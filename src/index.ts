@@ -2,6 +2,8 @@ export * from './components/Button';
 export * from './components/Input';
 export * from './components/Card';
 export * from './components/Table';
+export * from './components/Checkbox';
+export * from './components/BulkActionsBar';
 export * from './components/Badge';
 export * from './components/NavItem';
 export * from './components/NavGroup';
