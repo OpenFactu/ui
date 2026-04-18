@@ -51,7 +51,7 @@ export const Modal: React.FC<ModalProps> = ({
   return createPortal(
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/90 dark:bg-black/90 animate-in fade-in duration-300">
       <Card
-        className={`w-full ${maxWidthClass} shadow-2xl border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-300 overflow-visible`}
+        className={`w-full ${maxWidthClass} max-h-[90vh] overflow-y-auto shadow-2xl border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-300`}
         title={title}
         subtitle={subtitle}
         headerAction={
