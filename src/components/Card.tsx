@@ -31,7 +31,7 @@ export const Card = ({
       )}
     >
       {(title || subtitle || headerAction) && (
-        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 bg-slate-50/30 dark:bg-slate-950/30">
+        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 bg-white dark:bg-slate-900">
           <div>
             {title && (
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 font-display tracking-tight">
@@ -51,7 +51,7 @@ export const Card = ({
       <div className={cn(!noPadding && 'p-6', bodyClassName)}>{children}</div>
 
       {footer && (
-        <div className="px-6 py-3 bg-slate-50/50 dark:bg-slate-950/50 border-t border-slate-100 dark:border-slate-800 mt-auto">
+        <div className="px-6 py-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 mt-auto">
           {footer}
         </div>
       )}
