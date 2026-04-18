@@ -182,11 +182,9 @@ export function Table<T>({
                   onClick={() => onRowClick?.(item)}
                   className={cn(
                     'group transition-all duration-75 border-t border-slate-100 dark:border-slate-800',
-                    isRowSelected
-                      ? 'bg-primary/5 dark:bg-primary/10'
-                      : rowIdx % 2 === 0
-                        ? 'bg-white dark:bg-slate-900'
-                        : 'bg-slate-50/50 dark:bg-slate-900',
+                    'bg-white dark:bg-slate-900',
+                    !isRowSelected && rowIdx % 2 === 1 && 'bg-slate-50/50 dark:bg-slate-900',
+                    isRowSelected && 'bg-primary/5 dark:bg-primary/10',
                     onRowClick
                       ? 'cursor-pointer hover:bg-primary/5'
                       : 'hover:bg-slate-50 dark:hover:bg-slate-800/50',
