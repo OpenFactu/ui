@@ -105,7 +105,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
       <div
         ref={dropdownRef}
         className={cn(
-          'fixed z-[999999] rounded-xl border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-1 shadow-2xl animate-in fade-in-50 duration-200',
+          'fixed z-[999999] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-1 shadow-2xl animate-in fade-in-50 duration-200',
         )}
         style={{
           top: coords.placement === 'bottom' ? coords.top + 4 : 'auto',

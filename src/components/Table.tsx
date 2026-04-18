@@ -105,7 +105,7 @@ export function Table<T>({
           cellText,
         )}
       >
-        <thead className="bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800">
+        <thead className="bg-slate-100 dark:bg-slate-800 sticky top-0 z-[1] border-b border-slate-200 dark:border-slate-700">
           <tr>
             {selectable && (
               <th className={cn(cellPad, 'w-8')}>
