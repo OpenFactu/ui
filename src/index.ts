@@ -1,6 +1,7 @@
 export * from './components/Button';
 export * from './components/Input';
 export * from './components/Card';
+export * from './components/KpiCard';
 export * from './components/Table';
 export * from './components/Checkbox';
 export * from './components/BulkActionsBar';

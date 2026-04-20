@@ -29,9 +29,9 @@ export const NavItem: React.FC<NavItemProps> = ({
     to={path}
     onClick={onClick}
     className={cn(
-      'flex items-center justify-between gap-3 px-3 py-2 rounded-xl transition-all duration-200 group',
+      'flex items-center justify-between gap-3 px-3 py-2 rounded-[2px] transition-colors duration-150 group',
       isActive
-        ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+        ? 'bg-accent text-white'
         : 'text-slate-400 hover:bg-slate-800 hover:text-white',
       className,
     )}

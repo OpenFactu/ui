@@ -9,6 +9,8 @@ export interface TableColumn<T> {
   align?: 'left' | 'center' | 'right';
   className?: string;
   width?: string;
+  /** Si true, aplica estilo primary column: DM Mono 12px ink-900 medium. */
+  primary?: boolean;
 }
 
 export type TableDensity = 'compact' | 'normal' | 'comfy';
@@ -32,9 +34,9 @@ export interface TableProps<T> {
 }
 
 const densityClasses: Record<TableDensity, { cell: string; text: string }> = {
-  compact: { cell: 'px-2.5 py-1', text: 'text-xs' },
-  normal: { cell: 'px-3 py-2', text: 'text-sm' },
-  comfy: { cell: 'px-4 py-3.5', text: 'text-sm' },
+  compact: { cell: 'px-4 py-2', text: 'text-[12px]' },
+  normal: { cell: 'px-4 py-3', text: 'text-[13px]' },
+  comfy: { cell: 'px-4 py-4', text: 'text-[13px]' },
 };
 
 export function Table<T>({
@@ -44,7 +46,7 @@ export function Table<T>({
   className,
   emptyMessage = 'No se encontraron registros.',
   isLoading,
-  density = 'compact',
+  density = 'normal',
   selectable = false,
   selectedKeys,
   onSelectionChange,
@@ -98,14 +100,19 @@ export function Table<T>({
   const totalCols = columns.length + (selectable ? 1 : 0);
 
   return (
-    <div className={cn('w-full overflow-auto bg-white dark:bg-slate-900', className)}>
+    <div
+      className={cn(
+        'w-full overflow-auto bg-white dark:bg-slate-900 border border-[var(--k-line)] dark:border-slate-800 rounded-[2px]',
+        className,
+      )}
+    >
       <table
         className={cn(
           'w-full leading-tight text-left border-collapse font-sans min-w-full',
           cellText,
         )}
       >
-        <thead className="bg-slate-100 dark:bg-slate-800 sticky top-0 z-[1] border-b border-slate-200 dark:border-slate-700">
+        <thead className="bg-white dark:bg-slate-900 sticky top-0 z-[1] border-b border-[var(--k-line)] dark:border-slate-800">
           <tr>
             {selectable && (
               <th className={cn(cellPad, 'w-8')}>
@@ -124,7 +131,7 @@ export function Table<T>({
                 style={{ width: col.width }}
                 className={cn(
                   cellPad,
-                  'font-bold uppercase tracking-tight text-[10px] text-slate-500 dark:text-slate-400 font-display whitespace-nowrap',
+                  'font-mono text-[10px] tracking-[1px] uppercase font-normal text-[var(--k-ink-400)] dark:text-slate-500 whitespace-nowrap',
                   col.align === 'center'
                     ? 'text-center'
                     : col.align === 'right'
@@ -143,11 +150,13 @@ export function Table<T>({
             <tr>
               <td
                 colSpan={totalCols}
-                className={cn(cellPad, 'py-10 text-center text-slate-400 dark:text-slate-500 font-medium')}
+                className={cn(cellPad, 'py-10 text-center text-[var(--k-ink-400)] dark:text-slate-500')}
               >
                 <div className="flex flex-col items-center gap-3">
-                  <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-                  <span className="animate-pulse">Sincronizando con el servidor...</span>
+                  <div className="w-5 h-5 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
+                  <span className="animate-pulse font-mono text-[11px] tracking-wider uppercase">
+                    Sincronizando…
+                  </span>
                 </div>
               </td>
             </tr>
@@ -155,10 +164,10 @@ export function Table<T>({
             <tr>
               <td
                 colSpan={totalCols}
-                className={cn(cellPad, 'py-16 text-center text-slate-400 dark:text-slate-500')}
+                className={cn(cellPad, 'py-16 text-center text-[var(--k-ink-400)] dark:text-slate-500')}
               >
-                <div className="flex flex-col items-center gap-2 opacity-50">
-                  <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex flex-col items-center gap-2">
+                  <svg className="h-8 w-8 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -166,7 +175,7 @@ export function Table<T>({
                       d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
                     />
                   </svg>
-                  <span className="text-xs font-semibold uppercase tracking-widest">
+                  <span className="text-[10px] font-mono uppercase tracking-[1.5px]">
                     {emptyMessage}
                   </span>
                 </div>
@@ -181,13 +190,11 @@ export function Table<T>({
                   key={key}
                   onClick={() => onRowClick?.(item)}
                   className={cn(
-                    'group transition-all duration-75 border-t border-slate-100 dark:border-slate-800',
-                    'bg-white dark:bg-slate-900',
-                    !isRowSelected && rowIdx % 2 === 1 && 'bg-slate-50/50 dark:bg-slate-900',
-                    isRowSelected && 'bg-primary/5 dark:bg-primary/10',
-                    onRowClick
-                      ? 'cursor-pointer hover:bg-primary/5'
-                      : 'hover:bg-slate-50 dark:hover:bg-slate-800/50',
+                    'group transition-colors border-b border-[var(--k-line-2)] dark:border-slate-800 last:border-b-0',
+                    isRowSelected
+                      ? 'bg-accent/5 dark:bg-accent/10'
+                      : 'hover:bg-[var(--k-surface)] dark:hover:bg-slate-800/50',
+                    onRowClick && 'cursor-pointer',
                   )}
                 >
                   {selectable && (
@@ -210,12 +217,20 @@ export function Table<T>({
                       content = item[col.accessor] as React.ReactNode;
                     }
 
+                    const isPrimary = col.primary;
+                    const isRightAligned = col.align === 'right';
+
                     return (
                       <td
                         key={colIdx}
                         className={cn(
                           cellPad,
-                          'text-slate-600 dark:text-slate-300 font-medium group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-colors',
+                          'transition-colors',
+                          isPrimary
+                            ? 'font-mono text-[12px] font-medium text-[var(--k-ink-900)] dark:text-slate-100'
+                            : isRightAligned
+                              ? 'font-mono text-[12px] text-[var(--k-ink-900)] dark:text-slate-100'
+                              : 'text-[var(--k-ink-700)] dark:text-slate-300',
                           col.align === 'center'
                             ? 'text-center'
                             : col.align === 'right'

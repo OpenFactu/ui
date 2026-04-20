@@ -17,20 +17,17 @@ export interface ToastProps {
  */
 export const Toast: React.FC<ToastProps> = ({ id, message, type = 'info', onClose }) => {
   const icons = {
-    success: <CheckCircle className="text-emerald-600" size={20} />,
-    error: <AlertCircle className="text-rose-600" size={20} />,
-    info: <Info className="text-blue-600" size={20} />,
-    warning: <AlertTriangle className="text-amber-600" size={20} />,
+    success: <CheckCircle className="text-[#16A34A]" size={18} />,
+    error: <AlertCircle className="text-[#DC2626]" size={18} />,
+    info: <Info className="text-[#2563EB]" size={18} />,
+    warning: <AlertTriangle className="text-[#D97706]" size={18} />,
   };
 
   const borderClasses = {
-    success:
-      'border-emerald-200 dark:border-emerald-500/30 bg-white/90 dark:bg-slate-900/90 shadow-emerald-500/5',
-    error:
-      'border-rose-200 dark:border-rose-500/30 bg-white/90 dark:bg-slate-900/90 shadow-rose-500/5',
-    info: 'border-blue-200 dark:border-blue-500/30 bg-white/90 dark:bg-slate-900/90 shadow-blue-500/5',
-    warning:
-      'border-amber-200 dark:border-amber-500/30 bg-white/90 dark:bg-slate-900/90 shadow-amber-500/5',
+    success: 'border-[#BBF7D0] dark:border-emerald-500/30 bg-white dark:bg-slate-900',
+    error: 'border-[#FECACA] dark:border-rose-500/30 bg-white dark:bg-slate-900',
+    info: 'border-[#BFDBFE] dark:border-blue-500/30 bg-white dark:bg-slate-900',
+    warning: 'border-[#FDE68A] dark:border-amber-500/30 bg-white dark:bg-slate-900',
   };
 
   React.useEffect(() => {
@@ -41,21 +38,21 @@ export const Toast: React.FC<ToastProps> = ({ id, message, type = 'info', onClos
   return (
     <div
       className={cn(
-        'pointer-events-auto flex w-full max-w-sm items-center gap-4 rounded-2xl border p-4 shadow-xl backdrop-blur-md transition-all animate-in slide-in-from-right-8 fade-in-0 duration-500',
+        'pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-[4px] border p-3 shadow-lg transition-all animate-in slide-in-from-right-8 fade-in-0 duration-300',
         borderClasses[type],
       )}
     >
-      <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-slate-700 shadow-inner">
+      <div className="flex-shrink-0 w-8 h-8 rounded-[2px] bg-[var(--k-surface)] dark:bg-slate-800 flex items-center justify-center border border-[var(--k-line)] dark:border-slate-700">
         {icons[type]}
       </div>
-      <div className="flex-1 text-sm font-semibold text-slate-800 dark:text-slate-100 leading-tight">
+      <div className="flex-1 text-[13px] font-medium text-[var(--k-ink-900)] dark:text-slate-100 leading-tight">
         {message}
       </div>
       <button
         onClick={() => onClose(id)}
-        className="flex-shrink-0 rounded-xl p-2 text-slate-300 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+        className="flex-shrink-0 rounded-[2px] p-1.5 text-[var(--k-ink-400)] hover:bg-[var(--k-surface)] dark:hover:bg-slate-800 hover:text-[var(--k-ink-900)] transition-colors"
       >
-        <X size={16} />
+        <X size={14} />
       </button>
     </div>
   );

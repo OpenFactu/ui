@@ -49,17 +49,17 @@ export const Modal: React.FC<ModalProps> = ({
   }[maxWidth];
 
   return createPortal(
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/70 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-[var(--k-ink-900)]/40 dark:bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
       <Card
-        className={`w-full ${maxWidthClass} max-h-[90vh] overflow-y-auto shadow-2xl border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-300`}
+        className={`w-full ${maxWidthClass} max-h-[90vh] overflow-y-auto rounded-[8px] shadow-xl animate-in zoom-in-95 duration-200`}
         title={title}
         subtitle={subtitle}
         headerAction={
           <button
             onClick={onClose}
-            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400 dark:text-slate-500 transition-colors"
+            className="p-1.5 text-[var(--k-ink-400)] hover:text-[var(--k-ink-900)] hover:bg-[var(--k-surface)] dark:hover:bg-slate-800 rounded-[2px] transition-colors"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         }
       >

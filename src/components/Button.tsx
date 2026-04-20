@@ -2,7 +2,7 @@ import * as React from 'react';
 import { cn } from '../utils';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline';
+  variant?: 'primary' | 'accent' | 'secondary' | 'danger' | 'ghost' | 'outline';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
 }
@@ -13,20 +13,24 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref,
   ) => {
     const variants = {
-      primary: 'bg-primary text-primary-fg hover:bg-primary-hover shadow-sm',
+      primary:
+        'bg-primary text-primary-fg hover:bg-primary-hover',
+      accent:
+        'bg-accent text-[color:var(--color-accent-fg)] hover:bg-[var(--k-teal-600)]',
       secondary:
-        'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700',
-      danger: 'bg-red-600 text-white hover:bg-red-700',
+        'bg-transparent border border-[var(--k-line)] text-[var(--k-ink-900)] hover:border-[var(--k-ink-400)] dark:text-slate-100 dark:border-slate-700',
+      danger:
+        'bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA] hover:bg-[#FEE2E2] dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30',
       ghost:
-        'bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300',
+        'bg-[var(--k-surface)] text-[var(--k-ink-500)] border border-[var(--k-line)] hover:text-[var(--k-ink-900)] hover:border-[var(--k-ink-400)] dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
       outline:
-        'bg-transparent border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200',
+        'bg-transparent border border-[var(--k-line)] text-[var(--k-ink-900)] hover:border-[var(--k-ink-400)] dark:text-slate-100 dark:border-slate-700',
     };
 
     const sizes = {
-      sm: 'px-3 py-1.5 text-sm',
-      md: 'px-4 py-2',
-      lg: 'px-6 py-3 text-lg',
+      sm: 'px-[14px] py-[6px] text-[12px]',
+      md: 'px-[18px] py-[9px] text-[13px]',
+      lg: 'px-6 py-3 text-[14px]',
     };
 
     return (
@@ -34,7 +38,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || isLoading}
         className={cn(
-          'inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 disabled:pointer-events-none',
+          'inline-flex items-center justify-center gap-1.5 rounded-[2px] font-medium font-sans transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent disabled:opacity-50 disabled:pointer-events-none',
           variants[variant],
           sizes[size],
           className,
@@ -43,7 +47,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {isLoading && (
           <svg
-            className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
+            className="animate-spin -ml-0.5 mr-1 h-3.5 w-3.5 text-current"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"

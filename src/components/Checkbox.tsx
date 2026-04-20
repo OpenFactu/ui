@@ -39,9 +39,9 @@ export const Checkbox: React.FC<CheckboxProps> = ({
       onClick={(e) => e.stopPropagation()}
       className={cn(
         dimensions,
-        'cursor-pointer rounded border border-slate-300 dark:border-slate-600',
+        'cursor-pointer rounded-[2px] border border-[var(--k-line)] dark:border-slate-600',
         'bg-white dark:bg-slate-800',
-        'text-primary focus:ring-2 focus:ring-primary/30 focus:ring-offset-0',
+        'text-accent accent-[color:var(--k-teal-500)] focus:ring-1 focus:ring-accent focus:ring-offset-0',
         'transition-colors',
         disabled && 'opacity-40 cursor-not-allowed',
         className,

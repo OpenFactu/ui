@@ -23,9 +23,9 @@ export const Loader = React.forwardRef<HTMLDivElement, LoaderProps>(
     };
 
     const variantClasses = {
-      primary: 'text-primary',
+      primary: 'text-accent',
       white: 'text-white',
-      neutral: 'text-slate-400 dark:text-slate-500',
+      neutral: 'text-[var(--k-ink-400)] dark:text-slate-500',
     };
 
     const loaderContent = (
@@ -38,7 +38,7 @@ export const Loader = React.forwardRef<HTMLDivElement, LoaderProps>(
           <Loader2 className={cn('animate-spin', sizeClasses[size], variantClasses[variant])} />
           {size === 'xl' && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-2 h-2 bg-primary rounded-full animate-ping" />
+              <div className="w-2 h-2 bg-accent rounded-full animate-ping" />
             </div>
           )}
         </div>

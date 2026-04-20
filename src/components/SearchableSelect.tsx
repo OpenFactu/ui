@@ -105,7 +105,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
       <div
         ref={dropdownRef}
         className={cn(
-          'fixed z-[999999] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-1 shadow-2xl animate-in fade-in-50 duration-200',
+          'fixed z-[999999] rounded-[4px] border border-[var(--k-line)] dark:border-slate-700 bg-white dark:bg-slate-900 p-1 shadow-lg animate-in fade-in-50 duration-200',
         )}
         style={{
           top: coords.placement === 'bottom' ? coords.top + 4 : 'auto',
@@ -114,11 +114,11 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
           width: coords.width,
         }}
       >
-        <div className="relative flex items-center border-b border-slate-100/50 dark:border-slate-800/50 p-2">
-          <Search className="absolute left-3 h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+        <div className="flex items-center gap-2 border-b border-slate-100/50 dark:border-slate-800/50 px-3 py-2">
+          <Search className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500" />
           <input
             ref={inputRef}
-            className="w-full bg-transparent pl-8 pr-2 text-xs outline-none text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 h-7"
+            className="w-full min-w-0 bg-transparent text-xs outline-none text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 h-7"
             placeholder="Buscar..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -135,10 +135,10 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
                   setSearchTerm('');
                 }}
                 className={cn(
-                  'group flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs cursor-pointer transition-all',
+                  'group flex items-center justify-between rounded-[2px] px-2.5 py-1.5 text-[12px] cursor-pointer transition-colors',
                   value === opt.value
-                    ? 'bg-primary text-primary-fg'
-                    : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300',
+                    ? 'bg-accent text-white'
+                    : 'hover:bg-[var(--k-surface)] dark:hover:bg-slate-800 text-[var(--k-ink-700)] dark:text-slate-300',
                 )}
               >
                 <div className="flex flex-col">
@@ -174,11 +174,11 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
       <div
         onClick={() => !disabled && setIsOpen(!isOpen)}
         className={cn(
-          'flex h-9 w-full items-center justify-between rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-1 text-sm shadow-sm transition-all',
+          'flex w-full items-center justify-between rounded-[2px] border border-[var(--k-line)] dark:border-slate-700 bg-white dark:bg-slate-900 text-[var(--k-ink-900)] dark:text-slate-100 px-3 py-2 text-[13px] transition-colors',
           disabled
-            ? 'cursor-not-allowed opacity-50 bg-slate-50 dark:bg-slate-800'
-            : 'cursor-pointer hover:border-slate-300 dark:hover:border-slate-600',
-          isOpen && 'ring-2 ring-primary/20 border-primary shadow-md',
+            ? 'cursor-not-allowed opacity-50 bg-[var(--k-surface)] dark:bg-slate-800'
+            : 'cursor-pointer hover:border-[var(--k-ink-400)] dark:hover:border-slate-600',
+          isOpen && 'border-accent',
         )}
       >
         <span

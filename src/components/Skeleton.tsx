@@ -6,7 +6,7 @@ interface SkeletonProps {
 }
 
 export const Skeleton: React.FC<SkeletonProps> = ({
-  className = 'h-4 bg-slate-200 dark:bg-slate-800 rounded',
+  className = 'h-4 bg-[var(--k-line)] dark:bg-slate-800 rounded-[2px]',
   count = 1,
 }) => {
   return (
@@ -23,7 +23,7 @@ export const SkeletonCard: React.FC<{ count?: number }> = ({ count = 1 }) => (
     {Array.from({ length: count }).map((_, i) => (
       <div
         key={i}
-        className="p-4 bg-white dark:bg-slate-900 rounded-lg border border-slate-100 dark:border-slate-800 space-y-4"
+        className="p-4 bg-white dark:bg-slate-900 rounded-[4px] border border-[var(--k-line)] dark:border-slate-800 space-y-4"
       >
         <Skeleton className="h-6 w-2/3" />
         <div className="space-y-2">
@@ -48,7 +48,7 @@ export const DashboardSkeleton: React.FC = () => (
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="p-6 bg-white dark:bg-slate-900 rounded-lg border border-slate-100 dark:border-slate-800 space-y-4"
+          className="p-6 bg-white dark:bg-slate-900 rounded-[4px] border border-[var(--k-line)] dark:border-slate-800 space-y-4"
         >
           <Skeleton className="h-3 w-32" />
           <Skeleton className="h-8 w-40" />
@@ -65,7 +65,7 @@ export const DashboardSkeleton: React.FC = () => (
       {/* Left Column */}
       <div className="lg:col-span-8 space-y-6">
         {/* Recent Documents Card */}
-        <div className="p-6 bg-white dark:bg-slate-900 rounded-lg border border-slate-100 dark:border-slate-800 space-y-4">
+        <div className="p-6 bg-white dark:bg-slate-900 rounded-[4px] border border-[var(--k-line)] dark:border-slate-800 space-y-4">
           <Skeleton className="h-6 w-48" />
           <div className="space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -86,7 +86,7 @@ export const DashboardSkeleton: React.FC = () => (
           {Array.from({ length: 2 }).map((_, i) => (
             <div
               key={i}
-              className="p-6 bg-white dark:bg-slate-900 rounded-lg border border-slate-100 dark:border-slate-800 space-y-4"
+              className="p-6 bg-white dark:bg-slate-900 rounded-[4px] border border-[var(--k-line)] dark:border-slate-800 space-y-4"
             >
               <Skeleton className="h-6 w-40" />
               <div className="space-y-3">
@@ -107,7 +107,7 @@ export const DashboardSkeleton: React.FC = () => (
         {Array.from({ length: 2 }).map((_, i) => (
           <div
             key={i}
-            className="p-6 bg-white dark:bg-slate-900 rounded-lg border border-slate-100 dark:border-slate-800 space-y-4"
+            className="p-6 bg-white dark:bg-slate-900 rounded-[4px] border border-[var(--k-line)] dark:border-slate-800 space-y-4"
           >
             <Skeleton className="h-6 w-40" />
             <div className="space-y-3">
