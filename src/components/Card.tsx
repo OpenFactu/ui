@@ -25,7 +25,7 @@ export const Card = ({
   return (
     <div
       className={cn(
-        'bg-white dark:bg-slate-900 border border-[var(--k-line)] dark:border-slate-800 rounded-[4px] overflow-hidden',
+        'bg-white dark:bg-slate-900 border border-[var(--k-line)] dark:border-slate-800 rounded-[4px] overflow-hidden k-card-in',
         className,
       )}
     >

@@ -26,7 +26,7 @@ export const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
       <div
         ref={ref}
         className={cn(
-          'inline-flex items-center rounded-[2px] border px-[10px] py-[3px] text-[10px] font-mono font-medium tracking-[0.5px] transition-colors',
+          'inline-flex items-center rounded-[2px] border px-[10px] py-[3px] text-[10px] font-mono font-medium tracking-[0.5px] transition-colors k-pop-in',
           variants[variant],
           className,
         )}

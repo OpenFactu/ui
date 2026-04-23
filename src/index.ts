@@ -15,5 +15,7 @@ export * from './components/Modal';
 export * from './components/GlobalLoader';
 export * from './components/FilterBar';
 export * from './context/ToastContext';
+export * from './components/Popup';
+export * from './context/PopupContext';
 export * from './components/SearchableSelect';
 export * from './utils';

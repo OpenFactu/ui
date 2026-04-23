@@ -11,6 +11,11 @@ export interface TableColumn<T> {
   width?: string;
   /** Si true, aplica estilo primary column: DM Mono 12px ink-900 medium. */
   primary?: boolean;
+  /** Si true, la columna es ordenable. Por defecto usa `accessor` como clave.
+   *  Si `accessor` es función o necesitas otra clave, pasa `sortAccessor`. */
+  sortable?: boolean;
+  /** Accessor específico para ordenar (cuando `accessor` es función o no existe). */
+  sortAccessor?: (item: T) => any;
 }
 
 export type TableDensity = 'compact' | 'normal' | 'comfy';
@@ -39,6 +44,30 @@ const densityClasses: Record<TableDensity, { cell: string; text: string }> = {
   comfy: { cell: 'px-4 py-4', text: 'text-[13px]' },
 };
 
+type SortDir = 'asc' | 'desc';
+
+interface SortState {
+  colIdx: number;
+  dir: SortDir;
+}
+
+function compareValues(a: any, b: any): number {
+  if (a == null && b == null) return 0;
+  if (a == null) return -1;
+  if (b == null) return 1;
+  if (typeof a === 'number' && typeof b === 'number') return a - b;
+  const da = a instanceof Date ? a.getTime() : NaN;
+  const db = b instanceof Date ? b.getTime() : NaN;
+  if (!Number.isNaN(da) && !Number.isNaN(db)) return da - db;
+  // Intentar parseo numérico (strings tipo "1,234.56" con , y .)
+  const na = Number(String(a).replace(/[^\d.-]/g, ''));
+  const nb = Number(String(b).replace(/[^\d.-]/g, ''));
+  if (!Number.isNaN(na) && !Number.isNaN(nb) && String(a).match(/\d/) && String(b).match(/\d/)) {
+    return na - nb;
+  }
+  return String(a).localeCompare(String(b), undefined, { numeric: true });
+}
+
 export function Table<T>({
   columns,
   data = [],
@@ -52,6 +81,30 @@ export function Table<T>({
   onSelectionChange,
   rowKey,
 }: TableProps<T>) {
+  // Estado de ordenación — cíclico: null → asc → desc → null
+  const [sort, setSort] = React.useState<SortState | null>(null);
+
+  const toggleSort = (colIdx: number) => {
+    setSort((prev) => {
+      if (!prev || prev.colIdx !== colIdx) return { colIdx, dir: 'asc' };
+      if (prev.dir === 'asc') return { colIdx, dir: 'desc' };
+      return null;
+    });
+  };
+
+  const sortedData = React.useMemo(() => {
+    if (!sort) return data;
+    const col = columns[sort.colIdx];
+    if (!col) return data;
+    const getVal = (item: T): any => {
+      if (col.sortAccessor) return col.sortAccessor(item);
+      if (typeof col.accessor === 'function') return col.accessor(item, 0);
+      if (col.accessor) return (item as any)[col.accessor];
+      return null;
+    };
+    const sorted = [...data].sort((a, b) => compareValues(getVal(a), getVal(b)));
+    return sort.dir === 'desc' ? sorted.reverse() : sorted;
+  }, [data, sort, columns]);
   // Selección — controlada o interna
   const [internalSelected, setInternalSelected] = React.useState<Set<string | number>>(
     () => new Set(),
@@ -108,7 +161,9 @@ export function Table<T>({
     >
       <table
         className={cn(
-          'w-full leading-tight text-left border-collapse font-sans min-w-full',
+          // min-w para móvil: si la tabla tiene varias columnas no caben en
+          // pantalla pequeña → scroll horizontal del wrapper (overflow-auto).
+          'w-full leading-tight text-left border-collapse font-sans min-w-[720px] sm:min-w-full',
           cellText,
         )}
       >
@@ -125,24 +180,60 @@ export function Table<T>({
                 />
               </th>
             )}
-            {columns.map((col, idx) => (
-              <th
-                key={idx}
-                style={{ width: col.width }}
-                className={cn(
-                  cellPad,
-                  'font-mono text-[10px] tracking-[1px] uppercase font-normal text-[var(--k-ink-400)] dark:text-slate-500 whitespace-nowrap',
-                  col.align === 'center'
-                    ? 'text-center'
-                    : col.align === 'right'
-                      ? 'text-right'
-                      : 'text-left',
-                  col.className,
-                )}
-              >
-                {col.header}
-              </th>
-            ))}
+            {columns.map((col, idx) => {
+              const isSortable = !!col.sortable;
+              const isSorted = sort?.colIdx === idx;
+              const dir = isSorted ? sort!.dir : null;
+              return (
+                <th
+                  key={idx}
+                  style={{ width: col.width }}
+                  onClick={isSortable ? () => toggleSort(idx) : undefined}
+                  className={cn(
+                    cellPad,
+                    'font-mono text-[10px] tracking-[1px] uppercase font-normal text-[var(--k-ink-400)] dark:text-slate-500 whitespace-nowrap select-none',
+                    col.align === 'center'
+                      ? 'text-center'
+                      : col.align === 'right'
+                        ? 'text-right'
+                        : 'text-left',
+                    isSortable &&
+                      'cursor-pointer hover:text-accent dark:hover:text-accent transition-colors',
+                    isSorted && 'text-accent dark:text-accent',
+                    col.className,
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1',
+                      col.align === 'right' && 'justify-end w-full',
+                    )}
+                  >
+                    {col.header}
+                    {isSortable && (
+                      <svg
+                        className="shrink-0 opacity-60"
+                        width="10"
+                        height="10"
+                        viewBox="0 0 10 10"
+                        aria-hidden
+                      >
+                        <path
+                          d="M5 1L8 4H2z"
+                          fill="currentColor"
+                          opacity={dir === 'asc' ? 1 : 0.3}
+                        />
+                        <path
+                          d="M5 9L2 6H8z"
+                          fill="currentColor"
+                          opacity={dir === 'desc' ? 1 : 0.3}
+                        />
+                      </svg>
+                    )}
+                  </span>
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
@@ -182,19 +273,26 @@ export function Table<T>({
               </td>
             </tr>
           ) : (
-            data.map((item, rowIdx) => {
+            sortedData.map((item, rowIdx) => {
               const key = getKey(item, rowIdx);
+              // Animación escalonada al montar: cada fila entra con 15ms de delay
+              // acumulado, limitado a 300ms total para no parecer lenta en tablas
+              // grandes.
+              const animDelay = Math.min(rowIdx * 15, 300);
               const isRowSelected = selected.has(key);
               return (
                 <tr
                   key={key}
                   onClick={() => onRowClick?.(item)}
+                  style={{
+                    animation: `k-row-in 0.45s ease-out ${animDelay}ms both`,
+                  }}
                   className={cn(
-                    'group transition-colors border-b border-[var(--k-line-2)] dark:border-slate-800 last:border-b-0',
+                    'group transition-all duration-200 border-b border-[var(--k-line-2)] dark:border-slate-800 last:border-b-0',
                     isRowSelected
-                      ? 'bg-accent/5 dark:bg-accent/10'
+                      ? 'bg-accent/5 dark:bg-accent/10 shadow-inner'
                       : 'hover:bg-[var(--k-surface)] dark:hover:bg-slate-800/50',
-                    onRowClick && 'cursor-pointer',
+                    onRowClick && 'cursor-pointer hover:shadow-sm hover:-translate-y-px',
                   )}
                 >
                   {selectable && (
