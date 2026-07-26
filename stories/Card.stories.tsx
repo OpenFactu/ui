@@ -6,7 +6,7 @@ import { Button } from '../src/components/Button';
 export const Basica: Story = () => (
   <div className="max-w-lg">
     <Card title="Datos fiscales" subtitle="Se usan en todos los documentos emitidos.">
-      <p className="text-[13px] text-[var(--k-ink-700)] dark:text-slate-300">
+      <p className="text-[13px] text-[var(--fg-body,#2d3a4a)] dark:text-slate-300">
         Acme S.L. · B12345678 · Calle Mayor 1, Madrid
       </p>
     </Card>
@@ -26,7 +26,7 @@ export const ConPieYAccion: Story = () => (
         </div>
       }
     >
-      <p className="text-[13px] text-[var(--k-ink-700)] dark:text-slate-300">FAC/2026/####</p>
+      <p className="text-[13px] text-[var(--fg-body,#2d3a4a)] dark:text-slate-300">FAC/2026/####</p>
     </Card>
   </div>
 );
@@ -39,12 +39,12 @@ export const Carga: Story = () => {
       <button
         type="button"
         onClick={() => setLoading((v) => !v)}
-        className="self-start rounded-[2px] border border-[var(--k-line)] dark:border-slate-700 px-3 py-1.5 text-[12px] text-[var(--k-ink-700)] dark:text-slate-300 hover:border-accent transition-colors"
+        className="self-start rounded-[2px] border border-[var(--k-line)] dark:border-slate-700 px-3 py-1.5 text-[12px] text-[var(--fg-body,#2d3a4a)] dark:text-slate-300 hover:border-accent transition-colors"
       >
         {loading ? 'Mostrar datos' : 'Volver a cargar'}
       </button>
       <Card isLoading={loading} title="Datos fiscales" subtitle="Se usan en todos los documentos.">
-        <p className="text-[13px] text-[var(--k-ink-700)] dark:text-slate-300">
+        <p className="text-[13px] text-[var(--fg-body,#2d3a4a)] dark:text-slate-300">
           Acme S.L. · B12345678 · Calle Mayor 1, Madrid. Régimen general de IVA.
         </p>
       </Card>

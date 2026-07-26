@@ -87,10 +87,36 @@ applyTheme({
 });
 ```
 
-### Presets
+### Presets y plugins
 
-`THEME_PRESETS` trae nueve temas listos, y `detectPreset(theme)` dice cuál está
-activo (o `null` si es a medida).
+`THEME_PRESETS` trae nueve temas de fábrica, pero el catálogo es **abierto**: un
+plugin puede aportar los suyos en tiempo de ejecución.
+
+```ts
+import { registerThemePreset, registerTokens } from '@openfactu/ui';
+
+// Al activar el plugin
+const baja = registerThemePreset({
+  id: 'acme-corporativo',
+  label: 'Acme corporativo',
+  description: 'Azul de marca sobre fondo claro.',
+  theme: { mode: 'light', colors: { primary: '#1e3a8a', accent: '#2563eb' } },
+}, { source: 'plugin-acme' });
+
+registerTokens('plugin-acme', { '--acme-ancho-panel': '280px' });
+
+baja();                        // al desactivarlo
+unregisterThemeSource('plugin-acme');   // o de golpe, todo lo suyo
+```
+
+El registro **comprueba el tema antes de aceptarlo**: un color mal formado lo
+rechaza, y si el contraste no llega al mínimo avisa por consola diciendo qué
+combinación falla. `validateTheme(theme)` devuelve ese mismo informe si
+prefieres enseñarlo en tu interfaz.
+
+En React, `useThemePresets()` devuelve el catálogo y se repinta solo cuando
+entra o sale un tema. `detectPreset(theme)` dice cuál está activo (o `null` si
+es a medida).
 
 ### Cómo elegir el color de un texto
 
@@ -158,29 +184,31 @@ Si tocas `src/charts/palette.ts`, hay que volver a pasar el validador.
 ## Componentes
 
 Formulario
-: `Input` · `Textarea` · `Select` · `SearchableSelect` · `NumberInput` ·
-`CurrencyInput` · `PercentInput` · `PasswordInput` · `SearchInput` ·
-`ColorInput` · `FileDropzone` · `DatePicker` · `Checkbox` · `Switch` ·
-`RadioGroup`
+: `Field` · `FormSection` · `FormGrid` · `Input` · `Textarea` · `Select` ·
+`SearchableSelect` · `NumberInput` · `CurrencyInput` · `PercentInput` ·
+`PasswordInput` · `SearchInput` · `ColorInput` · `FileDropzone` · `DatePicker` ·
+`Checkbox` · `Switch` · `RadioGroup`
 
 Datos
-: `Table` · `List` · `Card` · `KpiCard` · `Badge` · `Progress` · `Avatar` ·
-`EmptyState` · `Skeleton` (+ `SkeletonList`, `SkeletonTable`, `SkeletonPage`)
+: `Table` · `EditableTable` · `List` · `Card` · `KpiCard` · `Badge` ·
+`Progress` · `Avatar` · `EmptyState` · `Skeleton` (+ `SkeletonList`,
+`SkeletonTable`, `SkeletonPage`)
 
 Gráficos
 : `Sparkline` · `Ring` · `StackedBar` · `Chart` (en `@openfactu/ui/charts`)
 
 Navegación
-: `SegmentedControl` · `Tabs` · `Pagination` · `Breadcrumbs` · `NavItem` · `NavGroup` · `FilterBar` ·
-`BulkActionsBar`
+: `PageHeader` · `SegmentedControl` · `Tabs` · `Pagination` · `Breadcrumbs` ·
+`NavItem` · `NavGroup` · `FilterBar` · `BulkActionsBar`
 
 Superposiciones
-: `Modal` · `Drawer` · `ConfirmDialog` · `DropdownMenu` · `ContextMenu` ·
+: `CommandPalette` · `Modal` · `Drawer` · `ConfirmDialog` · `DropdownMenu` · `ContextMenu` ·
 `Tooltip` · `Popup` · `Toast` · `Loader` · `GlobalLoader` · `Transition`
 
 Hooks
 : `usePopover` · `useAnimatedPresence` · `useScrollLock` · `useFocusTrap` ·
-`useDebouncedValue` · `useColorScheme` · `useContextMenu` · `useToast` ·
+`useDebouncedValue` · `useColorScheme` · `useMediaQuery` ·
+`usePrefersReducedMotion` · `useThemePresets` · `useContextMenu` · `useToast` ·
 `usePopup` · `useTheme`
 
 ## Desarrollo
@@ -202,6 +230,54 @@ el CSS publicado y el motor de temas en TypeScript producen los mismos valores,
 y `scripts/check-contrast.mts` mide el contraste real de cada texto bajo el tema
 que se le indique (compone las capas translúcidas y congela las transiciones,
 para no medir colores a mitad de camino).
+
+## Tablas editables
+
+`EditableTable` cubre los dos patrones de siempre sin escribir el editor a mano.
+Los controles se **declaran**, no se pintan:
+
+```tsx
+<EditableTable
+  mode="cell"                       // 'row' para el CRUD con Guardar/Cancelar
+  columns={[
+    { header: 'Artículo', accessor: 'articulo',
+      editor: { type: 'search-select', options: articulos },
+      isDisabled: (l) => !!l.origen },      // líneas que vienen de un pedido
+    { header: 'Cantidad', accessor: 'cantidad', align: 'right',
+      editor: { type: 'number', precision: 2 } },
+    { header: 'Precio', accessor: 'precio', align: 'right',
+      editor: { type: 'currency' } },
+  ]}
+  data={lineas}
+  onChange={actualizarLinea}
+  onAddRow={nuevaLinea}
+  summaryRow={() => [null, null, money(total)]}   // pie alineado con las columnas
+/>
+```
+
+En `mode="row"` la fila entera entra en edición: **Intro guarda y Escape
+cancela**. Los tipos de editor disponibles son `text`, `number`, `currency`,
+`percent`, `select`, `search-select`, `date`, `checkbox` y `custom`.
+
+## Tablas en móvil
+
+`Table` acepta `responsive="cards"`: por debajo del punto de corte pinta una
+tarjeta por fila en lugar de obligar a desplazarse en horizontal. El papel de
+cada columna se declara con `card`:
+
+```tsx
+<Table
+  responsive="cards"
+  columns={[
+    { header: 'Número', accessor: 'numero', card: 'title' },
+    { header: 'Cliente', accessor: 'cliente', card: 'subtitle' },
+    { header: 'Estado', cell: estadoBadge, card: 'status' },
+    { header: 'Total', accessor: total, align: 'right', card: 'meta' },
+  ]}
+/>
+```
+
+Lo que no lleve `card` va al cuerpo de la tarjeta con su etiqueta delante.
 
 ## Convenciones
 

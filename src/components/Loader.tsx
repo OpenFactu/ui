@@ -25,7 +25,7 @@ export const Loader = React.forwardRef<HTMLDivElement, LoaderProps>(
     const variantClasses = {
       primary: 'text-accent',
       white: 'text-white',
-      neutral: 'text-[var(--fg-subtle,#94a3b8)]',
+      neutral: 'text-[var(--fg-subtle,#657486)]',
     };
 
     const loaderContent = (

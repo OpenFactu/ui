@@ -73,7 +73,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
           {eyebrow && (
-            <p className="text-[10px] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#94a3b8)] mb-1">
+            <p className="text-[10px] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)] mb-1">
               {eyebrow}
             </p>
           )}
@@ -91,7 +91,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             {title}
           </h1>
           {subtitle && (
-            <p className="text-[13px] text-[var(--fg-muted,#64748b)] mt-1 leading-relaxed">
+            <p className="text-[13px] text-[var(--fg-muted,#52606f)] mt-1 leading-relaxed">
               {subtitle}
             </p>
           )}

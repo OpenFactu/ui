@@ -68,7 +68,7 @@ export const Accordion: React.FC<AccordionProps> = ({
               {item.title}
               <ChevronDown
                 className={cn(
-                  'h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle,#94a3b8)] transition-transform duration-200',
+                  'h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle,#657486)] transition-transform duration-200',
                   isOpen && 'rotate-180',
                 )}
               />

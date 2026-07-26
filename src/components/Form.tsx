@@ -80,7 +80,7 @@ export const Field: React.FC<FieldProps> = ({
       className={cn(
         LABEL_SIZES[labelSize],
         labelSize === 'micro'
-          ? 'text-[var(--fg-subtle,#94a3b8)]'
+          ? 'text-[var(--fg-subtle,#657486)]'
           : 'text-[var(--fg-body,#2d3a4a)]',
         orientation === 'horizontal' && 'pt-2 shrink-0',
         labelClassName,
@@ -98,7 +98,7 @@ export const Field: React.FC<FieldProps> = ({
         <p className="text-[11px] font-medium text-[var(--k-danger-fg)] mt-1">{error}</p>
       )}
       {hint && !error && (
-        <p className="text-[11px] text-[var(--fg-muted,#64748b)] mt-1">{hint}</p>
+        <p className="text-[11px] text-[var(--fg-muted,#52606f)] mt-1">{hint}</p>
       )}
     </>
   );
@@ -160,7 +160,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
             </h3>
           )}
           {description && (
-            <p className="text-[12px] text-[var(--fg-muted,#64748b)] mt-0.5 leading-relaxed">
+            <p className="text-[12px] text-[var(--fg-muted,#52606f)] mt-0.5 leading-relaxed">
               {description}
             </p>
           )}

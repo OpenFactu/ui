@@ -64,6 +64,9 @@ const browser = await chromium.launch({ executablePath: CHROME });
 const page = await browser.newPage({
   viewport: { width: 1280, height: 800 },
   deviceScaleFactor: 1,
+  // Con esto los gráficos no animan (lo respetan por diseño) y las capturas
+  // salen deterministas sin tener que esperar a nada.
+  reducedMotion: 'reduce',
 });
 const errors = [];
 page.on('pageerror', (err) => errors.push(err.message.slice(0, 160)));
@@ -81,7 +84,7 @@ for (const id of storyIds) {
     await page.addStyleTag({
       content: '*,*::before,*::after{animation-duration:0s!important;animation-delay:0s!important;transition-duration:0s!important}',
     });
-    await page.waitForTimeout(150);
+    await page.waitForTimeout(200);
     await page.screenshot({ path: path.join(outDir, `${id}--${theme}.png`), fullPage: true });
   }
 }

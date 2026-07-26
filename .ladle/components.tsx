@@ -15,7 +15,7 @@ export const Provider: GlobalProviderType = ({ children, globalState }) => {
     <MemoryRouter>
       <ToastProvider>
         <PopupProvider>
-          <div className="p-6 font-sans text-[var(--k-ink-900)] dark:text-slate-100">
+          <div className="p-6 font-sans text-[var(--fg-default,#0a1628)] dark:text-slate-100">
             {children}
           </div>
         </PopupProvider>

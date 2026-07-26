@@ -39,7 +39,7 @@ export const Progress: React.FC<ProgressProps> = ({
             </span>
           )}
           {showValue && (
-            <span className="font-mono text-[11px] text-[var(--fg-muted,#64748b)]">
+            <span className="font-mono text-[11px] text-[var(--fg-muted,#52606f)]">
               {Math.round(clamped)}%
             </span>
           )}

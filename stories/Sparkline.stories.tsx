@@ -22,7 +22,7 @@ export const Sparklines: Story = () => (
       </Card>
     </div>
     <div>
-      <p className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#94a3b8)] mb-2">
+      <p className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)] mb-2">
         alturas
       </p>
       <div className="flex flex-col gap-3">
@@ -43,7 +43,7 @@ export const Anillos: Story = () => (
       <Ring value={60} tone="accent" size={64} thickness={6} label />
       <Ring value={100} tone="success" size={26} thickness={3} />
     </div>
-    <p className="text-[12px] text-[var(--fg-muted,#64748b)]">
+    <p className="text-[12px] text-[var(--fg-muted,#52606f)]">
       Con <code className="font-mono">tone="auto"</code> el color cambia por umbral: verde, ámbar y
       rojo.
     </p>
@@ -97,7 +97,7 @@ export const EnUso: Story = () => (
       <Ring value={78} tone="auto" size={56} thickness={5} label />
       <div>
         <p className="text-[13px] text-[var(--fg-body,#2d3a4a)]">7.800 de 10.000 documentos</p>
-        <p className="text-[11px] text-[var(--fg-muted,#64748b)]">Se renueva el 1 de agosto</p>
+        <p className="text-[11px] text-[var(--fg-muted,#52606f)]">Se renueva el 1 de agosto</p>
       </div>
     </Card>
   </div>

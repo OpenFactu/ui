@@ -20,7 +20,7 @@ export const Legacy: Story = () => {
     <>
       <Button onClick={m.show}>Abrir (API antigua)</Button>
       <Modal isOpen={m.open} onClose={m.hide} title="Detalle" subtitle="Solo title y maxWidth" maxWidth="lg">
-        <p className="text-[13px] text-[var(--k-ink-700)] dark:text-slate-300">
+        <p className="text-[13px] text-[var(--fg-body,#2d3a4a)] dark:text-slate-300">
           Sin pie, sin acciones: exactamente lo que se renderizaba antes.
         </p>
       </Modal>
@@ -109,7 +109,7 @@ export const Tonos: Story = () => {
         size="sm"
         primaryAction={{ label: tone === 'danger' ? 'Eliminar' : 'Aceptar' }}
       >
-        <p className="text-[13px] text-[var(--k-ink-700)] dark:text-slate-300">
+        <p className="text-[13px] text-[var(--fg-body,#2d3a4a)] dark:text-slate-300">
           Esta acción afecta a 3 registros.
         </p>
       </Modal>
@@ -145,7 +145,7 @@ export const Asistente: Story = () => {
             : { label: 'Crear', onClick: m.hide }
         }
       >
-        <p className="text-[13px] text-[var(--k-ink-700)] dark:text-slate-300">
+        <p className="text-[13px] text-[var(--fg-body,#2d3a4a)] dark:text-slate-300">
           Paso {step + 1} de {steps.length}: {steps[step].label}
         </p>
       </Modal>
@@ -241,7 +241,7 @@ export const Anidado: Story = () => {
         primaryAction={{ label: 'Guardar' }}
       >
         <div className="flex flex-col gap-3">
-          <p className="text-[13px] text-[var(--k-ink-700)] dark:text-slate-300">
+          <p className="text-[13px] text-[var(--fg-body,#2d3a4a)] dark:text-slate-300">
             Los colores del tema se editan en un diálogo aparte.
           </p>
           <Button variant="secondary" onClick={inner.show}>
@@ -273,7 +273,7 @@ export const Composicion: Story = () => {
       <Modal isOpen={m.open} onClose={m.hide} size="lg">
         <Modal.Header eyebrow="Detalle de cambio" title="Auditoría" onClose={m.hide} />
         <Modal.Body>
-          <pre className="text-[12px] font-mono text-[var(--k-ink-700)] dark:text-slate-300">
+          <pre className="text-[12px] font-mono text-[var(--fg-body,#2d3a4a)] dark:text-slate-300">
 {`- estado: borrador
 + estado: contabilizada`}
           </pre>

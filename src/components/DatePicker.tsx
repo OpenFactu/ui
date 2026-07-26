@@ -97,7 +97,7 @@ function addMonths(y: number, m: number, delta: number): { y: number; m: number 
 const gridButton =
   'flex items-center justify-center rounded-[var(--k-radius-xs,2px)] text-[12px] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none';
 const navButton =
-  'p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-muted,#64748b)] hover:text-accent hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:pointer-events-none';
+  'p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-muted,#52606f)] hover:text-accent hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:pointer-events-none';
 
 export const DatePicker: React.FC<DatePickerProps> = ({
   value,
@@ -303,7 +303,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         <button
           type="button"
           onClick={() => setView('years')}
-          className="rounded-[var(--k-radius-xs,2px)] px-1 py-0.5 font-mono text-[12px] font-semibold text-[var(--fg-muted,#64748b)] hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800 hover:text-accent transition-colors"
+          className="rounded-[var(--k-radius-xs,2px)] px-1 py-0.5 font-mono text-[12px] font-semibold text-[var(--fg-muted,#52606f)] hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800 hover:text-accent transition-colors"
           aria-label={`Cambiar de año. Año actual: ${viewYear}`}
         >
           {viewYear}
@@ -327,7 +327,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         {weekdayLabels.map((day, i) => (
           <span
             key={i}
-            className="h-7 flex items-center justify-center font-mono text-[10px] font-semibold uppercase text-[var(--fg-subtle,#94a3b8)]"
+            className="h-7 flex items-center justify-center font-mono text-[10px] font-semibold uppercase text-[var(--fg-subtle,#657486)]"
           >
             {day}
           </span>
@@ -503,7 +503,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                   onChange(null);
                   close();
                 }}
-                className="text-[11px] font-medium text-[var(--fg-muted,#64748b)] hover:text-[var(--k-danger-fg)] hover:underline"
+                className="text-[11px] font-medium text-[var(--fg-muted,#52606f)] hover:text-[var(--k-danger-fg)] hover:underline"
               >
                 {t.clear}
               </button>
@@ -545,7 +545,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             className={cn(
               value
                 ? 'text-[var(--fg-default,#0a1628)] font-mono text-[12px]'
-                : 'text-[var(--fg-subtle,#94a3b8)]',
+                : 'text-[var(--fg-subtle,#657486)]',
             )}
           >
             {value ? formatDisplay(value) : placeholder}
@@ -556,20 +556,20 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                 role="button"
                 aria-label="Limpiar fecha"
                 tabIndex={0}
-                className="h-3.5 w-3.5 text-[var(--fg-subtle,#94a3b8)] hover:text-[var(--k-danger-fg)] transition-colors"
+                className="h-3.5 w-3.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   onChange(null);
                 }}
               />
             )}
-            <Calendar className="h-3.5 w-3.5 text-[var(--fg-subtle,#94a3b8)]" />
+            <Calendar className="h-3.5 w-3.5 text-[var(--fg-subtle,#657486)]" />
           </span>
         </button>
       </div>
       {error && <p className="text-[11px] font-medium text-[var(--k-danger-fg)] mt-0.5">{error}</p>}
       {helperText && !error && (
-        <p className="text-[11px] text-[var(--fg-subtle,#94a3b8)] mt-0.5">
+        <p className="text-[11px] text-[var(--fg-subtle,#657486)] mt-0.5">
           {helperText}
         </p>
       )}

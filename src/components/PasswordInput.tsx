@@ -90,7 +90,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
           onClick={handleGenerate}
           aria-label="Generar contraseña"
           title="Generar contraseña"
-          className="px-2 py-1.5 text-[var(--fg-subtle,#94a3b8)] hover:text-accent transition-colors"
+          className="px-2 py-1.5 text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors"
         >
           <RefreshCw className="h-3.5 w-3.5" />
         </button>
@@ -101,7 +101,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
           onClick={() => setVisible(!isVisible)}
           aria-label={isVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
           title={isVisible ? 'Ocultar' : 'Mostrar'}
-          className="px-2.5 py-1.5 text-[var(--fg-subtle,#94a3b8)] hover:text-accent transition-colors"
+          className="px-2.5 py-1.5 text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors"
         >
           {isVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
         </button>
@@ -137,7 +137,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
             ))}
           </div>
           {text && (
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--fg-subtle,#94a3b8)]">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--fg-subtle,#657486)]">
               {strengthLabels[Math.max(0, score - 1)]}
             </span>
           )}
@@ -153,7 +153,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
                 key={req.label}
                 className={cn(
                   'flex items-center gap-1.5 text-[11px]',
-                  met ? 'text-[var(--k-success-fg)]' : 'text-[var(--fg-subtle,#94a3b8)]',
+                  met ? 'text-[var(--k-success-fg)]' : 'text-[var(--fg-subtle,#657486)]',
                 )}
               >
                 {met ? <Check className="h-3 w-3 shrink-0" /> : <X className="h-3 w-3 shrink-0" />}

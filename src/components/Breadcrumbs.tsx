@@ -21,11 +21,11 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className }) =>
       {items.map((item, idx) => {
         const isLast = idx === items.length - 1;
         const interactive =
-          'text-[var(--fg-muted,#64748b)] hover:text-accent transition-colors';
+          'text-[var(--fg-muted,#52606f)] hover:text-accent transition-colors';
         return (
           <li key={idx} className="flex items-center gap-1.5">
             {idx > 0 && (
-              <ChevronRight className="h-3 w-3 text-[var(--fg-subtle,#94a3b8)] shrink-0" />
+              <ChevronRight className="h-3 w-3 text-[var(--fg-subtle,#657486)] shrink-0" />
             )}
             {isLast ? (
               <span
@@ -43,7 +43,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className }) =>
                 {item.label}
               </button>
             ) : (
-              <span className="text-[var(--fg-muted,#64748b)]">{item.label}</span>
+              <span className="text-[var(--fg-muted,#52606f)]">{item.label}</span>
             )}
           </li>
         );

@@ -45,7 +45,7 @@ export const IzquierdaGrande: Story = () => {
         Abrir panel izquierdo (lg)
       </Button>
       <Drawer open={open} onClose={() => setOpen(false)} side="left" size="lg" title="Navegación">
-        <p className="text-[13px] text-[var(--k-ink-700)] dark:text-slate-300">
+        <p className="text-[13px] text-[var(--fg-body,#2d3a4a)] dark:text-slate-300">
           Contenido del panel lateral izquierdo.
         </p>
       </Drawer>

@@ -370,7 +370,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
                   <div
                     key={`h-${row.label}`}
                     role="presentation"
-                    className="px-2.5 pt-2 pb-1 text-[9px] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#94a3b8)]"
+                    className="px-2.5 pt-2 pb-1 text-[9px] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]"
                   >
                     {row.label}
                   </div>
@@ -459,13 +459,13 @@ export function SearchableSelect(props: SearchableSelectProps) {
             })
           ) : (
             <div className="py-6 text-center">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--fg-subtle,#94a3b8)]">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
                 {loading ? 'Cargando…' : emptyMessage}
               </p>
             </div>
           )}
           {hasMore && rows.length > 0 && (
-            <div className="py-2 text-center text-[10px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#94a3b8)]">
+            <div className="py-2 text-center text-[10px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
               {loading ? 'Cargando más…' : 'Baja para ver más'}
             </div>
           )}

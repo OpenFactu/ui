@@ -238,21 +238,21 @@ export const Select: React.FC<SelectProps> = ({
             'truncate',
             selectedOption
               ? 'text-[var(--fg-default,#0a1628)]'
-              : 'text-[var(--fg-subtle,#94a3b8)]',
+              : 'text-[var(--fg-subtle,#657486)]',
           )}
         >
           {selectedOption ? selectedOption.label : placeholder}
         </span>
         <ChevronDown
           className={cn(
-            'h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle,#94a3b8)] transition-transform duration-200',
+            'h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle,#657486)] transition-transform duration-200',
             isOpen && 'rotate-180',
           )}
         />
       </button>
       {error && <p className="text-[11px] font-medium text-[#DC2626] mt-0.5">{error}</p>}
       {helperText && !error && (
-        <p className="text-[11px] text-[var(--fg-subtle,#94a3b8)] mt-0.5">
+        <p className="text-[11px] text-[var(--fg-subtle,#657486)] mt-0.5">
           {helperText}
         </p>
       )}

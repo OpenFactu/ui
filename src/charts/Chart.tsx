@@ -20,6 +20,7 @@ import { cn } from '../utils';
 import { EmptyState, type EmptyStateProps } from '../components/EmptyState';
 import { Skeleton } from '../components/Skeleton';
 import { useColorScheme } from '../hooks/useColorScheme';
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import { CHART_CHROME, seriesColor, type ChartRole } from './palette';
 
 export type ChartType = 'line' | 'area' | 'bar' | 'donut';
@@ -55,6 +56,11 @@ export interface ChartProps {
   emptyState?: EmptyStateProps;
   /** Añade debajo una tabla con los mismos datos. */
   tableView?: boolean;
+  /**
+   * Anima el dibujo al entrar. Default true, salvo que el sistema pida
+   * reducir el movimiento, en cuyo caso nunca anima.
+   */
+  animate?: boolean;
   className?: string;
   'aria-label'?: string;
 }
@@ -82,10 +88,13 @@ export const Chart: React.FC<ChartProps> = ({
   isLoading = false,
   emptyState,
   tableView = false,
+  animate = true,
   className,
   ...rest
 }) => {
   const mode = useColorScheme();
+  const reduceMotion = usePrefersReducedMotion();
+  const animated = animate && !reduceMotion;
   const showLegend = legend ?? series.length > 1;
   const formatValue = valueFormat ?? ((v: number) => String(v));
 
@@ -184,6 +193,7 @@ export const Chart: React.FC<ChartProps> = ({
           paddingAngle={2}
           stroke="var(--bg-card, #ffffff)"
           strokeWidth={2}
+          isAnimationActive={animated}
         >
           {data.map((row, i) => (
             <Cell
@@ -231,6 +241,7 @@ export const Chart: React.FC<ChartProps> = ({
             fill={colors[i]}
             stackId={s.stackId}
             radius={isVertical ? [0, 4, 4, 0] : [4, 4, 0, 0]}
+            isAnimationActive={animated}
           />
         ))}
       </BarChart>
@@ -257,6 +268,7 @@ export const Chart: React.FC<ChartProps> = ({
               strokeWidth={2}
               stackId={s.stackId}
               activeDot={{ r: 5 }}
+              isAnimationActive={animated}
             />
           ) : (
             <Line
@@ -268,6 +280,7 @@ export const Chart: React.FC<ChartProps> = ({
               strokeWidth={2}
               dot={{ r: 3, strokeWidth: 0, fill: colors[i] }}
               activeDot={{ r: 5 }}
+              isAnimationActive={animated}
             />
           ),
         )}
@@ -288,13 +301,13 @@ export const Chart: React.FC<ChartProps> = ({
           <caption className="sr-only">Datos del gráfico en forma de tabla</caption>
           <thead>
             <tr className="border-b border-[var(--border-default,#e2e8f0)]">
-              <th className="text-left py-1.5 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-subtle,#94a3b8)]">
+              <th className="text-left py-1.5 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-subtle,#657486)]">
                 {xKey}
               </th>
               {series.map((s) => (
                 <th
                   key={s.key}
-                  className="text-right py-1.5 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-subtle,#94a3b8)]"
+                  className="text-right py-1.5 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-subtle,#657486)]"
                 >
                   {s.label ?? s.key}
                 </th>

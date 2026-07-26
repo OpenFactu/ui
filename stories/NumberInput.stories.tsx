@@ -16,7 +16,7 @@ export const Basico: Story = () => {
         suffix="kg"
         helperText="Se puede teclear «2,5» o «2.5»."
       />
-      <p className="text-[11px] font-mono text-[var(--k-ink-500)] dark:text-slate-400">
+      <p className="text-[11px] font-mono text-[var(--fg-muted,#52606f)] dark:text-slate-400">
         unidades={String(qty)} · peso={String(weight)}
       </p>
     </div>
@@ -31,7 +31,7 @@ export const Moneda: Story = () => {
       <CurrencyInput label="Precio" value={price} onChange={setPrice} />
       <CurrencyInput label="En dólares, símbolo delante" currency="USD" symbolPosition="prefix" value={price} onChange={setPrice} />
       <PercentInput label="IVA" value={discount} onChange={setDiscount} />
-      <p className="text-[11px] font-mono text-[var(--k-ink-500)] dark:text-slate-400">
+      <p className="text-[11px] font-mono text-[var(--fg-muted,#52606f)] dark:text-slate-400">
         precio={String(price)} · iva={String(discount)}
       </p>
     </div>
@@ -50,7 +50,7 @@ export const Decimales: Story = () => {
         precision={2}
         helperText="Los estados intermedios («0,», «-») no se normalizan mientras escribes."
       />
-      <p className="text-[11px] font-mono text-[var(--k-ink-500)] dark:text-slate-400">
+      <p className="text-[11px] font-mono text-[var(--fg-muted,#52606f)] dark:text-slate-400">
         value={String(value)}
       </p>
     </div>

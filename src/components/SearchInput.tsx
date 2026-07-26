@@ -183,7 +183,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
           return (
             <React.Fragment key={item.id}>
               {item.group && first && (
-                <div className="px-2.5 pt-2 pb-1 text-[9px] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#94a3b8)]">
+                <div className="px-2.5 pt-2 pb-1 text-[9px] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
                   {item.group}
                 </div>
               )}
@@ -201,10 +201,10 @@ export const SearchInput: React.FC<SearchInputProps> = ({
                     : 'text-[var(--fg-body,#2d3a4a)]',
                 )}
               >
-                {item.icon ?? <Clock className="h-3 w-3 shrink-0 text-[var(--fg-subtle,#94a3b8)]" />}
+                {item.icon ?? <Clock className="h-3 w-3 shrink-0 text-[var(--fg-subtle,#657486)]" />}
                 <span className="flex-1 min-w-0 truncate">{item.label}</span>
                 {item.description && (
-                  <span className="shrink-0 text-[10px] text-[var(--fg-muted,#64748b)]">
+                  <span className="shrink-0 text-[10px] text-[var(--fg-muted,#52606f)]">
                     {item.description}
                   </span>
                 )}
@@ -256,7 +256,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   };
 
   const hint = shortcut && (showShortcutHint ?? true) && !value && (
-    <kbd className="pointer-events-none select-none rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--fg-subtle,#94a3b8)]">
+    <kbd className="pointer-events-none select-none rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--fg-subtle,#657486)]">
       {shortcutLabel(shortcut)}
     </kbd>
   );
@@ -272,7 +272,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
             type="button"
             onClick={clear}
             aria-label="Limpiar búsqueda"
-            className="p-1 text-[var(--fg-subtle,#94a3b8)] hover:text-[var(--k-danger-fg)] transition-colors"
+            className="p-1 text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors"
           >
             <X className="h-3.5 w-3.5" />
           </button>

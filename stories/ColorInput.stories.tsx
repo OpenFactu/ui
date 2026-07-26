@@ -7,7 +7,7 @@ export const Basico: Story = () => {
   return (
     <div className="max-w-xs flex flex-col gap-3">
       <ColorInput label="Color de acento" value={color} onChange={setColor} />
-      <p className="text-[11px] font-mono text-[var(--k-ink-500)] dark:text-slate-400">{color}</p>
+      <p className="text-[11px] font-mono text-[var(--fg-muted,#52606f)] dark:text-slate-400">{color}</p>
     </div>
   );
 };

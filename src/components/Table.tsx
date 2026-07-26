@@ -109,6 +109,17 @@ export interface TableProps<T> {
   responsive?: 'scroll' | 'cards';
   /** Ancho por debajo del cual se pasa a tarjetas. Default 640. */
   cardsBreakpoint?: number;
+  /**
+   * Fila de totales al pie, alineada con las columnas. Se le pasan las filas
+   * visibles y devuelve una celda por columna visible (o `null` para dejarla
+   * vacía). Evita tener que montar un bloque de totales aparte que se
+   * desalinea con la tabla.
+   */
+  summaryRow?: (rows: T[]) => Array<React.ReactNode>;
+  /** Etiqueta de la primera celda del pie. Default 'Total'. */
+  summaryLabel?: React.ReactNode;
+  /** Fila extra al final del cuerpo, para el «+ Añadir línea». */
+  appendRow?: React.ReactNode;
 }
 
 type SortDir = 'asc' | 'desc';
@@ -164,7 +175,7 @@ function ColumnToggle({
         aria-label="Mostrar u ocultar columnas"
         title="Columnas"
         onClick={() => setIsOpen(!isOpen)}
-        className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#94a3b8)] hover:text-accent hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800 transition-colors"
+        className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800 transition-colors"
       >
         <Columns3 className="h-3.5 w-3.5" />
       </button>
@@ -178,7 +189,7 @@ function ColumnToggle({
             )}
             style={style}
           >
-            <p className="px-2.5 pt-1.5 pb-1 text-[9px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#94a3b8)]">
+            <p className="px-2.5 pt-1.5 pb-1 text-[9px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
               Columnas
             </p>
             {entries.map((entry) => (
@@ -225,6 +236,9 @@ export function Table<T>({
   loadingLabel = 'Sincronizando…',
   responsive = 'scroll',
   cardsBreakpoint = 640,
+  summaryRow,
+  summaryLabel = 'Total',
+  appendRow,
 }: TableProps<T>) {
   // ── Visibilidad de columnas — controlada o interna ─────────────────────
   const [internalVisibility, setInternalVisibility] = React.useState<Record<string, boolean>>({});
@@ -466,7 +480,7 @@ export function Table<T>({
           ))
         ) : pagedData.length === 0 ? (
           <div className="rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] py-10 text-center">
-            <span className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#94a3b8)]">
+            <span className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
               {emptyMessage}
             </span>
           </div>
@@ -508,7 +522,7 @@ export function Table<T>({
                       {subtitleCols.map((col) => (
                         <div
                           key={colKeyOf(col)}
-                          className="text-[12px] text-[var(--fg-muted,#64748b)] truncate"
+                          className="text-[12px] text-[var(--fg-muted,#52606f)] truncate"
                         >
                           {render(col, item, rowIdx)}
                         </div>
@@ -525,7 +539,7 @@ export function Table<T>({
                           <button
                             type="button"
                             aria-label="Acciones de la fila"
-                            className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#94a3b8)] hover:text-accent transition-colors"
+                            className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors"
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </button>
@@ -539,7 +553,7 @@ export function Table<T>({
                   <dl className="grid grid-cols-2 gap-x-3 gap-y-1">
                     {bodyCols.map((col) => (
                       <div key={colKeyOf(col)} className="flex flex-col min-w-0">
-                        <dt className="text-[9px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#94a3b8)]">
+                        <dt className="text-[9px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
                           {col.header}
                         </dt>
                         <dd
@@ -655,7 +669,7 @@ export function Table<T>({
                     }
                     className={cn(
                       cellPad,
-                      'relative font-mono text-[10px] tracking-[1px] uppercase font-normal text-[var(--fg-subtle,#94a3b8)] whitespace-nowrap select-none',
+                      'relative font-mono text-[10px] tracking-[1px] uppercase font-normal text-[var(--fg-subtle,#657486)] whitespace-nowrap select-none',
                       col.align === 'center'
                         ? 'text-center'
                         : col.align === 'right'
@@ -781,7 +795,7 @@ export function Table<T>({
               <tr>
                 <td
                   colSpan={totalCols}
-                  className={cn(cellPad, 'py-10 text-center text-[var(--fg-subtle,#94a3b8)]')}
+                  className={cn(cellPad, 'py-10 text-center text-[var(--fg-subtle,#657486)]')}
                 >
                   <div className="flex flex-col items-center gap-3">
                     <div className="w-5 h-5 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
@@ -795,7 +809,7 @@ export function Table<T>({
               <tr>
                 <td
                   colSpan={totalCols}
-                  className={cn(cellPad, 'py-16 text-center text-[var(--fg-subtle,#94a3b8)]')}
+                  className={cn(cellPad, 'py-16 text-center text-[var(--fg-subtle,#657486)]')}
                 >
                   <div className="flex flex-col items-center gap-2">
                     <svg className="h-8 w-8 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -871,7 +885,7 @@ export function Table<T>({
                             aria-label={isExpanded ? 'Contraer fila' : 'Expandir fila'}
                             aria-expanded={isExpanded}
                             onClick={() => toggleExpanded(key)}
-                            className="p-0.5 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#94a3b8)] hover:text-accent transition-colors"
+                            className="p-0.5 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors"
                           >
                             <ChevronRight
                               className={cn(
@@ -928,7 +942,7 @@ export function Table<T>({
                               <button
                                 type="button"
                                 aria-label="Acciones de la fila"
-                                className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#94a3b8)] opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-within:opacity-100 hover:text-accent hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800 transition-all"
+                                className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-within:opacity-100 hover:text-accent hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800 transition-all"
                               >
                                 <MoreHorizontal className="h-3.5 w-3.5" />
                               </button>
@@ -948,7 +962,47 @@ export function Table<T>({
                 );
               })
             )}
+            {appendRow && !isLoading && (
+              <tr className="border-t border-[var(--border-subtle,#f1f5f9)]">
+                <td colSpan={totalCols} className="p-0">
+                  {appendRow}
+                </td>
+              </tr>
+            )}
           </tbody>
+          {summaryRow && !isLoading && pagedData.length > 0 && (
+            <tfoot className="border-t-2 border-[var(--border-default,#e2e8f0)]">
+              <tr>
+                {selectable && <td className={cellPad} />}
+                {hasExpand && <td className={cellPad} />}
+                {(() => {
+                  const cells = summaryRow(pagedData);
+                  return visibleColumns.map((col, i) => (
+                    <td
+                      key={colKeyOf(col)}
+                      className={cn(
+                        cellPad,
+                        'font-mono text-[12px] font-semibold text-[var(--fg-default,#0a1628)]',
+                        col.align === 'center'
+                          ? 'text-center'
+                          : col.align === 'right'
+                            ? 'text-right'
+                            : 'text-left',
+                      )}
+                    >
+                      {/* La primera celda lleva la etiqueta si no se ha dado contenido. */}
+                      {cells[i] ?? (i === 0 ? (
+                        <span className="font-sans text-[10px] uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
+                          {summaryLabel}
+                        </span>
+                      ) : null)}
+                    </td>
+                  ));
+                })()}
+                {hasTrailing && <td className={cellPad} />}
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
       {pagination && (!isLoading || loadingVariant === 'skeleton') && (

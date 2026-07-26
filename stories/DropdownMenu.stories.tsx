@@ -27,7 +27,7 @@ export const IconoYAlineacion: Story = () => (
     <DropdownMenu items={ITEMS}>
       <button
         type="button"
-        className="p-1.5 rounded-[2px] text-[var(--k-ink-500)] hover:text-accent hover:bg-[var(--k-line-2)] dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
+        className="p-1.5 rounded-[2px] text-[var(--fg-muted,#52606f)] hover:text-accent hover:bg-[var(--k-line-2)] dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
       >
         <MoreHorizontal className="h-4 w-4" />
       </button>

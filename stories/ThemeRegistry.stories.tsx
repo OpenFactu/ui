@@ -81,7 +81,7 @@ export const TemasDePlugin: Story = () => {
             <Plug className="h-3.5 w-3.5" /> Activar plugin «Acme»
           </Button>
         )}
-        <span className="text-[12px] text-[var(--fg-muted,#64748b)]">
+        <span className="text-[12px] text-[var(--fg-muted,#52606f)]">
           {presets.length} temas disponibles
         </span>
       </div>
@@ -166,7 +166,7 @@ export const Validacion: Story = () => {
               </span>
             </div>
             {r.issues.length === 0 ? (
-              <p className="text-[11px] text-[var(--fg-muted,#64748b)]">Sin observaciones.</p>
+              <p className="text-[11px] text-[var(--fg-muted,#52606f)]">Sin observaciones.</p>
             ) : (
               <ul className="flex flex-col gap-0.5">
                 {r.issues.map((issue, i) => (

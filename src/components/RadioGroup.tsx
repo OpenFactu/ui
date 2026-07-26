@@ -82,7 +82,7 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
                   {opt.label}
                 </span>
                 {opt.description && (
-                  <span className="text-[11px] text-[var(--fg-subtle,#94a3b8)] mt-0.5">
+                  <span className="text-[11px] text-[var(--fg-subtle,#657486)] mt-0.5">
                     {opt.description}
                   </span>
                 )}

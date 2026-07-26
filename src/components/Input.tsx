@@ -68,7 +68,7 @@ const STATUS_ICON: Record<InputStatus, React.ReactNode> = {
 };
 
 const ADDON_CLASSES =
-  'flex items-center shrink-0 text-[12px] text-[var(--fg-muted,#64748b)] bg-[var(--k-surface)] dark:bg-slate-800 border-[var(--border-default,#e2e8f0)]';
+  'flex items-center shrink-0 text-[12px] text-[var(--fg-muted,#52606f)] bg-[var(--k-surface)] dark:bg-slate-800 border-[var(--border-default,#e2e8f0)]';
 
 export const Input: React.FC<InputProps> = ({
   label,
@@ -120,14 +120,14 @@ export const Input: React.FC<InputProps> = ({
             'text-[11px] mt-0.5',
             effectiveStatus === 'success' && 'text-[var(--k-success-fg)]',
             effectiveStatus === 'warning' && 'text-[var(--k-warning-fg)]',
-            effectiveStatus === 'default' && 'text-[var(--fg-subtle,#94a3b8)]',
+            effectiveStatus === 'default' && 'text-[var(--fg-subtle,#657486)]',
           )}
         >
           {statusMessage}
         </p>
       )}
       {helperText && !message && (
-        <p className="text-[11px] text-[var(--fg-subtle,#94a3b8)] mt-0.5">
+        <p className="text-[11px] text-[var(--fg-subtle,#657486)] mt-0.5">
           {helperText}
         </p>
       )}
@@ -145,7 +145,7 @@ export const Input: React.FC<InputProps> = ({
         {labelNode}
         <div className="relative group">
           {leftIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-subtle,#94a3b8)] group-focus-within:text-accent transition-colors">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-subtle,#657486)] group-focus-within:text-accent transition-colors">
               {leftIcon}
             </div>
           )}
@@ -157,7 +157,7 @@ export const Input: React.FC<InputProps> = ({
               'flex w-full rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] text-[var(--fg-default,#0a1628)] transition-colors',
               SIZE_CLASSES[inputSize],
               'file:border-0 file:bg-transparent file:text-sm file:font-medium',
-              'placeholder:text-[var(--fg-subtle,#94a3b8)] focus-visible:outline-none focus-visible:border-accent',
+              'placeholder:text-[var(--fg-subtle,#657486)] focus-visible:outline-none focus-visible:border-accent',
               'disabled:cursor-not-allowed disabled:opacity-50',
               leftIcon && 'pl-10',
               rightIcon && 'pr-10',
@@ -170,7 +170,7 @@ export const Input: React.FC<InputProps> = ({
             {...props}
           />
           {rightIcon && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fg-subtle,#94a3b8)] group-focus-within:text-accent transition-colors">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fg-subtle,#657486)] group-focus-within:text-accent transition-colors">
               {rightIcon}
             </div>
           )}
@@ -205,7 +205,7 @@ export const Input: React.FC<InputProps> = ({
         )}
         <div className="relative flex-1 min-w-0 flex items-center">
           {leftIcon && (
-            <span className="absolute left-3 text-[var(--fg-subtle,#94a3b8)] group-focus-within:text-accent transition-colors">
+            <span className="absolute left-3 text-[var(--fg-subtle,#657486)] group-focus-within:text-accent transition-colors">
               {leftIcon}
             </span>
           )}
@@ -216,7 +216,7 @@ export const Input: React.FC<InputProps> = ({
             className={cn(
               'w-full min-w-0 bg-transparent border-0 text-[var(--fg-default,#0a1628)]',
               SIZE_CLASSES[inputSize],
-              'placeholder:text-[var(--fg-subtle,#94a3b8)] focus:outline-none focus-visible:outline-none',
+              'placeholder:text-[var(--fg-subtle,#657486)] focus:outline-none focus-visible:outline-none',
               'disabled:cursor-not-allowed',
               leftIcon && 'pl-10',
               className,
@@ -224,7 +224,7 @@ export const Input: React.FC<InputProps> = ({
             {...props}
           />
           {rightIcon && (
-            <span className="absolute right-3 text-[var(--fg-subtle,#94a3b8)]">
+            <span className="absolute right-3 text-[var(--fg-subtle,#657486)]">
               {rightIcon}
             </span>
           )}

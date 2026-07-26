@@ -173,7 +173,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         )}
       >
         <div className="flex items-center gap-2.5 px-4 border-b border-[var(--border-default,#e2e8f0)]">
-          <Search className="h-4 w-4 shrink-0 text-[var(--fg-subtle,#94a3b8)]" />
+          <Search className="h-4 w-4 shrink-0 text-[var(--fg-subtle,#657486)]" />
           <input
             ref={inputRef}
             value={term}
@@ -184,7 +184,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             aria-expanded
             aria-controls="command-palette-list"
             aria-activedescendant={`command-item-${activeIndex}`}
-            className="flex-1 min-w-0 h-12 bg-transparent text-[14px] outline-none text-[var(--fg-default,#0a1628)] placeholder:text-[var(--fg-subtle,#94a3b8)]"
+            className="flex-1 min-w-0 h-12 bg-transparent text-[14px] outline-none text-[var(--fg-default,#0a1628)] placeholder:text-[var(--fg-subtle,#657486)]"
           />
           {loading && (
             <span className="h-3.5 w-3.5 shrink-0 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
@@ -198,14 +198,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           className="max-h-[min(60vh,420px)] overflow-y-auto p-2"
         >
           {flat.length === 0 ? (
-            <p className="py-10 text-center text-[11px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#94a3b8)]">
+            <p className="py-10 text-center text-[11px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
               {loading ? 'Buscando…' : emptyMessage}
             </p>
           ) : (
             visible.map((section) => (
               <div key={section.key} className="mb-1 last:mb-0">
                 {section.label && (
-                  <div className="flex items-center gap-1.5 px-2 pt-2 pb-1 text-[9px] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#94a3b8)]">
+                  <div className="flex items-center gap-1.5 px-2 pt-2 pb-1 text-[9px] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
                     {section.icon}
                     {section.label}
                   </div>
@@ -243,7 +243,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                       <span className="flex-1 min-w-0 flex flex-col">
                         <span className="truncate text-[13px]">{item.label}</span>
                         {item.description && (
-                          <span className="truncate text-[11px] text-[var(--fg-muted,#64748b)]">
+                          <span className="truncate text-[11px] text-[var(--fg-muted,#52606f)]">
                             {item.description}
                           </span>
                         )}
@@ -253,7 +253,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                           {item.shortcut.map((k) => (
                             <kbd
                               key={k}
-                              className="rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--fg-subtle,#94a3b8)]"
+                              className="rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--fg-subtle,#657486)]"
                             >
                               {k}
                             </kbd>
@@ -272,7 +272,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         </div>
 
         {footerHint !== false && (
-          <div className="flex items-center gap-4 px-4 py-2 border-t border-[var(--border-default,#e2e8f0)] bg-[var(--bg-muted,#fafbfc)] text-[10px] text-[var(--fg-subtle,#94a3b8)]">
+          <div className="flex items-center gap-4 px-4 py-2 border-t border-[var(--border-default,#e2e8f0)] bg-[var(--bg-muted,#fafbfc)] text-[10px] text-[var(--fg-subtle,#657486)]">
             {footerHint ?? (
               <>
                 <span className="flex items-center gap-1">

@@ -46,7 +46,7 @@ export const Seleccionable: Story = () => {
   const [selected, setSelected] = React.useState<Set<string | number>>(new Set());
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-xs text-[var(--k-ink-500)] dark:text-slate-400">
+      <p className="text-xs text-[var(--fg-muted,#52606f)] dark:text-slate-400">
         Seleccionadas: {selected.size}
       </p>
       <Table
@@ -78,12 +78,12 @@ export const EstadosDeCarga: Story = () => {
       <button
         type="button"
         onClick={() => setLoading((v) => !v)}
-        className="self-start rounded-[2px] border border-[var(--k-line)] dark:border-slate-700 px-3 py-1.5 text-[12px] text-[var(--k-ink-700)] dark:text-slate-300 hover:border-accent transition-colors"
+        className="self-start rounded-[2px] border border-[var(--k-line)] dark:border-slate-700 px-3 py-1.5 text-[12px] text-[var(--fg-body,#2d3a4a)] dark:text-slate-300 hover:border-accent transition-colors"
       >
         {loading ? 'Mostrar datos' : 'Volver a cargar'}
       </button>
       <div>
-        <p className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--k-ink-400)] mb-2">
+        <p className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)] mb-2">
           esqueleto (por defecto) · con paginación
         </p>
         <Table
@@ -95,7 +95,7 @@ export const EstadosDeCarga: Story = () => {
         />
       </div>
       <div>
-        <p className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--k-ink-400)] mb-2">
+        <p className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)] mb-2">
           spinner (comportamiento anterior)
         </p>
         <Table
@@ -106,7 +106,7 @@ export const EstadosDeCarga: Story = () => {
         />
       </div>
       <div>
-        <p className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--k-ink-400)] mb-2">
+        <p className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)] mb-2">
           densidad compacta · 3 filas
         </p>
         <Table
@@ -181,7 +181,7 @@ export const FilasExpandibles: Story = () => (
     renderExpanded={(item) => (
       <div className="flex gap-8 text-[12px]">
         <div>
-          <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--k-ink-400)] mb-1">
+          <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--fg-subtle,#657486)] mb-1">
             Detalle
           </p>
           <p>
@@ -189,7 +189,7 @@ export const FilasExpandibles: Story = () => (
           </p>
         </div>
         <div>
-          <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--k-ink-400)] mb-1">
+          <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--fg-subtle,#657486)] mb-1">
             Importe
           </p>
           <p className="font-mono">{item.total.toFixed(2)} €</p>
@@ -203,7 +203,7 @@ export const ConAcciones: Story = () => {
   const [last, setLast] = React.useState('—');
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-xs text-[var(--k-ink-500)] dark:text-slate-400">
+      <p className="text-xs text-[var(--fg-muted,#52606f)] dark:text-slate-400">
         Hover para el botón ⋯ · click derecho en la fila para el menú contextual · última acción:{' '}
         <strong>{last}</strong>
       </p>
@@ -227,7 +227,7 @@ export const ConAcciones: Story = () => {
 
 export const ColumnasAvanzadas: Story = () => (
   <div className="flex flex-col gap-3">
-    <p className="text-xs text-[var(--k-ink-500)] dark:text-slate-400">
+    <p className="text-xs text-[var(--fg-muted,#52606f)] dark:text-slate-400">
       Primera columna fija (scroll horizontal) · bordes de cabecera arrastrables · botón de
       columnas arriba a la derecha.
     </p>
@@ -261,4 +261,39 @@ export const TodoJunto: Story = () => (
     ]}
     showColumnToggle
   />
+);
+
+/**
+ * En pantalla estrecha la tabla se convierte en tarjetas. El papel de cada
+ * columna se declara con `card`; lo que no se indica va al cuerpo con su
+ * etiqueta. Reduce el ancho de la ventana para verlo.
+ */
+export const Responsive: Story = () => (
+  <div className="flex flex-col gap-3">
+    <p className="text-[12px] text-[var(--fg-muted,#52606f)]">
+      Por debajo de 640px de ancho esta tabla pasa a tarjetas.
+    </p>
+    <Table
+      responsive="cards"
+      columns={[
+        { header: 'Número', accessor: 'number', primary: true, sortable: true, card: 'title' },
+        { header: 'Cliente', accessor: 'partner', sortable: true, card: 'subtitle' },
+        { header: 'Estado', cell: (i) => STATUS_BADGE[i.status], align: 'center', card: 'status' },
+        {
+          header: 'Total',
+          accessor: (i) => `${i.total.toFixed(2)} €`,
+          align: 'right',
+          sortable: true,
+          sortAccessor: (i) => i.total,
+          card: 'meta',
+        },
+      ]}
+      data={DATA.slice(0, 5)}
+      selectable
+      rowActions={(item) => [
+        { label: 'Editar', onClick: () => console.log('editar', item.number) },
+        { label: 'Eliminar', destructive: true, onClick: () => {} },
+      ]}
+    />
+  </div>
 );

@@ -9,7 +9,7 @@ import {
 } from '../src/components/Skeleton';
 
 const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <p className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--k-ink-400)] mb-2">
+  <p className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)] mb-2">
     {children}
   </p>
 );

@@ -85,7 +85,7 @@ export const PopupFrame: React.FC<PopupFrameProps> = ({
                   </h2>
                 )}
                 {subtitle && (
-                  <p className="text-sm text-[var(--fg-muted,#64748b)] mt-0.5">
+                  <p className="text-sm text-[var(--fg-muted,#52606f)] mt-0.5">
                     {subtitle}
                   </p>
                 )}
@@ -94,7 +94,7 @@ export const PopupFrame: React.FC<PopupFrameProps> = ({
             {dismissible && (
               <button
                 onClick={onClose}
-                className="p-1.5 text-[var(--fg-subtle,#94a3b8)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--k-surface)] dark:hover:bg-slate-800 rounded-[var(--k-radius-xs,2px)] transition-colors flex-shrink-0"
+                className="p-1.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--k-surface)] dark:hover:bg-slate-800 rounded-[var(--k-radius-xs,2px)] transition-colors flex-shrink-0"
               >
                 <X size={18} />
               </button>

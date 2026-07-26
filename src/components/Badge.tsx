@@ -21,7 +21,7 @@ export const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
       teal:
         'bg-[var(--k-accent-50)] text-[var(--k-accent-600)] border-[var(--k-accent-100)] dark:bg-accent/15 dark:text-[var(--k-accent-100)] dark:border-accent/30',
       neutral:
-        'bg-[var(--k-surface)] text-[var(--fg-muted,#64748b)] border-[var(--k-line)] dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+        'bg-[var(--k-surface)] text-[var(--fg-muted,#52606f)] border-[var(--k-line)] dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
     };
 
     return (

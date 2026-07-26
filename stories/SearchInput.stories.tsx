@@ -26,7 +26,7 @@ export const ConAtajoYDebounce: Story = () => {
         shortcut="mod+k"
         placeholder="Buscar en toda la aplicación…"
       />
-      <p className="text-[11px] font-mono text-[var(--k-ink-500)] dark:text-slate-400">
+      <p className="text-[11px] font-mono text-[var(--fg-muted,#52606f)] dark:text-slate-400">
         tecleado: «{value}» · consultado: «{applied}»
       </p>
     </div>
@@ -48,7 +48,7 @@ export const Variantes: Story = () => {
           <button
             type="button"
             aria-label="Escanear código"
-            className="p-1 text-[var(--k-ink-400)] hover:text-accent transition-colors"
+            className="p-1 text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors"
           >
             <ScanLine className="h-3.5 w-3.5" />
           </button>
@@ -86,7 +86,7 @@ export const ConSugerencias: Story = () => {
         onSubmit={(v) => console.log('buscar', v)}
         placeholder="Buscar documentos y clientes…"
       />
-      <p className="text-[11px] text-[var(--fg-muted,#64748b)]">
+      <p className="text-[11px] text-[var(--fg-muted,#52606f)]">
         Enfoca el campo vacío para ver el historial. Escribe para ver sugerencias agrupadas. Los
         chips de la izquierda son filtros y se quitan con la X.
       </p>
@@ -103,7 +103,7 @@ export const TokensDeBusqueda: Story = () => {
     <div className="max-w-lg flex flex-col gap-3">
       <SearchInput value={raw} onChange={setRaw} clearable />
       <div className="rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] p-3 text-[12px]">
-        <p className="font-mono text-[11px] text-[var(--fg-muted,#64748b)] mb-1.5">tokens</p>
+        <p className="font-mono text-[11px] text-[var(--fg-muted,#52606f)] mb-1.5">tokens</p>
         <div className="flex flex-wrap gap-1.5 mb-3">
           {parsed.tokens.length ? (
             parsed.tokens.map((t) => (
@@ -115,10 +115,10 @@ export const TokensDeBusqueda: Story = () => {
               </span>
             ))
           ) : (
-            <span className="text-[var(--fg-subtle,#94a3b8)]">ninguno</span>
+            <span className="text-[var(--fg-subtle,#657486)]">ninguno</span>
           )}
         </div>
-        <p className="font-mono text-[11px] text-[var(--fg-muted,#64748b)] mb-1">texto libre</p>
+        <p className="font-mono text-[11px] text-[var(--fg-muted,#52606f)] mb-1">texto libre</p>
         <p className="text-[var(--fg-body,#2d3a4a)]">{parsed.rest || '—'}</p>
       </div>
     </div>

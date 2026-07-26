@@ -110,7 +110,7 @@ export const Tabs: React.FC<TabsProps> = ({
                     underlineSizes[size],
                     isActive
                       ? 'border-accent text-accent'
-                      : 'border-transparent text-[var(--fg-muted,#64748b)] hover:text-[var(--fg-body,#2d3a4a)]',
+                      : 'border-transparent text-[var(--fg-muted,#52606f)] hover:text-[var(--fg-body,#2d3a4a)]',
                   )
                 : isSegmented
                 ? cn(
@@ -119,7 +119,7 @@ export const Tabs: React.FC<TabsProps> = ({
                     i > 0 && 'border-l border-[var(--border-default,#e2e8f0)]',
                     isActive
                       ? 'bg-accent text-[color:var(--color-accent-fg)]'
-                      : 'text-[var(--fg-muted,#64748b)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--bg-hover,#f1f5f9)]',
+                      : 'text-[var(--fg-muted,#52606f)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--bg-hover,#f1f5f9)]',
                   )
                 : cn(
                     'rounded-[var(--k-radius-xs,2px)]',

@@ -29,7 +29,7 @@ export const ClickDerecho: Story = () => {
             },
           ])
         }
-        className="flex items-center justify-center h-48 max-w-lg border border-dashed border-[var(--k-line)] dark:border-slate-700 rounded-[4px] text-[12px] text-[var(--k-ink-500)] dark:text-slate-400 select-none"
+        className="flex items-center justify-center h-48 max-w-lg border border-dashed border-[var(--k-line)] dark:border-slate-700 rounded-[4px] text-[12px] text-[var(--fg-muted,#52606f)] dark:text-slate-400 select-none"
       >
         Haz click derecho aquí
       </div>

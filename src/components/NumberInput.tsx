@@ -134,7 +134,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
         disabled={disabled}
         onClick={() => nudge(step)}
         aria-label="Aumentar"
-        className="flex items-center justify-center px-1.5 h-1/2 text-[var(--fg-subtle,#94a3b8)] hover:text-accent transition-colors disabled:opacity-40"
+        className="flex items-center justify-center px-1.5 h-1/2 text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors disabled:opacity-40"
       >
         <ChevronUp className="h-3 w-3" />
       </button>
@@ -144,7 +144,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
         disabled={disabled}
         onClick={() => nudge(-step)}
         aria-label="Disminuir"
-        className="flex items-center justify-center px-1.5 h-1/2 text-[var(--fg-subtle,#94a3b8)] hover:text-accent transition-colors disabled:opacity-40"
+        className="flex items-center justify-center px-1.5 h-1/2 text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors disabled:opacity-40"
       >
         <ChevronDown className="h-3 w-3" />
       </button>

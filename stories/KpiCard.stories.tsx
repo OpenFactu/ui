@@ -19,7 +19,7 @@ export const Carga: Story = () => {
       <button
         type="button"
         onClick={() => setLoading((v) => !v)}
-        className="self-start rounded-[2px] border border-[var(--k-line)] dark:border-slate-700 px-3 py-1.5 text-[12px] text-[var(--k-ink-700)] dark:text-slate-300 hover:border-accent transition-colors"
+        className="self-start rounded-[2px] border border-[var(--k-line)] dark:border-slate-700 px-3 py-1.5 text-[12px] text-[var(--fg-body,#2d3a4a)] dark:text-slate-300 hover:border-accent transition-colors"
       >
         {loading ? 'Mostrar datos' : 'Volver a cargar'}
       </button>

@@ -21,10 +21,10 @@ export const Lados: Story = () => (
 );
 
 export const EnIcono: Story = () => (
-  <div className="flex items-center gap-2 text-[13px] text-[var(--k-ink-700)] dark:text-slate-300">
+  <div className="flex items-center gap-2 text-[13px] text-[var(--fg-body,#2d3a4a)] dark:text-slate-300">
     Impuesto aplicado
     <Tooltip content="IVA general del 21% aplicado según la configuración fiscal de la empresa.">
-      <Info className="h-3.5 w-3.5 text-[var(--k-ink-400)] cursor-help" />
+      <Info className="h-3.5 w-3.5 text-[var(--fg-subtle,#657486)] cursor-help" />
     </Tooltip>
   </div>
 );

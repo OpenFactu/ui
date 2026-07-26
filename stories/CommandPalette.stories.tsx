@@ -51,7 +51,7 @@ export const Basica: Story = () => {
       <Button variant="secondary" onClick={palette.openPalette}>
         <SearchIcon className="h-3.5 w-3.5" /> Abrir (o pulsa Ctrl+K)
       </Button>
-      <p className="text-[12px] text-[var(--fg-muted,#64748b)]">
+      <p className="text-[12px] text-[var(--fg-muted,#52606f)]">
         Prueba a escribir «fac acme»: las palabras se buscan por separado, no hace falta teclearlas
         seguidas.
       </p>
@@ -87,7 +87,7 @@ export const BusquedaEnServidor: Story = () => {
       <Button variant="accent" onClick={palette.openPalette}>
         Abrir paleta
       </Button>
-      <p className="text-[11px] font-mono text-[var(--fg-muted,#64748b)]">consulta: «{term}»</p>
+      <p className="text-[11px] font-mono text-[var(--fg-muted,#52606f)]">consulta: «{term}»</p>
       <CommandPalette
         open={palette.open}
         onClose={palette.close}

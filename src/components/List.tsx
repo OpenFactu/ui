@@ -65,7 +65,7 @@ export interface ListSectionData {
 }
 
 const TONE_TEXT: Record<ListTone, string> = {
-  default: 'text-[var(--fg-muted,#64748b)]',
+  default: 'text-[var(--fg-muted,#52606f)]',
   accent: 'text-accent',
   success: 'text-[var(--k-success-fg)]',
   warning: 'text-[var(--k-warning-fg)]',
@@ -160,7 +160,7 @@ export const ListItem: React.FC<ListItemProps> = ({
       <span
         className={cn(
           'shrink-0 flex items-center justify-center',
-          isActive ? 'text-accent' : 'text-[var(--fg-subtle,#94a3b8)]',
+          isActive ? 'text-accent' : 'text-[var(--fg-subtle,#657486)]',
         )}
       >
         {icon}
@@ -203,12 +203,12 @@ export const ListItem: React.FC<ListItemProps> = ({
           {badge}
         </span>
         {subtitle && (
-          <span className="truncate text-[11px] text-[var(--fg-muted,#64748b)]">
+          <span className="truncate text-[11px] text-[var(--fg-muted,#52606f)]">
             {subtitle}
           </span>
         )}
         {description && (
-          <span className="text-[11px] text-[var(--fg-muted,#64748b)] line-clamp-2">
+          <span className="text-[11px] text-[var(--fg-muted,#52606f)] line-clamp-2">
             {description}
           </span>
         )}
@@ -216,7 +216,7 @@ export const ListItem: React.FC<ListItemProps> = ({
       </span>
       {trailing ??
         (meta ? (
-          <span className="shrink-0 text-[11px] font-mono text-[var(--fg-muted,#64748b)] tabular-nums">
+          <span className="shrink-0 text-[11px] font-mono text-[var(--fg-muted,#52606f)] tabular-nums">
             {meta}
           </span>
         ) : null)}
@@ -262,8 +262,8 @@ export const ListItem: React.FC<ListItemProps> = ({
           className={cn(
             'p-1 rounded-[var(--k-radius-xs,2px)] transition-colors disabled:opacity-40 disabled:pointer-events-none',
             action.tone === 'danger'
-              ? 'text-[var(--fg-subtle,#94a3b8)] hover:text-[var(--k-danger-fg)] hover:bg-rose-50 dark:hover:bg-rose-500/10'
-              : 'text-[var(--fg-subtle,#94a3b8)] hover:text-accent hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800',
+              ? 'text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] hover:bg-rose-50 dark:hover:bg-rose-500/10'
+              : 'text-[var(--fg-subtle,#657486)] hover:text-accent hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800',
           )}
         >
           {action.icon}
@@ -346,14 +346,14 @@ export const ListSection: React.FC<ListSectionProps> = ({
         {label}
       </span>
       {meta && (
-        <span className="text-[11px] font-mono text-[var(--fg-subtle,#94a3b8)]">
+        <span className="text-[11px] font-mono text-[var(--fg-subtle,#657486)]">
           {meta}
         </span>
       )}
       {collapsible && (
         <ChevronDown
           className={cn(
-            'h-3.5 w-3.5 text-[var(--fg-subtle,#94a3b8)] transition-transform',
+            'h-3.5 w-3.5 text-[var(--fg-subtle,#657486)] transition-transform',
             !open && '-rotate-90',
           )}
         />

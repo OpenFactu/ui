@@ -31,19 +31,19 @@ export const Subiendo: Story = () => (
 export const Variantes: Story = () => (
   <div className="flex flex-col gap-6 max-w-lg">
     <div>
-      <p className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--k-ink-400)] mb-2">
+      <p className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)] mb-2">
         inline
       </p>
       <FileDropzone variant="inline" onFiles={() => {}} label="Adjuntar documento" />
     </div>
     <div>
-      <p className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--k-ink-400)] mb-2">
+      <p className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)] mb-2">
         button
       </p>
       <FileDropzone variant="button" onFiles={() => {}} label="Subir archivo" />
     </div>
     <div>
-      <p className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--k-ink-400)] mb-2">
+      <p className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)] mb-2">
         con error
       </p>
       <FileDropzone onFiles={() => {}} error="El archivo supera el tamaño permitido." />

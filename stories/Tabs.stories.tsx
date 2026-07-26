@@ -25,7 +25,7 @@ export const Underline: Story = () => {
   return (
     <div className="flex flex-col gap-4 max-w-2xl">
       <Tabs items={ITEMS} value={tab} onChange={setTab} />
-      <p className="text-[13px] text-[var(--k-ink-700)] dark:text-slate-300">
+      <p className="text-[13px] text-[var(--fg-body,#2d3a4a)] dark:text-slate-300">
         Contenido de <strong>{tab}</strong>
       </p>
     </div>
@@ -53,25 +53,25 @@ export const Variantes: Story = () => {
   return (
     <div className="flex flex-col gap-8 max-w-2xl">
       <div>
-        <p className="text-[11px] font-mono uppercase tracking-wider text-[var(--k-ink-400)] mb-2">
+        <p className="text-[11px] font-mono uppercase tracking-wider text-[var(--fg-subtle,#657486)] mb-2">
           size sm
         </p>
         <Tabs items={ITEMS} value={a} onChange={setA} size="sm" />
       </div>
       <div>
-        <p className="text-[11px] font-mono uppercase tracking-wider text-[var(--k-ink-400)] mb-2">
+        <p className="text-[11px] font-mono uppercase tracking-wider text-[var(--fg-subtle,#657486)] mb-2">
           fullWidth
         </p>
         <Tabs items={ITEMS.slice(0, 3)} value={b} onChange={setB} fullWidth />
       </div>
       <div>
-        <p className="text-[11px] font-mono uppercase tracking-wider text-[var(--k-ink-400)] mb-2">
+        <p className="text-[11px] font-mono uppercase tracking-wider text-[var(--fg-subtle,#657486)] mb-2">
           pill sm
         </p>
         <Tabs items={ITEMS.slice(0, 3)} value={c} onChange={setC} variant="pill" size="sm" />
       </div>
       <div>
-        <p className="text-[11px] font-mono uppercase tracking-wider text-[var(--k-ink-400)] mb-2">
+        <p className="text-[11px] font-mono uppercase tracking-wider text-[var(--fg-subtle,#657486)] mb-2">
           scrollable (12 tabs)
         </p>
         <Tabs items={many} value={d} onChange={setD} scrollable size="sm" />

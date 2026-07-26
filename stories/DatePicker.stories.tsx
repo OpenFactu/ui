@@ -7,7 +7,7 @@ export const Basico: Story = () => {
   return (
     <div className="max-w-xs">
       <DatePicker label="Fecha de factura" value={value} onChange={setValue} clearable />
-      <p className="mt-3 text-[11px] font-mono text-[var(--k-ink-500)] dark:text-slate-400">
+      <p className="mt-3 text-[11px] font-mono text-[var(--fg-muted,#52606f)] dark:text-slate-400">
         value: {value ?? 'null'}
       </p>
     </div>
@@ -48,7 +48,7 @@ export const NavegacionRapida: Story = () => {
   return (
     <div className="max-w-xs flex flex-col gap-3">
       <DatePicker label="Fecha de nacimiento" value={value} onChange={setValue} />
-      <p className="text-[11px] text-[var(--k-ink-500)] dark:text-slate-400">
+      <p className="text-[11px] text-[var(--fg-muted,#52606f)] dark:text-slate-400">
         Abre el calendario y pulsa sobre «2026» para saltar de década.
       </p>
     </div>

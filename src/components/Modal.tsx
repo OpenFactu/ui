@@ -220,7 +220,7 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
           )}
           <div className="min-w-0">
             {eyebrow && (
-              <p className="text-[10px] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#94a3b8)] mb-0.5">
+              <p className="text-[10px] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)] mb-0.5">
                 {eyebrow}
               </p>
             )}
@@ -233,7 +233,7 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
               </h2>
             )}
             {subtitle && (
-              <p className="text-[12px] text-[var(--fg-subtle,#94a3b8)] mt-0.5 leading-relaxed">
+              <p className="text-[12px] text-[var(--fg-subtle,#657486)] mt-0.5 leading-relaxed">
                 {subtitle}
               </p>
             )}
@@ -247,7 +247,7 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Cerrar"
-            className="p-1.5 text-[var(--fg-subtle,#94a3b8)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--k-surface)] dark:hover:bg-slate-800 rounded-[var(--k-radius-xs,2px)] transition-colors"
+            className="p-1.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--k-surface)] dark:hover:bg-slate-800 rounded-[var(--k-radius-xs,2px)] transition-colors"
           >
             <X size={18} />
           </button>
@@ -422,7 +422,7 @@ const ModalRoot: React.FC<ModalProps> = ({
                       ? 'text-accent font-medium'
                       : done
                         ? 'text-[var(--fg-body,#2d3a4a)]'
-                        : 'text-[var(--fg-subtle,#94a3b8)]',
+                        : 'text-[var(--fg-subtle,#657486)]',
                   )}
                 >
                   <span
@@ -432,7 +432,7 @@ const ModalRoot: React.FC<ModalProps> = ({
                         ? 'bg-accent text-[color:var(--color-accent-fg)]'
                         : done
                           ? 'bg-accent/15 text-accent'
-                          : 'bg-[var(--k-line-2)] dark:bg-slate-800 text-[var(--fg-subtle,#94a3b8)]',
+                          : 'bg-[var(--k-line-2)] dark:bg-slate-800 text-[var(--fg-subtle,#657486)]',
                     )}
                   >
                     {done ? '✓' : i + 1}
@@ -457,7 +457,7 @@ const ModalRoot: React.FC<ModalProps> = ({
         )}
       >
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-12 text-[var(--fg-subtle,#94a3b8)]">
+          <div className="flex flex-col items-center justify-center gap-3 py-12 text-[var(--fg-subtle,#657486)]">
             <span className="h-6 w-6 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
             <span className="font-mono text-[11px] tracking-wider uppercase">{loadingLabel}</span>
           </div>

@@ -99,8 +99,10 @@ export const DEFAULT_THEME: ResolvedTheme = {
     bgHover: '#f1f5f9',
     fgDefault: '#0a1628',
     fgBody: '#2d3a4a',
-    fgMuted: '#64748b',
-    fgSubtle: '#94a3b8',
+    // Medidos sobre blanco: 6.4:1 y 4.6:1. La paleta original se quedaba en
+    // 2,5:1, por debajo del mínimo legible para texto pequeño.
+    fgMuted: '#52606f',
+    fgSubtle: '#657486',
     borderDefault: '#e2e8f0',
     borderSubtle: '#f1f5f9',
     borderStrong: '#cbd5e1',

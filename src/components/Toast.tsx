@@ -50,7 +50,7 @@ export const Toast: React.FC<ToastProps> = ({ id, message, type = 'info', onClos
       </div>
       <button
         onClick={() => onClose(id)}
-        className="flex-shrink-0 rounded-[var(--k-radius-xs,2px)] p-1.5 text-[var(--fg-subtle,#94a3b8)] hover:bg-[var(--k-surface)] dark:hover:bg-slate-800 hover:text-[var(--fg-default,#0a1628)] transition-colors"
+        className="flex-shrink-0 rounded-[var(--k-radius-xs,2px)] p-1.5 text-[var(--fg-subtle,#657486)] hover:bg-[var(--k-surface)] dark:hover:bg-slate-800 hover:text-[var(--fg-default,#0a1628)] transition-colors"
       >
         <X size={14} />
       </button>

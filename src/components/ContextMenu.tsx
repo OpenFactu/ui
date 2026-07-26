@@ -73,7 +73,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose }
             onSelect={() => {}}
             active={openSub === i}
             trailing={
-              <ChevronRight className="h-3 w-3 text-[var(--fg-subtle,#94a3b8)]" />
+              <ChevronRight className="h-3 w-3 text-[var(--fg-subtle,#657486)]" />
             }
           />
           {openSub === i && (

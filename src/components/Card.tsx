@@ -72,7 +72,7 @@ export const Card = ({
                   </h3>
                 )}
                 {subtitle && (
-                  <p className="text-[12px] font-sans text-[var(--fg-subtle,#94a3b8)] mt-0.5 leading-relaxed">
+                  <p className="text-[12px] font-sans text-[var(--fg-subtle,#657486)] mt-0.5 leading-relaxed">
                     {subtitle}
                   </p>
                 )}

@@ -22,7 +22,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       danger:
         'bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA] hover:bg-[#FEE2E2] dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30',
       ghost:
-        'bg-[var(--k-surface)] text-[var(--fg-muted,#64748b)] border border-[var(--k-line)] hover:text-[var(--fg-default,#0a1628)] hover:border-[var(--k-ink-400)] dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+        'bg-[var(--k-surface)] text-[var(--fg-muted,#52606f)] border border-[var(--k-line)] hover:text-[var(--fg-default,#0a1628)] hover:border-[var(--k-ink-400)] dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
       outline:
         'bg-transparent border border-[var(--k-line)] text-[var(--fg-default,#0a1628)] hover:border-[var(--k-ink-400)] dark:text-slate-100 dark:border-slate-700',
     };

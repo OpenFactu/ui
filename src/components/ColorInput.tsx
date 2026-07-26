@@ -103,7 +103,7 @@ export const ColorInput: React.FC<ColorInputProps> = ({
               error && 'border-[var(--k-danger)]',
             )}
           >
-            <span className="pl-2 font-mono text-[12px] text-[var(--fg-subtle,#94a3b8)] select-none">#</span>
+            <span className="pl-2 font-mono text-[12px] text-[var(--fg-subtle,#657486)] select-none">#</span>
             <input
               type="text"
               inputMode="text"
@@ -128,7 +128,7 @@ export const ColorInput: React.FC<ColorInputProps> = ({
                 type="button"
                 onClick={() => onChange('')}
                 aria-label="Quitar color"
-                className="px-1.5 text-[var(--fg-subtle,#94a3b8)] hover:text-[var(--k-danger-fg)] transition-colors"
+                className="px-1.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors"
               >
                 <X className="h-3 w-3" />
               </button>
@@ -164,7 +164,7 @@ export const ColorInput: React.FC<ColorInputProps> = ({
 
       {error && <p className="text-[11px] font-medium text-[var(--k-danger-fg)]">{error}</p>}
       {helperText && !error && (
-        <p className="text-[11px] text-[var(--fg-subtle,#94a3b8)]">{helperText}</p>
+        <p className="text-[11px] text-[var(--fg-subtle,#657486)]">{helperText}</p>
       )}
     </div>
   );

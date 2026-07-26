@@ -19,7 +19,7 @@ import { Progress } from '../src/components/Progress';
 const Frame: React.FC<{ children: React.ReactNode; title?: string }> = ({ children, title }) => (
   <div className="max-w-xl">
     {title && (
-      <p className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--k-ink-400)] mb-2">
+      <p className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)] mb-2">
         {title}
       </p>
     )}
@@ -186,7 +186,7 @@ export const CargaYVacio: Story = () => {
       <button
         type="button"
         onClick={() => setLoading((v) => !v)}
-        className="self-start rounded-[2px] border border-[var(--k-line)] dark:border-slate-700 px-3 py-1.5 text-[12px] text-[var(--k-ink-700)] dark:text-slate-300 hover:border-accent transition-colors"
+        className="self-start rounded-[2px] border border-[var(--k-line)] dark:border-slate-700 px-3 py-1.5 text-[12px] text-[var(--fg-body,#2d3a4a)] dark:text-slate-300 hover:border-accent transition-colors"
       >
         {loading ? 'Terminar carga' : 'Volver a cargar'}
       </button>

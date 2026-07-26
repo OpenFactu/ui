@@ -74,18 +74,18 @@ export const KpiCard: React.FC<KpiCardProps> = ({
       )}
     >
       {icon && (
-        <span className="absolute top-6 right-6 text-[var(--fg-subtle,#94a3b8)]">
+        <span className="absolute top-6 right-6 text-[var(--fg-subtle,#657486)]">
           {icon}
         </span>
       )}
-      <div className="font-mono text-[10px] tracking-[1.5px] uppercase text-[var(--fg-subtle,#94a3b8)] mb-2.5">
+      <div className="font-mono text-[10px] tracking-[1.5px] uppercase text-[var(--fg-subtle,#657486)] mb-2.5">
         {label}
       </div>
       <div className="font-display text-[32px] font-bold leading-none text-[var(--fg-default,#0a1628)]">
         {value}
       </div>
       {sub && (
-        <div className="text-[12px] text-[var(--fg-subtle,#94a3b8)] mt-1.5">
+        <div className="text-[12px] text-[var(--fg-subtle,#657486)] mt-1.5">
           {sub}
         </div>
       )}
@@ -95,7 +95,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({
             'inline-flex items-center gap-1 text-[11px] font-mono font-medium mt-3',
             trend.dir === 'up' && 'text-[var(--k-success-fg)]',
             trend.dir === 'down' && 'text-[var(--k-danger-fg)]',
-            trend.dir === 'flat' && 'text-[var(--fg-subtle,#94a3b8)]',
+            trend.dir === 'flat' && 'text-[var(--fg-subtle,#657486)]',
           )}
         >
           <span>

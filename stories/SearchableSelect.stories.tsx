@@ -26,7 +26,7 @@ export const ConScroll: Story = () => {
   const [value, setValue] = React.useState('');
   return (
     <div className="flex flex-col gap-4" style={{ minHeight: '250vh' }}>
-      <p className="text-xs text-[var(--k-ink-500)] dark:text-slate-400">
+      <p className="text-xs text-[var(--fg-muted,#52606f)] dark:text-slate-400">
         Abre el select y haz scroll: el dropdown debe quedarse anclado al trigger.
       </p>
       <div style={{ marginTop: '60vh' }} className="max-w-sm">
@@ -56,7 +56,7 @@ export const Multiple: Story = () => {
   return (
     <div className="max-w-sm flex flex-col gap-3">
       <SearchableSelect multiple options={OPTIONS} value={values} onChange={setValues} clearable />
-      <p className="text-[11px] font-mono text-[var(--k-ink-500)] dark:text-slate-400">
+      <p className="text-[11px] font-mono text-[var(--fg-muted,#52606f)] dark:text-slate-400">
         value: [{values.join(', ')}]
       </p>
     </div>
@@ -161,7 +161,7 @@ export const Creable: Story = () => {
           return nuevo.value;
         }}
       />
-      <p className="text-[11px] font-mono text-[var(--fg-muted,#64748b)]">
+      <p className="text-[11px] font-mono text-[var(--fg-muted,#52606f)]">
         {opciones.length} etiquetas · seleccionada: {value || '—'}
       </p>
     </div>
@@ -195,7 +195,7 @@ export const CargaIncremental: Story = () => {
           }, 350);
         }}
       />
-      <p className="text-[11px] font-mono text-[var(--fg-muted,#64748b)]">
+      <p className="text-[11px] font-mono text-[var(--fg-muted,#52606f)]">
         {visibles} de {todos.length} cargados
       </p>
     </div>

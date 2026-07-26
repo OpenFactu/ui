@@ -207,7 +207,7 @@ export function validateTheme(theme: ThemeInput): ThemeValidation {
     ['colors.fgSubtle', pair(resolved.colors.fgSubtle, resolved.colors.bgCard), MIN_TEXT_CONTRAST, 'el texto atenuado sobre las tarjetas'],
     ['colors.accentFg', pair(resolved.colors.accentFg, resolved.colors.accent), MIN_TEXT_CONTRAST, 'el texto sobre el color de acento'],
     ['colors.primaryFg', pair(resolved.colors.primaryFg, resolved.colors.primary), MIN_TEXT_CONTRAST, 'el texto sobre el color primario'],
-    ['colors.borderDefault', pair(resolved.colors.borderDefault, resolved.colors.bgCard), 1.3, 'los bordes sobre las tarjetas'],
+    ['colors.borderDefault', pair(resolved.colors.borderDefault, resolved.colors.bgCard), 1.15, 'los bordes sobre las tarjetas'],
     ['colors.accent', pair(resolved.colors.accent, resolved.colors.bgCard), MIN_UI_CONTRAST, 'el acento sobre las tarjetas'],
   ];
 

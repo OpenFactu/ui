@@ -171,11 +171,11 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
           key={`${file.name}-${i}`}
           className="flex items-center gap-2 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] px-2 py-1.5 text-[12px]"
         >
-          <FileIcon className="h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle,#94a3b8)]" />
+          <FileIcon className="h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle,#657486)]" />
           <span className="flex-1 truncate text-[var(--fg-body,#2d3a4a)]">
             {file.name}
           </span>
-          <span className="shrink-0 font-mono text-[10px] text-[var(--fg-subtle,#94a3b8)]">
+          <span className="shrink-0 font-mono text-[10px] text-[var(--fg-subtle,#657486)]">
             {formatFileSize(file.size)}
           </span>
           {onRemoveFile && (
@@ -183,7 +183,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
               type="button"
               onClick={() => onRemoveFile(i, file)}
               aria-label={`Quitar ${file.name}`}
-              className="shrink-0 p-0.5 text-[var(--fg-subtle,#94a3b8)] hover:text-[var(--k-danger-fg)] transition-colors"
+              className="shrink-0 p-0.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors"
             >
               <X className="h-3 w-3" />
             </button>
@@ -244,7 +244,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
       >
         {children ?? (
           <>
-            <span className="text-[var(--fg-subtle,#94a3b8)]">
+            <span className="text-[var(--fg-subtle,#657486)]">
               {icon ?? <Upload className={variant === 'area' ? 'h-7 w-7' : 'h-4 w-4'} />}
             </span>
             <span className="flex flex-col gap-0.5">
@@ -252,7 +252,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
                 {isUploading ? uploadingLabel : label}
               </span>
               {hint && (
-                <span className="text-[11px] text-[var(--fg-subtle,#94a3b8)]">
+                <span className="text-[11px] text-[var(--fg-subtle,#657486)]">
                   {hint}
                 </span>
               )}

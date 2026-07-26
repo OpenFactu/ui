@@ -43,7 +43,7 @@ export function FilterBar({
       {/* Global Search */}
       <div className="relative flex-none w-full md:w-96">
         <Search
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-subtle,#94a3b8)]"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-subtle,#657486)]"
           size={14}
         />
         <input
@@ -91,7 +91,7 @@ export function FilterBar({
 
             {filter.type === 'select' && (
               <Filter
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--fg-subtle,#94a3b8)] pointer-events-none"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--fg-subtle,#657486)] pointer-events-none"
                 size={12}
               />
             )}

@@ -34,7 +34,7 @@ export const Textarea: React.FC<TextareaProps> = ({
         id={textareaId}
         className={cn(
           'flex w-full min-h-[80px] rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] text-[13px] text-[var(--fg-default,#0a1628)] px-3 py-2 transition-colors resize-y',
-          'placeholder:text-[var(--fg-subtle,#94a3b8)] focus-visible:outline-none focus-visible:border-accent',
+          'placeholder:text-[var(--fg-subtle,#657486)] focus-visible:outline-none focus-visible:border-accent',
           'disabled:cursor-not-allowed disabled:opacity-50',
           error && 'border-[#DC2626] focus-visible:border-[#DC2626]',
           className,
@@ -43,7 +43,7 @@ export const Textarea: React.FC<TextareaProps> = ({
       />
       {error && <p className="text-[11px] font-medium text-[#DC2626] mt-0.5">{error}</p>}
       {helperText && !error && (
-        <p className="text-[11px] text-[var(--fg-subtle,#94a3b8)] mt-0.5">
+        <p className="text-[11px] text-[var(--fg-subtle,#657486)] mt-0.5">
           {helperText}
         </p>
       )}

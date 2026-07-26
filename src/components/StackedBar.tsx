@@ -99,7 +99,7 @@ export const StackedBar: React.FC<StackedBarProps> = ({
                   style={{ background: segment.color ?? DEFAULT_COLORS[i % DEFAULT_COLORS.length] }}
                 />
                 <span className="text-[var(--fg-body,#2d3a4a)]">{segment.label ?? segment.key}</span>
-                <span className="font-mono text-[var(--fg-muted,#64748b)] tabular-nums">
+                <span className="font-mono text-[var(--fg-muted,#52606f)] tabular-nums">
                   {valueFormat(segment.value)} · {pct.toFixed(1)}%
                 </span>
               </li>

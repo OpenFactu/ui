@@ -20,7 +20,7 @@ export const Basico: Story = () => {
           { value: 'all', label: 'Histórico' },
         ]}
       />
-      <p className="text-[11px] font-mono text-[var(--fg-muted,#64748b)]">scope = {scope}</p>
+      <p className="text-[11px] font-mono text-[var(--fg-muted,#52606f)]">scope = {scope}</p>
     </div>
   );
 };
@@ -32,7 +32,7 @@ export const Variantes: Story = () => {
   const [d, setD] = React.useState('list');
 
   const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <p className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#94a3b8)] mb-2">
+    <p className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)] mb-2">
       {children}
     </p>
   );
@@ -124,7 +124,7 @@ export const FrenteATabs: Story = () => {
         <p className="text-[12px] font-medium text-[var(--fg-body,#2d3a4a)] mb-1">
           SegmentedControl — filtra los datos que se muestran
         </p>
-        <p className="text-[11px] text-[var(--fg-muted,#64748b)] mb-2 font-mono">role="radiogroup"</p>
+        <p className="text-[11px] text-[var(--fg-muted,#52606f)] mb-2 font-mono">role="radiogroup"</p>
         <SegmentedControl
           size="sm"
           uppercase
@@ -141,7 +141,7 @@ export const FrenteATabs: Story = () => {
         <p className="text-[12px] font-medium text-[var(--fg-body,#2d3a4a)] mb-1">
           Tabs variant="segmented" — intercambia paneles
         </p>
-        <p className="text-[11px] text-[var(--fg-muted,#64748b)] mb-2 font-mono">role="tablist"</p>
+        <p className="text-[11px] text-[var(--fg-muted,#52606f)] mb-2 font-mono">role="tablist"</p>
         <Tabs
           variant="segmented"
           value={vista}

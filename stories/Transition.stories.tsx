@@ -13,7 +13,7 @@ export const Presets: Story = () => {
       <Switch checked={show} onChange={setShow} label="show" />
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <p className="text-[11px] font-mono uppercase tracking-wider text-[var(--k-ink-400)] mb-2">
+          <p className="text-[11px] font-mono uppercase tracking-wider text-[var(--fg-subtle,#657486)] mb-2">
             Fade
           </p>
           <Transition show={show}>
@@ -21,7 +21,7 @@ export const Presets: Story = () => {
           </Transition>
         </div>
         <div>
-          <p className="text-[11px] font-mono uppercase tracking-wider text-[var(--k-ink-400)] mb-2">
+          <p className="text-[11px] font-mono uppercase tracking-wider text-[var(--fg-subtle,#657486)] mb-2">
             Slide up
           </p>
           <Transition show={show} from="opacity-0 translate-y-3" to="opacity-100 translate-y-0">
@@ -29,7 +29,7 @@ export const Presets: Story = () => {
           </Transition>
         </div>
         <div>
-          <p className="text-[11px] font-mono uppercase tracking-wider text-[var(--k-ink-400)] mb-2">
+          <p className="text-[11px] font-mono uppercase tracking-wider text-[var(--fg-subtle,#657486)] mb-2">
             Scale
           </p>
           <Transition
@@ -42,7 +42,7 @@ export const Presets: Story = () => {
           </Transition>
         </div>
         <div>
-          <p className="text-[11px] font-mono uppercase tracking-wider text-[var(--k-ink-400)] mb-2">
+          <p className="text-[11px] font-mono uppercase tracking-wider text-[var(--fg-subtle,#657486)] mb-2">
             Slide right
           </p>
           <Transition

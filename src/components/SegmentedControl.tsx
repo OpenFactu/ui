@@ -138,14 +138,14 @@ export function SegmentedControl<T extends string = string>({
                     'rounded-[var(--k-radius-sm,4px)]',
                     isActive
                       ? 'bg-[var(--bg-card,#ffffff)] text-[var(--fg-default,#0a1628)] shadow-sm'
-                      : 'text-[var(--fg-muted,#64748b)] hover:text-[var(--fg-default,#0a1628)]',
+                      : 'text-[var(--fg-muted,#52606f)] hover:text-[var(--fg-default,#0a1628)]',
                   )
                 : cn(
                     // Separador entre segmentos; el contenedor recorta los extremos.
                     i > 0 && 'border-l border-[var(--border-default,#e2e8f0)]',
                     isActive
                       ? 'bg-accent text-[color:var(--color-accent-fg)]'
-                      : 'text-[var(--fg-muted,#64748b)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--bg-hover,#f1f5f9)]',
+                      : 'text-[var(--fg-muted,#52606f)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--bg-hover,#f1f5f9)]',
                   ),
             )}
           >
