@@ -24,10 +24,10 @@ export const Toast: React.FC<ToastProps> = ({ id, message, type = 'info', onClos
   };
 
   const borderClasses = {
-    success: 'border-[#BBF7D0] dark:border-emerald-500/30 bg-white dark:bg-slate-900',
-    error: 'border-[#FECACA] dark:border-rose-500/30 bg-white dark:bg-slate-900',
-    info: 'border-[#BFDBFE] dark:border-blue-500/30 bg-white dark:bg-slate-900',
-    warning: 'border-[#FDE68A] dark:border-amber-500/30 bg-white dark:bg-slate-900',
+    success: 'border-[#BBF7D0] dark:border-emerald-500/30 bg-[var(--bg-card,#ffffff)]',
+    error: 'border-[#FECACA] dark:border-rose-500/30 bg-[var(--bg-card,#ffffff)]',
+    info: 'border-[#BFDBFE] dark:border-blue-500/30 bg-[var(--bg-card,#ffffff)]',
+    warning: 'border-[#FDE68A] dark:border-amber-500/30 bg-[var(--bg-card,#ffffff)]',
   };
 
   React.useEffect(() => {
@@ -38,19 +38,19 @@ export const Toast: React.FC<ToastProps> = ({ id, message, type = 'info', onClos
   return (
     <div
       className={cn(
-        'pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-[4px] border p-3 shadow-lg transition-all animate-in slide-in-from-right-8 fade-in-0 duration-300',
+        'pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-[var(--k-radius-sm,4px)] border p-3 shadow-lg transition-all animate-in slide-in-from-right-8 fade-in-0 duration-300',
         borderClasses[type],
       )}
     >
-      <div className="flex-shrink-0 w-8 h-8 rounded-[2px] bg-[var(--k-surface)] dark:bg-slate-800 flex items-center justify-center border border-[var(--k-line)] dark:border-slate-700">
+      <div className="flex-shrink-0 w-8 h-8 rounded-[var(--k-radius-xs,2px)] bg-[var(--k-surface)] dark:bg-slate-800 flex items-center justify-center border border-[var(--border-default,#e2e8f0)]">
         {icons[type]}
       </div>
-      <div className="flex-1 text-[13px] font-medium text-[var(--k-ink-900)] dark:text-slate-100 leading-tight">
+      <div className="flex-1 text-[13px] font-medium text-[var(--fg-default,#0a1628)] leading-tight">
         {message}
       </div>
       <button
         onClick={() => onClose(id)}
-        className="flex-shrink-0 rounded-[2px] p-1.5 text-[var(--k-ink-400)] hover:bg-[var(--k-surface)] dark:hover:bg-slate-800 hover:text-[var(--k-ink-900)] transition-colors"
+        className="flex-shrink-0 rounded-[var(--k-radius-xs,2px)] p-1.5 text-[var(--fg-subtle,#94a3b8)] hover:bg-[var(--k-surface)] dark:hover:bg-slate-800 hover:text-[var(--fg-default,#0a1628)] transition-colors"
       >
         <X size={14} />
       </button>

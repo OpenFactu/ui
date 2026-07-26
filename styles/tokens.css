@@ -1,0 +1,156 @@
+/**
+ * @openfactu/ui — tokens de diseño.
+ *
+ * Fuente única de verdad de las variables CSS que consumen los componentes.
+ * No contiene directivas @tailwind, así que es importable desde cualquier
+ * pipeline (Vite, PostCSS, un <link> suelto).
+ *
+ *   import '@openfactu/ui/tokens.css';   // o '@openfactu/ui/styles.css'
+ *
+ * Los valores por defecto son la marca Keirost. Para tematizar en runtime usa
+ * `applyTheme()` o `<ThemeProvider>`, que escriben estas mismas variables sobre
+ * :root (o sobre el elemento que se le indique).
+ */
+
+:root {
+  color-scheme: light;
+
+  /* ── Marca (dinámicos por tenant) ──────────────────────────────────────
+     Formato RGB separado por espacios para que Tailwind aplique alpha:
+     rgb(var(--color-accent-rgb) / <alpha-value>) */
+  --color-primary-rgb: 10 22 40; /* #0A1628 · ink */
+  --color-primary-hover-rgb: 45 58 74; /* #2D3A4A · ink-2 */
+  --color-primary-fg-rgb: 255 255 255;
+  --color-accent-rgb: 13 148 136; /* #0D9488 · teal */
+  --color-accent-fg-rgb: 255 255 255;
+
+  /* Alias hex, útiles fuera de Tailwind (inline styles, stroke de SVG). */
+  --color-primary: rgb(var(--color-primary-rgb));
+  --color-primary-hover: rgb(var(--color-primary-hover-rgb));
+  --color-primary-fg: rgb(var(--color-primary-fg-rgb));
+  --color-accent: rgb(var(--color-accent-rgb));
+  --color-accent-fg: rgb(var(--color-accent-fg-rgb));
+
+  /* ── Escala del acento ─────────────────────────────────────────────────
+     Los --k-teal-* son el nombre histórico; --k-accent-* es el semántico.
+     `applyTheme` reescribe ambos cuando el tenant usa un acento propio. */
+  --k-teal-50: #f0fafa;
+  --k-teal-100: #ccefed;
+  --k-teal-500: #0d9488;
+  --k-teal-600: #0a6e63;
+  --k-teal-900: #042b26;
+  --k-accent-50: var(--k-teal-50);
+  --k-accent-100: var(--k-teal-100);
+  --k-accent-500: var(--k-teal-500);
+  --k-accent-600: var(--k-teal-600);
+  --k-accent-900: var(--k-teal-900);
+
+  /* ── Escala neutra ─────────────────────────────────────────────────────
+     `ink` = tinta (texto); `line` = separadores; `surface` = fondo sutil. */
+  --k-ink-900: #0a1628;
+  --k-ink-800: #1a2535;
+  --k-ink-700: #2d3a4a;
+  --k-ink-500: #64748b;
+  --k-ink-400: #94a3b8;
+  --k-line: #e2e8f0;
+  --k-line-2: #f1f5f9;
+  --k-surface: #fafbfc;
+
+  /* ── Semánticos de estado ──────────────────────────────────────────────*/
+  --k-success: #16a34a;
+  --k-warning: #d97706;
+  --k-danger: #dc2626;
+  --k-info: #2563eb;
+
+  --k-success-fg: #15803d;
+  --k-warning-fg: #b45309;
+  --k-danger-fg: #b91c1c;
+  --k-info-fg: #1d4ed8;
+
+  --k-success-bg: #f0fdf4;
+  --k-warning-bg: #fffbeb;
+  --k-danger-bg: #fef2f2;
+  --k-info-bg: #eff6ff;
+
+  /* ── Superficie / texto / borde (semánticos, con variante oscura) ──────*/
+  --bg-app: #fafbfc;
+  --bg-card: #ffffff;
+  --bg-sidebar: #0a1628;
+  --bg-muted: #fafbfc;
+  --bg-hover: #f1f5f9;
+  --fg-default: #0a1628;
+  --fg-body: #2d3a4a;
+  --fg-muted: #64748b;
+  --fg-subtle: #94a3b8;
+  --border-default: #e2e8f0;
+  --border-subtle: #f1f5f9;
+  --border-strong: #cbd5e1;
+
+  /* ── Tipografía ───────────────────────────────────────────────────────*/
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-sans: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
+
+  /* ── Radio ────────────────────────────────────────────────────────────*/
+  --k-radius-xs: 2px;
+  --k-radius-sm: 4px;
+  --k-radius-md: 8px;
+  --k-radius-lg: 12px;
+  --k-radius-full: 9999px;
+
+  /* ── Sombra ───────────────────────────────────────────────────────────*/
+  --k-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --k-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --k-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --k-shadow-overlay: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+
+  /* ── Apilado ──────────────────────────────────────────────────────────
+     Valores heredados del código existente: hay integraciones con overlays
+     propios en z-[99999], así que modal se queda ahí en vez de "normalizar"
+     a una escala baja que los dejaría por encima. */
+  --k-z-sticky: 30;
+  --k-z-dropdown: 50;
+  --k-z-overlay: 99999;
+  --k-z-modal: 99999;
+  --k-z-popover: 999999;
+  --k-z-toast: 1000000;
+  --k-z-tooltip: 1000001;
+}
+
+html.dark {
+  color-scheme: dark;
+
+  /* La escala `--k-ink-*` / `--k-line*` / `--k-surface` NO se invierte: es una
+     paleta, y se usa tanto para texto como para fondos (el degradado del
+     Avatar, por ejemplo). Lo que responde al modo es la capa semántica de
+     abajo (`--fg-*`, `--bg-*`, `--border-*`); es ahí donde deben apuntar los
+     componentes. */
+
+  --k-success-fg: #4ade80;
+  --k-warning-fg: #fbbf24;
+  --k-danger-fg: #fca5a5;
+  --k-info-fg: #93c5fd;
+
+  --k-success-bg: rgb(22 163 74 / 0.12);
+  --k-warning-bg: rgb(217 119 6 / 0.12);
+  --k-danger-bg: rgb(220 38 38 / 0.12);
+  --k-info-bg: rgb(37 99 235 / 0.12);
+
+  --bg-app: #0a1628;
+  --bg-card: #1a2535;
+  --bg-sidebar: #042b26;
+  --bg-muted: #111c2e;
+  --bg-hover: #22304a;
+  --fg-default: #e2e8f0;
+  --fg-body: #cbd5e1;
+  --fg-muted: #a9b6c8;
+  --fg-subtle: #8b99ad;
+  --border-default: #2d3a4a;
+  --border-subtle: #22304a;
+  --border-strong: #3d4c60;
+
+  --k-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --k-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --k-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+  --k-shadow-overlay: 0 25px 50px -12px rgb(0 0 0 / 0.7);
+}

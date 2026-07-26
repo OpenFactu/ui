@@ -1,0 +1,215 @@
+# @openfactu/ui
+
+Librería de componentes React del sistema de diseño Keirost.
+
+```bash
+npm install @openfactu/ui
+```
+
+## Puesta en marcha
+
+La librería ya no depende de que la aplicación defina sus tokens: los publica ella.
+Son dos líneas, una en el CSS y otra en la configuración de Tailwind.
+
+```css
+/* index.css — antes de las directivas @tailwind */
+@import '@openfactu/ui/styles.css';
+```
+
+```js
+// tailwind.config.js
+import uiPreset from '@openfactu/ui/tailwind-preset';
+
+export default {
+  presets: [uiPreset],
+  content: [
+    './src/**/*.{ts,tsx}',
+    './node_modules/@openfactu/ui/dist/**/*.{js,jsx}', // para que el JIT vea las clases del paquete
+  ],
+  plugins: [animated], // tailwindcss-animated, si usas las clases animate-in
+};
+```
+
+`@openfactu/ui/styles.css` equivale a `tokens.css` (las variables) más
+`keyframes.css` (las animaciones que los componentes referencian por nombre).
+Si solo necesitas las variables, importa `@openfactu/ui/tokens.css`.
+
+## Temas
+
+Un tema son, en lo esencial, **dos colores y un modo**; el resto se deriva
+(hover, colores de texto contrastados, superficies del modo oscuro, escala del
+acento). Todo lo derivado se puede sobreescribir.
+
+```tsx
+import { applyTheme } from '@openfactu/ui';
+
+applyTheme({
+  mode: 'dark',
+  colors: { primary: '#1E102C', accent: '#EC4899' },
+});
+```
+
+`applyTheme` escribe las variables sobre `<html>` y alterna la clase `dark`.
+Acepta un segundo argumento para tematizar solo un subárbol, útil para
+previsualizar un tema dentro de la propia interfaz.
+
+También hay un provider opcional, para manejar el tema con estado de React:
+
+```tsx
+<ThemeProvider defaultTheme={{ mode: 'light', colors: { primary: '#0A1628', accent: '#0D9488' } }}>
+  <App />
+</ThemeProvider>
+```
+
+Los componentes **nunca** leen ese contexto: consumen variables CSS, así que
+montar el provider es opcional y no es un requisito para usar la librería.
+
+### Evitar el parpadeo inicial
+
+`resolveTheme` es una función pura, de modo que el tema se puede precalcular y
+aplicar antes de que arranque React:
+
+```ts
+import { resolveTheme, themeToCssText } from '@openfactu/ui';
+
+const css = themeToCssText(resolveTheme(temaDelTenant)); // string de :root { … }
+```
+
+Un tema no son solo colores: también define la **redondez** y la tipografía, y
+todos los componentes las siguen.
+
+```tsx
+applyTheme({
+  mode: 'light',
+  colors: { primary: '#0A1628', accent: '#0D9488' },
+  radius: 'lg',                          // 'none' | 'sm' | 'md' | 'lg', o { xs, sm, md, lg }
+  typography: { fontFamily: 'geist' },   // id de FONT_OPTIONS
+});
+```
+
+### Presets
+
+`THEME_PRESETS` trae nueve temas listos, y `detectPreset(theme)` dice cuál está
+activo (o `null` si es a medida).
+
+### Cómo elegir el color de un texto
+
+La escala `--k-ink-*` es una **paleta fija**: sirve igual para texto que para
+fondos (el degradado del `Avatar`), así que no cambia con el modo. Lo que
+responde al tema es la capa semántica, y es a la que deben apuntar los textos:
+
+| Token | Para qué |
+|---|---|
+| `--fg-default` | títulos y texto principal |
+| `--fg-body` | texto corriente |
+| `--fg-muted` | texto secundario, metadatos |
+| `--fg-subtle` | marcadores de posición, iconos, texto de ayuda |
+
+Lo mismo con los colores de estado: `--k-danger` es para **rellenos y marcas**;
+como texto va `--k-danger-fg`, que en modo oscuro sube el tono para seguir
+siendo legible.
+
+## Gráficos
+
+Las visualizaciones pequeñas (`Sparkline`, `Ring`, `StackedBar`) son SVG propio
+y salen de la entrada principal, sin dependencias.
+
+Los gráficos completos viven en una **subruta aparte** porque usan `recharts`,
+declarada como peerDependency **opcional**: si no pintas gráficos, no tienes que
+instalarla y la entrada principal sigue sin dependencias de terceros.
+
+```bash
+npm install recharts   # solo si usas @openfactu/ui/charts
+```
+
+```tsx
+import { Chart } from '@openfactu/ui/charts';
+
+<Chart
+  type="line"
+  data={movimientos}
+  xKey="mes"
+  series={[
+    { key: 'ventas', label: 'Ventas' },
+    { key: 'compras', label: 'Compras' },
+  ]}
+  valueFormat={(v) => `${v.toLocaleString('es-ES')} €`}
+/>
+```
+
+El componente absorbe el contenedor responsivo, el tooltip, los ejes y la
+rejilla derivados del tema, el formato de miles del eje y el estado vacío.
+
+**La paleta de series no se elige a ojo**: el orden de las ocho ranuras se
+seleccionó ejecutando el validador de paletas y conservando solo una ordenación
+que supera todas las comprobaciones (incluida la separación para daltonismo) en
+claro y en oscuro. De ahí salen tres reglas que el componente aplica solo:
+
+- Los colores se reparten **en orden y sin ciclar**; a partir de la octava serie
+  toca agrupar en «Otros» en vez de inventar tonos.
+- El color va ligado a la **entidad**, no a su puesto en un ranking: filtrar no
+  repinta las series que quedan (para eso está `colorBy`).
+- Los roles semánticos (`positive`, `negative`, `warning`, `neutral`) están
+  **reservados**: significan lo mismo en todos los gráficos y no se reparten
+  como una serie más.
+
+Si tocas `src/charts/palette.ts`, hay que volver a pasar el validador.
+
+## Componentes
+
+Formulario
+: `Input` · `Textarea` · `Select` · `SearchableSelect` · `NumberInput` ·
+`CurrencyInput` · `PercentInput` · `PasswordInput` · `SearchInput` ·
+`ColorInput` · `FileDropzone` · `DatePicker` · `Checkbox` · `Switch` ·
+`RadioGroup`
+
+Datos
+: `Table` · `List` · `Card` · `KpiCard` · `Badge` · `Progress` · `Avatar` ·
+`EmptyState` · `Skeleton` (+ `SkeletonList`, `SkeletonTable`, `SkeletonPage`)
+
+Gráficos
+: `Sparkline` · `Ring` · `StackedBar` · `Chart` (en `@openfactu/ui/charts`)
+
+Navegación
+: `SegmentedControl` · `Tabs` · `Pagination` · `Breadcrumbs` · `NavItem` · `NavGroup` · `FilterBar` ·
+`BulkActionsBar`
+
+Superposiciones
+: `Modal` · `Drawer` · `ConfirmDialog` · `DropdownMenu` · `ContextMenu` ·
+`Tooltip` · `Popup` · `Toast` · `Loader` · `GlobalLoader` · `Transition`
+
+Hooks
+: `usePopover` · `useAnimatedPresence` · `useScrollLock` · `useFocusTrap` ·
+`useDebouncedValue` · `useColorScheme` · `useContextMenu` · `useToast` ·
+`usePopup` · `useTheme`
+
+## Desarrollo
+
+```bash
+npm run dev        # playground (Ladle) en http://localhost:61000
+npm run build      # compila a dist/
+npm run typecheck  # comprueba también las stories
+npm run shots -- .shots/base   # capturas de todas las stories, claro y oscuro
+npx tsx scripts/check-contrast.mts        # contraste real de los textos bajo un tema
+npx tsx scripts/check-tokens.mjs          # el CSS publicado y el motor TS coinciden
+```
+
+Las stories viven en `stories/`, una por componente. `scripts/shots.mjs`
+captura todas en ambos modos y compara dos carpetas
+(`node scripts/shots.mjs --diff .shots/base .shots/nuevo`), que es la red de
+seguridad para cambios transversales. `scripts/check-tokens.mjs` comprueba que
+el CSS publicado y el motor de temas en TypeScript producen los mismos valores,
+y `scripts/check-contrast.mts` mide el contraste real de cada texto bajo el tema
+que se le indique (compone las capas translúcidas y congela las transiciones,
+para no medir colores a mitad de camino).
+
+## Convenciones
+
+- **Clases Tailwind literales**: nunca construidas por concatenación
+  (`bg-${variante}` no funciona con el JIT del consumidor). Se usan mapas de
+  cadenas completas.
+- **Variables con valor de reserva**: `bg-[var(--bg-card,#ffffff)]`, para que un
+  consumidor que no importe la hoja de estilos siga viendo la marca por defecto.
+- La escala `--k-ink-*` / `--k-line*` / `--k-surface` es una **paleta fija**; lo
+  que responde al modo claro/oscuro es la capa semántica (`--bg-*`, `--fg-*`,
+  `--border-*`). Los componentes deben apuntar a esta última.

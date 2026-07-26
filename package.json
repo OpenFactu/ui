@@ -1,20 +1,46 @@
 {
   "name": "@openfactu/ui",
-  "version": "0.2.1",
+  "version": "0.4.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./charts": {
+      "types": "./dist/charts/index.d.ts",
+      "default": "./dist/charts/index.js"
+    },
+    "./styles.css": "./styles/index.css",
+    "./tokens.css": "./styles/tokens.css",
+    "./keyframes.css": "./styles/keyframes.css",
+    "./tailwind-preset": "./tailwind/preset.cjs",
+    "./package.json": "./package.json",
+    "./dist/*": "./dist/*"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
   "files": [
-    "dist"
+    "dist",
+    "styles",
+    "tailwind"
   ],
   "scripts": {
-    "build": "tsc"
+    "dev": "ladle serve",
+    "build": "tsc",
+    "build:ladle": "ladle build",
+    "typecheck": "tsc --noEmit -p tsconfig.stories.json",
+    "shots": "node scripts/shots.mjs"
   },
   "publishConfig": {
     "access": "public"
   },
   "peerDependencies": {
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "recharts": ">=2"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -23,9 +49,19 @@
     "tailwind-merge": "^2.3.0"
   },
   "devDependencies": {
+    "@ladle/react": "^5.1.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.5.4",
+    "playwright-core": "^1.62.0",
+    "recharts": "^3.10.1",
     "tailwindcss": "^3.4.1",
+    "tailwindcss-animated": "^2.1.0",
     "typescript": "^5.3.3"
+  },
+  "peerDependenciesMeta": {
+    "recharts": {
+      "optional": true
+    }
   }
 }

@@ -98,7 +98,7 @@ export const PopupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               </Button>
             }
           >
-            <div className="text-sm text-[var(--k-ink-700)] dark:text-slate-200 whitespace-pre-wrap">
+            <div className="text-sm text-[var(--fg-body,#2d3a4a)] whitespace-pre-wrap">
               {opts.message}
             </div>
           </PopupFrame>
@@ -136,7 +136,7 @@ export const PopupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 </>
               }
             >
-              <div className="text-sm text-[var(--k-ink-700)] dark:text-slate-200 whitespace-pre-wrap">
+              <div className="text-sm text-[var(--fg-body,#2d3a4a)] whitespace-pre-wrap">
                 {opts.message}
               </div>
             </PopupFrame>

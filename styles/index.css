@@ -1,0 +1,11 @@
+/**
+ * @openfactu/ui — hoja de estilos completa.
+ *
+ *   import '@openfactu/ui/styles.css';
+ *
+ * Equivale a importar `tokens.css` + `keyframes.css`. Si solo necesitas las
+ * variables (por ejemplo, para tematizar un panel aislado), importa
+ * `@openfactu/ui/tokens.css`.
+ */
+@import './tokens.css';
+@import './keyframes.css';

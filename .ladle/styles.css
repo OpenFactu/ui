@@ -1,0 +1,17 @@
+/* Estilos del playground. Los tokens ya NO se copian aquí: se importan del
+   mismo CSS que publica el paquete, de modo que lo que se ve en Ladle es
+   exactamente lo que recibe el consumidor. */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import '../styles/index.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  background: var(--bg-app);
+}
+
+body {
+  font-family: var(--font-sans);
+}

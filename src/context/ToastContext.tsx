@@ -44,7 +44,7 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       {children}
 
       {/* Contenedor de Toasts (Portal Simplificado) */}
-      <div className="fixed top-8 right-8 z-[9999] flex flex-col gap-4 w-full max-w-sm pointer-events-none">
+      <div className="fixed top-8 right-8 z-[var(--k-z-toast,1000000)] flex flex-col gap-4 w-full max-w-sm pointer-events-none">
         {toasts.map((t) => (
           <Toast key={t.id} {...t} onClose={removeToast} />
         ))}

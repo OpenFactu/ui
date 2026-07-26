@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, AlertTriangle, CheckCircle, Info, AlertCircle } from 'lucide-react';
 import { Button } from './Button';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 export type PopupTone = 'info' | 'success' | 'warning' | 'danger';
 
@@ -38,17 +39,16 @@ export const PopupFrame: React.FC<PopupFrameProps> = ({
   children,
   footer,
 }) => {
+  // Con contador: cerrar un popup abierto sobre otro ya no desbloquea el
+  // scroll del que sigue abierto debajo.
+  useScrollLock(true);
+
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     const onEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && dismissible) onClose();
     };
     window.addEventListener('keydown', onEsc);
-    return () => {
-      document.body.style.overflow = prev;
-      window.removeEventListener('keydown', onEsc);
-    };
+    return () => window.removeEventListener('keydown', onEsc);
   }, [onClose, dismissible]);
 
   const widthClass = {
@@ -67,25 +67,25 @@ export const PopupFrame: React.FC<PopupFrameProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-[var(--k-ink-900)]/40 dark:bg-black/70 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-[var(--k-z-modal,99999)] flex items-center justify-center p-4 bg-[var(--k-ink-900)]/40 dark:bg-black/70 backdrop-blur-sm animate-in fade-in duration-200"
       onClick={() => dismissible && onClose()}
     >
       <div
-        className={`w-full ${widthClass} max-h-[90vh] overflow-hidden rounded-[8px] shadow-xl bg-white dark:bg-slate-900 border border-[var(--k-line)] dark:border-slate-700 animate-in zoom-in-95 duration-200 flex flex-col`}
+        className={`w-full ${widthClass} max-h-[90vh] overflow-hidden rounded-[var(--k-radius-md,8px)] shadow-xl bg-[var(--bg-card,#ffffff)] border border-[var(--border-default,#e2e8f0)] animate-in zoom-in-95 duration-200 flex flex-col`}
         onClick={(e) => e.stopPropagation()}
       >
         {(title || dismissible) && (
-          <div className="flex items-start justify-between gap-3 p-5 border-b border-[var(--k-line)] dark:border-slate-800">
+          <div className="flex items-start justify-between gap-3 p-5 border-b border-[var(--border-default,#e2e8f0)]">
             <div className="flex items-start gap-3 min-w-0">
               {tone && <div className="mt-0.5">{TONE_ICONS[tone]}</div>}
               <div className="min-w-0">
                 {title && (
-                  <h2 className="text-lg font-black text-[var(--k-ink-900)] dark:text-slate-100 truncate">
+                  <h2 className="text-lg font-black text-[var(--fg-default,#0a1628)] truncate">
                     {title}
                   </h2>
                 )}
                 {subtitle && (
-                  <p className="text-sm text-[var(--k-ink-500)] dark:text-slate-400 mt-0.5">
+                  <p className="text-sm text-[var(--fg-muted,#64748b)] mt-0.5">
                     {subtitle}
                   </p>
                 )}
@@ -94,7 +94,7 @@ export const PopupFrame: React.FC<PopupFrameProps> = ({
             {dismissible && (
               <button
                 onClick={onClose}
-                className="p-1.5 text-[var(--k-ink-400)] hover:text-[var(--k-ink-900)] dark:hover:text-slate-100 hover:bg-[var(--k-surface)] dark:hover:bg-slate-800 rounded-[2px] transition-colors flex-shrink-0"
+                className="p-1.5 text-[var(--fg-subtle,#94a3b8)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--k-surface)] dark:hover:bg-slate-800 rounded-[var(--k-radius-xs,2px)] transition-colors flex-shrink-0"
               >
                 <X size={18} />
               </button>
@@ -103,7 +103,7 @@ export const PopupFrame: React.FC<PopupFrameProps> = ({
         )}
         <div className="flex-1 overflow-y-auto p-5">{children}</div>
         {footer && (
-          <div className="flex justify-end gap-2 p-4 border-t border-[var(--k-line)] dark:border-slate-800 bg-[var(--k-surface)] dark:bg-slate-900/60">
+          <div className="flex justify-end gap-2 p-4 border-t border-[var(--border-default,#e2e8f0)] bg-[var(--bg-muted,#f8fafc)]">
             {footer}
           </div>
         )}

@@ -21,7 +21,7 @@ interface FilterBarProps {
 }
 
 const inputCls =
-  'h-9 px-3 bg-white dark:bg-slate-900 border border-[var(--k-line)] dark:border-slate-700 rounded-[2px] text-[12px] font-medium text-[var(--k-ink-700)] dark:text-slate-200 focus:outline-none focus:border-accent hover:border-[var(--k-ink-400)] transition-colors';
+  'h-9 px-3 bg-[var(--bg-card,#ffffff)] border border-[var(--border-default,#e2e8f0)] rounded-[var(--k-radius-xs,2px)] text-[12px] font-medium text-[var(--fg-body,#2d3a4a)] focus:outline-none focus:border-accent hover:border-[var(--k-ink-400)] transition-colors';
 
 export function FilterBar({
   searchTerm,
@@ -36,14 +36,14 @@ export function FilterBar({
   return (
     <div
       className={cn(
-        'flex flex-wrap items-center gap-3 p-4 bg-white dark:bg-slate-900 border-b border-[var(--k-line)] dark:border-slate-800',
+        'flex flex-wrap items-center gap-3 p-4 bg-[var(--bg-card,#ffffff)] border-b border-[var(--border-default,#e2e8f0)]',
         className,
       )}
     >
       {/* Global Search */}
       <div className="relative flex-none w-full md:w-96">
         <Search
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--k-ink-400)] dark:text-slate-500"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-subtle,#94a3b8)]"
           size={14}
         />
         <input
@@ -91,7 +91,7 @@ export function FilterBar({
 
             {filter.type === 'select' && (
               <Filter
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--k-ink-400)] dark:text-slate-600 pointer-events-none"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--fg-subtle,#94a3b8)] pointer-events-none"
                 size={12}
               />
             )}
@@ -101,7 +101,7 @@ export function FilterBar({
         {(searchTerm || Object.values(activeFilters).some((v) => v !== '')) && (
           <button
             onClick={onClear}
-            className="inline-flex items-center gap-1.5 px-3 h-9 text-[11px] font-mono font-medium text-[#DC2626] hover:bg-[#FEF2F2] dark:hover:bg-rose-500/10 rounded-[2px] transition-colors uppercase tracking-[1px]"
+            className="inline-flex items-center gap-1.5 px-3 h-9 text-[11px] font-mono font-medium text-[#DC2626] hover:bg-[#FEF2F2] dark:hover:bg-rose-500/10 rounded-[var(--k-radius-xs,2px)] transition-colors uppercase tracking-[1px]"
           >
             <X size={12} />
             Limpiar
