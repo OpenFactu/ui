@@ -32,7 +32,8 @@
     "build": "tsc",
     "build:ladle": "ladle build",
     "typecheck": "tsc --noEmit -p tsconfig.stories.json",
-    "shots": "node scripts/shots.mjs"
+    "shots": "node scripts/shots.mjs",
+    "prepublishOnly": "npm run build"
   },
   "publishConfig": {
     "access": "public"
@@ -63,5 +64,23 @@
     "recharts": {
       "optional": true
     }
-  }
+  },
+  "description": "Librería de componentes React del sistema de diseño Keirost.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OpenFactu/ui.git"
+  },
+  "homepage": "https://github.com/OpenFactu/ui#readme",
+  "bugs": {
+    "url": "https://github.com/OpenFactu/ui/issues"
+  },
+  "keywords": [
+    "react",
+    "ui",
+    "design-system",
+    "componentes",
+    "tailwind",
+    "keirost"
+  ]
 }
