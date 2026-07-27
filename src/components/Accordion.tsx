@@ -61,7 +61,7 @@ export const Accordion: React.FC<AccordionProps> = ({
               onClick={() => toggle(item.key)}
               className={cn(
                 'flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-[13px] font-medium text-[var(--fg-default,#0a1628)] transition-colors',
-                'hover:bg-[var(--k-surface)] dark:hover:bg-slate-800/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent',
+                'hover:bg-[var(--bg-hover)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent',
                 item.disabled && 'opacity-50 cursor-not-allowed pointer-events-none',
               )}
             >

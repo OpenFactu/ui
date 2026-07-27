@@ -69,6 +69,11 @@
   .k-pop-in {
     animation: none;
   }
+  /* Los avisos entran y salen con una transición, no con una animación: se
+     desactiva la transición y el cambio de estado se aplica de golpe. */
+  .k-toast {
+    transition: none !important;
+  }
   [style*='k-row-in'],
   [style*='k-skeleton-shimmer'] {
     animation: none !important;

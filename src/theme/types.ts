@@ -53,11 +53,31 @@ export interface ThemeColors {
   warningBg?: string;
   dangerBg?: string;
   infoBg?: string;
+  /**
+   * Texto **encima** del color de estado usado como relleno (`--k-*-on`). No
+   * confundir con `-fg`, que es el color de estado usado como texto sobre una
+   * superficie normal. Si no se indica se elige el que más contraste da.
+   */
+  successOn?: Hex;
+  warningOn?: Hex;
+  dangerOn?: Hex;
+  infoOn?: Hex;
+  /** Texto encima del acento usado como relleno (`--k-accent-on`). */
+  accentOn?: Hex;
 
   /** Superficies. En modo oscuro se derivan del primario si no se indican. */
   bgApp?: Hex;
   bgCard?: Hex;
   bgSidebar?: Hex;
+  /**
+   * Capa del sidebar. Se deriva de `bgSidebar` midiendo contraste real, de modo
+   * que un sidebar claro siga teniendo la navegación legible; sin estos tokens
+   * los componentes no tenían más remedio que fijar un gris de Tailwind.
+   */
+  sidebarFg?: Hex;
+  sidebarFgMuted?: Hex;
+  sidebarHover?: Hex;
+  sidebarActive?: Hex;
   bgMuted?: Hex;
   bgHover?: Hex;
   fgDefault?: Hex;

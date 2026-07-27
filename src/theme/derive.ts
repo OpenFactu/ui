@@ -113,6 +113,61 @@ export function lighten(hex: string, amount: number): string {
   return rgbToHex(lightenRgb(hexToRgb(hex), amount));
 }
 
+/**
+ * Techo de luminancia de un fondo oscuro. Es el del primario más claro que se
+ * reparte de fábrica (Slate `#1E293B`, 0.0218), así que ninguno de los temas
+ * incluidos se toca y solo se corrigen los que se salen de la franja.
+ */
+export const DARK_SURFACE_MAX_LUMINANCE = 0.025;
+
+/**
+ * Baja un color hasta la franja de luminancia de un fondo oscuro conservando su
+ * matiz; si ya está dentro lo devuelve intacto.
+ *
+ * Hace falta porque el color primario de una marca no tiene por qué ser casi
+ * negro. Un teal como `#0D9488` usado tal cual de fondo en modo oscuro deja el
+ * texto principal en 2.81:1 — ilegible — mientras que oscurecido hasta esta
+ * franja se queda en dos dígitos.
+ */
+export function clampToDarkSurface(
+  hex: string,
+  maxLuminance = DARK_SURFACE_MAX_LUMINANCE,
+): string {
+  const rgb = hexToRgb(hex);
+  if (relativeLuminance(rgb) <= maxLuminance) return rgbToHex(rgb);
+  // Búsqueda binaria del oscurecimiento: multiplicar los tres canales mantiene
+  // el matiz y la saturación, que es justo lo que la marca aporta.
+  let low = 0;
+  let high = 1;
+  for (let i = 0; i < 20; i += 1) {
+    const mid = (low + high) / 2;
+    if (relativeLuminance(darkenRgb(rgb, mid)) > maxLuminance) low = mid;
+    else high = mid;
+  }
+  return rgbToHex(darkenRgb(rgb, high));
+}
+
+/**
+ * Versión atenuada de `fg` sobre `bg` que **sigue siendo legible**: mezcla el
+ * texto hacia el fondo todo lo que puede sin bajar del contraste mínimo.
+ *
+ * Se usa para el texto secundario del sidebar, donde el fondo lo elige el tema
+ * y por tanto no vale un gris fijo: sobre un sidebar claro, un `slate-400`
+ * desaparece.
+ */
+export function mutedOn(bg: string, fg: string, minContrast = 4.5): string {
+  const fondo = hexToRgb(bg);
+  const texto = hexToRgb(fg);
+  let low = 0; // 0 = el texto tal cual
+  let high = 1; // 1 = el fondo (invisible)
+  for (let i = 0; i < 20; i += 1) {
+    const mid = (low + high) / 2;
+    if (contrastRatio(mixRgb(texto, fondo, mid), fondo) >= minContrast) low = mid;
+    else high = mid;
+  }
+  return rgbToHex(mixRgb(texto, fondo, low));
+}
+
 /** `#0D9488` + 0.12 → `rgb(13 148 136 / 0.12)`, listo para CSS. */
 export function alpha(hex: string, value: number): string {
   const [r, g, b] = hexToRgb(hex);

@@ -41,9 +41,9 @@ export const MenuItemButton: React.FC<MenuItemButtonProps> = ({
     className={cn(
       'w-full flex items-center gap-2 px-3 py-1.5 text-[13px] text-left rounded-[var(--k-radius-xs,2px)] transition-colors focus-visible:outline-none',
       item.destructive
-        ? 'text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10'
-        : 'text-[var(--fg-body,#2d3a4a)] hover:bg-[var(--k-surface)] dark:hover:bg-slate-800',
-      active && (item.destructive ? 'bg-rose-50 dark:bg-rose-500/10' : 'bg-[var(--k-surface)] dark:bg-slate-800'),
+        ? 'text-[var(--k-danger-fg)] hover:bg-[var(--k-danger-bg)]'
+        : 'text-[var(--fg-body,#2d3a4a)] hover:bg-[var(--bg-hover)]',
+      active && (item.destructive ? 'bg-[var(--k-danger-bg)]' : 'bg-[var(--bg-hover)]'),
       item.disabled && 'opacity-40 cursor-not-allowed',
     )}
   >

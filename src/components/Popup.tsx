@@ -18,11 +18,14 @@ export interface PopupFrameProps {
   footer?: React.ReactNode;
 }
 
+// Los iconos usan los tokens de estado, no un azul y un verde de Tailwind:
+// esto sale en TODOS los diálogos de confirmación, así que un color fijo aquí
+// se ve en toda la aplicación por muy tematizada que esté.
 const TONE_ICONS: Record<PopupTone, React.ReactNode> = {
-  info: <Info size={20} className="text-blue-600" />,
-  success: <CheckCircle size={20} className="text-emerald-600" />,
-  warning: <AlertTriangle size={20} className="text-amber-600" />,
-  danger: <AlertCircle size={20} className="text-rose-600" />,
+  info: <Info size={20} className="text-[var(--k-info)]" />,
+  success: <CheckCircle size={20} className="text-[var(--k-success)]" />,
+  warning: <AlertTriangle size={20} className="text-[var(--k-warning)]" />,
+  danger: <AlertCircle size={20} className="text-[var(--k-danger)]" />,
 };
 
 /**
@@ -51,6 +54,12 @@ export const PopupFrame: React.FC<PopupFrameProps> = ({
     return () => window.removeEventListener('keydown', onEsc);
   }, [onClose, dismissible]);
 
+  // Un diálogo que el lector de pantalla no anuncia como diálogo es, para quien
+  // no mira la pantalla, texto que aparece de la nada. `Modal` ya lo hacía bien;
+  // esto no, y es lo que usan TODAS las confirmaciones.
+  const titleId = React.useId();
+  const subtitleId = React.useId();
+
   const widthClass = {
     sm: 'max-w-sm',
     md: 'max-w-md',
@@ -67,10 +76,16 @@ export const PopupFrame: React.FC<PopupFrameProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[var(--k-z-modal,99999)] flex items-center justify-center p-4 bg-[var(--k-ink-900)]/40 dark:bg-black/70 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-[var(--k-z-modal,99999)] flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--k-ink-900)_45%,transparent)] backdrop-blur-sm animate-in fade-in duration-200"
       onClick={() => dismissible && onClose()}
     >
       <div
+        // 'alertdialog' y no 'dialog': un popup con tono interrumpe y espera una
+        // respuesta, que es justo la diferencia entre los dos papeles.
+        role={tone ? 'alertdialog' : 'dialog'}
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+        aria-describedby={subtitle ? subtitleId : undefined}
         className={`w-full ${widthClass} max-h-[90vh] overflow-hidden rounded-[var(--k-radius-md,8px)] shadow-xl bg-[var(--bg-card,#ffffff)] border border-[var(--border-default,#e2e8f0)] animate-in zoom-in-95 duration-200 flex flex-col`}
         onClick={(e) => e.stopPropagation()}
       >
@@ -80,12 +95,15 @@ export const PopupFrame: React.FC<PopupFrameProps> = ({
               {tone && <div className="mt-0.5">{TONE_ICONS[tone]}</div>}
               <div className="min-w-0">
                 {title && (
-                  <h2 className="text-lg font-black text-[var(--fg-default,#0a1628)] truncate">
+                  <h2
+                    id={titleId}
+                    className="text-lg font-black text-[var(--fg-default,#0a1628)] truncate"
+                  >
                     {title}
                   </h2>
                 )}
                 {subtitle && (
-                  <p className="text-sm text-[var(--fg-muted,#52606f)] mt-0.5">
+                  <p id={subtitleId} className="text-sm text-[var(--fg-muted,#52606f)] mt-0.5">
                     {subtitle}
                   </p>
                 )}
@@ -93,8 +111,10 @@ export const PopupFrame: React.FC<PopupFrameProps> = ({
             </div>
             {dismissible && (
               <button
+                type="button"
+                aria-label="Cerrar"
                 onClick={onClose}
-                className="p-1.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--k-surface)] dark:hover:bg-slate-800 rounded-[var(--k-radius-xs,2px)] transition-colors flex-shrink-0"
+                className="p-1.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--bg-hover)] rounded-[var(--k-radius-xs,2px)] transition-colors flex-shrink-0"
               >
                 <X size={18} />
               </button>

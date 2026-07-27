@@ -131,7 +131,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
                   'h-1 flex-1 rounded-full transition-colors',
                   text && i < score
                     ? STRENGTH_COLORS[score]
-                    : 'bg-[var(--k-line)] dark:bg-slate-800',
+                    : 'bg-[var(--bg-hover)]',
                 )}
               />
             ))}

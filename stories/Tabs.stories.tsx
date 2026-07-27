@@ -79,3 +79,29 @@ export const Variantes: Story = () => {
     </div>
   );
 };
+
+/**
+ * El caso de `CompanySettings`: muchas pestañas, `scrollable` y subrayado.
+ * `overflow-x-auto` obliga al navegador a recortar también en vertical, así que
+ * cualquier cosa que sobresalga por abajo desaparece.
+ */
+const MUCHAS = [
+  'Datos fiscales',
+  'Branding',
+  'Formato',
+  'Comportamiento',
+  'Fiscal / Pagos',
+  'Acceso',
+  'Almacenamiento',
+  'Correo',
+  'IA',
+].map((label) => ({ key: label, label }));
+
+export const SubrayadoDesplazable: Story = () => {
+  const [tab, setTab] = React.useState(MUCHAS[0].key);
+  return (
+    <div className="max-w-md">
+      <Tabs items={MUCHAS} value={tab} onChange={setTab} variant="underline" size="sm" scrollable />
+    </div>
+  );
+};

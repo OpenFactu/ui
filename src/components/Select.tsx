@@ -20,6 +20,12 @@ export interface SelectProps {
   onChange: (value: string) => void;
   placeholder?: string;
   label?: string;
+  /**
+   * Marca visible junto a la etiqueta y `aria-required` en el control. Hace
+   * falta explícito porque esto no es un `<select>` nativo: sin él, migrar un
+   * `<select required>` perdía la obligatoriedad sin que se notara.
+   */
+  required?: boolean;
   error?: string;
   helperText?: string;
   disabled?: boolean;
@@ -36,6 +42,7 @@ export const Select: React.FC<SelectProps> = ({
   onChange,
   placeholder = 'Seleccionar...',
   label,
+  required,
   error,
   helperText,
   disabled = false,
@@ -155,7 +162,7 @@ export const Select: React.FC<SelectProps> = ({
           ref={listRef}
           id={listboxId}
           role="listbox"
-          className="max-h-[240px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200"
+          className="max-h-[240px] overflow-y-auto scrollbar-thin scrollbar-thumb-[var(--border-default)]"
         >
           {options.map((opt, idx) => {
             const isSelected = opt.value === value;
@@ -175,7 +182,7 @@ export const Select: React.FC<SelectProps> = ({
                   isSelected
                     ? 'bg-accent text-white font-semibold'
                     : highlighted
-                      ? 'bg-[var(--k-surface)] dark:bg-slate-800 text-[var(--fg-body,#2d3a4a)]'
+                      ? 'bg-[var(--bg-hover)] text-[var(--fg-body,#2d3a4a)]'
                       : 'text-[var(--fg-body,#2d3a4a)]',
                   opt.disabled && 'opacity-40 cursor-not-allowed',
                 )}
@@ -187,7 +194,7 @@ export const Select: React.FC<SelectProps> = ({
           })}
           {options.length === 0 && (
             <div className="py-4 text-center">
-              <p className="text-[10px] font-bold text-slate-300 dark:text-slate-600 uppercase tracking-widest">
+              <p className="text-[10px] font-bold text-[var(--fg-subtle)] uppercase tracking-widest">
                 Sin opciones
               </p>
             </div>
@@ -205,6 +212,11 @@ export const Select: React.FC<SelectProps> = ({
           className="text-[12px] font-medium text-[var(--fg-body,#2d3a4a)]"
         >
           {label}
+          {required && (
+            <span className="text-[var(--k-danger-fg)] ml-0.5" aria-hidden="true">
+              *
+            </span>
+          )}
         </label>
       )}
       <button
@@ -212,6 +224,7 @@ export const Select: React.FC<SelectProps> = ({
         id={selectId}
         type="button"
         role="combobox"
+        aria-required={required || undefined}
         aria-label={ariaLabel}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
@@ -226,10 +239,10 @@ export const Select: React.FC<SelectProps> = ({
           'flex w-full items-center justify-between gap-2 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] px-3 py-2 text-[13px] text-left transition-colors',
           'focus-visible:outline-none focus-visible:border-accent',
           disabled
-            ? 'cursor-not-allowed opacity-50 bg-[var(--k-surface)] dark:bg-slate-800'
-            : 'cursor-pointer hover:border-[var(--k-ink-400)] dark:hover:border-slate-600',
+            ? 'cursor-not-allowed opacity-50 bg-[var(--bg-muted)]'
+            : 'cursor-pointer hover:border-[var(--border-strong)]',
           isOpen && 'border-accent',
-          error && 'border-[#DC2626] focus-visible:border-[#DC2626]',
+          error && 'border-[var(--k-danger)] focus-visible:border-[var(--k-danger)]',
           className,
         )}
       >
@@ -250,7 +263,9 @@ export const Select: React.FC<SelectProps> = ({
           )}
         />
       </button>
-      {error && <p className="text-[11px] font-medium text-[#DC2626] mt-0.5">{error}</p>}
+      {error && (
+        <p className="text-[11px] font-medium text-[var(--k-danger-fg)] mt-0.5">{error}</p>
+      )}
       {helperText && !error && (
         <p className="text-[11px] text-[var(--fg-subtle,#657486)] mt-0.5">
           {helperText}

@@ -78,7 +78,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
     ...(animation === 'shimmer'
       ? {
           backgroundImage:
-            'linear-gradient(90deg, var(--k-line, #e2e8f0) 0%, var(--k-line-2, #f1f5f9) 40%, var(--k-line, #e2e8f0) 80%)',
+            'linear-gradient(90deg, var(--bg-hover) 0%, var(--bg-muted) 40%, var(--bg-hover) 80%)',
           backgroundSize: '200% 100%',
           animationName: 'k-skeleton-shimmer',
           animationDuration: '1.6s',
@@ -97,9 +97,9 @@ export const Skeleton: React.FC<SkeletonProps> = ({
         aria-hidden
         className={cn(
           'shrink-0',
-          animation === 'shimmer'
-            ? 'bg-[var(--k-line-2)] dark:bg-slate-800'
-            : 'bg-[var(--k-line)] dark:bg-slate-800',
+          // Un solo token para los dos modos: `--bg-hover` ya se invierte
+          // con `html.dark` y sigue al tema del tenant.
+          'bg-[var(--bg-hover)]',
           animation === 'pulse' && 'animate-pulse',
           className,
         )}

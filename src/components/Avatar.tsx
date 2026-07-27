@@ -19,7 +19,7 @@ const sizeClasses = {
 
 const statusColors = {
   online: 'bg-[var(--k-success)]',
-  offline: 'bg-slate-400',
+  offline: 'bg-[var(--fg-subtle,#657486)]',
   busy: 'bg-[var(--k-danger)]',
   away: 'bg-[var(--k-warning)]',
 };
@@ -67,7 +67,7 @@ export const Avatar: React.FC<AvatarProps> = ({ name, src, size = 'md', status, 
       {status && (
         <span
           className={cn(
-            'absolute bottom-0 right-0 rounded-full ring-2 ring-white dark:ring-slate-900',
+            'absolute bottom-0 right-0 rounded-full ring-2 ring-[var(--bg-card)]',
             statusColors[status],
             statusSizes[size],
           )}

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronRight, Columns3, MoreHorizontal } from 'lucide-react';
+import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import { cn } from '../utils';
 import { Checkbox } from './Checkbox';
 import { Pagination } from './Pagination';
@@ -54,12 +55,33 @@ export interface TablePagination {
   onPageSizeChange?: (size: number) => void;
 }
 
+export interface TableInfinite {
+  /** Quedan más filas por traer. */
+  hasMore: boolean;
+  /** Trae la página siguiente. Se llama una vez por cada acercamiento al final. */
+  onLoadMore: () => void;
+  /** Hay una petición en vuelo; se enseña un indicador y no se pide otra. */
+  loading?: boolean;
+  /** Qué poner cuando ya no queda nada. `false` no pone nada. */
+  endMessage?: React.ReactNode | false;
+}
+
 export interface TableProps<T> {
   columns: TableColumn<T>[];
   data: T[];
   onRowClick?: (item: T) => void;
   className?: string;
-  emptyMessage?: string;
+  /**
+   * Estado vacío. Admite nodos, no solo texto: un vacío útil suele llevar
+   * icono y un botón para crear el primer registro.
+   */
+  emptyMessage?: React.ReactNode;
+  /**
+   * Clases extra por fila, para el estado visual que solo conoce quien la usa:
+   * la fila seleccionada de un panel, o tachar las ya asignadas. Sin esto hay
+   * que salirse del componente y escribir la tabla a mano.
+   */
+  rowClassName?: (item: T, index: number) => string | undefined;
   isLoading?: boolean;
   /** Densidad de filas. Default: 'compact' (estilo Odoo). */
   density?: TableDensity;
@@ -73,6 +95,11 @@ export interface TableProps<T> {
   rowKey?: (item: T, index: number) => string | number;
   /** Paginación integrada (cliente o servidor, ver TablePagination). */
   pagination?: TablePagination;
+  /**
+   * Carga la página siguiente al acercarse al final, en lugar de paginar. Se
+   * excluye con `pagination`: o se navega por páginas o se sigue bajando.
+   */
+  infinite?: TableInfinite;
   /** Filas expandibles: contenido del detalle. Añade columna chevron. */
   renderExpanded?: (item: T) => React.ReactNode;
   /** Expansión controlada. */
@@ -175,7 +202,7 @@ function ColumnToggle({
         aria-label="Mostrar u ocultar columnas"
         title="Columnas"
         onClick={() => setIsOpen(!isOpen)}
-        className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800 transition-colors"
+        className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent hover:bg-[var(--bg-hover)] transition-colors"
       >
         <Columns3 className="h-3.5 w-3.5" />
       </button>
@@ -195,7 +222,7 @@ function ColumnToggle({
             {entries.map((entry) => (
               <label
                 key={entry.key}
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--k-radius-xs,2px)] text-[12px] text-[var(--fg-body,#2d3a4a)] hover:bg-[var(--k-surface)] dark:hover:bg-slate-800 cursor-pointer"
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--k-radius-xs,2px)] text-[12px] text-[var(--fg-body,#2d3a4a)] hover:bg-[var(--bg-hover)] cursor-pointer"
               >
                 <Checkbox checked={entry.visible} onChange={() => onToggle(entry.key)} size="sm" />
                 <span className="truncate">{entry.header}</span>
@@ -208,10 +235,59 @@ function ColumnToggle({
   );
 }
 
+/**
+ * Celda de acciones de fila.
+ *
+ * Con una sola acción no se pliega: esconder un único botón detrás de un menú
+ * cuesta dos clics para llegar a lo mismo y no ahorra nada de ancho, así que se
+ * pinta directo. A partir de dos sí compensa el desplegable. El menú de click
+ * derecho de la fila sigue ofreciéndolas en ambos casos.
+ */
+const RowActionsCell: React.FC<{ actions: RowAction[] | null; alwaysVisible?: boolean }> = ({
+  actions,
+  alwaysVisible,
+}) => {
+  if (!actions || actions.length === 0) return null;
+
+  const revealClass = alwaysVisible
+    ? ''
+    : 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-within:opacity-100';
+  const btnClass = cn(
+    'p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent hover:bg-[var(--bg-hover)] transition-all disabled:opacity-40 disabled:pointer-events-none',
+    revealClass,
+  );
+
+  if (actions.length === 1) {
+    const only = actions[0];
+    const label = typeof only.label === 'string' ? only.label : 'Acción de la fila';
+    return (
+      <button
+        type="button"
+        title={label}
+        aria-label={label}
+        disabled={only.disabled}
+        onClick={only.onClick}
+        className={cn(btnClass, only.destructive && 'hover:text-[var(--k-danger-fg)]')}
+      >
+        {only.icon ?? <MoreHorizontal className="h-3.5 w-3.5" />}
+      </button>
+    );
+  }
+
+  return (
+    <DropdownMenu items={actions} align="end">
+      <button type="button" aria-label="Acciones de la fila" className={btnClass}>
+        <MoreHorizontal className="h-3.5 w-3.5" />
+      </button>
+    </DropdownMenu>
+  );
+};
+
 export function Table<T>({
   columns,
   data = [],
   onRowClick,
+  rowClassName,
   className,
   emptyMessage = 'No se encontraron registros.',
   isLoading,
@@ -221,6 +297,7 @@ export function Table<T>({
   onSelectionChange,
   rowKey,
   pagination,
+  infinite,
   renderExpanded,
   expandedKeys,
   onExpandedChange,
@@ -279,6 +356,31 @@ export function Table<T>({
   const [internalPage, setInternalPage] = React.useState(1);
   const [internalPageSize, setInternalPageSize] = React.useState(pagination?.pageSize ?? 25);
   const serverMode = pagination?.total !== undefined;
+
+  const { sentinelRef } = useInfiniteScroll({
+    hasMore: infinite?.hasMore ?? false,
+    onLoadMore: infinite?.onLoadMore ?? (() => {}),
+    loading: infinite?.loading,
+    disabled: !infinite || isLoading,
+  });
+
+  /** Pie de la carga incremental, compartido por la tabla y las tarjetas. */
+  const infiniteFooter = infinite && (
+    <>
+      <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
+      {infinite.loading && (
+        <div className="flex items-center justify-center gap-2 py-3 text-[11px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
+          <span className="h-3 w-3 animate-spin rounded-full border-2 border-accent/20 border-t-accent" />
+          Cargando más
+        </div>
+      )}
+      {!infinite.hasMore && !infinite.loading && infinite.endMessage !== false && (
+        <div className="py-3 text-center text-[10px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
+          {infinite.endMessage ?? 'No hay más registros'}
+        </div>
+      )}
+    </>
+  );
   const pageSize = pagination
     ? pagination.onPageSizeChange
       ? pagination.pageSize
@@ -300,7 +402,8 @@ export function Table<T>({
   };
 
   const pagedData = React.useMemo(() => {
-    if (!pagination || serverMode) return sortedData;
+    // Con carga incremental no se recorta: las filas se van acumulando.
+    if (!pagination || serverMode || infinite) return sortedData;
     return sortedData.slice((page - 1) * pageSize, page * pageSize);
   }, [sortedData, pagination, serverMode, page, pageSize]);
 
@@ -422,8 +525,8 @@ export function Table<T>({
     cellIdx < stickyCount &&
     cn(
       isRowSelected
-        ? 'bg-[var(--k-teal-50)] dark:bg-slate-800'
-        : 'bg-[var(--bg-card,#ffffff)] group-hover:bg-[var(--k-surface)] dark:group-hover:bg-slate-800',
+        ? 'bg-[color-mix(in_srgb,var(--color-accent)_12%,var(--bg-card))]'
+        : 'bg-[var(--bg-card,#ffffff)] group-hover:bg-[var(--bg-hover)]',
       cellIdx === stickyCount - 1 &&
         'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.12)] dark:shadow-[2px_0_4px_-2px_rgba(0,0,0,0.5)]',
     );
@@ -501,6 +604,7 @@ export function Table<T>({
                   'rounded-[var(--k-radius-sm,4px)] border bg-[var(--bg-card,#ffffff)] p-3 flex flex-col gap-2 transition-colors',
                   isRowSelected ? 'border-accent bg-accent/5' : 'border-[var(--border-default,#e2e8f0)]',
                   onRowClick && 'cursor-pointer active:bg-[var(--bg-hover,#f1f5f9)]',
+                  rowClassName?.(item, rowIdx),
                 )}
               >
                 <div className="flex items-start justify-between gap-2">
@@ -533,19 +637,9 @@ export function Table<T>({
                     {statusCols.map((col) => (
                       <React.Fragment key={colKeyOf(col)}>{render(col, item, rowIdx)}</React.Fragment>
                     ))}
-                    {actions && actions.length > 0 && (
-                      <span onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenu items={actions} align="end">
-                          <button
-                            type="button"
-                            aria-label="Acciones de la fila"
-                            className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </button>
-                        </DropdownMenu>
-                      </span>
-                    )}
+                    <span onClick={(e) => e.stopPropagation()}>
+                      <RowActionsCell actions={actions} alwaysVisible />
+                    </span>
                   </div>
                 </div>
 
@@ -587,7 +681,9 @@ export function Table<T>({
           })
         )}
 
-        {pagination && !isLoading && (
+        {infiniteFooter}
+
+        {pagination && !infinite && !isLoading && (
           <Pagination
             page={page}
             pageSize={pageSize}
@@ -820,9 +916,13 @@ export function Table<T>({
                         d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
                       />
                     </svg>
-                    <span className="text-[10px] font-mono uppercase tracking-[1.5px]">
-                      {emptyMessage}
-                    </span>
+                    {typeof emptyMessage === 'string' ? (
+                      <span className="text-[10px] font-mono uppercase tracking-[1.5px]">
+                        {emptyMessage}
+                      </span>
+                    ) : (
+                      emptyMessage
+                    )}
                   </div>
                 </td>
               </tr>
@@ -852,8 +952,9 @@ export function Table<T>({
                         'group transition-all duration-200 border-b border-[var(--border-subtle,#f1f5f9)] last:border-b-0',
                         isRowSelected
                           ? 'bg-accent/5 dark:bg-accent/10 shadow-inner'
-                          : 'hover:bg-[var(--k-surface)] dark:hover:bg-slate-800/50',
+                          : 'hover:bg-[var(--bg-hover)]',
                         onRowClick && 'cursor-pointer hover:shadow-sm hover:-translate-y-px',
+                        rowClassName?.(item, rowIdx),
                       )}
                     >
                       {selectable && (
@@ -937,22 +1038,12 @@ export function Table<T>({
                       })}
                       {hasTrailing && (
                         <td className={cn(cellPad, 'w-8 text-right')} onClick={(e) => e.stopPropagation()}>
-                          {actions && actions.length > 0 && (
-                            <DropdownMenu items={actions} align="end">
-                              <button
-                                type="button"
-                                aria-label="Acciones de la fila"
-                                className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-within:opacity-100 hover:text-accent hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800 transition-all"
-                              >
-                                <MoreHorizontal className="h-3.5 w-3.5" />
-                              </button>
-                            </DropdownMenu>
-                          )}
+                          <RowActionsCell actions={actions} />
                         </td>
                       )}
                     </tr>
                     {hasExpand && isExpanded && (
-                      <tr className="border-b border-[var(--border-subtle,#f1f5f9)] last:border-b-0 bg-[var(--k-surface)]/60 dark:bg-slate-800/30">
+                      <tr className="border-b border-[var(--border-subtle,#f1f5f9)] last:border-b-0 bg-[var(--bg-muted)]">
                         <td colSpan={totalCols} className={cn(cellPad, 'py-3')}>
                           {renderExpanded(item)}
                         </td>
@@ -966,6 +1057,13 @@ export function Table<T>({
               <tr className="border-t border-[var(--border-subtle,#f1f5f9)]">
                 <td colSpan={totalCols} className="p-0">
                   {appendRow}
+                </td>
+              </tr>
+            )}
+            {infinite && (
+              <tr aria-hidden="true">
+                <td colSpan={totalCols} className="p-0">
+                  {infiniteFooter}
                 </td>
               </tr>
             )}
@@ -1005,7 +1103,7 @@ export function Table<T>({
           )}
         </table>
       </div>
-      {pagination && (!isLoading || loadingVariant === 'skeleton') && (
+      {pagination && !infinite && (!isLoading || loadingVariant === 'skeleton') && (
         <div className="border-t border-[var(--border-default,#e2e8f0)] px-4 py-2">
           {isLoading ? (
             // El pie se mantiene ocupando su sitio: si se ocultara, la tabla

@@ -1,27 +1,52 @@
 import * as React from 'react';
 import { cn } from '../utils';
 
+/**
+ * `danger` es el nombre bueno — es el que usa `Button` para lo mismo. `error`
+ * se mantiene porque hay decenas de usos escritos y renombrar rompería el
+ * consumidor; las dos pintan igual. En código nuevo, `danger`.
+ *
+ * Lo mismo con `accent`, que sustituye al histórico `teal`: la escala dejó de
+ * ser verde azulada en cuanto los temas la hicieron configurable.
+ */
+export type BadgeVariant =
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'error'
+  | 'info'
+  | 'neutral'
+  | 'accent'
+  | 'teal';
+
 export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'teal';
+  variant?: BadgeVariant;
 }
 
 export const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
   ({ className, variant = 'neutral', ...props }, ref) => {
-    const variants = {
+    const variants: Record<BadgeVariant, string> = {
+      // Los tokens de estado ya traen su versión de fondo y de texto para cada
+      // modo; el hex fijo con un `dark:` de Tailwind al lado solo servía para
+      // congelar el color y que ningún tema pudiera ajustarlo.
       success:
-        'bg-[#F0FDF4] text-[#166534] border-[#BBF7D0] dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30',
+        'bg-[var(--k-success-bg)] text-[var(--k-success-fg)] border-[rgb(var(--k-success-rgb)/0.3)]',
       warning:
-        'bg-[#FFFBEB] text-[#92400E] border-[#FDE68A] dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30',
+        'bg-[var(--k-warning-bg)] text-[var(--k-warning-fg)] border-[rgb(var(--k-warning-rgb)/0.3)]',
+      danger:
+        'bg-[var(--k-danger-bg)] text-[var(--k-danger-fg)] border-[rgb(var(--k-danger-rgb)/0.3)]',
       error:
-        'bg-[#FEF2F2] text-[#991B1B] border-[#FECACA] dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30',
+        'bg-[var(--k-danger-bg)] text-[var(--k-danger-fg)] border-[rgb(var(--k-danger-rgb)/0.3)]',
       info:
-        'bg-[#EFF6FF] text-[#1E40AF] border-[#BFDBFE] dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30',
+        'bg-[var(--k-info-bg)] text-[var(--k-info-fg)] border-[rgb(var(--k-info-rgb)/0.3)]',
       // La variante de acento sí sigue al tema; las de estado NO: un color de
       // estado tiene que significar lo mismo en todos los temas.
+      accent:
+        'bg-[var(--k-accent-50)] text-[var(--k-accent-600)] border-[var(--k-accent-100)] dark:bg-accent/15 dark:text-[var(--k-accent-100)] dark:border-accent/30',
       teal:
         'bg-[var(--k-accent-50)] text-[var(--k-accent-600)] border-[var(--k-accent-100)] dark:bg-accent/15 dark:text-[var(--k-accent-100)] dark:border-accent/30',
       neutral:
-        'bg-[var(--k-surface)] text-[var(--fg-muted,#52606f)] border-[var(--k-line)] dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+        'bg-[var(--bg-muted)] text-[var(--fg-muted,#52606f)] border-[var(--border-default)]',
     };
 
     return (

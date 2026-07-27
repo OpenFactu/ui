@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
-import { CornerDownLeft, Search } from 'lucide-react';
+import { Clock, CornerDownLeft, Search } from 'lucide-react';
 import { cn } from '../utils';
+import { useEscapeStack } from '../internal/escapeStack';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 
@@ -11,6 +12,11 @@ export interface CommandItem {
   /** Segunda línea: ruta, descripción o contexto. */
   description?: string;
   icon?: React.ReactNode;
+  /**
+   * Dato corto alineado a la derecha: el código de un artículo, un importe, una
+   * fecha. No confundir con `description`, que va como segunda línea.
+   */
+  meta?: React.ReactNode;
   /** Atajo que se muestra a la derecha (`['Ctrl', 'S']`). */
   shortcut?: string[];
   /** Texto extra por el que también debe encontrarse (sinónimos, código). */
@@ -24,6 +30,11 @@ export interface CommandSection {
   label?: string;
   icon?: React.ReactNode;
   items: CommandItem[];
+  /**
+   * Acción del encabezado del grupo: el «ver todos» que lleva al listado
+   * completo cuando los resultados son solo una muestra.
+   */
+  action?: { label: string; onSelect: () => void };
 }
 
 export interface CommandPaletteProps {
@@ -37,6 +48,12 @@ export interface CommandPaletteProps {
   loading?: boolean;
   placeholder?: string;
   emptyMessage?: string;
+  /**
+   * Guarda las últimas búsquedas con esta clave y, con la caja vacía, las
+   * ofrece en lugar del mensaje de vacío. `false` lo desactiva.
+   */
+  recentKey?: string | false;
+  maxRecent?: number;
   /** Texto de ayuda del pie. `false` lo oculta. */
   footerHint?: React.ReactNode | false;
   className?: string;
@@ -74,6 +91,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   loading = false,
   placeholder = 'Buscar o ejecutar…',
   emptyMessage = 'Sin resultados',
+  recentKey = false,
+  maxRecent = 5,
   footerHint,
   className,
 }) => {
@@ -83,7 +102,54 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const listRef = React.useRef<HTMLDivElement>(null);
   const debounced = useDebouncedValue(term, debounceMs);
 
+  // Las últimas búsquedas se guardan en el navegador, no en el estado: lo que
+  // se busca a menudo se busca también mañana.
+  const [recientes, setRecientes] = React.useState<string[]>([]);
+  React.useEffect(() => {
+    if (!recentKey || typeof localStorage === 'undefined') return;
+    try {
+      const raw = localStorage.getItem(recentKey);
+      if (raw) setRecientes(JSON.parse(raw));
+    } catch {
+      // Un almacenamiento lleno o bloqueado no puede tumbar la paleta.
+    }
+  }, [recentKey, open]);
+
+  const recordar = React.useCallback(
+    (texto: string) => {
+      if (!recentKey || !texto.trim()) return;
+      setRecientes((prev) => {
+        const next = [texto, ...prev.filter((x) => x !== texto)].slice(0, maxRecent);
+        try {
+          localStorage.setItem(recentKey, JSON.stringify(next));
+        } catch {
+          // Ver arriba.
+        }
+        return next;
+      });
+    },
+    [recentKey, maxRecent],
+  );
+
+  const olvidar = React.useCallback(() => {
+    setRecientes([]);
+    if (recentKey) {
+      try {
+        localStorage.removeItem(recentKey);
+      } catch {
+        // Ver arriba.
+      }
+    }
+  }, [recentKey]);
+
   useScrollLock(open);
+
+  // Escape en `document` y no solo en el campo: al pulsar «ver todos» o una
+  // búsqueda reciente el foco se va del input, y hasta ahora Escape dejaba de
+  // cerrar la paleta. La pila es la misma que la de los diálogos, así que
+  // abierta sobre uno solo se cierra ella.
+  const idPaleta = React.useId();
+  useEscapeStack(idPaleta, open, onClose);
 
   React.useEffect(() => {
     if (!onSearch) return;
@@ -118,6 +184,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   }, [activeIndex]);
 
   const run = (item: CommandItem) => {
+    recordar(term);
     onClose();
     item.onSelect();
   };
@@ -147,8 +214,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         break;
       }
       case 'Escape':
+        // Lo gestiona `useEscapeStack`; aquí solo se evita que el navegador
+        // vacíe el campo de búsqueda antes de cerrar.
         event.preventDefault();
-        onClose();
         break;
     }
   };
@@ -159,7 +227,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[var(--k-z-modal,99999)] flex items-start justify-center p-4 pt-[12vh] bg-[var(--k-ink-900)]/40 dark:bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-[var(--k-z-modal,99999)] flex items-start justify-center p-4 pt-[12vh] bg-[color-mix(in_srgb,var(--k-ink-900)_45%,transparent)] backdrop-blur-sm"
       onClick={onClose}
     >
       <div
@@ -197,7 +265,39 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           role="listbox"
           className="max-h-[min(60vh,420px)] overflow-y-auto p-2"
         >
-          {flat.length === 0 ? (
+          {/* Las recientes solo sustituyen al vacío cuando de verdad no hay nada
+              que enseñar: en modo cliente la caja vacía muestra el catálogo de
+              comandos, que es para lo que está la paleta, y taparlo con el
+              historial sería peor. */}
+          {!term && recientes.length > 0 && (onSearch || flat.length === 0) ? (
+            <div>
+              <div className="flex items-center gap-1.5 px-2 pt-2 pb-1 text-[9px] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
+                <Clock className="h-3 w-3" />
+                Búsquedas recientes
+                <button
+                  type="button"
+                  onClick={olvidar}
+                  className="ml-auto normal-case tracking-normal text-[10px] font-medium text-accent hover:underline"
+                >
+                  Borrar
+                </button>
+              </div>
+              {recientes.map((texto) => (
+                <button
+                  key={texto}
+                  type="button"
+                  onClick={() => {
+                    setTerm(texto);
+                    inputRef.current?.focus();
+                  }}
+                  className="flex w-full items-center gap-2.5 rounded-[var(--k-radius-xs,2px)] px-2.5 py-2 text-left text-[13px] text-[var(--fg-body,#2d3a4a)] transition-colors hover:bg-[var(--bg-hover)]"
+                >
+                  <Clock className="h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle,#657486)]" />
+                  {texto}
+                </button>
+              ))}
+            </div>
+          ) : flat.length === 0 ? (
             <p className="py-10 text-center text-[11px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
               {loading ? 'Buscando…' : emptyMessage}
             </p>
@@ -208,6 +308,18 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                   <div className="flex items-center gap-1.5 px-2 pt-2 pb-1 text-[9px] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
                     {section.icon}
                     {section.label}
+                    {section.action && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onClose();
+                          section.action!.onSelect();
+                        }}
+                        className="ml-auto normal-case tracking-normal text-[10px] font-medium text-accent hover:underline"
+                      >
+                        {section.action.label}
+                      </button>
+                    )}
                   </div>
                 )}
                 {section.items.map((item) => {
@@ -248,6 +360,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                           </span>
                         )}
                       </span>
+                      {item.meta && (
+                        <span className="shrink-0 font-mono text-[11px] text-[var(--fg-subtle,#657486)]">
+                          {item.meta}
+                        </span>
+                      )}
                       {item.shortcut && (
                         <span className="shrink-0 flex items-center gap-1">
                           {item.shortcut.map((k) => (
@@ -260,7 +377,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                           ))}
                         </span>
                       )}
-                      {active && !item.shortcut && (
+                      {active && !item.shortcut && !item.meta && (
                         <CornerDownLeft className="h-3.5 w-3.5 shrink-0 opacity-60" />
                       )}
                     </div>

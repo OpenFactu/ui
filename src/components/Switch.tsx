@@ -41,7 +41,7 @@ export const Switch: React.FC<SwitchProps> = ({
         className={cn(
           'relative inline-flex shrink-0 items-center rounded-full p-0.5 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-1',
           s.track,
-          checked ? 'bg-accent' : 'bg-slate-300 dark:bg-slate-600',
+          checked ? 'bg-accent' : 'bg-[var(--border-strong)]',
           disabled && 'opacity-50 cursor-not-allowed',
         )}
       >

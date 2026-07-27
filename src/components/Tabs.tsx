@@ -126,7 +126,7 @@ export const Tabs: React.FC<TabsProps> = ({
                     pillSizes[size],
                     isActive
                       ? 'bg-accent/10 text-accent dark:bg-accent/20'
-                      : 'text-[var(--fg-body,#2d3a4a)] dark:text-slate-400 hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800 hover:text-accent',
+                      : 'text-[var(--fg-body,#2d3a4a)] hover:bg-[var(--bg-hover)] hover:text-accent',
                   ),
               item.disabled && 'opacity-50 cursor-not-allowed pointer-events-none',
             )}

@@ -72,10 +72,31 @@
   --k-danger-bg: #fef2f2;
   --k-info-bg: #eff6ff;
 
+  /* Texto ENCIMA del color de estado usado como relleno (no confundir con
+     `-fg`, que es el estado usado como texto). No cambia con el modo porque el
+     color de estado tampoco cambia. */
+  /* Tripletes para transparencias: rgb(var(--k-danger-rgb) / 0.3). */
+  --k-success-rgb: 22 163 74;
+  --k-warning-rgb: 217 119 6;
+  --k-danger-rgb: 220 38 38;
+  --k-info-rgb: 37 99 235;
+
+  --k-success-on: #0f172a;
+  --k-warning-on: #0f172a;
+  --k-danger-on: #ffffff;
+  --k-info-on: #ffffff;
+  --k-accent-on: #0f172a;
+
   /* ── Superficie / texto / borde (semánticos, con variante oscura) ──────*/
   --bg-app: #fafbfc;
   --bg-card: #ffffff;
   --bg-sidebar: #0a1628;
+  /* Capa del sidebar: es la única superficie que no sigue al modo, así que su
+     texto necesita tokens propios. Medidos contra el fondo: 18.13:1 y 4.54:1. */
+  --sidebar-fg: #ffffff;
+  --sidebar-fg-muted: #798089;
+  --sidebar-hover: #202a3b;
+  --sidebar-active: #0d9488;
   --bg-muted: #fafbfc;
   --bg-hover: #f1f5f9;
   --fg-default: #0a1628;
@@ -139,6 +160,10 @@ html.dark {
   --bg-app: #0a1628;
   --bg-card: #1a2535;
   --bg-sidebar: #042b26;
+  --sidebar-fg: #ffffff;
+  --sidebar-fg-muted: #7b908d;
+  --sidebar-hover: #1a3e39;
+  --sidebar-active: #0d9488;
   --bg-muted: #111c2e;
   --bg-hover: #22304a;
   --fg-default: #e2e8f0;

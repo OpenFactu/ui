@@ -237,7 +237,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
           variant === 'area' ? 'px-4 py-8' : 'px-3 py-3 flex-row',
           dragging
             ? 'border-accent bg-accent/5'
-            : 'border-[var(--border-default,#e2e8f0)] hover:border-[var(--k-ink-400)] dark:hover:border-slate-600',
+            : 'border-[var(--border-default,#e2e8f0)] hover:border-[var(--border-strong)]',
           error && 'border-[var(--k-danger)]',
           (disabled || isUploading) && 'opacity-60 pointer-events-none',
         )}
@@ -260,7 +260,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
           </>
         )}
         {progress !== undefined && (
-          <div className="w-full max-w-xs h-1 rounded-full bg-[var(--k-line-2)] dark:bg-slate-800 overflow-hidden mt-1">
+          <div className="w-full max-w-xs h-1 rounded-full bg-[var(--bg-hover)] overflow-hidden mt-1">
             <div
               className="h-full bg-accent transition-all duration-300"
               style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}

@@ -69,7 +69,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({
       className={cn(
         'p-7 bg-[var(--bg-card,#ffffff)] border border-[var(--border-default,#e2e8f0)] relative',
         onClick &&
-          'text-left w-full cursor-pointer transition-colors hover:border-[var(--k-ink-400)] dark:hover:border-slate-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
+          'text-left w-full cursor-pointer transition-colors hover:border-[var(--border-strong)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
         className,
       )}
     >

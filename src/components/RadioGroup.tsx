@@ -70,7 +70,11 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
                     'h-4 w-4 rounded-full border transition-colors peer-focus-visible:ring-1 peer-focus-visible:ring-accent peer-focus-visible:ring-offset-1',
                     isChecked
                       ? 'border-accent bg-accent'
-                      : 'border-[var(--k-ink-400)] dark:border-slate-600 bg-[var(--bg-card,#ffffff)] group-hover:border-accent',
+                      : // `--k-ink-400` y no `--border-strong`: el aro de un radio
+                        // sin marcar tiene que verse, y el borde fuerte en claro
+                        // (#cbd5e1) queda demasiado pálido. La paleta de tinta no
+                        // se invierte, así que en oscuro también contrasta.
+                        'border-[var(--k-ink-400)] bg-[var(--bg-card,#ffffff)] group-hover:border-accent',
                   )}
                 />
                 {isChecked && (
@@ -91,7 +95,7 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
           );
         })}
       </div>
-      {error && <p className="text-[11px] font-medium text-[#DC2626]">{error}</p>}
+      {error && <p className="text-[11px] font-medium text-[var(--k-danger-fg)]">{error}</p>}
     </div>
   );
 };

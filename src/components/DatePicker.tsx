@@ -22,6 +22,8 @@ export interface DatePickerProps {
   value: string | null;
   onChange: (value: string | null) => void;
   label?: string;
+  /** Marca visible junto a la etiqueta y `aria-required` en el control. */
+  required?: boolean;
   error?: string;
   helperText?: string;
   placeholder?: string;
@@ -97,12 +99,13 @@ function addMonths(y: number, m: number, delta: number): { y: number; m: number 
 const gridButton =
   'flex items-center justify-center rounded-[var(--k-radius-xs,2px)] text-[12px] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none';
 const navButton =
-  'p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-muted,#52606f)] hover:text-accent hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:pointer-events-none';
+  'p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-muted,#52606f)] hover:text-accent hover:bg-[var(--bg-hover)] transition-colors disabled:opacity-30 disabled:pointer-events-none';
 
 export const DatePicker: React.FC<DatePickerProps> = ({
   value,
   onChange,
   label,
+  required,
   error,
   helperText,
   placeholder = 'dd/mm/aaaa',
@@ -293,7 +296,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         <button
           type="button"
           onClick={() => setView('months')}
-          className="rounded-[var(--k-radius-xs,2px)] px-1 py-0.5 text-[12px] font-semibold text-[var(--fg-default,#0a1628)] hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800 hover:text-accent transition-colors"
+          className="rounded-[var(--k-radius-xs,2px)] px-1 py-0.5 text-[12px] font-semibold text-[var(--fg-default,#0a1628)] hover:bg-[var(--bg-hover)] hover:text-accent transition-colors"
           aria-label={`Cambiar de mes. Mes actual: ${t.months[viewMonth - 1]}`}
         >
           {t.months[viewMonth - 1]}
@@ -303,7 +306,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         <button
           type="button"
           onClick={() => setView('years')}
-          className="rounded-[var(--k-radius-xs,2px)] px-1 py-0.5 font-mono text-[12px] font-semibold text-[var(--fg-muted,#52606f)] hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800 hover:text-accent transition-colors"
+          className="rounded-[var(--k-radius-xs,2px)] px-1 py-0.5 font-mono text-[12px] font-semibold text-[var(--fg-muted,#52606f)] hover:bg-[var(--bg-hover)] hover:text-accent transition-colors"
           aria-label={`Cambiar de año. Año actual: ${viewYear}`}
         >
           {viewYear}
@@ -363,7 +366,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                 isSelected
                   ? 'bg-accent text-[color:var(--color-accent-fg)] font-semibold'
                   : cn(
-                      'text-[var(--fg-body,#2d3a4a)] hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800',
+                      'text-[var(--fg-body,#2d3a4a)] hover:bg-[var(--bg-hover)]',
                       isToday && 'font-bold text-accent',
                     ),
               )}
@@ -398,7 +401,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
               isSelected
                 ? 'bg-accent text-[color:var(--color-accent-fg)] font-semibold'
                 : cn(
-                    'text-[var(--fg-body,#2d3a4a)] hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800',
+                    'text-[var(--fg-body,#2d3a4a)] hover:bg-[var(--bg-hover)]',
                     isCurrent && 'font-bold text-accent',
                   ),
             )}
@@ -431,7 +434,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
               isSelected
                 ? 'bg-accent text-[color:var(--color-accent-fg)] font-semibold'
                 : cn(
-                    'text-[var(--fg-body,#2d3a4a)] hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800',
+                    'text-[var(--fg-body,#2d3a4a)] hover:bg-[var(--bg-hover)]',
                     isCurrent && 'font-bold text-accent',
                   ),
             )}
@@ -522,12 +525,18 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           className="text-[12px] font-medium text-[var(--fg-body,#2d3a4a)]"
         >
           {label}
+          {required && (
+            <span className="text-[var(--k-danger-fg)] ml-0.5" aria-hidden="true">
+              *
+            </span>
+          )}
         </label>
       )}
       <div ref={anchorRef} className="relative">
         <button
           id={generatedId}
           type="button"
+          aria-required={required || undefined}
           disabled={disabled}
           onClick={() => (isOpen ? close() : openCalendar())}
           aria-haspopup="dialog"
@@ -535,8 +544,8 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           className={cn(
             'flex w-full items-center justify-between gap-2 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] px-3 py-2 text-[13px] transition-colors',
             disabled
-              ? 'cursor-not-allowed opacity-50 bg-[var(--k-surface)] dark:bg-slate-800'
-              : 'cursor-pointer hover:border-[var(--k-ink-400)] dark:hover:border-slate-600',
+              ? 'cursor-not-allowed opacity-50 bg-[var(--bg-muted)]'
+              : 'cursor-pointer hover:border-[var(--border-strong)]',
             isOpen && 'border-accent',
             error && 'border-[var(--k-danger)]',
           )}

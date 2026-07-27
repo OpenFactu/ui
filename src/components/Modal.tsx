@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from 'lucide-react';
+import { useEscapeStack } from '../internal/escapeStack';
 import { cn } from '../utils';
 import { Button, type ButtonProps } from './Button';
 import { useScrollLock } from '../hooks/useScrollLock';
@@ -144,30 +145,7 @@ const TONE_CHIP: Record<ModalTone, string> = {
 /** Profundidad de anidamiento, para apilar diálogos abiertos unos sobre otros. */
 const ModalDepthContext = React.createContext(0);
 
-/**
- * Pila de diálogos abiertos. Escape solo debe cerrar el de arriba: sin esto,
- * cada diálogo escucha en `document` y una sola pulsación los cierra todos.
- */
-const escapeStack: string[] = [];
 
-function useEscapeStack(id: string, active: boolean, onEscape: () => void): void {
-  React.useEffect(() => {
-    if (!active) return;
-    escapeStack.push(id);
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      if (escapeStack[escapeStack.length - 1] !== id) return;
-      e.stopPropagation();
-      onEscape();
-    };
-    document.addEventListener('keydown', onKey);
-    return () => {
-      const idx = escapeStack.lastIndexOf(id);
-      if (idx !== -1) escapeStack.splice(idx, 1);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [id, active, onEscape]);
-}
 
 // ── Subcomponentes de composición ───────────────────────────────────────
 
@@ -247,7 +225,7 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Cerrar"
-            className="p-1.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--k-surface)] dark:hover:bg-slate-800 rounded-[var(--k-radius-xs,2px)] transition-colors"
+            className="p-1.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--bg-hover)] rounded-[var(--k-radius-xs,2px)] transition-colors"
           >
             <X size={18} />
           </button>
@@ -432,7 +410,7 @@ const ModalRoot: React.FC<ModalProps> = ({
                         ? 'bg-accent text-[color:var(--color-accent-fg)]'
                         : done
                           ? 'bg-accent/15 text-accent'
-                          : 'bg-[var(--k-line-2)] dark:bg-slate-800 text-[var(--fg-subtle,#657486)]',
+                          : 'bg-[var(--bg-hover)] text-[var(--fg-subtle,#657486)]',
                     )}
                   >
                     {done ? '✓' : i + 1}
@@ -440,7 +418,7 @@ const ModalRoot: React.FC<ModalProps> = ({
                   <span className="truncate">{step.label}</span>
                 </button>
                 {i < steps.length - 1 && (
-                  <span className="h-px w-4 bg-[var(--k-line)] dark:bg-slate-700 shrink-0" />
+                  <span className="h-px w-4 bg-[var(--border-default)] shrink-0" />
                 )}
               </li>
             );
@@ -522,7 +500,7 @@ const ModalRoot: React.FC<ModalProps> = ({
         style={{ zIndex: resolvedZ }}
         onClick={() => closeOnOverlayClick && canDismiss && onClose()}
         className={cn(
-          'fixed inset-0 flex items-center justify-center p-4 bg-[var(--k-ink-900)]/40 dark:bg-black/70 backdrop-blur-sm transition-opacity duration-200',
+          'fixed inset-0 flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--k-ink-900)_45%,transparent)] backdrop-blur-sm transition-opacity duration-200',
           visible ? 'opacity-100' : 'opacity-0',
           overlayClassName,
         )}

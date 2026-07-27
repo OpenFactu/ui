@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Search, ChevronDown, Check, Plus, X } from 'lucide-react';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
+import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 
 export interface SearchableSelectOption {
   value: string;
@@ -23,6 +24,17 @@ interface SearchableSelectBaseProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  /** Etiqueta encima del control, asociada por `htmlFor`. */
+  label?: React.ReactNode;
+  /**
+   * Marca visible junto a la etiqueta y `aria-required` en el control. Explícito
+   * porque esto no es un `<select>` nativo y la obligatoriedad se perdería.
+   */
+  required?: boolean;
+  /** Texto de ayuda o de error bajo el control. */
+  helperText?: string;
+  error?: string;
+  id?: string;
   /** Botón X para deseleccionar (en multiple cada chip ya tiene su X). */
   clearable?: boolean;
   /** Spinner en el listado (carga de opciones desde servidor). */
@@ -79,6 +91,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
     placeholder = 'Seleccionar...',
     disabled = false,
     className,
+    id,
     clearable = false,
     loading = false,
     onSearchChange,
@@ -98,6 +111,8 @@ export function SearchableSelect(props: SearchableSelectProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const listboxId = React.useId();
+  const generatedId = React.useId();
+  const controlId = id || generatedId;
 
   const {
     anchorRef: wrapperRef,
@@ -309,12 +324,17 @@ export function SearchableSelect(props: SearchableSelectProps) {
     setSearchTerm('');
   };
 
-  // Aviso al llegar al final, para traer la página siguiente.
-  const handleListScroll = (event: React.UIEvent<HTMLDivElement>) => {
-    if (!hasMore || !onLoadMore || loading) return;
-    const el = event.currentTarget;
-    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 24) onLoadMore();
-  };
+  // La página siguiente la pide el mismo mecanismo que Table y List, en vez de
+  // medir `scrollTop` a mano: así el aviso llega un poco antes del final y no
+  // hay que escuchar cada evento de scroll de la lista.
+  const { sentinelRef } = useInfiniteScroll({
+    hasMore,
+    onLoadMore: onLoadMore ?? (() => {}),
+    loading,
+    disabled: !onLoadMore || !isOpen,
+    root: listRef,
+    rootMargin: '80px',
+  });
 
   const hasValue = selectedValues.length > 0;
   const activeDescendant =
@@ -333,8 +353,8 @@ export function SearchableSelect(props: SearchableSelectProps) {
         )}
         style={popoverStyle}
       >
-        <div className="flex items-center gap-2 border-b border-slate-100/50 dark:border-slate-800/50 px-3 py-2 shrink-0">
-          <Search className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500" />
+        <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] px-3 py-2 shrink-0">
+          <Search className="h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle)]" />
           <input
             ref={inputRef}
             role="combobox"
@@ -342,7 +362,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
             aria-controls={listboxId}
             aria-activedescendant={activeDescendant}
             aria-autocomplete="list"
-            className="w-full min-w-0 bg-transparent text-xs outline-none text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 h-7"
+            className="w-full min-w-0 bg-transparent text-xs outline-none text-[var(--fg-default)] placeholder:text-[var(--fg-subtle)] h-7"
             placeholder="Buscar..."
             value={searchTerm}
             onChange={(e) => {
@@ -360,8 +380,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
           id={listboxId}
           role="listbox"
           aria-multiselectable={props.multiple || undefined}
-          onScroll={handleListScroll}
-          className="max-h-[220px] overflow-y-auto p-1 scrollbar-thin scrollbar-thumb-slate-200"
+          className="max-h-[220px] overflow-y-auto p-1 scrollbar-thin scrollbar-thumb-[var(--border-default)]"
         >
           {rows.length > 0 ? (
             rows.map((row) => {
@@ -445,7 +464,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
                       <span
                         className={cn(
                           'text-[9px] font-mono mt-0.5',
-                          selected ? 'opacity-80' : 'text-slate-400 dark:text-slate-500',
+                          selected ? 'opacity-80' : 'text-[var(--fg-subtle)]',
                         )}
                       >
                         {opt.secondaryLabel}
@@ -464,6 +483,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
               </p>
             </div>
           )}
+          <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
           {hasMore && rows.length > 0 && (
             <div className="py-2 text-center text-[10px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
               {loading ? 'Cargando más…' : 'Baja para ver más'}
@@ -474,10 +494,17 @@ export function SearchableSelect(props: SearchableSelectProps) {
       document.body,
     );
 
-  return (
-    <div ref={wrapperRef} className={cn('relative w-full', className)}>
+  // Con etiqueta o mensaje, el `className` del consumidor va al envoltorio; sin
+  // ellos el control ES la raíz y lo lleva él, como hasta ahora.
+  const envuelto = Boolean(props.label || props.error || props.helperText);
+
+  const control = (
+    <div ref={wrapperRef} className={cn('relative w-full', !envuelto && className)}>
       <div
+        id={controlId}
         role="combobox"
+        aria-required={props.required || undefined}
+        aria-invalid={props.error ? true : undefined}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-controls={isOpen ? listboxId : undefined}
@@ -488,9 +515,10 @@ export function SearchableSelect(props: SearchableSelectProps) {
         className={cn(
           'flex w-full items-center justify-between gap-2 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] text-[var(--fg-default,#0a1628)] px-3 py-2 text-[13px] transition-colors focus-visible:outline-none focus-visible:border-accent',
           disabled
-            ? 'cursor-not-allowed opacity-50 bg-[var(--k-surface)] dark:bg-slate-800'
-            : 'cursor-pointer hover:border-[var(--k-ink-400)] dark:hover:border-slate-600',
+            ? 'cursor-not-allowed opacity-50 bg-[var(--bg-muted)]'
+            : 'cursor-pointer hover:border-[var(--border-strong)]',
           isOpen && 'border-accent',
+          props.error && 'border-[var(--k-danger)]',
         )}
       >
         {props.multiple && hasValue ? (
@@ -521,7 +549,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
           <span
             className={cn(
               'truncate font-semibold',
-              !hasValue && 'text-slate-400 dark:text-slate-500 font-normal',
+              !hasValue && 'text-[var(--fg-subtle)] font-normal',
             )}
           >
             {hasValue ? selectedOptions[0]?.label : placeholder}
@@ -532,7 +560,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
             <X
               role="button"
               aria-label={props.multiple ? 'Limpiar todo' : 'Limpiar selección'}
-              className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 hover:text-[var(--k-danger-fg)] transition-colors"
+              className="h-3.5 w-3.5 text-[var(--fg-subtle)] hover:text-[var(--k-danger-fg)] transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 clearAll();
@@ -541,13 +569,47 @@ export function SearchableSelect(props: SearchableSelectProps) {
           )}
           <ChevronDown
             className={cn(
-              'h-3 w-3 text-slate-400 dark:text-slate-500 transition-transform duration-200',
+              'h-3 w-3 text-[var(--fg-subtle)] transition-transform duration-200',
               isOpen && 'rotate-180',
             )}
           />
         </span>
       </div>
       {dropdownContent}
+    </div>
+  );
+
+  const mensaje = props.error ?? props.helperText;
+  if (!envuelto) return control;
+
+  return (
+    <div className={cn('flex w-full flex-col gap-1.5', className)}>
+      {props.label && (
+        <label
+          htmlFor={controlId}
+          className="text-[12px] font-medium text-[var(--fg-body,#2d3a4a)]"
+        >
+          {props.label}
+          {props.required && (
+            <span className="ml-0.5 text-[var(--k-danger-fg)]" aria-hidden="true">
+              *
+            </span>
+          )}
+        </label>
+      )}
+      {control}
+      {mensaje && (
+        <p
+          className={cn(
+            'text-[11px]',
+            props.error
+              ? 'font-medium text-[var(--k-danger-fg)]'
+              : 'text-[var(--fg-subtle,#657486)]',
+          )}
+        >
+          {mensaje}
+        </p>
+      )}
     </div>
   );
 }

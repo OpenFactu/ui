@@ -12,19 +12,27 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     { className, variant = 'primary', size = 'md', isLoading, children, disabled, ...props },
     ref,
   ) => {
+    /**
+     * Todo con tokens semánticos y sin variantes `dark:`: los tokens ya cambian
+     * de valor según el modo, así que un `dark:border-slate-700` solo servía
+     * para congelar el botón en el azul pizarra de Tailwind — visible en cuanto
+     * el tenant usa un tema que no es azul (Carbon, Forest, Plum).
+     */
     const variants = {
-      primary:
-        'bg-primary text-primary-fg hover:bg-primary-hover',
+      primary: 'bg-primary text-primary-fg hover:bg-primary-hover',
       accent:
-        'bg-accent text-[color:var(--color-accent-fg)] hover:bg-[var(--k-teal-600)]',
+        'bg-accent text-[color:var(--color-accent-fg)] hover:bg-[var(--k-accent-600)]',
       secondary:
-        'bg-transparent border border-[var(--k-line)] text-[var(--fg-default,#0a1628)] hover:border-[var(--k-ink-400)] dark:text-slate-100 dark:border-slate-700',
+        'bg-transparent border border-[var(--border-default)] text-[var(--fg-default)] hover:border-[var(--border-strong)]',
+      // Ojo con el borde: `border-[var(--x)]/30` NO genera CSS en Tailwind v3
+      // (la sintaxis de alpha no aplica sobre un valor arbitrario que ya es una
+      // var), así que el borde suave se hace con color-mix, que sí compila.
       danger:
-        'bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA] hover:bg-[#FEE2E2] dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30',
+        'bg-[var(--k-danger-bg)] text-[var(--k-danger-fg)] border border-[color-mix(in_srgb,var(--k-danger)_35%,var(--bg-card))] hover:border-[var(--k-danger)]',
       ghost:
-        'bg-[var(--k-surface)] text-[var(--fg-muted,#52606f)] border border-[var(--k-line)] hover:text-[var(--fg-default,#0a1628)] hover:border-[var(--k-ink-400)] dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+        'bg-[var(--bg-muted)] text-[var(--fg-muted)] border border-[var(--border-default)] hover:text-[var(--fg-default)] hover:border-[var(--border-strong)]',
       outline:
-        'bg-transparent border border-[var(--k-line)] text-[var(--fg-default,#0a1628)] hover:border-[var(--k-ink-400)] dark:text-slate-100 dark:border-slate-700',
+        'bg-transparent border border-[var(--border-default)] text-[var(--fg-default)] hover:border-[var(--border-strong)]',
     };
 
     const sizes = {

@@ -73,14 +73,14 @@ export const ColorInput: React.FC<ColorInputProps> = ({
           className={cn(
             'relative shrink-0 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] overflow-hidden transition-colors',
             SWATCH_SIZES[size],
-            disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-[var(--k-ink-400)]',
+            disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-[var(--border-strong)]',
             error && 'border-[var(--k-danger)]',
           )}
           style={{ background: value ? hex : undefined }}
           title={value || 'Sin color'}
         >
           {!value && (
-            <span className="absolute inset-0 flex items-center justify-center bg-[var(--k-surface)] dark:bg-slate-800">
+            <span className="absolute inset-0 flex items-center justify-center bg-[var(--bg-muted)]">
               <span className="h-full w-px rotate-45 bg-[var(--k-danger)]/60" />
             </span>
           )}

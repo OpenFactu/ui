@@ -34,7 +34,20 @@ const listeners = new Set<Listener>();
 /** Tokens extra por espacio de nombres, para que un plugin pueda quitar los suyos. */
 const tokenNamespaces = new Map<string, Record<string, string>>();
 
+/**
+ * Instantánea cacheada del catálogo.
+ *
+ * `useSyncExternalStore` compara la instantánea con `Object.is` después de cada
+ * render: si se construyera el array al vuelo en cada llamada, nunca coincidiría
+ * consigo misma y React repintaría en bucle hasta reventar («Maximum update
+ * depth exceeded»). Se invalida solo cuando el registro cambia de verdad.
+ */
+let presetsSnapshot: RegisteredThemePreset[] | null = null;
+let tokensSnapshot: Record<string, string> | null = null;
+
 function notify(): void {
+  presetsSnapshot = null;
+  tokensSnapshot = null;
   for (const listener of listeners) listener();
 }
 
@@ -97,10 +110,13 @@ export function unregisterThemeSource(source: string): void {
 
 /** Catálogo completo: primero los integrados, después los registrados. */
 export function getThemePresets(): RegisteredThemePreset[] {
-  return [
-    ...THEME_PRESETS.map((p) => ({ ...p, source: 'builtin' })),
-    ...registered.values(),
-  ];
+  if (!presetsSnapshot) {
+    presetsSnapshot = [
+      ...THEME_PRESETS.map((p) => ({ ...p, source: 'builtin' })),
+      ...registered.values(),
+    ];
+  }
+  return presetsSnapshot;
 }
 
 export function getThemePreset(id: string): RegisteredThemePreset | undefined {
@@ -142,9 +158,12 @@ export function unregisterTokens(namespace: string): void {
 
 /** Todos los tokens registrados, ya mezclados. Lo consume `applyTheme`. */
 export function getRegisteredTokens(): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const vars of tokenNamespaces.values()) Object.assign(out, vars);
-  return out;
+  if (!tokensSnapshot) {
+    const out: Record<string, string> = {};
+    for (const vars of tokenNamespaces.values()) Object.assign(out, vars);
+    tokensSnapshot = out;
+  }
+  return tokensSnapshot;
 }
 
 // ── Validación ──────────────────────────────────────────────────────────

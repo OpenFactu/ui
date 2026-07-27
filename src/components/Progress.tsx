@@ -52,7 +52,7 @@ export const Progress: React.FC<ProgressProps> = ({
         aria-valuemax={100}
         aria-label={label}
         className={cn(
-          'w-full overflow-hidden rounded-full bg-[var(--k-line-2)] dark:bg-slate-800',
+          'w-full overflow-hidden rounded-full bg-[var(--bg-hover)]',
           size === 'sm' ? 'h-1' : 'h-2',
         )}
       >

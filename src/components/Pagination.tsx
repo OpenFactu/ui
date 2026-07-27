@@ -31,7 +31,7 @@ export const Pagination: React.FC<PaginationProps> = ({
   const showSizes = pageSizeOptions.length > 0 && onPageSizeChange;
 
   const navBtn =
-    'inline-flex items-center gap-1 px-2 py-1 rounded-[var(--k-radius-xs,2px)] text-[12px] font-medium text-[var(--fg-body,#2d3a4a)] hover:text-accent hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800 transition-colors disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent';
+    'inline-flex items-center gap-1 px-2 py-1 rounded-[var(--k-radius-xs,2px)] text-[12px] font-medium text-[var(--fg-body,#2d3a4a)] hover:text-accent hover:bg-[var(--bg-hover)] transition-colors disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent';
 
   return (
     <div

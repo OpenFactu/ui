@@ -68,7 +68,7 @@ const STATUS_ICON: Record<InputStatus, React.ReactNode> = {
 };
 
 const ADDON_CLASSES =
-  'flex items-center shrink-0 text-[12px] text-[var(--fg-muted,#52606f)] bg-[var(--k-surface)] dark:bg-slate-800 border-[var(--border-default,#e2e8f0)]';
+  'flex items-center shrink-0 text-[12px] text-[var(--fg-muted,#52606f)] bg-[var(--bg-muted)] border-[var(--border-default,#e2e8f0)]';
 
 export const Input: React.FC<InputProps> = ({
   label,
@@ -107,7 +107,11 @@ export const Input: React.FC<InputProps> = ({
       )}
     >
       {label}
-      {(requiredMark || props.required) && <span className="text-[var(--k-danger-fg)] ml-0.5">*</span>}
+      {(requiredMark || props.required) && (
+        <span className="text-[var(--k-danger-fg)] ml-0.5" aria-hidden="true">
+          *
+        </span>
+      )}
     </label>
   );
 
@@ -136,76 +140,37 @@ export const Input: React.FC<InputProps> = ({
 
   const hasAddons = prefix !== undefined || suffix !== undefined || withStatusIcon;
 
-  // Sin complementos se conserva exactamente el marcado y las clases de la
-  // versión anterior: el borde lo lleva el propio <input>, de modo que los
-  // usos que pasan `className` con `border-*` o `rounded-*` siguen mandando.
-  if (!hasAddons) {
-    return (
-      <div className={cn('flex flex-col gap-1.5 w-full', containerClassName)}>
-        {labelNode}
-        <div className="relative group">
-          {leftIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-subtle,#657486)] group-focus-within:text-accent transition-colors">
-              {leftIcon}
-            </div>
-          )}
-          <input
-            ref={inputRef}
-            id={inputId}
-            aria-invalid={effectiveStatus === 'error' || undefined}
-            className={cn(
-              'flex w-full rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] text-[var(--fg-default,#0a1628)] transition-colors',
-              SIZE_CLASSES[inputSize],
-              'file:border-0 file:bg-transparent file:text-sm file:font-medium',
-              'placeholder:text-[var(--fg-subtle,#657486)] focus-visible:outline-none focus-visible:border-accent',
-              'disabled:cursor-not-allowed disabled:opacity-50',
-              leftIcon && 'pl-10',
-              rightIcon && 'pr-10',
-              effectiveStatus === 'error' &&
-                'border-[var(--k-danger)] focus-visible:border-[var(--k-danger)]',
-              effectiveStatus === 'success' && 'border-[var(--k-success)]',
-              effectiveStatus === 'warning' && 'border-[var(--k-warning)]',
-              className,
-            )}
-            {...props}
-          />
-          {rightIcon && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fg-subtle,#657486)] group-focus-within:text-accent transition-colors">
-              {rightIcon}
-            </div>
-          )}
-        </div>
-        {messageNode}
-      </div>
-    );
-  }
-
-  // Con complementos, el borde pasa al contenedor para que el foco enmarque el
-  // conjunto y no se parta entre el campo y los añadidos.
+  // UN SOLO árbol, siempre con el envoltorio. Antes había dos marcados distintos
+  // —uno para el campo pelado y otro con complementos— y React elegía entre
+  // ellos en cada render: en cuanto aparecía un complemento (la X de limpiar en
+  // cuanto escribes la primera letra), el <input> se desmontaba y volvía a
+  // montarse, y con él se perdía el foco. Se seguía escribiendo al vacío.
+  //
+  // El envoltorio está siempre; lo que cambia son las clases. Sin complementos
+  // el borde lo sigue llevando el propio <input>, de modo que los usos que
+  // pasan `className` con `border-*` o `rounded-*` mandan igual que antes.
   return (
     <div className={cn('flex flex-col gap-1.5 w-full', containerClassName)}>
       {labelNode}
       <div
         className={cn(
-          'group flex w-full items-stretch overflow-hidden rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] transition-colors',
-          STATUS_RING[effectiveStatus],
-          props.disabled && 'opacity-50 cursor-not-allowed bg-[var(--k-surface)] dark:bg-slate-800',
+          'group flex w-full items-stretch',
+          hasAddons &&
+            'overflow-hidden rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] transition-colors',
+          hasAddons && STATUS_RING[effectiveStatus],
+          hasAddons && props.disabled && 'opacity-50 cursor-not-allowed bg-[var(--bg-muted)]',
         )}
       >
         {prefix !== undefined && (
           <span
-            className={cn(
-              ADDON_CLASSES,
-              'border-r',
-              !prefixInteractive && 'px-2.5 select-none',
-            )}
+            className={cn(ADDON_CLASSES, 'border-r', !prefixInteractive && 'px-2.5 select-none')}
           >
             {prefix}
           </span>
         )}
         <div className="relative flex-1 min-w-0 flex items-center">
           {leftIcon && (
-            <span className="absolute left-3 text-[var(--fg-subtle,#657486)] group-focus-within:text-accent transition-colors">
+            <span className="absolute left-3 z-10 text-[var(--fg-subtle,#657486)] group-focus-within:text-accent transition-colors">
               {leftIcon}
             </span>
           )}
@@ -214,17 +179,29 @@ export const Input: React.FC<InputProps> = ({
             id={inputId}
             aria-invalid={effectiveStatus === 'error' || undefined}
             className={cn(
-              'w-full min-w-0 bg-transparent border-0 text-[var(--fg-default,#0a1628)]',
+              'w-full min-w-0 text-[var(--fg-default,#0a1628)]',
               SIZE_CLASSES[inputSize],
               'placeholder:text-[var(--fg-subtle,#657486)] focus:outline-none focus-visible:outline-none',
               'disabled:cursor-not-allowed',
+              hasAddons
+                ? 'bg-transparent border-0'
+                : cn(
+                    'flex rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] transition-colors',
+                    'file:border-0 file:bg-transparent file:text-sm file:font-medium',
+                    'focus-visible:border-accent disabled:opacity-50',
+                    effectiveStatus === 'error' &&
+                      'border-[var(--k-danger)] focus-visible:border-[var(--k-danger)]',
+                    effectiveStatus === 'success' && 'border-[var(--k-success)]',
+                    effectiveStatus === 'warning' && 'border-[var(--k-warning)]',
+                  ),
               leftIcon && 'pl-10',
+              !hasAddons && rightIcon && 'pr-10',
               className,
             )}
             {...props}
           />
           {rightIcon && (
-            <span className="absolute right-3 text-[var(--fg-subtle,#657486)]">
+            <span className="absolute right-3 text-[var(--fg-subtle,#657486)] group-focus-within:text-accent transition-colors">
               {rightIcon}
             </span>
           )}
@@ -234,11 +211,7 @@ export const Input: React.FC<InputProps> = ({
         )}
         {suffix !== undefined && (
           <span
-            className={cn(
-              ADDON_CLASSES,
-              'border-l',
-              !suffixInteractive && 'px-2.5 select-none',
-            )}
+            className={cn(ADDON_CLASSES, 'border-l', !suffixInteractive && 'px-2.5 select-none')}
           >
             {suffix}
           </span>

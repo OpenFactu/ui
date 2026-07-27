@@ -30,19 +30,27 @@ export const NavItem: React.FC<NavItemProps> = ({
     onClick={onClick}
     className={cn(
       'flex items-center justify-between gap-3 px-3 py-2 rounded-[var(--k-radius-xs,2px)] transition-colors duration-150 group',
+      // Tokens del sidebar, no grises de Tailwind: el fondo lo elige el tema y
+      // un `slate-400` fijo desaparece en cuanto el sidebar no es casi negro.
       isActive
-        ? 'bg-accent text-white'
-        : 'text-slate-400 hover:bg-slate-800 hover:text-white',
+        ? 'bg-[var(--sidebar-active)] text-[color:var(--color-accent-fg)]'
+        : 'text-[var(--sidebar-fg-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-fg)]',
       className,
     )}
   >
     <div className="flex items-center gap-3">
       <Icon
         size={18}
-        className={cn(isActive ? 'text-white' : 'group-hover:scale-110 transition-transform')}
+        className={cn(
+          isActive
+            ? 'text-[color:var(--color-accent-fg)]'
+            : 'group-hover:scale-110 transition-transform',
+        )}
       />
       <span className="font-medium text-sm">{label}</span>
     </div>
-    {isActive && <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
+    {isActive && (
+      <div className="w-1.5 h-1.5 rounded-full bg-[color:var(--color-accent-fg)] animate-pulse" />
+    )}
   </Link>
 );

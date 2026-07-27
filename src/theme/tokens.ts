@@ -6,7 +6,18 @@ import type {
   ThemeInput,
   ThemeRadius,
 } from './types';
-import { alpha, contrastingFg, darken, lighten, hexToRgb, normalizeHex, rgbToSpaceString } from './derive';
+import {
+  alpha,
+  clampToDarkSurface,
+  relativeLuminance,
+  contrastingFg,
+  darken,
+  mutedOn,
+  lighten,
+  hexToRgb,
+  normalizeHex,
+  rgbToSpaceString,
+} from './derive';
 import { fontOptionFor } from './fonts';
 
 /** Acento de fábrica: si no cambia, se conserva su escala afinada a mano. */
@@ -92,9 +103,22 @@ export const DEFAULT_THEME: ResolvedTheme = {
     warningBg: '#fffbeb',
     dangerBg: '#fef2f2',
     infoBg: '#eff6ff',
+    // Texto sobre el color de estado usado como relleno. Medidos: 5.42 / 5.60 /
+    // 4.83 / 5.17 a 1, todos por encima del mínimo legible.
+    successOn: '#0f172a',
+    warningOn: '#0f172a',
+    dangerOn: '#ffffff',
+    infoOn: '#ffffff',
+    /** Texto sobre el acento usado como relleno. Medido: 4.77:1. */
+    accentOn: '#0f172a',
     bgApp: '#fafbfc',
     bgCard: '#ffffff',
     bgSidebar: '#0a1628',
+    // Medidos sobre #0a1628: 18.13:1 el principal y 4.54:1 el atenuado.
+    sidebarFg: '#ffffff',
+    sidebarFgMuted: '#798089',
+    sidebarHover: '#202a3b',
+    sidebarActive: '#0d9488',
     bgMuted: '#fafbfc',
     bgHover: '#f1f5f9',
     fgDefault: '#0a1628',
@@ -172,19 +196,25 @@ export function resolveTheme(input?: ThemeInput, base: ResolvedTheme = DEFAULT_T
   // La paleta (`ink`, `line`, `surface`) se queda como está: es una escala fija
   // que se usa tanto para texto como para fondos, así que invertirla rompería
   // cualquier componente que la use como superficie.
+  //
+  // Del primario se toma el MATIZ, nunca la claridad: los presets de fábrica ya
+  // son casi negros, pero el color de una marca cualquiera no tiene por qué
+  // serlo. Sin este ajuste un primario teal pintaba las tarjetas de teal vivo y
+  // dejaba el texto en 2.81:1.
   const isFactoryPrimary = primary === DEFAULT_THEME.colors.primary;
+  const surfaceBase = clampToDarkSurface(primary);
   const darkSurfaces = {
     ...(isFactoryPrimary
       ? DEFAULT_DARK_SURFACES
       : {
-          bgApp: primary,
-          bgCard: lighten(primary, 0.06),
-          bgMuted: lighten(primary, 0.03),
-          bgHover: lighten(primary, 0.1),
-          bgSidebar: darken(primary, 0.25),
-          borderDefault: lighten(primary, 0.14),
-          borderSubtle: lighten(primary, 0.09),
-          borderStrong: lighten(primary, 0.22),
+          bgApp: surfaceBase,
+          bgCard: lighten(surfaceBase, 0.06),
+          bgMuted: lighten(surfaceBase, 0.03),
+          bgHover: lighten(surfaceBase, 0.1),
+          bgSidebar: darken(surfaceBase, 0.25),
+          borderDefault: lighten(surfaceBase, 0.14),
+          borderSubtle: lighten(surfaceBase, 0.09),
+          borderStrong: lighten(surfaceBase, 0.22),
         }),
     fgDefault: '#e2e8f0',
     fgBody: '#cbd5e1',
@@ -193,6 +223,11 @@ export function resolveTheme(input?: ThemeInput, base: ResolvedTheme = DEFAULT_T
     fgMuted: '#a9b6c8',
     fgSubtle: '#8b99ad',
   };
+
+  const sidebar = normalizeHex(
+    c.bgSidebar ?? (isDark ? darkSurfaces.bgSidebar : base.colors.bgSidebar),
+  );
+  const sidebarFg = contrastingFg(sidebar);
 
   const success = normalizeHex(c.success ?? base.colors.success);
   const warning = normalizeHex(c.warning ?? base.colors.warning);
@@ -254,11 +289,28 @@ export function resolveTheme(input?: ThemeInput, base: ResolvedTheme = DEFAULT_T
       warningBg: c.warningBg ?? semanticBg(warning, base.colors.warning, base.colors.warningBg),
       dangerBg: c.dangerBg ?? semanticBg(danger, base.colors.danger, base.colors.dangerBg),
       infoBg: c.infoBg ?? semanticBg(info, base.colors.info, base.colors.infoBg),
+      // El relleno lleva el texto que de verdad contrasta más, no el que suele
+      // suponerse (blanco): sobre un ámbar o un lima, el blanco no llega.
+      successOn: normalizeHex(c.successOn ?? contrastingFg(success)),
+      warningOn: normalizeHex(c.warningOn ?? contrastingFg(warning)),
+      dangerOn: normalizeHex(c.dangerOn ?? contrastingFg(danger)),
+      infoOn: normalizeHex(c.infoOn ?? contrastingFg(info)),
+      accentOn: normalizeHex(c.accentOn ?? contrastingFg(accent)),
       bgApp: normalizeHex(c.bgApp ?? (isDark ? darkSurfaces.bgApp : base.colors.bgApp)),
       bgCard: normalizeHex(c.bgCard ?? (isDark ? darkSurfaces.bgCard : base.colors.bgCard)),
-      bgSidebar: normalizeHex(
-        c.bgSidebar ?? (isDark ? darkSurfaces.bgSidebar : base.colors.bgSidebar),
+      bgSidebar: sidebar,
+      sidebarFg: normalizeHex(c.sidebarFg ?? sidebarFg),
+      // El secundario se atenúa hasta el límite de lo legible, no hasta un gris
+      // elegido a ojo: así aguanta igual sobre un sidebar negro que sobre uno
+      // claro.
+      sidebarFgMuted: normalizeHex(c.sidebarFgMuted ?? mutedOn(sidebar, sidebarFg)),
+      sidebarHover: normalizeHex(
+        c.sidebarHover ??
+          (relativeLuminance(hexToRgb(sidebar)) < 0.2
+            ? lighten(sidebar, 0.09)
+            : darken(sidebar, 0.07)),
       ),
+      sidebarActive: normalizeHex(c.sidebarActive ?? accent),
       bgMuted: normalizeHex(c.bgMuted ?? (isDark ? darkSurfaces.bgMuted : base.colors.bgMuted)),
       bgHover: normalizeHex(c.bgHover ?? (isDark ? darkSurfaces.bgHover : base.colors.bgHover)),
       fgDefault: normalizeHex(
@@ -340,10 +392,25 @@ export function themeToCssVars(theme: ResolvedTheme): ThemeCssVars {
     '--k-warning-bg': colors.warningBg,
     '--k-danger-bg': colors.dangerBg,
     '--k-info-bg': colors.infoBg,
+    // Tripletes para poder usar transparencias: `rgb(var(--k-danger-rgb) / .3)`.
+    // Sin ellos no hay forma de pedir «este estado al 30 %» sin fijar un hex.
+    '--k-success-rgb': rgb(colors.success),
+    '--k-warning-rgb': rgb(colors.warning),
+    '--k-danger-rgb': rgb(colors.danger),
+    '--k-info-rgb': rgb(colors.info),
+    '--k-success-on': colors.successOn,
+    '--k-warning-on': colors.warningOn,
+    '--k-danger-on': colors.dangerOn,
+    '--k-info-on': colors.infoOn,
+    '--k-accent-on': colors.accentOn,
 
     '--bg-app': colors.bgApp,
     '--bg-card': colors.bgCard,
     '--bg-sidebar': colors.bgSidebar,
+    '--sidebar-fg': colors.sidebarFg,
+    '--sidebar-fg-muted': colors.sidebarFgMuted,
+    '--sidebar-hover': colors.sidebarHover,
+    '--sidebar-active': colors.sidebarActive,
     '--bg-muted': colors.bgMuted,
     '--bg-hover': colors.bgHover,
     '--fg-default': colors.fgDefault,

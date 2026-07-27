@@ -46,7 +46,7 @@ export const Loader = React.forwardRef<HTMLDivElement, LoaderProps>(
           <span
             className={cn(
               'text-sm font-bold tracking-tight animate-pulse',
-              variant === 'white' ? 'text-white' : 'text-slate-600 dark:text-slate-300',
+              variant === 'white' ? 'text-white' : 'text-[var(--fg-muted)]',
             )}
           >
             {label}
@@ -57,7 +57,7 @@ export const Loader = React.forwardRef<HTMLDivElement, LoaderProps>(
 
     if (overlay) {
       return (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/60 dark:bg-slate-900/70 backdrop-blur-[2px] rounded-inherit transition-all duration-300">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[color-mix(in_srgb,var(--bg-card)_65%,transparent)] backdrop-blur-[2px] rounded-inherit transition-all duration-300">
           {loaderContent}
         </div>
       );

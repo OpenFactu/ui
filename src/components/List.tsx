@@ -5,6 +5,7 @@ import { cn } from '../utils';
 import { SkeletonList } from './Skeleton';
 import { EmptyState, type EmptyStateProps } from './EmptyState';
 import { densityClasses, type Density } from './internal/density';
+import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 
 export type ListDensity = Density;
 export type ListVariant = 'plain' | 'divided' | 'bordered' | 'cards';
@@ -230,7 +231,7 @@ export const ListItem: React.FC<ListItemProps> = ({
       'rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)]',
     isActive && 'bg-accent/10 dark:bg-accent/15',
     !isActive && unread && 'bg-accent/5',
-    !isActive && interactive && !disabled && 'hover:bg-[var(--k-surface)] dark:hover:bg-slate-800/50',
+    !isActive && interactive && !disabled && 'hover:bg-[var(--bg-hover)]',
     isSelected && !isActive && 'bg-accent/5',
     disabled && 'opacity-50 pointer-events-none',
     className,
@@ -262,8 +263,8 @@ export const ListItem: React.FC<ListItemProps> = ({
           className={cn(
             'p-1 rounded-[var(--k-radius-xs,2px)] transition-colors disabled:opacity-40 disabled:pointer-events-none',
             action.tone === 'danger'
-              ? 'text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] hover:bg-rose-50 dark:hover:bg-rose-500/10'
-              : 'text-[var(--fg-subtle,#657486)] hover:text-accent hover:bg-[var(--k-line-2)] dark:hover:bg-slate-800',
+              ? 'text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] hover:bg-[var(--k-danger-bg)]'
+              : 'text-[var(--fg-subtle,#657486)] hover:text-accent hover:bg-[var(--bg-hover)]',
           )}
         >
           {action.icon}
@@ -382,6 +383,14 @@ export const ListSection: React.FC<ListSectionProps> = ({
 
 // ─────────────────────────────────────────────────────────────────────────
 
+export interface ListInfinite {
+  hasMore: boolean;
+  onLoadMore: () => void;
+  loading?: boolean;
+  /** Qué poner al llegar al final. `false` no pone nada. */
+  endMessage?: React.ReactNode | false;
+}
+
 export interface ListProps {
   /** Modo plano. Excluyente con `sections`. */
   items?: ListItemData[];
@@ -405,6 +414,8 @@ export interface ListProps {
   staggerAnimation?: boolean;
   header?: React.ReactNode;
   footer?: React.ReactNode;
+  /** Carga la página siguiente al acercarse al final de la lista. */
+  infinite?: ListInfinite;
   /** Sustituye el renderizado de cada fila. */
   renderItem?: (item: ListItemData, index: number) => React.ReactNode;
   className?: string;
@@ -435,6 +446,7 @@ const ListRoot: React.FC<ListProps> = ({
   staggerAnimation = true,
   header,
   footer,
+  infinite,
   renderItem,
   className,
   itemClassName,
@@ -443,6 +455,35 @@ const ListRoot: React.FC<ListProps> = ({
 }) => {
   const [internalSelected, setInternalSelected] = React.useState<Array<string | number>>([]);
   const selected = selectedIds ?? internalSelected;
+
+  // Con `maxHeight` la lista tiene su propio scroll: el centinela debe ir
+  // DENTRO y el observador mirar ese contenedor. Colocado fuera está siempre a
+  // la vista y encadena una carga tras otra hasta agotar el servidor.
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const { sentinelRef } = useInfiniteScroll({
+    hasMore: infinite?.hasMore ?? false,
+    onLoadMore: infinite?.onLoadMore ?? (() => {}),
+    loading: infinite?.loading,
+    disabled: !infinite || isLoading,
+    root: maxHeight ? scrollRef : undefined,
+  });
+
+  const pieInfinito = infinite && (
+    <>
+      <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
+      {infinite.loading && (
+        <div className="flex items-center justify-center gap-2 py-3 text-[11px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
+          <span className="h-3 w-3 animate-spin rounded-full border-2 border-accent/20 border-t-accent" />
+          Cargando más
+        </div>
+      )}
+      {!infinite.hasMore && !infinite.loading && infinite.endMessage !== false && (
+        <div className="py-3 text-center text-[10px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
+          {infinite.endMessage ?? 'No hay más elementos'}
+        </div>
+      )}
+    </>
+  );
 
   const toggleSelected = React.useCallback(
     (id: string | number) => {
@@ -503,6 +544,7 @@ const ListRoot: React.FC<ListProps> = ({
           </div>
         )}
         <div
+          ref={scrollRef}
           style={maxHeight ? { maxHeight, overflowY: 'auto' } : undefined}
           className={maxHeight ? 'overflow-y-auto' : undefined}
         >
@@ -540,6 +582,7 @@ const ListRoot: React.FC<ListProps> = ({
               {children ?? renderRows(items ?? [])}
             </ul>
           )}
+          {pieInfinito}
         </div>
         {footer && (
           <div className="px-4 py-2 border-t border-[var(--border-default,#e2e8f0)]">
