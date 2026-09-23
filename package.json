@@ -37,7 +37,8 @@
     "shots": "node scripts/shots.mjs",
     "prepublishOnly": "npm run build",
     "test:operations": "node scripts/check-operations.mjs",
-    "test:documents": "node scripts/check-document-pages.mjs"
+    "test:documents": "node scripts/check-document-pages.mjs",
+    "test:workspace": "node scripts/check-workspace-kit.mjs"
   },
   "publishConfig": {
     "access": "public"
@@ -69,7 +70,7 @@
       "optional": true
     }
   },
-  "description": "Librer\u00eda de componentes React del sistema de dise\u00f1o Keirost.",
+  "description": "Librería de componentes React del sistema de diseño Keirost.",
   "license": "MIT",
   "repository": {
     "type": "git",

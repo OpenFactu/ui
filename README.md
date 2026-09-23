@@ -601,6 +601,79 @@ Con Ladle abierto, `npm run test:operations` comprueba totales, edición,
 aprobación, foco, superposiciones, móvil, importes y resultados del portapapeles.
 Admite `LADLE_URL`, `CHROME_PATH` y `SHOTS_DIR` (directorio existente opcional).
 
+## Etiquetas, adjuntos, aprobaciones y notificaciones
+
+`Workspace Kit → Expediente` combina cinco componentes nuevos en una página
+interactiva. `Estados y variantes` muestra las cargas, errores, bloqueos y
+listas vacías. Todos usan los tokens del tema y APIs controladas: la aplicación
+conserva los datos, permisos, transiciones y persistencia.
+
+| Componente | Uso | API principal |
+| --- | --- | --- |
+| `TagInput` | Clasificación con etiquetas editables | `value`, `onChange`, `maxTags`, `validateTag`, `readOnly` |
+| `AttachmentList` | Archivos existentes y estados de carga | `items`, `onOpen`, `onDownload`, `onRemove`, `onRetry` |
+| `ApprovalFlow` | Etapas de un circuito de autorización | `steps` con `status`, `assignee`, `description`, `actions` |
+| `NotificationList` | Bandeja con leídos/no leídos | `items`, `onActivate`, `onReadChange`, `onMarkAllRead`, `onDismiss` |
+| `SplitButton` | Acción principal con alternativas | `label`, `onClick`, `actions`, `isLoading`, `disabled` |
+
+```tsx
+<TagInput
+  label="Etiquetas"
+  value={tags}
+  onChange={setTags}
+  maxTags={6}
+  validateTag={(tag) => tag.length > 24 ? 'Máximo 24 caracteres.' : null}
+/>
+
+<AttachmentList
+  items={attachments}
+  onOpen={abrirArchivo}
+  onDownload={descargarArchivo}
+  onRemove={(file) => pedirConfirmacion(file)}
+  onRetry={reintentarSubida}
+/>
+
+<ApprovalFlow steps={[
+  { id: 'compras', title: 'Compras', status: 'approved', assignee: 'Ana García' },
+  { id: 'finanzas', title: 'Finanzas', status: 'current', assignee: 'Luis Martín',
+    actions: <Button type="button" onClick={aprobar}>Aprobar</Button> },
+]} />
+
+<SplitButton label="Guardar" onClick={guardar} actions={[
+  { id: 'download', label: 'Descargar resumen', onClick: descargar },
+  { id: 'send', label: 'Enviar', onClick: enviar, disabled: !puedeEnviar },
+]} />
+```
+
+- `TagInput` recorta espacios y evita duplicados sin distinguir mayúsculas.
+  Admite Intro, coma, punto y coma y pegado de varias líneas; el texto pendiente
+  se añade al salir (`commitOnBlur=false` lo desactiva). Con el campo vacío,
+  Retroceso enfoca la última etiqueta; Supr/Retroceso la elimina. Los rechazos
+  se anuncian y se muestran junto al campo. Ofrece `label` o `ariaLabel`.
+- `AttachmentItem.status` admite `ready` (predeterminado), `uploading` y
+  `error`. `progress` es 0–100; si se omite, la carga es indeterminada. Tamaño
+  en bytes; `removable=false` oculta Eliminar. Durante una carga no se ofrecen
+  abrir/descargar y se bloquea eliminar. No gestiona red ni confirmaciones:
+  úsalo junto a `FileDropzone` y a tu diálogo de confirmación.
+- `ApprovalStatus` admite `waiting`, `current`, `approved`, `rejected` y
+  `skipped`. Las etapas mantienen el orden recibido y pueden tener varias
+  revisiones actuales. Texto e iconos acompañan al color. El componente no
+  aplica permisos ni decide quién puede aprobar.
+- `NotificationList` calcula el contador desde `items`. Activar una entrada
+  **no** cambia `read`: el consumidor decide cuándo marcarla. `onMarkAllRead`
+  recibe solo los IDs no leídos de la lista actual, útil para paginación o
+  filtros. `maxHeight` limita el scroll; `action` permite acciones por entrada.
+- `SplitButton` usa botones nativos independientes. Flechas, Inicio/Fin y
+  Escape navegan el menú, omiten acciones desactivadas y restauran el foco.
+  Con `actions=[]` queda solo la acción principal; `isLoading` bloquea ambas
+  partes. Las acciones reciben callbacks síncronos; controla `isLoading` y
+  los errores desde tu aplicación para operaciones asíncronas.
+
+La demo conserva archivos y decisiones solo en memoria. Las descargas contienen
+el archivo seleccionado o texto/CSV de ejemplo, no documentos externos.
+Ejecuta `npm run test:workspace` con Ladle abierto; admite `LADLE_URL`,
+`CHROME_PATH` y `SHOTS_DIR` como las otras comprobaciones de navegador.
+
 ## Convenciones
 
 - **Clases Tailwind literales**: nunca construidas por concatenación
