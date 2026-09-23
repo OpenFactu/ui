@@ -63,8 +63,8 @@ export const Card = ({
       )}
     >
       {showHeader && (
-        <div className="px-6 py-4 border-b border-[var(--border-default,#e2e8f0)] flex items-center justify-between gap-4">
-          <div className={cn(isLoading && skeletonHeader && 'flex-1')}>
+        <div className="px-6 py-4 border-b border-[var(--border-default,#e2e8f0)] flex flex-wrap items-center justify-between gap-4">
+          <div className="min-w-0 flex-1 basis-48">
             {isLoading && skeletonHeader ? (
               <div className="flex flex-col gap-2">
                 {title && <Skeleton height={20} width="40%" />}

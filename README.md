@@ -449,6 +449,158 @@ cada columna se declara con `card`:
 
 Lo que no lleve `card` va al cuerpo de la tarjeta con su etiqueta delante.
 
+## Páginas reutilizables y creación de documentos
+
+`PageLayout` organiza cabecera, contenido, panel lateral y pie adaptable.
+`DocumentEditor` lo especializa para formularios: guardado asíncrono, errores,
+estado de cambios pendientes y confirmación antes de descartar. No requieren
+router, API, tipos de factura ni un esquema de datos concreto.
+
+```tsx
+import { Card, DocumentEditor, DocumentTotals, Input } from '@openfactu/ui';
+
+function EditarPedido() {
+  const [cliente, setCliente] = React.useState('');
+  const [dirty, setDirty] = React.useState(false);
+
+  return (
+    <DocumentEditor
+      title="Nuevo pedido"
+      subtitle="Datos del cliente y líneas del documento"
+      dirty={dirty}
+      onSave={async () => {
+        await guardarPedido({ cliente }); // Tu persistencia; rechaza si falla.
+        setDirty(false);
+      }}
+      onCancel={() => volverAlListado()}
+      aside={<DocumentTotals lines={[]} total={0} />}
+    >
+      <Card title="Datos generales">
+        <Input label="Cliente" required value={cliente} onChange={(event) => {
+          setCliente(event.target.value);
+          setDirty(true);
+        }} />
+      </Card>
+      {/* Añade aquí tu Table/EditableTable, adjuntos, notas u otras secciones. */}
+    </DocumentEditor>
+  );
+}
+```
+
+### Contrato del editor
+
+- `children` contiene el formulario. No incluyas otro `<form>`; los botones
+  auxiliares de su interior deben declarar `type="button"`.
+- `onSave` debe devolver/esperar la promesa de persistencia. El editor bloquea
+  los controles y nuevos envíos hasta que termina. La validación HTML de los
+  campos `required` se ejecuta antes de guardar.
+- `dirty` es controlado por la aplicación: el editor no compara objetos ni
+  considera guardado un cambio por su cuenta. Al cancelar con cambios pide
+  confirmación antes de llamar a `onCancel`; se puede omitir con
+  `confirmDiscard={false}`. Esta protección afecta al botón Cancelar, no a la
+  navegación del router ni al cierre de la pestaña.
+- Un rechazo de `onSave` muestra `saveErrorMessage`, enfoca el aviso y conserva
+  el formulario. `onSaveError` recibe la causa; `error` permite mostrar errores
+  controlados por la aplicación. `isSaving` añade un bloqueo externo.
+- `readOnly` desactiva los controles del formulario y oculta Guardar.
+  `saveDisabled`, `saveLabel`, `cancelLabel` y `footerInfo` ajustan las acciones.
+- `aside` es contenido complementario **fuera del formulario**, ideal para
+  `DocumentTotals`, instrucciones o metadatos. Coloca los campos editables en
+  `children`. En móvil el panel lateral aparece debajo de las secciones.
+
+### Páginas sin formulario
+
+Usa `PageLayout` directamente para fichas, listados o paneles. Hereda las
+opciones de `PageHeader` (`breadcrumbs`, `eyebrow`, `actions`, `tabs`,
+`toolbar`…) y añade `aside`, `asideLabel`, `footer` y `width="md" | "lg" |
+"full"`. `stickyAside`, `asideTop` y `stickyFooter` permiten ajustar las zonas
+que acompañan al scroll, dentro o fuera de `AppShell`.
+
+En Ladle: `Document Pages → Crear documento` muestra factura y pedido con
+líneas editables, cancelación, fallo simulado y modo consulta; `Página general`
+muestra una ficha de cliente con el mismo layout. Ejecuta
+`npm run test:documents` para comprobar el flujo.
+
+## Componentes de documentos y operaciones
+
+`Operations → Pedidos y aprobaciones` reúne las nuevas piezas con los tres
+estilos ERP. Permite filtrar, editar unidades, enviar un borrador a revisión y
+aprobar un pedido con confirmación e historial. Los datos son de ejemplo y no
+se guardan al recargar. `Operations → Importes y utilidades` muestra monedas,
+ceros, abonos, valores ausentes y copia de referencias.
+
+```tsx
+import { Amount, CopyButton, DocumentTotals, StatusBadge } from '@openfactu/ui';
+
+<StatusBadge status="pending" />
+<StatusBadge status="approved" label="Validado por compras" />
+<Amount value={1234.56} currency="EUR" locale="es-ES" />
+<CopyButton value="PC-2026-042" label="Copiar referencia" />
+<DocumentTotals
+  lines={[
+    { id: 'base', label: 'Base', value: 1000 },
+    { id: 'discount', label: 'Descuento', value: -100, tone: 'success' },
+    { id: 'tax', label: 'Impuestos', value: 189 },
+  ]}
+  total={1089}
+  totalLabel="Total del pedido"
+/>
+```
+
+- `Amount` recibe unidades monetarias, usa `Intl.NumberFormat`, conserva el
+  cero y muestra `emptyValue` (por defecto `—`) ante `null`, `undefined` o
+  valores no finitos. `formatOptions` permite ajustar la presentación;
+  `tone` no interpreta el signo como éxito o error.
+- `StatusBadge` ofrece `draft`, `pending`, `approved`, `paid`, `overdue`,
+  `rejected` y `cancelled`, con texto además de color. Se pueden personalizar
+  `label`, `tone` y `showDot`.
+- `DocumentTotals` **solo presenta** importes ya calculados: no calcula
+  impuestos, descuentos ni el total. Admite `currency`, `locale`, `note`,
+  `footer` y `variant="compact"`.
+- `CopyButton` usa el portapapeles del navegador tras el clic; requiere un
+  contexto seguro y permisos del navegador. Muestra éxito o error, también
+  con `iconOnly`, y ofrece `onCopy`/`onCopyError` y etiquetas personalizables.
+
+### Totales de tabla por columna
+
+`summaryByColumn` asocia cada total a `column.id ?? column.header`, por lo que
+ocultar otra columna no desplaza el importe. Tiene prioridad sobre
+`summaryRow`, que sigue siendo compatible. Ambas variantes reciben la página
+actual y aparecen también en tarjetas móviles. Con paginación de servidor,
+los totales globales deben venir de la API y mostrarse explícitamente aparte.
+
+```tsx
+<Table
+  columns={[
+    { id: 'reference', header: 'Pedido', accessor: 'reference' },
+    { id: 'amount', header: 'Importe', accessor: 'amount', align: 'right' },
+  ]}
+  data={orders}
+  responsive="cards"
+  showColumnToggle
+  summaryLabel="Total de la página"
+  summaryByColumn={(rows) => ({
+    amount: <Amount value={rows.reduce((sum, row) => sum + row.amount, 0)} />,
+  })}
+/>
+```
+
+### Indicadores, paneles y estados vacíos
+
+- `KpiCard` añade `variant="soft" | "outline"`, un espacio `chart` para
+  `Sparkline` y `trend.sentiment="positive" | "negative" | "neutral"`:
+  bajar costes puede ser positivo. Sin `sentiment` conserva la interpretación
+  anterior. Si usas `onClick`, no introduzcas controles interactivos en los slots.
+- `Drawer` añade `subtitle`, `ariaLabel`, `initialFocusRef`, retención y
+  restauración del foco, bloqueo compartido del scroll y cierre con Escape
+  respetando otras superposiciones abiertas.
+- `Timeline` permite activar sus eventos con Intro o Espacio mediante botones.
+- `EmptyState` añade `variant="compact" | "panel"` y `secondaryAction`.
+
+Con Ladle abierto, `npm run test:operations` comprueba totales, edición,
+aprobación, foco, superposiciones, móvil, importes y resultados del portapapeles.
+Admite `LADLE_URL`, `CHROME_PATH` y `SHOTS_DIR` (directorio existente opcional).
+
 ## Convenciones
 
 - **Clases Tailwind literales**: nunca construidas por concatenación

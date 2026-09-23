@@ -1,5 +1,6 @@
 import * as React from 'react';
 import type { Story } from '@ladle/react';
+import { useStoryTheme } from './shared/useStoryTheme';
 import {
   ArrowDownToLine,
   ArrowUpRight,
@@ -32,7 +33,6 @@ import {
   PageHeader,
   SegmentedControl,
   Table,
-  applyTheme,
   type CardProps,
   type TableColumn,
   type TableDensity,
@@ -142,23 +142,6 @@ const NAV = [
   { label: 'Clientes', icon: Users },
   { label: 'Tesorería', icon: Wallet },
 ];
-
-/** Aplica también a los portales del catálogo y restaura el tema al salir. */
-function useStoryTheme(id: string) {
-  React.useLayoutEffect(() => {
-    const root = document.documentElement;
-    const previousStyle = root.getAttribute('style');
-    const previousDark = root.classList.contains('dark');
-    applyTheme(ERP_THEME_PRESETS.find((preset) => preset.id === id)!.theme, root, {
-      injectFontLink: false,
-    });
-    return () => {
-      if (previousStyle === null) root.removeAttribute('style');
-      else root.setAttribute('style', previousStyle);
-      root.classList.toggle('dark', previousDark);
-    };
-  }, [id]);
-}
 
 /** Tres sistemas visuales sobre la misma aplicación y los mismos componentes. */
 export const EstilosERP: Story = () => {

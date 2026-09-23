@@ -161,6 +161,9 @@ export interface TableProps<T> {
    * desalinea con la tabla.
    */
   summaryRow?: (rows: T[]) => Array<React.ReactNode>;
+  /** Totales de la página por `col.id ?? col.header`. Conservan su columna al
+   * ocultar otras; tienen prioridad sobre summaryRow y aparecen también en móvil. */
+  summaryByColumn?: (rows: T[]) => Record<string, React.ReactNode>;
   /** Etiqueta de la primera celda del pie. Default 'Total'. */
   summaryLabel?: React.ReactNode;
   /** Fila extra al final del cuerpo, para el «+ Añadir línea». */
@@ -340,6 +343,7 @@ export function Table<T>({
   responsive = 'scroll',
   cardsBreakpoint = 640,
   summaryRow,
+  summaryByColumn,
   summaryLabel = 'Total',
   appendRow,
 }: TableProps<T>) {
@@ -573,6 +577,13 @@ export function Table<T>({
   const cellText = densityClasses[density].text;
   const totalCols =
     visibleColumns.length + (selectable ? 1 : 0) + (hasExpand ? 1 : 0) + (hasTrailing ? 1 : 0);
+  const hasSummary = !!(summaryByColumn || summaryRow) && !isLoading && pagedData.length > 0;
+  const keyedSummary = hasSummary ? summaryByColumn?.(pagedData) : undefined;
+  const summaryCells = hasSummary
+    ? keyedSummary
+      ? visibleColumns.map((col) => keyedSummary[colKeyOf(col)])
+      : summaryRow?.(pagedData) ?? []
+    : [];
 
   const toggleEntries = columns.map((col) => ({
     key: colKeyOf(col),
@@ -772,6 +783,20 @@ export function Table<T>({
         )}
 
         {infiniteFooter}
+
+        {hasSummary && (
+          <section aria-label="Resumen de la tabla" className="rounded-[var(--k-radius-sm)] border border-[var(--border-default)] bg-[var(--bg-muted)] p-4">
+            <p className="mb-3 text-[12px] font-semibold text-[var(--fg-default)]">{summaryLabel}</p>
+            <dl className="space-y-2 text-[12px]">
+              {visibleColumns.map((col, index) => summaryCells[index] != null && (
+                <div key={colKeyOf(col)} className="flex flex-wrap justify-between gap-3">
+                  <dt className="text-[var(--fg-muted)]">{col.header}</dt>
+                  <dd className="font-mono text-[var(--fg-default)]">{summaryCells[index]}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        )}
 
         {pagination && !infinite && !isLoading && (
           <Pagination
@@ -1169,13 +1194,13 @@ export function Table<T>({
               </tr>
             )}
           </tbody>
-          {summaryRow && !isLoading && pagedData.length > 0 && (
+          {hasSummary && (
             <tfoot className="border-t-2 border-[var(--border-default,#e2e8f0)]">
               <tr>
                 {selectable && <td className={cellPad} />}
                 {hasExpand && <td className={cellPad} />}
                 {(() => {
-                  const cells = summaryRow(pagedData);
+                  const cells = summaryCells;
                   return visibleColumns.map((col, i) => (
                     <td
                       key={colKeyOf(col)}
