@@ -239,7 +239,7 @@ export const EstilosERP: Story = () => {
                 >
                   <Bell size={16} />
                 </Button>
-                <Avatar name="Ángel Acedo" size="sm" />
+                <Avatar name="Ana García" size="sm" />
               </div>
             </>
           }
@@ -440,8 +440,8 @@ export const EstilosERP: Story = () => {
                       items={[
                         { key: 'name', label: 'Nombre', value: 'Almacén principal' },
                         { key: 'code', label: 'Código', value: 'ALM-001', mono: true },
-                        { key: 'owner', label: 'Responsable', value: 'Ángel Acedo' },
-                        { key: 'location', label: 'Ubicación', value: 'Villafranca de los Barros' },
+                        { key: 'owner', label: 'Responsable', value: 'Ana García' },
+                        { key: 'location', label: 'Ubicación', value: 'Madrid' },
                         {
                           key: 'notes',
                           label: 'Observaciones',
@@ -599,7 +599,7 @@ export const AvisosYFichas: Story = () => {
             {
               key: 'address',
               label: 'Dirección',
-              value: 'Calle Mayor, 12 · 06220 Villafranca de los Barros',
+              value: 'Calle del Ejemplo, 12 · 28001 Madrid',
               fullWidth: true,
             },
           ]}
