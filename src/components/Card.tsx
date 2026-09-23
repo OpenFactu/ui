@@ -18,6 +18,8 @@ export interface CardProps {
   skeletonLines?: number;
   /** También esqueletiza título y subtítulo. Default true. */
   skeletonHeader?: boolean;
+  /** Tratamiento de superficie. Por defecto conserva el borde tradicional. */
+  variant?: 'outlined' | 'elevated' | 'subtle' | 'ghost';
 }
 
 export const Card = ({
@@ -33,6 +35,7 @@ export const Card = ({
   skeleton = 'text',
   skeletonLines = 3,
   skeletonHeader = true,
+  variant = 'outlined',
 }: CardProps) => {
   const showHeader = title || subtitle || headerAction;
 
@@ -50,6 +53,9 @@ export const Card = ({
       aria-busy={isLoading || undefined}
       className={cn(
         'bg-[var(--bg-card,#ffffff)] border border-[var(--border-default,#e2e8f0)] rounded-[var(--k-radius-sm,4px)] overflow-hidden',
+        variant === 'elevated' && 'border-transparent shadow-k-md',
+        variant === 'subtle' && 'bg-[var(--bg-muted,#f8fafc)] border-transparent',
+        variant === 'ghost' && 'bg-transparent border-transparent',
         // Sin la animación de entrada mientras carga: si no, la tarjeta
         // «entraría» dos veces, al montar y al llegar los datos.
         !isLoading && 'k-card-in',
@@ -57,7 +63,7 @@ export const Card = ({
       )}
     >
       {showHeader && (
-        <div className="px-6 py-4 border-b border-[var(--border-default,#e2e8f0)] flex items-center justify-between gap-4 bg-[var(--bg-card,#ffffff)]">
+        <div className="px-6 py-4 border-b border-[var(--border-default,#e2e8f0)] flex items-center justify-between gap-4">
           <div className={cn(isLoading && skeletonHeader && 'flex-1')}>
             {isLoading && skeletonHeader ? (
               <div className="flex flex-col gap-2">

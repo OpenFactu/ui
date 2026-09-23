@@ -33,6 +33,7 @@
     "build:ladle": "ladle build",
     "typecheck": "tsc --noEmit -p tsconfig.stories.json",
     "test:erp": "node scripts/check-erp.mjs",
+    "test:design": "node scripts/check-design.mjs",
     "shots": "node scripts/shots.mjs",
     "prepublishOnly": "npm run build"
   },

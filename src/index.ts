@@ -1,4 +1,7 @@
 export * from './components/Button';
+export * from './components/Alert';
+export * from './components/AppShell';
+export * from './components/DescriptionList';
 export * from './components/Input';
 export * from './components/Card';
 export * from './components/KpiCard';

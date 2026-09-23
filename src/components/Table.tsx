@@ -85,6 +85,10 @@ export interface TableProps<T> {
   isLoading?: boolean;
   /** Densidad de filas. Default: 'normal'. */
   density?: TableDensity;
+  /** Filas lisas, alternas o rejilla con separadores verticales. */
+  variant?: 'default' | 'striped' | 'grid';
+  /** Cabecera con superficie atenuada para separar los encabezados del cuerpo. */
+  headerVariant?: 'default' | 'muted';
   /** Nombre accesible de la tabla o del listado de tarjetas. */
   ariaLabel?: string;
   /** Limita el área de scroll; la cabecera permanece visible. */
@@ -305,6 +309,8 @@ export function Table<T>({
   emptyMessage = 'No se encontraron registros.',
   isLoading,
   density = 'normal',
+  variant = 'default',
+  headerVariant = 'default',
   ariaLabel,
   maxHeight,
   sort: controlledSort,
@@ -550,12 +556,13 @@ export function Table<T>({
     return { position: 'sticky', left: stickyLefts[cellIdx] ?? 0, zIndex: 2 };
   };
 
-  const stickyCellClass = (cellIdx: number, isRowSelected: boolean): string | false =>
+  const stickyCellClass = (cellIdx: number, isRowSelected: boolean, striped = false): string | false =>
     stickyFirstColumn &&
     cellIdx < stickyCount &&
     cn(
       isRowSelected
         ? 'bg-[color-mix(in_srgb,var(--color-accent)_12%,var(--bg-card))]'
+        : striped ? 'bg-[var(--bg-muted,#f8fafc)] group-hover:bg-[var(--bg-hover)]'
         : 'bg-[var(--bg-card,#ffffff)] group-hover:bg-[var(--bg-hover)]',
       cellIdx === stickyCount - 1 &&
         'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.12)] dark:shadow-[2px_0_4px_-2px_rgba(0,0,0,0.5)]',
@@ -800,7 +807,11 @@ export function Table<T>({
             cellText,
           )}
         >
-          <thead className="bg-[var(--bg-card,#ffffff)] sticky top-0 z-[3] border-b border-[var(--border-default,#e2e8f0)]">
+          <thead className={cn(
+            'bg-[var(--bg-card,#ffffff)] sticky top-0 z-[3] border-b border-[var(--border-default,#e2e8f0)]',
+            headerVariant === 'muted' && 'bg-[var(--bg-muted,#f8fafc)] [&_th]:bg-[var(--bg-muted,#f8fafc)]',
+            variant === 'grid' && '[&_th+th]:border-l [&_th+th]:border-[var(--border-default,#e2e8f0)]',
+          )}>
             <tr ref={headerRowRef}>
               {selectable && (
                 <th
@@ -1020,6 +1031,7 @@ export function Table<T>({
                 const animDelay = Math.min(rowIdx * 15, 300);
                 const isRowSelected = selected.has(key);
                 const isExpanded = expanded.has(key);
+                const striped = variant === 'striped' && rowIdx % 2 === 1;
                 const actions = rowActions ? rowActions(item) : null;
                 return (
                   <React.Fragment key={key}>
@@ -1039,14 +1051,15 @@ export function Table<T>({
                         'group transition-all duration-200 border-b border-[var(--border-subtle,#f1f5f9)] last:border-b-0',
                         isRowSelected
                           ? 'bg-accent/5 dark:bg-accent/10 shadow-inner'
-                          : 'hover:bg-[var(--bg-hover)]',
+                          : cn(striped && 'bg-[var(--bg-muted,#f8fafc)]', 'hover:bg-[var(--bg-hover)]'),
+                        variant === 'grid' && '[&_td+td]:border-l [&_td+td]:border-[var(--border-default,#e2e8f0)]',
                         onRowClick && 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent',
                         rowClassName?.(item, rowIdx),
                       )}
                     >
                       {selectable && (
                         <td
-                          className={cn(cellPad, 'w-8', stickyCellClass(0, isRowSelected))}
+                          className={cn(cellPad, 'w-8', stickyCellClass(0, isRowSelected, striped))}
                           style={stickyCellStyle(0)}
                           onClick={(e) => e.stopPropagation()}
                         >
@@ -1064,7 +1077,7 @@ export function Table<T>({
                           className={cn(
                             cellPad,
                             'w-8',
-                            stickyCellClass(selectable ? 1 : 0, isRowSelected),
+                            stickyCellClass(selectable ? 1 : 0, isRowSelected, striped),
                           )}
                           style={stickyCellStyle(selectable ? 1 : 0)}
                           onClick={(e) => e.stopPropagation()}
@@ -1116,7 +1129,7 @@ export function Table<T>({
                                 : col.align === 'right'
                                   ? 'text-right'
                                   : 'text-left',
-                              stickyCellClass(cellIdx, isRowSelected),
+                              stickyCellClass(cellIdx, isRowSelected, striped),
                               col.className,
                             )}
                           >

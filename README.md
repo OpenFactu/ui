@@ -89,7 +89,7 @@ applyTheme({
 
 ### Presets y plugins
 
-`THEME_PRESETS` trae nueve temas de fábrica, pero el catálogo es **abierto**: un
+`THEME_PRESETS` trae doce temas de fábrica, pero el catálogo es **abierto**: un
 plugin puede aportar los suyos en tiempo de ejecución.
 
 ```ts
@@ -211,12 +211,106 @@ Hooks
 `usePrefersReducedMotion` · `useThemePresets` · `useContextMenu` · `useToast` ·
 `usePopup` · `useTheme`
 
+Estructura y fichas
+: `AppShell` · `DescriptionList` · `Alert`
+
+## Estilos y componentes para ERP
+
+Abre **DesignSystem → EstilosERP** en Ladle para comparar tres líneas visuales
+en la misma pantalla. Cambian la paleta, las superficies, la tipografía, los
+radios y las sombras; los componentes y sus datos se mantienen.
+
+| Preset | Estilo | Tabla del ejemplo |
+|---|---|---|
+| `keirost-soft` | Claro, violeta, superficies elevadas y bordes redondeados | Lisa, densidad normal |
+| `keirost-ledger` | Papel cálido, títulos serif y bordes rectos | Rejilla, densidad normal |
+| `keirost-terminal` | Oscuro, verde y tipografía monoespaciada | Filas alternas, densidad compacta |
+
+```tsx
+import { applyTheme, ERP_THEME_PRESETS } from '@openfactu/ui';
+
+applyTheme(ERP_THEME_PRESETS.find((preset) => preset.id === 'keirost-soft')!.theme);
+```
+
+`ERP_THEME_PRESETS` contiene esos tres estilos y también forma parte del
+catálogo general `THEME_PRESETS`. Los presets clásicos conservan su orden y
+el tema predeterminado no cambia. La apariencia de cada componente se elige
+explícitamente: aplicar el tema no modifica su comportamiento ni su densidad.
+
+| Componente | Nuevas opciones |
+|---|---|
+| `Table` | `variant="default"`, `"striped"` o `"grid"`; `headerVariant="muted"` |
+| `Card` | `variant="outlined"`, `"elevated"`, `"subtle"` o `"ghost"` |
+| `Button` | `variant="soft"` y `"link"`, además de las variantes existentes |
+
+Las filas alternas siguen el tema y respetan la selección, el hover y las
+columnas fijas. La rejilla añade separadores verticales. Las variantes de
+tabla afectan a la presentación tabular; `responsive="cards"` conserva el
+formato de ficha al pasar a móvil.
+
+### AppShell
+
+Marco de aplicación con cabecera, navegación plegable y scroll independiente.
+En móvil, el menú es un diálogo con bloqueo de scroll, retención del foco,
+cierre con Escape y restauración del foco. No depende de un router concreto.
+
+```tsx
+<AppShell
+  brand={<span>Mi ERP</span>}
+  compactBrand={<span>ERP</span>}
+  header={<span>Mi empresa · Inventario</span>}
+  sidebar={({ collapsed, close }) => (
+    <nav aria-label="Secciones">
+      <a href="/inventario" onClick={close} aria-label="Inventario">
+        {collapsed ? 'INV' : 'Inventario'}
+      </a>
+    </nav>
+  )}
+>
+  <PageHeader title="Inventario" />
+</AppShell>
+```
+
+`collapsed`/`onCollapsedChange` permiten controlar el plegado; también hay
+`defaultCollapsed`, `sidebarFooter`, `sidebarWidth`, `collapsedWidth`, `height`
+y `contentClassName`. La navegación recibe `collapsed`, `mobile` y `close`.
+Si utilizas enlaces de tu router, llama a `close` al navegar en móvil.
+
+### DescriptionList y Alert
+
+```tsx
+<DescriptionList
+  columns={2}
+  variant="surface"
+  items={[
+    { key: 'cliente', label: 'Cliente', value: 'Acme S.L.' },
+    { key: 'saldo', label: 'Saldo', value: '1.250,00 €', mono: true },
+    { key: 'notas', label: 'Notas', value: null, fullWidth: true },
+  ]}
+/>
+
+<Alert tone="warning" title="Stock insuficiente" action={<Button variant="soft">Revisar</Button>}>
+  Revisa las existencias antes de confirmar el pedido.
+</Alert>
+```
+
+`DescriptionList` ofrece una, dos o tres columnas, disposición `stacked` o
+`inline` y variantes `plain`, `divided` y `surface`. Usa `dt`/`dd`, conserva
+valores como cero y muestra `emptyValue` para valores ausentes.
+
+`Alert` ofrece tonos `info`, `success`, `warning`, `danger` y `neutral`, variantes
+`soft`/`outline`, icono opcional, acción y `onDismiss`. Su rol predeterminado es
+`note`: usa `role="status"` para cambios informativos y `role="alert"` para un
+error urgente después de una acción. `Button variant="link"` sigue siendo un
+botón de acción; para navegar utiliza un enlace.
+
 ## Desarrollo
 
 ```bash
 npm run dev        # playground (Ladle) en http://localhost:61000
 npm run build      # compila a dist/
 npm run typecheck  # comprueba también las stories
+npm run test:design # estilos, variantes y navegación de AppShell (con Ladle abierto)
 npm run shots -- .shots/base   # capturas de todas las stories, claro y oscuro
 npx tsx scripts/check-contrast.mts        # contraste real de los textos bajo un tema
 npx tsx scripts/check-tokens.mjs          # el CSS publicado y el motor TS coinciden
