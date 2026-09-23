@@ -26,6 +26,8 @@ interface SearchableSelectBaseProps {
   className?: string;
   /** Etiqueta encima del control, asociada por `htmlFor`. */
   label?: React.ReactNode;
+  /** Nombre accesible cuando no se muestra una etiqueta encima. */
+  ariaLabel?: string;
   /**
    * Marca visible junto a la etiqueta y `aria-required` en el control. Explícito
    * porque esto no es un `<select>` nativo y la obligatoriedad se perdería.
@@ -504,6 +506,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
         id={controlId}
         role="combobox"
         aria-required={props.required || undefined}
+        aria-label={props.ariaLabel}
         aria-invalid={props.error ? true : undefined}
         aria-expanded={isOpen}
         aria-haspopup="listbox"

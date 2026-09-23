@@ -37,26 +37,26 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
   return (
     <div
       className={cn(
-        'sticky top-0 z-20 flex items-center gap-3 px-4 py-2',
-        'bg-primary/10 dark:bg-primary/20 border-b border-primary/30',
-        'text-sm font-medium text-primary',
+        'sticky top-0 z-20 flex flex-wrap items-center gap-3 px-4 py-2',
+        'bg-[var(--bg-muted,#f1f5f9)] border-b border-[var(--border-default,#e2e8f0)]',
+        'text-sm font-medium text-[var(--fg-default,#0a1628)]',
         'animate-in fade-in slide-in-from-top-1 duration-150',
         className,
       )}
     >
-      <span className="font-bold">
+      <span role="status" className="font-bold tabular-nums">
         {count} <span className="font-normal opacity-80">{label}</span>
       </span>
       {onClear && (
         <button
           type="button"
           onClick={onClear}
-          className="text-xs underline opacity-70 hover:opacity-100 transition-opacity"
+          className="text-xs underline text-[var(--fg-muted,#52606f)] hover:text-[var(--fg-default,#0a1628)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
           Deseleccionar
         </button>
       )}
-      <div className="ml-auto flex items-center gap-2">{children}</div>
+      <div className="ml-auto flex flex-wrap items-center gap-2">{children}</div>
     </div>
   );
 };

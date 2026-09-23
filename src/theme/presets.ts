@@ -9,7 +9,98 @@ export interface ThemePreset {
   theme: ThemeInput;
 }
 
-/** Temas listos para usar. `applyPreset(id)` los aplica de una pieza. */
+/** Tres líneas visuales para ERP, también incluidas en THEME_PRESETS. */
+export const ERP_THEME_PRESETS: ThemePreset[] = [
+  {
+    id: 'keirost-soft',
+    label: 'Soft',
+    description: 'Superficies claras, violeta, radios amplios y sombras suaves.',
+    theme: {
+      mode: 'light',
+      colors: {
+        primary: '#24243D',
+        accent: '#6D28D9',
+        bgApp: '#F5F5FA',
+        bgCard: '#FFFFFF',
+        bgSidebar: '#FFFFFF',
+        bgMuted: '#F0EFF7',
+        bgHover: '#EDE9FE',
+        fgDefault: '#24243D',
+        fgBody: '#414157',
+        fgMuted: '#626278',
+        fgSubtle: '#69697E',
+        borderDefault: '#E4E1EF',
+        borderSubtle: '#EFEDF5',
+        borderStrong: '#C4BDDC',
+      },
+      radius: { xs: '8px', sm: '12px', md: '16px', lg: '24px' },
+      typography: {
+        sans: 'system-ui, -apple-system, sans-serif',
+        display: 'system-ui, -apple-system, sans-serif',
+      },
+      shadows: {
+        sm: '0 2px 8px rgb(36 36 61 / 0.04)',
+        md: '0 8px 28px rgb(36 36 61 / 0.08)',
+        lg: '0 20px 60px rgb(36 36 61 / 0.12)',
+      },
+    },
+  },
+  {
+    id: 'keirost-ledger',
+    label: 'Ledger',
+    description: 'Papel cálido, títulos serif y líneas precisas. Estética editorial.',
+    theme: {
+      mode: 'light',
+      colors: {
+        primary: '#292524',
+        accent: '#9A3412',
+        bgApp: '#FAF8F4',
+        bgCard: '#FFFEFC',
+        bgSidebar: '#F3EFE7',
+        bgMuted: '#F3EFE7',
+        bgHover: '#ECE5D9',
+        fgDefault: '#292524',
+        fgBody: '#44403C',
+        fgMuted: '#665E55',
+        fgSubtle: '#746B61',
+        borderDefault: '#D8D0C3',
+        borderSubtle: '#E9E2D7',
+        borderStrong: '#B5A795',
+      },
+      radius: 'none',
+      typography: {
+        sans: 'system-ui, -apple-system, sans-serif',
+        display: "Georgia, 'Times New Roman', serif",
+      },
+      shadows: { sm: 'none', md: 'none', lg: '0 12px 32px rgb(41 37 36 / 0.12)' },
+    },
+  },
+  {
+    id: 'keirost-terminal',
+    label: 'Terminal',
+    description: 'Oscuro, monoespaciado y verde. Para operaciones y datos densos.',
+    theme: {
+      mode: 'dark',
+      colors: {
+        primary: '#111827',
+        accent: '#4ADE80',
+        bgApp: '#0B111B',
+        bgCard: '#141E2C',
+        bgSidebar: '#0D1520',
+        bgMuted: '#101925',
+        bgHover: '#1D2C3F',
+        borderDefault: '#334155',
+        borderSubtle: '#253246',
+        borderStrong: '#64748B',
+      },
+      radius: 'sm',
+      typography: { fontFamily: 'mono' },
+      shadows: { sm: 'none', md: 'none', lg: '0 18px 40px rgb(0 0 0 / 0.4)' },
+    },
+  },
+];
+
+/** Catálogo completo; los presets históricos conservan su orden. */
 export const THEME_PRESETS: ThemePreset[] = [
   {
     id: 'keirost-classic',
@@ -65,6 +156,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     description: 'Azul noche con acento violeta. Inmersivo, premium.',
     theme: { mode: 'dark', colors: { primary: '#0F1430', accent: '#8B5CF6' } },
   },
+  ...ERP_THEME_PRESETS,
 ];
 
 export function themePresetById(id: string): ThemePreset | undefined {

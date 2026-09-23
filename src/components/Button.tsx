@@ -2,7 +2,7 @@ import * as React from 'react';
 import { cn } from '../utils';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'accent' | 'secondary' | 'danger' | 'ghost' | 'outline';
+  variant?: 'primary' | 'accent' | 'secondary' | 'danger' | 'ghost' | 'outline' | 'soft' | 'link';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
 }
@@ -33,6 +33,10 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         'bg-[var(--bg-muted)] text-[var(--fg-muted)] border border-[var(--border-default)] hover:text-[var(--fg-default)] hover:border-[var(--border-strong)]',
       outline:
         'bg-transparent border border-[var(--border-default)] text-[var(--fg-default)] hover:border-[var(--border-strong)]',
+      soft:
+        'bg-[color-mix(in_srgb,var(--color-accent,#0d9488)_12%,var(--bg-card,#ffffff))] text-[var(--fg-default,#0a1628)] border border-transparent hover:border-accent',
+      link:
+        'bg-transparent text-[var(--fg-default,#0a1628)] underline decoration-accent underline-offset-4 hover:text-accent',
     };
 
     const sizes = {
