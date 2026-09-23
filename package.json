@@ -32,6 +32,7 @@
     "build": "tsc",
     "build:ladle": "ladle build",
     "typecheck": "tsc --noEmit -p tsconfig.stories.json",
+    "test:erp": "node scripts/check-erp.mjs",
     "shots": "node scripts/shots.mjs",
     "prepublishOnly": "npm run build"
   },

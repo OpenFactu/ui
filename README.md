@@ -231,6 +231,82 @@ y `scripts/check-contrast.mts` mide el contraste real de cada texto bajo el tema
 que se le indique (compone las capas translúcidas y congela las transiciones,
 para no medir colores a mitad de camino).
 
+## Listados para ERP
+
+La story **ERP → Facturacion** reúne búsqueda por factura/cliente, filtros con
+chips, densidad, paginación, columnas configurables, selección entre páginas,
+exportación CSV, detalle, alta de borradores y registro de cobros. Funciona en
+claro y oscuro, y cambia a tarjetas en móvil. Los datos son de ejemplo y los
+cambios solo viven en memoria.
+
+`FilterBar` admite `showActiveFilters`, `resultCount` y un slot `actions` para
+controles de vista. Sus props se exportan como `FilterBarProps`. Los filtros
+conservan su nombre accesible después de seleccionar un valor.
+
+### Ordenación desde una API
+
+```tsx
+const [sort, setSort] = useState<TableSort | null>(null);
+const [page, setPage] = useState(1);
+const [pageSize, setPageSize] = useState(25);
+// Incluye sort, page y pageSize en la consulta de tu API.
+
+<Table
+  ariaLabel="Facturas"
+  columns={columns}
+  data={response.items}
+  rowKey={(invoice) => invoice.id}
+  sort={sort}
+  onSortChange={setSort}
+  sortMode="server"
+  pagination={{
+    page, pageSize, total: response.total,
+    onPageChange: setPage,
+    onPageSizeChange: setPageSize,
+  }}
+/>
+```
+
+`TableSort` tiene la forma `{ colKey: string, dir: 'asc' | 'desc' }`;
+`colKey` es `column.id ?? column.header`. El ciclo es ascendente, descendente y
+sin orden (`null`). En modo servidor la tabla **no reordena la página recibida**.
+El modo predeterminado sigue siendo cliente; `defaultSort` permite un orden
+inicial sin controlar el estado. Ordenar o cambiar el tamaño de página emite
+`onPageChange(1)`, también con paginación controlada.
+
+Los códigos se ordenan como texto natural (`A-2` antes de `A-10`), conservando
+sus letras. Usa números en el `accessor` y `cell` para formatear importes, o
+devuelve el valor original en `sortAccessor`. No se intenta interpretar un
+importe localizado como `1.234,56 €`; su formato puede ser ambiguo.
+
+### Selección y navegación
+
+- `isRowSelectable={(row) => !row.locked}` excluye filas tanto de la casilla
+  individual como de «Seleccionar página». La selección de otras páginas se
+  conserva; la aplicación decide si la limpia al filtrar o al completar una acción.
+- Usa `id` o `rowKey` estable para datos remotos o que cambien de orden. Sin
+  ellos, la alternativa es el índice del dato original: funciona al ordenar y
+  paginar en cliente, pero no representa una identidad persistente entre consultas.
+- Los encabezados ordenables son botones accesibles con `aria-sort`. Las filas
+  con `onRowClick` se abren con Intro o Espacio, sin interceptar controles internos.
+- `maxHeight={560}` limita el área de scroll de la tabla y mantiene su cabecera
+  visible. En tarjetas se ofrecen selección de página, ordenación, visibilidad
+  de columnas y apertura del detalle expandido.
+
+### Comprobación del flujo
+
+Con Ladle abierto en otra terminal (`npm run dev`):
+
+```bash
+npx playwright-core install chromium   # solo la primera vez
+npm run test:erp
+```
+
+El script admite `LADLE_URL` (por defecto `http://localhost:61000`) y
+`CHROME_PATH` si prefieres usar un Chrome instalado. Comprueba selección entre
+páginas, orden estable, teclado, paginación controlada, filtros, exportación,
+alta de borradores y el flujo móvil.
+
 ## Tablas editables
 
 `EditableTable` cubre los dos patrones de siempre sin escribir el editor a mano.

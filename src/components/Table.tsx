@@ -83,15 +83,29 @@ export interface TableProps<T> {
    */
   rowClassName?: (item: T, index: number) => string | undefined;
   isLoading?: boolean;
-  /** Densidad de filas. Default: 'compact' (estilo Odoo). */
+  /** Densidad de filas. Default: 'normal'. */
   density?: TableDensity;
+  /** Nombre accesible de la tabla o del listado de tarjetas. */
+  ariaLabel?: string;
+  /** Limita el área de scroll; la cabecera permanece visible. */
+  maxHeight?: number | string;
+  /** Ordenación controlada. `null` conserva el orden recibido. */
+  sort?: TableSort | null;
+  defaultSort?: TableSort | null;
+  onSortChange?: (sort: TableSort | null) => void;
+  /** 'server' emite el cambio sin reordenar los datos recibidos. Default 'client'. */
+  sortMode?: 'client' | 'server';
   /** Si true, añade columna de checkboxes y permite multi-select.
    *  Con paginación en cliente, el checkbox de cabecera selecciona SOLO la página visible. */
   selectable?: boolean;
+  /** Excluye filas de la selección individual y de «seleccionar página». */
+  isRowSelectable?: (item: T) => boolean;
   /** Selección controlada. Si se omite, la Table mantiene estado interno. */
   selectedKeys?: Set<string | number>;
   onSelectionChange?: (keys: Set<string | number>) => void;
-  /** Cómo extraer la key de cada fila. Default: item.id. */
+  /** Key estable: por defecto item.id, o índice original en data como alternativa.
+   * El índice recibido corresponde a data antes de ordenar o paginar.
+   * Para datos remotos o que cambian, proporciona siempre una identidad estable. */
   rowKey?: (item: T, index: number) => string | number;
   /** Paginación integrada (cliente o servidor, ver TablePagination). */
   pagination?: TablePagination;
@@ -149,11 +163,9 @@ export interface TableProps<T> {
   appendRow?: React.ReactNode;
 }
 
-type SortDir = 'asc' | 'desc';
-
-interface SortState {
+export interface TableSort {
   colKey: string;
-  dir: SortDir;
+  dir: 'asc' | 'desc';
 }
 
 function compareValues(a: any, b: any): number {
@@ -164,12 +176,8 @@ function compareValues(a: any, b: any): number {
   const da = a instanceof Date ? a.getTime() : NaN;
   const db = b instanceof Date ? b.getTime() : NaN;
   if (!Number.isNaN(da) && !Number.isNaN(db)) return da - db;
-  // Intentar parseo numérico (strings tipo "1,234.56" con , y .)
-  const na = Number(String(a).replace(/[^\d.-]/g, ''));
-  const nb = Number(String(b).replace(/[^\d.-]/g, ''));
-  if (!Number.isNaN(na) && !Number.isNaN(nb) && String(a).match(/\d/) && String(b).match(/\d/)) {
-    return na - nb;
-  }
+  // Los códigos no son importes: quitar letras mezcla series y referencias.
+  // Para importes formateados, sortAccessor debe devolver el número original.
   return String(a).localeCompare(String(b), undefined, { numeric: true });
 }
 
@@ -200,6 +208,7 @@ function ColumnToggle({
         ref={anchorRef}
         type="button"
         aria-label="Mostrar u ocultar columnas"
+        aria-expanded={isOpen}
         title="Columnas"
         onClick={() => setIsOpen(!isOpen)}
         className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent hover:bg-[var(--bg-hover)] transition-colors"
@@ -224,7 +233,12 @@ function ColumnToggle({
                 key={entry.key}
                 className="flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--k-radius-xs,2px)] text-[12px] text-[var(--fg-body,#2d3a4a)] hover:bg-[var(--bg-hover)] cursor-pointer"
               >
-                <Checkbox checked={entry.visible} onChange={() => onToggle(entry.key)} size="sm" />
+                <Checkbox
+                  checked={entry.visible}
+                  disabled={entry.visible && entries.filter((column) => column.visible).length === 1}
+                  onChange={() => onToggle(entry.key)}
+                  size="sm"
+                />
                 <span className="truncate">{entry.header}</span>
               </label>
             ))}
@@ -275,10 +289,9 @@ const RowActionsCell: React.FC<{ actions: RowAction[] | null; alwaysVisible?: bo
   }
 
   return (
-    <DropdownMenu items={actions} align="end">
-      <button type="button" aria-label="Acciones de la fila" className={btnClass}>
-        <MoreHorizontal className="h-3.5 w-3.5" />
-      </button>
+    <DropdownMenu items={actions} align="end" className={cn(btnClass, 'cursor-pointer')}>
+      <span className="sr-only">Acciones de la fila</span>
+      <MoreHorizontal className="h-3.5 w-3.5" />
     </DropdownMenu>
   );
 };
@@ -292,7 +305,14 @@ export function Table<T>({
   emptyMessage = 'No se encontraron registros.',
   isLoading,
   density = 'normal',
+  ariaLabel,
+  maxHeight,
+  sort: controlledSort,
+  defaultSort = null,
+  onSortChange,
+  sortMode = 'client',
   selectable = false,
+  isRowSelectable,
   selectedKeys,
   onSelectionChange,
   rowKey,
@@ -328,18 +348,22 @@ export function Table<T>({
   const visibleColumns = columns.filter(isColVisible);
 
   // ── Ordenación — cíclico: null → asc → desc → null (clave estable) ────
-  const [sort, setSort] = React.useState<SortState | null>(null);
+  const [internalSort, setInternalSort] = React.useState<TableSort | null>(defaultSort);
+  const sort = controlledSort === undefined ? internalSort : controlledSort;
 
+  const changeSort = (next: TableSort | null) => {
+    if (controlledSort === undefined) setInternalSort(next);
+    onSortChange?.(next);
+    if (pagination) setPage(1);
+  };
   const toggleSort = (colKey: string) => {
-    setSort((prev) => {
-      if (!prev || prev.colKey !== colKey) return { colKey, dir: 'asc' };
-      if (prev.dir === 'asc') return { colKey, dir: 'desc' };
-      return null;
-    });
+    changeSort(!sort || sort.colKey !== colKey
+      ? { colKey, dir: 'asc' }
+      : sort.dir === 'asc' ? { colKey, dir: 'desc' } : null);
   };
 
   const sortedData = React.useMemo(() => {
-    if (!sort) return data;
+    if (!sort || sortMode === 'server') return data;
     const col = columns.find((c) => colKeyOf(c) === sort.colKey);
     if (!col) return data;
     const getVal = (item: T): any => {
@@ -348,9 +372,10 @@ export function Table<T>({
       if (col.accessor) return (item as any)[col.accessor];
       return null;
     };
-    const sorted = [...data].sort((a, b) => compareValues(getVal(a), getVal(b)));
-    return sort.dir === 'desc' ? sorted.reverse() : sorted;
-  }, [data, sort, columns]);
+    const direction = sort.dir === 'desc' ? -1 : 1;
+    // Invertir el comparador conserva el orden de las filas con el mismo valor.
+    return [...data].sort((a, b) => direction * compareValues(getVal(a), getVal(b)));
+  }, [data, sort, columns, sortMode]);
 
   // ── Paginación — cliente (total omitido) o servidor (total presente) ──
   const [internalPage, setInternalPage] = React.useState(1);
@@ -389,7 +414,7 @@ export function Table<T>({
   const totalRecords = serverMode ? pagination!.total! : sortedData.length;
   const totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
   const rawPage = pagination?.page ?? internalPage;
-  const page = Math.min(rawPage, totalPages);
+  const page = Math.max(1, Math.min(rawPage, totalPages));
 
   const setPage = (next: number) => {
     if (pagination?.page === undefined) setInternalPage(next);
@@ -397,15 +422,15 @@ export function Table<T>({
   };
   const setPageSize = (size: number) => {
     if (!pagination?.onPageSizeChange) setInternalPageSize(size);
-    if (pagination?.page === undefined) setInternalPage(1);
     pagination?.onPageSizeChange?.(size);
+    setPage(1);
   };
 
   const pagedData = React.useMemo(() => {
     // Con carga incremental no se recorta: las filas se van acumulando.
     if (!pagination || serverMode || infinite) return sortedData;
     return sortedData.slice((page - 1) * pageSize, page * pageSize);
-  }, [sortedData, pagination, serverMode, page, pageSize]);
+  }, [sortedData, pagination, serverMode, page, pageSize, infinite]);
 
   // ── Selección — controlada o interna ──────────────────────────────────
   const [internalSelected, setInternalSelected] = React.useState<Set<string | number>>(
@@ -417,16 +442,21 @@ export function Table<T>({
     onSelectionChange?.(next);
   };
 
+  const sourceIndices = React.useMemo(() => new Map(data.map((item, index) => [item, index])), [data]);
   const getKey = React.useCallback(
     (item: T, idx: number): string | number => {
-      if (rowKey) return rowKey(item, idx);
+      const sourceIndex = sourceIndices.get(item) ?? idx;
+      if (rowKey) return rowKey(item, sourceIndex);
       const anyItem = item as any;
-      return anyItem?.id ?? idx;
+      return anyItem?.id ?? sourceIndex;
     },
-    [rowKey],
+    [rowKey, sourceIndices],
   );
 
-  const pageKeys = React.useMemo(() => pagedData.map((d, i) => getKey(d, i)), [pagedData, getKey]);
+  const pageKeys = React.useMemo(
+    () => pagedData.flatMap((item, index) => isRowSelectable && !isRowSelectable(item) ? [] : [getKey(item, index)]),
+    [pagedData, getKey, isRowSelectable],
+  );
   const allSelected = pageKeys.length > 0 && pageKeys.every((k) => selected.has(k));
   const someSelected = !allSelected && pageKeys.some((k) => selected.has(k));
   const headerState: 'checked' | 'unchecked' | 'indeterminate' = allSelected
@@ -546,6 +576,13 @@ export function Table<T>({
   // ── Vista de tarjetas en pantalla estrecha ────────────────────────────
   const narrow = useIsNarrow(cardsBreakpoint);
   const asCards = responsive === 'cards' && narrow;
+  const activateRow = (event: React.KeyboardEvent, item: T) => {
+    if (event.target !== event.currentTarget || !onRowClick) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onRowClick(item);
+    }
+  };
 
   if (asCards) {
     const byRole = (role: TableColumn<T>['card']) => visibleColumns.filter((c) => c.card === role);
@@ -570,7 +607,40 @@ export function Table<T>({
     };
 
     return (
-      <div className={cn('w-full flex flex-col gap-2', className)}>
+      <div
+        aria-label={ariaLabel}
+        aria-busy={isLoading || undefined}
+        role={ariaLabel ? 'region' : undefined}
+        className={cn('w-full flex flex-col gap-2', className)}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2 text-[12px] text-[var(--fg-muted,#52606f)]">
+          {selectable && (
+            <Checkbox
+              checked={allSelected}
+              state={headerState}
+              disabled={isLoading || pageKeys.length === 0}
+              onChange={toggleAll}
+              label="Seleccionar página"
+              size="sm"
+            />
+          )}
+          <div className="ml-auto flex items-center gap-2">
+            {columns.some((column) => column.sortable) && (
+              <DropdownMenu className="cursor-pointer rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] px-2 py-1 focus-visible:ring-1 focus-visible:ring-accent" items={[
+                { label: 'Orden original', onClick: () => changeSort(null) },
+                ...columns.filter((column) => column.sortable).flatMap((column) =>
+                  (['asc', 'desc'] as const).map((dir) => ({
+                    label: `${column.header}: ${dir === 'asc' ? 'ascendente' : 'descendente'}`,
+                    onClick: () => changeSort({ colKey: colKeyOf(column), dir }),
+                  })),
+                ),
+              ]}>
+                {sort ? `${columns.find((column) => colKeyOf(column) === sort.colKey)?.header ?? 'Orden'} ${sort.dir === 'asc' ? '↑' : '↓'}` : 'Ordenar registros'}
+              </DropdownMenu>
+            )}
+            {showColumnToggle && <ColumnToggle entries={toggleEntries} onToggle={(key) => setVisibility({ ...visibility, [key]: visibility[key] === false })} />}
+          </div>
+        </div>
         {isLoading ? (
           Array.from({ length: skeletonRowCount }).map((_, i) => (
             <div
@@ -596,6 +666,8 @@ export function Table<T>({
               <div
                 key={key}
                 onClick={() => onRowClick?.(item)}
+                tabIndex={onRowClick ? 0 : undefined}
+                onKeyDown={(event) => activateRow(event, item)}
                 onContextMenu={
                   actions && actions.length > 0 ? (e) => openContextMenu(e, actions) : undefined
                 }
@@ -603,7 +675,7 @@ export function Table<T>({
                 className={cn(
                   'rounded-[var(--k-radius-sm,4px)] border bg-[var(--bg-card,#ffffff)] p-3 flex flex-col gap-2 transition-colors',
                   isRowSelected ? 'border-accent bg-accent/5' : 'border-[var(--border-default,#e2e8f0)]',
-                  onRowClick && 'cursor-pointer active:bg-[var(--bg-hover,#f1f5f9)]',
+                  onRowClick && 'cursor-pointer active:bg-[var(--bg-hover,#f1f5f9)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
                   rowClassName?.(item, rowIdx),
                 )}
               >
@@ -613,6 +685,7 @@ export function Table<T>({
                       <span onClick={(e) => e.stopPropagation()} className="pt-0.5">
                         <Checkbox
                           checked={isRowSelected}
+                          disabled={isRowSelectable ? !isRowSelectable(item) : false}
                           onChange={() => toggleRow(key)}
                           size="sm"
                           aria-label={`Seleccionar fila ${rowIdx + 1}`}
@@ -671,6 +744,16 @@ export function Table<T>({
                   </div>
                 )}
 
+                {renderExpanded && (
+                  <button
+                    type="button"
+                    aria-expanded={expanded.has(key)}
+                    onClick={(event) => { event.stopPropagation(); toggleExpanded(key); }}
+                    className="self-start text-[12px] text-accent focus-visible:ring-1 focus-visible:ring-accent"
+                  >
+                    {expanded.has(key) ? 'Ocultar detalle' : 'Ver detalle'}
+                  </button>
+                )}
                 {renderExpanded && expanded.has(key) && (
                   <div className="pt-2 border-t border-[var(--border-subtle,#f1f5f9)]">
                     {renderExpanded(item)}
@@ -701,13 +784,15 @@ export function Table<T>({
 
   return (
     <div
+      aria-busy={isLoading || undefined}
       className={cn(
         'w-full bg-[var(--bg-card,#ffffff)] border border-[var(--border-default,#e2e8f0)] rounded-[var(--k-radius-xs,2px)]',
         className,
       )}
     >
-      <div className="w-full overflow-auto">
+      <div className="w-full overflow-auto" style={{ maxHeight }}>
         <table
+          aria-label={ariaLabel}
           className={cn(
             // min-w para móvil: si la tabla tiene varias columnas no caben en
             // pantalla pequeña → scroll horizontal del wrapper (overflow-auto).
@@ -725,9 +810,10 @@ export function Table<T>({
                   <Checkbox
                     state={headerState}
                     checked={allSelected}
+                    disabled={isLoading || pageKeys.length === 0}
                     onChange={toggleAll}
                     size="sm"
-                    aria-label="Seleccionar todas las filas"
+                    aria-label="Seleccionar página"
                   />
                 </th>
               )}
@@ -748,21 +834,17 @@ export function Table<T>({
                 const dir = isSorted ? sort!.dir : null;
                 const cellIdx = leadingCount + idx;
                 const width = colWidths[colKey] ?? col.width;
+                const HeaderContent = isSortable ? 'button' : 'span';
                 return (
                   <th
                     key={colKey}
+                    scope="col"
+                    aria-sort={isSortable ? dir === 'asc' ? 'ascending' : dir === 'desc' ? 'descending' : 'none' : undefined}
                     style={{
                       width,
                       minWidth: colWidths[colKey],
                       ...stickyCellStyle(cellIdx),
                     }}
-                    onClick={
-                      isSortable
-                        ? () => {
-                            if (!resizingRef.current) toggleSort(colKey);
-                          }
-                        : undefined
-                    }
                     className={cn(
                       cellPad,
                       'relative font-mono text-[10px] tracking-[1px] uppercase font-normal text-[var(--fg-subtle,#657486)] whitespace-nowrap select-none',
@@ -778,9 +860,12 @@ export function Table<T>({
                       col.className,
                     )}
                   >
-                    <span
+                    <HeaderContent
+                      type={isSortable ? 'button' : undefined}
+                      onClick={isSortable ? () => { if (!resizingRef.current) toggleSort(colKey); } : undefined}
                       className={cn(
-                        'inline-flex items-center gap-1',
+                        'inline-flex items-center gap-1 uppercase',
+                        isSortable && 'rounded-[var(--k-radius-xs,2px)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
                         col.align === 'right' && 'justify-end w-full',
                       )}
                     >
@@ -805,7 +890,7 @@ export function Table<T>({
                           />
                         </svg>
                       )}
-                    </span>
+                    </HeaderContent>
                     {resizableColumns && (
                       <span
                         onPointerDown={(e) => startResize(e, colKey)}
@@ -940,6 +1025,8 @@ export function Table<T>({
                   <React.Fragment key={key}>
                     <tr
                       onClick={() => onRowClick?.(item)}
+                      tabIndex={onRowClick ? 0 : undefined}
+                      onKeyDown={(event) => activateRow(event, item)}
                       onContextMenu={
                         actions && actions.length > 0
                           ? (e) => openContextMenu(e, actions)
@@ -953,7 +1040,7 @@ export function Table<T>({
                         isRowSelected
                           ? 'bg-accent/5 dark:bg-accent/10 shadow-inner'
                           : 'hover:bg-[var(--bg-hover)]',
-                        onRowClick && 'cursor-pointer hover:shadow-sm hover:-translate-y-px',
+                        onRowClick && 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent',
                         rowClassName?.(item, rowIdx),
                       )}
                     >
@@ -965,6 +1052,7 @@ export function Table<T>({
                         >
                           <Checkbox
                             checked={isRowSelected}
+                            disabled={isRowSelectable ? !isRowSelectable(item) : false}
                             onChange={() => toggleRow(key)}
                             size="sm"
                             aria-label={`Seleccionar fila ${rowIdx + 1}`}
