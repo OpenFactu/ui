@@ -38,7 +38,8 @@
     "prepublishOnly": "npm run build",
     "test:operations": "node scripts/check-operations.mjs",
     "test:documents": "node scripts/check-document-pages.mjs",
-    "test:workspace": "node scripts/check-workspace-kit.mjs"
+    "test:workspace": "node scripts/check-workspace-kit.mjs",
+    "test:data-entry": "node scripts/check-data-entry.mjs"
   },
   "publishConfig": {
     "access": "public"

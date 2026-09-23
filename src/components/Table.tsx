@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronRight, Columns3, MoreHorizontal } from 'lucide-react';
+import { ChevronRight, Columns3, MoreHorizontal, RefreshCw } from 'lucide-react';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import { cn } from '../utils';
 import { Checkbox } from './Checkbox';
@@ -11,6 +11,8 @@ import { Skeleton } from './Skeleton';
 import { densityClasses, skeletonWidth, type Density } from './internal/density';
 import { usePopover } from '../hooks/usePopover';
 import { useIsNarrow } from '../hooks/useMediaQuery';
+import { Alert } from './Alert';
+import { Button } from './Button';
 
 export interface TableColumn<T> {
   header: string;
@@ -83,6 +85,14 @@ export interface TableProps<T> {
    */
   rowClassName?: (item: T, index: number) => string | undefined;
   isLoading?: boolean;
+  /** Actualiza en segundo plano conservando filas, selección y expansión. */
+  isRefreshing?: boolean;
+  refreshingLabel?: string;
+  /** Error de carga. Con datos conserva las filas; sin datos sustituye al vacío. */
+  errorMessage?: React.ReactNode;
+  /** Solicita otro intento. La aplicación gestiona la petición y sus estados. */
+  onRetry?: () => void;
+  retryLabel?: string;
   /** Densidad de filas. Default: 'normal'. */
   density?: TableDensity;
   /** Filas lisas, alternas o rejilla con separadores verticales. */
@@ -310,7 +320,12 @@ export function Table<T>({
   rowClassName,
   className,
   emptyMessage = 'No se encontraron registros.',
-  isLoading,
+  isLoading: initialLoading,
+  isRefreshing = false,
+  refreshingLabel = 'Actualizando registros…',
+  errorMessage,
+  onRetry,
+  retryLabel = 'Reintentar',
   density = 'normal',
   variant = 'default',
   headerVariant = 'default',
@@ -347,6 +362,46 @@ export function Table<T>({
   summaryLabel = 'Total',
   appendRow,
 }: TableProps<T>) {
+  const isLoading = initialLoading || (isRefreshing && data.length === 0);
+  const hasError = Boolean(errorMessage) && !isLoading && !isRefreshing;
+  const blockingError = hasError && data.length === 0;
+  const feedback = (
+    <>
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className={
+          isRefreshing && !isLoading
+            ? 'flex items-center gap-2 px-4 py-2 text-[12px] text-[var(--fg-muted,#52606f)]'
+            : 'sr-only'
+        }
+      >
+        {isLoading ? loadingLabel : isRefreshing ? (
+          <>
+            <RefreshCw size={14} aria-hidden="true" className="animate-spin motion-reduce:animate-none" />
+            {refreshingLabel}
+          </>
+        ) : null}
+      </div>
+      {hasError && (
+        <Alert
+          tone="danger"
+          role="alert"
+          className="m-3"
+          title={blockingError ? 'No se han podido cargar los registros' : 'No se han podido actualizar los registros'}
+          action={onRetry && (
+            <Button type="button" size="sm" variant="secondary" onClick={onRetry}>
+              {retryLabel}
+            </Button>
+          )}
+        >
+          {errorMessage}
+          {!blockingError && <p className="mt-1">Se muestran los últimos datos disponibles.</p>}
+        </Alert>
+      )}
+    </>
+  );
   // ── Visibilidad de columnas — controlada o interna ─────────────────────
   const [internalVisibility, setInternalVisibility] = React.useState<Record<string, boolean>>({});
   const visibility = columnVisibility ?? internalVisibility;
@@ -396,11 +451,11 @@ export function Table<T>({
     hasMore: infinite?.hasMore ?? false,
     onLoadMore: infinite?.onLoadMore ?? (() => {}),
     loading: infinite?.loading,
-    disabled: !infinite || isLoading,
+    disabled: !infinite || isLoading || isRefreshing || Boolean(errorMessage),
   });
 
   /** Pie de la carga incremental, compartido por la tabla y las tarjetas. */
-  const infiniteFooter = infinite && (
+  const infiniteFooter = infinite && !isLoading && !hasError && (
     <>
       <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
       {infinite.loading && (
@@ -627,10 +682,10 @@ export function Table<T>({
     return (
       <div
         aria-label={ariaLabel}
-        aria-busy={isLoading || undefined}
         role={ariaLabel ? 'region' : undefined}
         className={cn('w-full flex flex-col gap-2', className)}
       >
+        {feedback}
         <div className="flex flex-wrap items-center justify-between gap-2 text-[12px] text-[var(--fg-muted,#52606f)]">
           {selectable && (
             <Checkbox
@@ -659,129 +714,132 @@ export function Table<T>({
             {showColumnToggle && <ColumnToggle entries={toggleEntries} onToggle={(key) => setVisibility({ ...visibility, [key]: visibility[key] === false })} />}
           </div>
         </div>
-        {isLoading ? (
-          Array.from({ length: skeletonRowCount }).map((_, i) => (
-            <div
-              key={i}
-              className="rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-3 flex flex-col gap-2"
-            >
-              <Skeleton height={14} width="55%" />
-              <Skeleton height={11} width="35%" />
-            </div>
-          ))
-        ) : pagedData.length === 0 ? (
-          <div className="rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] py-10 text-center">
-            <span className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
-              {emptyMessage}
-            </span>
-          </div>
-        ) : (
-          pagedData.map((item, rowIdx) => {
-            const key = getKey(item, rowIdx);
-            const isRowSelected = selected.has(key);
-            const actions = rowActions ? rowActions(item) : null;
-            return (
+        <div aria-busy={isLoading || isRefreshing || undefined} className="flex flex-col gap-2">
+          {isLoading ? (
+            Array.from({ length: skeletonRowCount }).map((_, i) => (
               <div
-                key={key}
-                onClick={() => onRowClick?.(item)}
-                tabIndex={onRowClick ? 0 : undefined}
-                onKeyDown={(event) => activateRow(event, item)}
-                onContextMenu={
-                  actions && actions.length > 0 ? (e) => openContextMenu(e, actions) : undefined
-                }
-                style={{ animation: `k-row-in 0.35s ease-out ${Math.min(rowIdx * 20, 200)}ms both` }}
-                className={cn(
-                  'rounded-[var(--k-radius-sm,4px)] border bg-[var(--bg-card,#ffffff)] p-3 flex flex-col gap-2 transition-colors',
-                  isRowSelected ? 'border-accent bg-accent/5' : 'border-[var(--border-default,#e2e8f0)]',
-                  onRowClick && 'cursor-pointer active:bg-[var(--bg-hover,#f1f5f9)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
-                  rowClassName?.(item, rowIdx),
-                )}
+                key={i}
+                aria-hidden="true"
+                className="rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-3 flex flex-col gap-2"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-start gap-2 min-w-0">
-                    {selectable && (
-                      <span onClick={(e) => e.stopPropagation()} className="pt-0.5">
-                        <Checkbox
-                          checked={isRowSelected}
-                          disabled={isRowSelectable ? !isRowSelectable(item) : false}
-                          onChange={() => toggleRow(key)}
-                          size="sm"
-                          aria-label={`Seleccionar fila ${rowIdx + 1}`}
-                        />
-                      </span>
-                    )}
-                    <div className="min-w-0">
-                      <div className="font-mono text-[13px] font-medium text-[var(--fg-default,#0a1628)] truncate">
-                        {titleCol && render(titleCol, item, rowIdx)}
-                      </div>
-                      {subtitleCols.map((col) => (
-                        <div
-                          key={colKeyOf(col)}
-                          className="text-[12px] text-[var(--fg-muted,#52606f)] truncate"
-                        >
-                          {render(col, item, rowIdx)}
+                <Skeleton height={14} width="55%" />
+                <Skeleton height={11} width="35%" />
+              </div>
+            ))
+          ) : blockingError ? null : pagedData.length === 0 ? (
+            <div className="rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] py-10 text-center">
+              {typeof emptyMessage === 'string' ? (
+                <span className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">{emptyMessage}</span>
+              ) : emptyMessage}
+            </div>
+          ) : (
+            pagedData.map((item, rowIdx) => {
+              const key = getKey(item, rowIdx);
+              const isRowSelected = selected.has(key);
+              const actions = rowActions ? rowActions(item) : null;
+              return (
+                <div
+                  key={key}
+                  onClick={() => onRowClick?.(item)}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  onKeyDown={(event) => activateRow(event, item)}
+                  onContextMenu={
+                    actions && actions.length > 0 ? (e) => openContextMenu(e, actions) : undefined
+                  }
+                  style={{ animation: `k-row-in 0.35s ease-out ${Math.min(rowIdx * 20, 200)}ms both` }}
+                  className={cn(
+                    'rounded-[var(--k-radius-sm,4px)] border bg-[var(--bg-card,#ffffff)] p-3 flex flex-col gap-2 transition-colors',
+                    isRowSelected ? 'border-accent bg-accent/5' : 'border-[var(--border-default,#e2e8f0)]',
+                    onRowClick && 'cursor-pointer active:bg-[var(--bg-hover,#f1f5f9)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+                    rowClassName?.(item, rowIdx),
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-2 min-w-0">
+                      {selectable && (
+                        <span onClick={(e) => e.stopPropagation()} className="pt-0.5">
+                          <Checkbox
+                            checked={isRowSelected}
+                            disabled={isRowSelectable ? !isRowSelectable(item) : false}
+                            onChange={() => toggleRow(key)}
+                            size="sm"
+                            aria-label={`Seleccionar fila ${rowIdx + 1}`}
+                          />
+                        </span>
+                      )}
+                      <div className="min-w-0">
+                        <div className="font-mono text-[13px] font-medium text-[var(--fg-default,#0a1628)] truncate">
+                          {titleCol && render(titleCol, item, rowIdx)}
                         </div>
+                        {subtitleCols.map((col) => (
+                          <div
+                            key={colKeyOf(col)}
+                            className="text-[12px] text-[var(--fg-muted,#52606f)] truncate"
+                          >
+                            {render(col, item, rowIdx)}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {statusCols.map((col) => (
+                        <React.Fragment key={colKeyOf(col)}>{render(col, item, rowIdx)}</React.Fragment>
                       ))}
+                      <span onClick={(e) => e.stopPropagation()}>
+                        <RowActionsCell actions={actions} alwaysVisible />
+                      </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {statusCols.map((col) => (
-                      <React.Fragment key={colKeyOf(col)}>{render(col, item, rowIdx)}</React.Fragment>
-                    ))}
-                    <span onClick={(e) => e.stopPropagation()}>
-                      <RowActionsCell actions={actions} alwaysVisible />
-                    </span>
-                  </div>
+
+                  {bodyCols.length > 0 && (
+                    <dl className="grid grid-cols-2 gap-x-3 gap-y-1">
+                      {bodyCols.map((col) => (
+                        <div key={colKeyOf(col)} className="flex flex-col min-w-0">
+                          <dt className="text-[9px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
+                            {col.header}
+                          </dt>
+                          <dd
+                            className={cn(
+                              'text-[12px] text-[var(--fg-body,#2d3a4a)] truncate',
+                              col.align === 'right' && 'font-mono tabular-nums',
+                            )}
+                          >
+                            {render(col, item, rowIdx)}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+
+                  {metaCols.length > 0 && (
+                    <div className="flex items-center justify-end gap-3 pt-1 border-t border-[var(--border-subtle,#f1f5f9)] font-mono text-[13px] tabular-nums text-[var(--fg-default,#0a1628)]">
+                      {metaCols.map((col) => (
+                        <React.Fragment key={colKeyOf(col)}>{render(col, item, rowIdx)}</React.Fragment>
+                      ))}
+                    </div>
+                  )}
+
+                  {renderExpanded && (
+                    <button
+                      type="button"
+                      aria-expanded={expanded.has(key)}
+                      onClick={(event) => { event.stopPropagation(); toggleExpanded(key); }}
+                      className="self-start text-[12px] text-accent focus-visible:ring-1 focus-visible:ring-accent"
+                    >
+                      {expanded.has(key) ? 'Ocultar detalle' : 'Ver detalle'}
+                    </button>
+                  )}
+                  {renderExpanded && expanded.has(key) && (
+                    <div className="pt-2 border-t border-[var(--border-subtle,#f1f5f9)]">
+                      {renderExpanded(item)}
+                    </div>
+                  )}
                 </div>
+              );
+            })
+          )}
 
-                {bodyCols.length > 0 && (
-                  <dl className="grid grid-cols-2 gap-x-3 gap-y-1">
-                    {bodyCols.map((col) => (
-                      <div key={colKeyOf(col)} className="flex flex-col min-w-0">
-                        <dt className="text-[9px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
-                          {col.header}
-                        </dt>
-                        <dd
-                          className={cn(
-                            'text-[12px] text-[var(--fg-body,#2d3a4a)] truncate',
-                            col.align === 'right' && 'font-mono tabular-nums',
-                          )}
-                        >
-                          {render(col, item, rowIdx)}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
-                )}
-
-                {metaCols.length > 0 && (
-                  <div className="flex items-center justify-end gap-3 pt-1 border-t border-[var(--border-subtle,#f1f5f9)] font-mono text-[13px] tabular-nums text-[var(--fg-default,#0a1628)]">
-                    {metaCols.map((col) => (
-                      <React.Fragment key={colKeyOf(col)}>{render(col, item, rowIdx)}</React.Fragment>
-                    ))}
-                  </div>
-                )}
-
-                {renderExpanded && (
-                  <button
-                    type="button"
-                    aria-expanded={expanded.has(key)}
-                    onClick={(event) => { event.stopPropagation(); toggleExpanded(key); }}
-                    className="self-start text-[12px] text-accent focus-visible:ring-1 focus-visible:ring-accent"
-                  >
-                    {expanded.has(key) ? 'Ocultar detalle' : 'Ver detalle'}
-                  </button>
-                )}
-                {renderExpanded && expanded.has(key) && (
-                  <div className="pt-2 border-t border-[var(--border-subtle,#f1f5f9)]">
-                    {renderExpanded(item)}
-                  </div>
-                )}
-              </div>
-            );
-          })
-        )}
-
+        </div>
         {infiniteFooter}
 
         {hasSummary && (
@@ -798,7 +856,7 @@ export function Table<T>({
           </section>
         )}
 
-        {pagination && !infinite && !isLoading && (
+        {pagination && !infinite && !isLoading && !blockingError && (
           <Pagination
             page={page}
             pageSize={pageSize}
@@ -816,15 +874,16 @@ export function Table<T>({
 
   return (
     <div
-      aria-busy={isLoading || undefined}
       className={cn(
         'w-full bg-[var(--bg-card,#ffffff)] border border-[var(--border-default,#e2e8f0)] rounded-[var(--k-radius-xs,2px)]',
         className,
       )}
     >
+      {feedback}
       <div className="w-full overflow-auto" style={{ maxHeight }}>
         <table
           aria-label={ariaLabel}
+          aria-busy={isLoading || isRefreshing || undefined}
           className={cn(
             // min-w para móvil: si la tabla tiene varias columnas no caben en
             // pantalla pequeña → scroll horizontal del wrapper (overflow-auto).
@@ -1022,7 +1081,7 @@ export function Table<T>({
                   </div>
                 </td>
               </tr>
-            ) : pagedData.length === 0 ? (
+            ) : blockingError ? null : pagedData.length === 0 ? (
               <tr>
                 <td
                   colSpan={totalCols}
@@ -1179,7 +1238,7 @@ export function Table<T>({
                 );
               })
             )}
-            {appendRow && !isLoading && (
+            {appendRow && !isLoading && !blockingError && (
               <tr className="border-t border-[var(--border-subtle,#f1f5f9)]">
                 <td colSpan={totalCols} className="p-0">
                   {appendRow}
@@ -1229,7 +1288,7 @@ export function Table<T>({
           )}
         </table>
       </div>
-      {pagination && !infinite && (!isLoading || loadingVariant === 'skeleton') && (
+      {pagination && !infinite && !blockingError && (!isLoading || loadingVariant === 'skeleton') && (
         <div className="border-t border-[var(--border-default,#e2e8f0)] px-4 py-2">
           {isLoading ? (
             // El pie se mantiene ocupando su sitio: si se ocultara, la tabla

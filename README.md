@@ -449,6 +449,73 @@ cada columna se declara con `card`:
 
 Lo que no lleve `card` va al cuerpo de la tarjeta con su etiqueta delante.
 
+## Tablas con datos remotos
+
+`Table` diferencia la carga inicial, una actualización y un error. La aplicación
+conserva el control de la petición, los filtros, el total y los datos recibidos.
+
+```tsx
+<Table
+  columns={columns}
+  data={clientes}
+  isLoading={pendiente && clientes.length === 0}
+  isRefreshing={pendiente && clientes.length > 0}
+  errorMessage={error ? 'No se ha podido conectar con el servidor.' : null}
+  onRetry={recargar}
+  responsive="cards"
+  ariaLabel="Clientes"
+/>
+```
+
+- `isLoading` muestra el esqueleto o spinner habitual; `isRefreshing` conserva
+  las filas montadas, la selección, el detalle expandido y los totales. Si no
+  hay datos, `isRefreshing` se representa como carga inicial.
+- `errorMessage` sin datos sustituye al estado vacío y oculta la paginación.
+  Con datos muestra un aviso de que se conserva la última información disponible.
+  Durante una petición activa se oculta el error anterior.
+- `onRetry` añade la acción de recuperación; la aplicación debe activar el estado
+  de carga y actualizar o limpiar el error. `retryLabel`, `refreshingLabel` y
+  `loadingLabel` permiten adaptar los textos. La carga incremental se pausa
+  mientras hay un error o una petición general en curso.
+- Las filas conservadas siguen siendo interactivas: la aplicación decide si
+  puede permitir acciones sobre datos pendientes de actualizar. Al cambiar a
+  otra consulta, debe vaciar los datos anteriores o identificarlos correctamente.
+
+La story **Data States → Clientes remotos** permite probar errores iniciales,
+fallos al actualizar, reintentos y vacíos con peticiones simuladas en memoria.
+
+## Edición numérica
+
+`NumberInput`, `CurrencyInput` y `PercentInput` admiten coma o punto al **teclear
+un decimal**. El separador de miles se usa para mostrar el valor fuera del campo,
+sin eliminar puntos decimales del texto en edición.
+
+El **pegado** admite grupos de miles completos del formato configurado:
+`1.234,56` en español; con `decimalSeparator="."` y `thousandSeparator=","`,
+`1,234.56`. `CurrencyInput` elige ese separador de miles automáticamente cuando
+no se especifica. Al pegar `1.234` con miles configurados como punto se interpreta
+como 1234; al teclearlo se interpreta como 1,234. El texto no numérico y las
+agrupaciones incompletas se rechazan sin sustituir el valor existente.
+
+Con `commitOn="blur"`, las flechas y los botones de incremento operan sobre el
+texto pendiente y confirman el valor al salir. `readOnly` bloquea también los
+incrementos y no emite cambios al enfocar o salir; `allowNegative={false}` impide
+bajar de cero con los incrementos. `onKeyDown` y `onPaste` pueden cancelar el
+comportamiento interno mediante `event.preventDefault()`.
+
+La story **Number Input → Edicion ERP** permite probar estos casos. Los mensajes
+de ayuda y error de `Input` están enlazados mediante `aria-describedby`, conservando
+también los identificadores aportados por la aplicación.
+
+```bash
+npm run dev
+# En otra terminal, con el catálogo ya disponible:
+npm run test:data-entry
+```
+
+La prueba usa Chromium de Playwright; se puede indicar una instalación existente
+con `CHROME_PATH` y otra dirección del catálogo con `LADLE_URL`.
+
 ## Páginas reutilizables y creación de documentos
 
 `PageLayout` organiza cabecera, contenido, panel lateral y pie adaptable.
