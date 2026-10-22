@@ -97,6 +97,9 @@ export const Input: React.FC<InputProps> = ({
   const effectiveStatus: InputStatus = error ? 'error' : status ?? 'default';
   const withStatusIcon = showStatusIcon ?? effectiveStatus !== 'default';
   const message = error ?? statusMessage;
+  const messageId = `${inputId}-description`;
+  const hasDescription = Boolean(message || helperText);
+  const describedBy = [props['aria-describedby'], hasDescription ? messageId : undefined].filter(Boolean).join(' ') || undefined;
 
   const labelNode = label && (
     <label
@@ -116,7 +119,7 @@ export const Input: React.FC<InputProps> = ({
   );
 
   const messageNode = (
-    <>
+    <div id={messageId}>
       {error && <p className="text-[11px] font-medium text-[var(--k-danger-fg)] mt-0.5">{error}</p>}
       {!error && statusMessage && (
         <p
@@ -135,7 +138,7 @@ export const Input: React.FC<InputProps> = ({
           {helperText}
         </p>
       )}
-    </>
+    </div>
   );
 
   const hasAddons = prefix !== undefined || suffix !== undefined || withStatusIcon;
@@ -199,6 +202,7 @@ export const Input: React.FC<InputProps> = ({
               className,
             )}
             {...props}
+            aria-describedby={describedBy}
           />
           {rightIcon && (
             <span className="absolute right-3 text-[var(--fg-subtle,#657486)] group-focus-within:text-accent transition-colors">
@@ -217,7 +221,7 @@ export const Input: React.FC<InputProps> = ({
           </span>
         )}
       </div>
-      {messageNode}
+      {hasDescription && messageNode}
     </div>
   );
 };

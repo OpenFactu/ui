@@ -23,7 +23,8 @@ export function parseDecimal(raw: string, thousandSeparator?: string | false): n
   if (cleaned === '' || cleaned === '-') return null;
   if (thousandSeparator) cleaned = cleaned.split(thousandSeparator).join('');
   cleaned = cleaned.replace(',', '.');
-  const parsed = Number.parseFloat(cleaned);
+  if (!DECIMAL_RE.test(cleaned)) return null;
+  const parsed = Number(cleaned);
   return Number.isFinite(parsed) ? parsed : null;
 }
 
@@ -31,6 +32,21 @@ export interface FormatNumberOptions {
   precision?: number;
   decimalSeparator?: string;
   thousandSeparator?: string | false;
+}
+
+/** El pegado acepta grupos de miles completos del formato configurado.
+ * Al teclear, coma y punto siguen siendo separadores decimales. */
+export function normalizePastedNumber(
+  text: string,
+  { decimalSeparator = ',', thousandSeparator = false }: FormatNumberOptions = {},
+): string | null {
+  let raw = text.trim();
+  const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  if (thousandSeparator && thousandSeparator !== decimalSeparator) {
+    const grouped = new RegExp(`^-?\\d{1,3}(?:${escape(thousandSeparator)}\\d{3})+(?:${escape(decimalSeparator)}\\d+)?$`);
+    if (grouped.test(raw)) raw = raw.split(thousandSeparator).join('');
+  }
+  return isPartialNumber(raw) && parseDecimal(raw) !== null ? raw : null;
 }
 
 /** 1234.5 → «1.234,50» con las opciones por defecto en español. */

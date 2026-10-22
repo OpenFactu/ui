@@ -48,10 +48,14 @@ const TONO_PUNTO: Record<TimelineTone, string> = {
 };
 
 const TONO_ICONO: Record<TimelineTone, string> = {
-  default: 'text-[var(--fg-muted,#52606f)] bg-[var(--bg-muted)] border-[var(--border-default,#e2e8f0)]',
-  accent: 'text-accent bg-[rgb(var(--color-accent-rgb)/0.1)] border-[rgb(var(--color-accent-rgb)/0.3)]',
-  success: 'text-[var(--k-success-fg)] bg-[var(--k-success-bg)] border-[rgb(var(--k-success-rgb)/0.3)]',
-  warning: 'text-[var(--k-warning-fg)] bg-[var(--k-warning-bg)] border-[rgb(var(--k-warning-rgb)/0.3)]',
+  default:
+    'text-[var(--fg-muted,#52606f)] bg-[var(--bg-muted)] border-[var(--border-default,#e2e8f0)]',
+  accent:
+    'text-accent bg-[rgb(var(--color-accent-rgb)/0.1)] border-[rgb(var(--color-accent-rgb)/0.3)]',
+  success:
+    'text-[var(--k-success-fg)] bg-[var(--k-success-bg)] border-[rgb(var(--k-success-rgb)/0.3)]',
+  warning:
+    'text-[var(--k-warning-fg)] bg-[var(--k-warning-bg)] border-[rgb(var(--k-warning-rgb)/0.3)]',
   danger: 'text-[var(--k-danger-fg)] bg-[var(--k-danger-bg)] border-[rgb(var(--k-danger-rgb)/0.3)]',
   info: 'text-[var(--k-info-fg)] bg-[var(--k-info-bg)] border-[rgb(var(--k-info-rgb)/0.3)]',
 };
@@ -139,12 +143,7 @@ export const Timeline: React.FC<TimelineProps> = ({
 
   if (events.length === 0) {
     return (
-      <p
-        className={cn(
-          'py-6 text-center text-[13px] text-[var(--fg-muted,#52606f)]',
-          className,
-        )}
-      >
+      <p className={cn('py-6 text-center text-[13px] text-[var(--fg-muted,#52606f)]', className)}>
         {emptyMessage}
       </p>
     );
@@ -210,15 +209,19 @@ export const Timeline: React.FC<TimelineProps> = ({
 
             <div className={cn('min-w-0 flex-1', compacto ? 'pb-2' : 'pb-4')}>
               <div className="flex flex-wrap items-baseline gap-x-2">
-                <span
-                  onClick={e.onClick}
-                  className={cn(
-                    'text-[13px] font-medium text-[var(--fg-default,#0a1628)]',
-                    e.onClick && 'cursor-pointer hover:text-accent',
-                  )}
-                >
-                  {e.title}
-                </span>
+                {e.onClick ? (
+                  <button
+                    type="button"
+                    onClick={e.onClick}
+                    className="rounded-sm text-left text-[13px] font-medium text-[var(--fg-default)] hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  >
+                    {e.title}
+                  </button>
+                ) : (
+                  <span className="text-[13px] font-medium text-[var(--fg-default)]">
+                    {e.title}
+                  </span>
+                )}
                 {e.author && (
                   <span className="text-[11px] text-[var(--fg-muted,#52606f)]">{e.author}</span>
                 )}
