@@ -6,6 +6,7 @@ import {
   clampNumber,
   formatNumber,
   isPartialNumber,
+  normalizePastedNumber,
   parseDecimal,
   roundTo,
 } from './internal/numberFormat';
@@ -62,9 +63,11 @@ export const NumberInput: React.FC<NumberInputProps> = ({
   className,
   suffix,
   disabled,
+  readOnly,
   onFocus,
   onBlur,
   onKeyDown,
+  onPaste,
   ...rest
 }) => {
   const [editing, setEditing] = React.useState(false);
@@ -72,6 +75,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
 
   const formatted = formatNumber(value, { precision, decimalSeparator, thousandSeparator });
   const display = editing ? buffer : formatted;
+  const minimum = allowNegative ? min : Math.max(0, min ?? 0);
 
   const emit = (parsed: number | null) => {
     if (parsed === null) {
@@ -82,11 +86,37 @@ export const NumberInput: React.FC<NumberInputProps> = ({
   };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled || readOnly) return;
     const raw = event.target.value;
     // Se rechaza lo que no puede llegar a ser un número; así el cursor no salta.
     if (!isPartialNumber(raw, allowNegative)) return;
     setBuffer(raw);
-    if (commitOn === 'change') emit(parseDecimal(raw, thousandSeparator));
+    // El buffer no contiene millares: un punto tecleado es un decimal.
+    if (commitOn === 'change') emit(parseDecimal(raw));
+  };
+
+  const handlePaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
+    onPaste?.(event);
+    if (event.defaultPrevented || disabled || readOnly) return;
+    const pasted = normalizePastedNumber(event.clipboardData.getData('text'), {
+      decimalSeparator, thousandSeparator,
+    });
+    if (pasted === null) {
+      event.preventDefault();
+      return;
+    }
+    const input = event.currentTarget;
+    const start = input.selectionStart ?? buffer.length;
+    const end = input.selectionEnd ?? start;
+    const next = buffer.slice(0, start) + pasted + buffer.slice(end);
+    event.preventDefault();
+    if (!isPartialNumber(next, allowNegative)) return;
+    setBuffer(next);
+    if (commitOn === 'change') emit(parseDecimal(next));
+    // React actualiza value después del evento; conservar la posición de inserción.
+    requestAnimationFrame(() => {
+      if (document.activeElement === input) input.setSelectionRange(start + pasted.length, start + pasted.length);
+    });
   };
 
   const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {
@@ -99,23 +129,30 @@ export const NumberInput: React.FC<NumberInputProps> = ({
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
     setEditing(false);
-    let parsed = parseDecimal(buffer, thousandSeparator);
+    if (disabled || readOnly) {
+      onBlur?.(event);
+      return;
+    }
+    let parsed = parseDecimal(buffer);
     if (parsed !== null) {
       parsed = roundTo(parsed, precision);
-      if (clampOnBlur) parsed = clampNumber(parsed, min, max);
+      if (clampOnBlur) parsed = clampNumber(parsed, minimum, max);
     }
     emit(parsed);
     onBlur?.(event);
   };
 
   const nudge = (delta: number) => {
-    const current = value ?? 0;
-    const next = clampNumber(roundTo(current + delta, precision), min, max);
-    onChange(next);
+    if (disabled || readOnly) return;
+    const current = editing ? parseDecimal(buffer) ?? 0 : value ?? 0;
+    const next = clampNumber(roundTo(current + delta, precision), minimum, max);
+    if (!editing || commitOn === 'change') onChange(next);
     if (editing) setBuffer(formatNumber(next, { precision, decimalSeparator }));
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    onKeyDown?.(event);
+    if (event.defaultPrevented || disabled || readOnly) return;
     if (event.key === 'ArrowUp') {
       event.preventDefault();
       nudge(step);
@@ -123,7 +160,6 @@ export const NumberInput: React.FC<NumberInputProps> = ({
       event.preventDefault();
       nudge(-step);
     }
-    onKeyDown?.(event);
   };
 
   const steppers = showSteppers ? (
@@ -131,7 +167,8 @@ export const NumberInput: React.FC<NumberInputProps> = ({
       <button
         type="button"
         tabIndex={-1}
-        disabled={disabled}
+        disabled={disabled || readOnly}
+        onMouseDown={(event) => event.preventDefault()}
         onClick={() => nudge(step)}
         aria-label="Aumentar"
         className="flex items-center justify-center px-1.5 h-1/2 text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors disabled:opacity-40"
@@ -141,7 +178,8 @@ export const NumberInput: React.FC<NumberInputProps> = ({
       <button
         type="button"
         tabIndex={-1}
-        disabled={disabled}
+        disabled={disabled || readOnly}
+        onMouseDown={(event) => event.preventDefault()}
         onClick={() => nudge(-step)}
         aria-label="Disminuir"
         className="flex items-center justify-center px-1.5 h-1/2 text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors disabled:opacity-40"
@@ -157,16 +195,19 @@ export const NumberInput: React.FC<NumberInputProps> = ({
       type="text"
       inputMode="decimal"
       disabled={disabled}
+      readOnly={readOnly}
       value={display}
       onChange={handleChange}
       onFocus={handleFocus}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
+      onPaste={handlePaste}
       suffix={steppers ?? suffix}
       suffixInteractive={!!steppers}
       className={cn(align === 'right' && 'text-right font-mono tabular-nums', className)}
       aria-valuenow={value ?? undefined}
-      aria-valuemin={min}
+      role={rest.role ?? 'spinbutton'}
+      aria-valuemin={minimum}
       aria-valuemax={max}
     />
   );
@@ -191,7 +232,8 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
   currency = 'EUR',
   symbolPosition = 'suffix',
   precision = 2,
-  thousandSeparator = '.',
+  decimalSeparator = ',',
+  thousandSeparator = decimalSeparator === '.' ? ',' : '.',
   allowNegative = false,
   prefix,
   suffix,
@@ -202,6 +244,7 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
     <NumberInput
       {...rest}
       precision={precision}
+      decimalSeparator={decimalSeparator}
       thousandSeparator={thousandSeparator}
       allowNegative={allowNegative}
       prefix={symbolPosition === 'prefix' ? prefix ?? symbol : prefix}

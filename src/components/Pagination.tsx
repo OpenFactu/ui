@@ -43,7 +43,7 @@ export const Pagination: React.FC<PaginationProps> = ({
       <span className="font-mono text-[11px] whitespace-nowrap">
         {from}–{to} de {total}
       </span>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-2">
         {showSizes && (
           <span className="flex items-center gap-1.5 whitespace-nowrap">
             <Select
