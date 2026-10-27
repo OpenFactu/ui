@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, AlertTriangle, CheckCircle, Info, AlertCircle } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { Button } from './Button';
 import { useScrollLock } from '../hooks/useScrollLock';
 
@@ -22,10 +22,10 @@ export interface PopupFrameProps {
 // esto sale en TODOS los diálogos de confirmación, así que un color fijo aquí
 // se ve en toda la aplicación por muy tematizada que esté.
 const TONE_ICONS: Record<PopupTone, React.ReactNode> = {
-  info: <Info size={20} className="text-[var(--k-info)]" />,
-  success: <CheckCircle size={20} className="text-[var(--k-success)]" />,
-  warning: <AlertTriangle size={20} className="text-[var(--k-warning)]" />,
-  danger: <AlertCircle size={20} className="text-[var(--k-danger)]" />,
+  info: <UiIcon slot="info" size={20} className="text-[var(--k-info)]" />,
+  success: <UiIcon slot="check-circle" size={20} className="text-[var(--k-success)]" />,
+  warning: <UiIcon slot="alert-triangle" size={20} className="text-[var(--k-warning)]" />,
+  danger: <UiIcon slot="alert-circle" size={20} className="text-[var(--k-danger)]" />,
 };
 
 /**
@@ -116,7 +116,7 @@ export const PopupFrame: React.FC<PopupFrameProps> = ({
                 onClick={onClose}
                 className="p-1.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--bg-hover)] rounded-[var(--k-radius-xs,2px)] transition-colors flex-shrink-0"
               >
-                <X size={18} />
+                <UiIcon slot="x" size={18} />
               </button>
             )}
           </div>

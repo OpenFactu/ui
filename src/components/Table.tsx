@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronRight, Columns3, MoreHorizontal } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import { cn } from '../utils';
 import { Checkbox } from './Checkbox';
@@ -204,7 +204,7 @@ function ColumnToggle({
         onClick={() => setIsOpen(!isOpen)}
         className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent hover:bg-[var(--bg-hover)] transition-colors"
       >
-        <Columns3 className="h-3.5 w-3.5" />
+        <UiIcon slot="columns-3" className="h-3.5 w-3.5" />
       </button>
       {isOpen &&
         createPortal(
@@ -269,7 +269,7 @@ const RowActionsCell: React.FC<{ actions: RowAction[] | null; alwaysVisible?: bo
         onClick={only.onClick}
         className={cn(btnClass, only.destructive && 'hover:text-[var(--k-danger-fg)]')}
       >
-        {only.icon ?? <MoreHorizontal className="h-3.5 w-3.5" />}
+        {only.icon ?? <UiIcon slot="more-horizontal" className="h-3.5 w-3.5" />}
       </button>
     );
   }
@@ -277,7 +277,7 @@ const RowActionsCell: React.FC<{ actions: RowAction[] | null; alwaysVisible?: bo
   return (
     <DropdownMenu items={actions} align="end">
       <button type="button" aria-label="Acciones de la fila" className={btnClass}>
-        <MoreHorizontal className="h-3.5 w-3.5" />
+        <UiIcon slot="more-horizontal" className="h-3.5 w-3.5" />
       </button>
     </DropdownMenu>
   );
@@ -988,7 +988,7 @@ export function Table<T>({
                             onClick={() => toggleExpanded(key)}
                             className="p-0.5 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors"
                           >
-                            <ChevronRight
+                            <UiIcon slot="chevron-right"
                               className={cn(
                                 'h-3.5 w-3.5 transition-transform duration-200',
                                 isExpanded && 'rotate-90',

@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { DatePicker } from './DatePicker';
 import { Input } from './Input';
@@ -144,7 +144,7 @@ export function FilterBar({
             onClick={onClear}
             className="inline-flex items-center gap-1.5 px-3 h-9 text-[11px] font-mono font-medium text-[var(--k-danger-fg)] hover:bg-[var(--k-danger-bg)] rounded-[var(--k-radius-xs,2px)] transition-colors uppercase tracking-[1px]"
           >
-            <X size={12} />
+            <UiIcon slot="x" size={12} />
             Limpiar
           </button>
         )}

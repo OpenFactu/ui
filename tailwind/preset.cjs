@@ -18,10 +18,28 @@
  *
  * @type {import('tailwindcss').Config}
  */
+// Densidad, movimiento y escala de texto: las escalas de Tailwind se multiplican por
+// una variable del tema. Con los valores de fábrica (1) no cambian ni un píxel.
+let defaults = {};
+try { defaults = require('tailwindcss/defaultTheme'); } catch { /* sin Tailwind resoluble no se escala nada */ }
+const scaled = (table, variable, skip = () => false) => Object.fromEntries(
+  Object.entries(table ?? {}).map(([key, value]) => [key, typeof value === 'string' && !skip(value) && value !== '0px' ? `calc(${value} * var(${variable}, 1))` : value]),
+);
+const sized = (table) => Object.fromEntries(
+  Object.entries(table ?? {}).map(([key, value]) => {
+    const [size, options] = Array.isArray(value) ? value : [value];
+    return [key, [`calc(${size} * var(--k-text-scale, 1))`, options ?? {}]];
+  }),
+);
+
 module.exports = {
   darkMode: 'class',
   theme: {
     extend: {
+      spacing: scaled(defaults.spacing, '--k-density', value => value === '1px' || value === 'auto'),
+      borderWidth: { DEFAULT: 'var(--k-border-width, 1px)' },
+      transitionDuration: scaled(defaults.transitionDuration, '--k-motion'),
+      transitionTimingFunction: { DEFAULT: 'var(--k-ease, cubic-bezier(0.4, 0, 0.2, 1))' },
       colors: {
         primary: 'rgb(var(--color-primary-rgb, 10 22 40) / <alpha-value>)',
         'primary-fg': 'rgb(var(--color-primary-fg-rgb, 255 255 255) / <alpha-value>)',
@@ -99,6 +117,13 @@ module.exports = {
       },
 
       boxShadow: {
+        // Las utilidades de sombra de Tailwind siguen al tema: con los valores de fábrica son las mismas que las de Tailwind.
+        DEFAULT: 'var(--k-shadow-sm, 0 1px 2px 0 rgb(0 0 0 / 0.05))',
+        sm: 'var(--k-shadow-sm, 0 1px 2px 0 rgb(0 0 0 / 0.05))',
+        md: 'var(--k-shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1))',
+        lg: 'var(--k-shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1))',
+        xl: 'var(--k-shadow-xl, 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1))',
+        '2xl': 'var(--k-shadow-overlay, 0 25px 50px -12px rgb(0 0 0 / 0.25))',
         'k-sm': 'var(--k-shadow-sm)',
         'k-md': 'var(--k-shadow-md)',
         'k-lg': 'var(--k-shadow-lg)',
@@ -117,6 +142,7 @@ module.exports = {
 
       // Escala tipográfica del brand guide.
       fontSize: {
+        ...sized(defaults.fontSize),
         display: ['48px', { lineHeight: '1.05', letterSpacing: '-1px', fontWeight: '800' }],
         h1: ['32px', { lineHeight: '1.1', letterSpacing: '-0.5px', fontWeight: '700' }],
         h2: ['22px', { lineHeight: '1.2', fontWeight: '600' }],

@@ -1,0 +1,26 @@
+/** Provider-independent AI interface components; no SDK or network transport. */
+export * from './types';
+export * from './labels';
+export * from './AIWorkspace';
+export * from './AIConversation';
+export * from './AIConversationHistory';
+export * from './AIMessage';
+export * from './AIComposer';
+export * from './AIMarkdown';
+export * from './AICodeBlock';
+export * from './AIAttachments';
+export * from './AISources';
+export * from './AIToolCall';
+export * from './AIArtifactPanel';
+export * from './AIVoice';
+export * from './registry';
+export * from './codeActions';
+export * from './AICodeDiff';
+export * from './AITrace';
+export * from './AIReasoning';
+export * from './AIPlan';
+export * from './AIConsole';
+export * from './AIFiles';
+export * from './AIContext';
+export * from './partRegistry';
+export { parseStackTrace, stripAnsi, buildFileTree, summarizeTests, contextUsage } from './internal/elements';

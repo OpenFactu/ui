@@ -92,6 +92,8 @@ export interface ThemeColors {
 export interface ThemeTypography {
   /** Id de {@link FONT_OPTIONS}. Si se indica, gana sobre `sans`/`display`. */
   fontFamily?: string;
+  /** Escala del texto (1 = normal). Afecta a los tamaños con nombre de Tailwind (`text-sm`…) vía el preset. */
+  scale?: number;
   sans?: string;
   display?: string;
   mono?: string;
@@ -109,6 +111,8 @@ export interface ThemeShadows {
   sm?: string;
   md?: string;
   lg?: string;
+  /** Diálogos y paneles (`shadow-xl`). Si no se indica, se deriva de `lg`. */
+  xl?: string;
   overlay?: string;
 }
 
@@ -122,6 +126,56 @@ export interface ThemeZIndex {
   tooltip?: number;
 }
 
+/**
+ * Material de las superficies (tarjetas, diálogos, menús, paneles). Con `blur`
+ * mayor que 0 o `alpha` menor que 1 el tema es «de cristal»: las superficies se
+ * vuelven translúcidas y difuminan lo que hay detrás, que es lo que da sentido a
+ * un `backdrop` con color. Los valores de fábrica (0 y 1) no cambian nada.
+ */
+export interface ThemeMaterial {
+  /** Desenfoque del fondo, en px. */
+  blur?: number;
+  /** Opacidad del relleno de las superficies, de 0 a 1. */
+  alpha?: number;
+  /** Saturación del fondo difuminado (1 = sin cambio; 1.4 da el aspecto «líquido»). */
+  saturate?: number;
+  /** Color del borde de las superficies de cristal; normalmente un blanco o negro translúcido. */
+  border?: string;
+  /** Reflejo del canto superior (`inset 0 1px 0 …`); vacío = ninguno. */
+  highlight?: string;
+}
+
+/** Grosor de las líneas: bordes (`border`, `border-b`, `divide-*`…) vía el preset de Tailwind. */
+export interface ThemeBorder {
+  /** Ancho en px (0.5–4). */
+  width?: number;
+}
+
+/** Anillo de foco de teclado, el mismo para todos los controles. Sin definirlo, cada componente conserva el suyo. */
+export interface ThemeFocus {
+  width?: number;
+  offset?: number;
+  /** Por defecto, el acento. */
+  color?: string;
+  style?: 'solid' | 'dashed' | 'dotted';
+}
+
+/** Color de la selección de texto (`::selection`). */
+export interface ThemeSelection {
+  background?: string;
+  color?: string;
+}
+
+/** Densidad: escala el espaciado de Tailwind (`p-4`, `gap-2`, `h-9`…) mediante el preset. */
+export type ThemeDensity = 'compact' | 'normal' | 'comfortable' | number;
+
+export interface ThemeMotion {
+  /** `none` desactiva las transiciones; un número multiplica todas las duraciones (1 = normal). */
+  speed?: 'none' | 'fast' | 'normal' | 'slow' | number;
+  /** Curva por defecto de las transiciones. */
+  easing?: string;
+}
+
 /** Tema tal y como lo escribe quien consume la librería. */
 export interface Theme {
   mode?: ThemeMode;
@@ -130,6 +184,19 @@ export interface Theme {
   radius?: ThemeRadius | 'none' | 'sm' | 'md' | 'lg';
   shadows?: ThemeShadows;
   zIndex?: ThemeZIndex;
+  material?: ThemeMaterial;
+  border?: ThemeBorder;
+  focus?: ThemeFocus;
+  selection?: ThemeSelection;
+  /**
+   * Fondo de la aplicación: cualquier valor de `background` (degradados, malla,
+   * `url()`). Es lo que el cristal difumina. Sin él, un tema glass se ve como uno plano.
+   */
+  backdrop?: string;
+  /** `drift` mueve despacio el fondo (solo transform; se apaga con movimiento reducido o `motion.speed: 'none'`). */
+  backdropMotion?: 'none' | 'drift';
+  density?: ThemeDensity;
+  motion?: ThemeMotion;
   /** Variables CSS crudas, aplicadas al final. Punto de extensión. */
   vars?: Record<string, string | number>;
 }
@@ -150,6 +217,16 @@ export interface ResolvedTheme {
   radius: Required<ThemeRadius>;
   shadows: Required<ThemeShadows>;
   zIndex: Required<ThemeZIndex>;
+  material: Required<ThemeMaterial>;
+  backdrop: string;
+  backdropMotion: 'none' | 'drift';
+  border: Required<ThemeBorder>;
+  /** `enabled` solo si el tema define el foco: si no, no se toca el de cada componente. */
+  focus: Required<ThemeFocus> & { enabled: boolean };
+  selection: Required<ThemeSelection> & { enabled: boolean };
+  /** Factor numérico (1 = normal). */
+  density: number;
+  motion: { speed: number; easing: string };
   vars: Record<string, string>;
 }
 

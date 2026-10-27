@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 
 export interface BreadcrumbItem {
@@ -25,7 +25,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className }) =>
         return (
           <li key={idx} className="flex items-center gap-1.5">
             {idx > 0 && (
-              <ChevronRight className="h-3 w-3 text-[var(--fg-subtle,#657486)] shrink-0" />
+              <UiIcon slot="chevron-right" className="h-3 w-3 text-[var(--fg-subtle,#657486)] shrink-0" />
             )}
             {isLast ? (
               <span

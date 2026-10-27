@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
-import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { useEscapeStack } from '../internal/escapeStack';
 import { cn } from '../utils';
 import { Button, type ButtonProps } from './Button';
@@ -128,10 +128,10 @@ const SIZE_CLASSES: Record<ModalSize, string> = {
 };
 
 const TONE_ICON: Record<Exclude<ModalTone, 'default'>, React.ReactNode> = {
-  info: <Info size={18} />,
-  success: <CheckCircle size={18} />,
-  warning: <AlertTriangle size={18} />,
-  danger: <AlertCircle size={18} />,
+  info: <UiIcon slot="info" size={18} />,
+  success: <UiIcon slot="check-circle" size={18} />,
+  warning: <UiIcon slot="alert-triangle" size={18} />,
+  danger: <UiIcon slot="alert-circle" size={18} />,
 };
 
 const TONE_CHIP: Record<ModalTone, string> = {
@@ -227,7 +227,7 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
             aria-label="Cerrar"
             className="p-1.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--bg-hover)] rounded-[var(--k-radius-xs,2px)] transition-colors"
           >
-            <X size={18} />
+            <UiIcon slot="x" size={18} />
           </button>
         )}
       </div>
@@ -446,7 +446,7 @@ const ModalRoot: React.FC<ModalProps> = ({
 
       {error && (
         <div className="shrink-0 px-6 py-2.5 border-t border-[var(--k-danger)]/30 bg-[var(--k-danger-bg)] text-[12px] text-[var(--k-danger-fg)] flex items-center gap-2">
-          <AlertCircle size={14} className="shrink-0" />
+          <UiIcon slot="alert-circle" size={14} className="shrink-0" />
           {error}
         </div>
       )}

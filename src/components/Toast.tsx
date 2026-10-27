@@ -1,19 +1,25 @@
 import * as React from 'react';
-import { AlertCircle, AlertTriangle, CheckCircle, Info, Loader2, X } from 'lucide-react';
+import { UiIcon, type IconSlot } from '../icons';
 import { cn } from '../utils';
 
-export type ToastType = 'success' | 'error' | 'info' | 'warning' | 'loading';
+export type ToastType = 'default' | 'success' | 'error' | 'info' | 'warning' | 'loading';
 
 /** Cómo se pinta el aviso. */
 export type ToastVariant =
-  /** Tarjeta neutra con una banda de color a la izquierda. El de siempre. */
+  /** Tarjeta neutra: el estado lo da la pastilla del icono y la barra de tiempo. El de siempre. */
   | 'accent'
   /** Fondo teñido del color de estado, para avisos que deben cantar más. */
   | 'soft'
   /** Relleno del color de estado. El más llamativo; el texto usa `--k-*-on`. */
   | 'solid'
-  /** Solo contorno, sin banda ni tinte. El más discreto. */
-  | 'outline';
+  /** Solo contorno de color, sin tinte. */
+  | 'outline'
+  /** Sobrio, como el de Sonner: sin pastilla, icono sin caja, esquinas amplias. El más discreto. */
+  | 'minimal'
+  /** Translúcido con desenfoque, con independencia del tema. Pensado para fondos con imagen o color. */
+  | 'glass'
+  /** Invertido: oscuro sobre un tema claro y claro sobre uno oscuro. */
+  | 'invert';
 
 /** Cómo entra y sale. Entrada y salida son la misma transición al revés. */
 export type ToastAnimation = 'slide' | 'fade' | 'scale' | 'lift';
@@ -36,8 +42,21 @@ export interface ToastData {
   duration?: number;
   /** Botón de acción a la derecha («Deshacer», «Ver factura»…). */
   action?: ToastAction;
+  /** Segunda acción, más discreta que `action` («Cancelar», «Ahora no»). Cierra el aviso. */
+  cancel?: ToastAction;
   /** Permite cerrarlo a mano. Default true, salvo en 'loading'. */
   dismissible?: boolean;
+  /** Icono propio, o `false` para ninguno. Por defecto, el del tipo (el tipo `default` no lleva). */
+  icon?: React.ReactNode | false;
+  /** Dónde va el botón de cerrar: dentro (X a la derecha) o en la esquina, visible al pasar el ratón. */
+  closeStyle?: 'inline' | 'corner';
+  /**
+   * Contenido propio, sin el cromo del aviso (icono, título, botones): lo pintas tú y el aviso solo
+   * aporta la pila, el temporizador, la entrada y el arrastre. Recibe el id para poder cerrarlo.
+   */
+  custom?: (id: string) => React.ReactNode;
+  /** Se llama cuando el aviso desaparece, lo cierre el usuario o el temporizador. */
+  onDismiss?: (toast: ToastData) => void;
 }
 
 export interface ToastProps {
@@ -51,17 +70,22 @@ export interface ToastProps {
   side?: 'left' | 'right' | 'center';
   /** Descartar deslizando con el dedo. Default true. Solo táctil y lápiz. */
   swipeToDismiss?: boolean;
+  /** En una pila plegada: es una capa de fondo (se ve solo su borde, sin contenido). */
+  peek?: boolean;
+  /** Alto al que se recorta la capa de fondo, para que asome con el mismo tamaño que la de delante. */
+  peekHeight?: number;
 }
 
 /** Píxeles de arrastre a partir de los cuales se considera un descarte. */
 const SWIPE_THRESHOLD = 72;
 
-const ICONS: Record<ToastType, React.ComponentType<{ size?: number; className?: string }>> = {
-  success: CheckCircle,
-  error: AlertCircle,
-  info: Info,
-  warning: AlertTriangle,
-  loading: Loader2,
+const ICONS: Record<ToastType, IconSlot | null> = {
+  default: null,
+  success: 'check-circle',
+  error: 'alert-circle',
+  info: 'info',
+  warning: 'alert-triangle',
+  loading: 'loader-2',
 };
 
 /**
@@ -69,6 +93,7 @@ const ICONS: Record<ToastType, React.ComponentType<{ size?: number; className?: 
  * color cuando se usa como relleno, y su versión teñida para fondos suaves.
  */
 const TONES: Record<ToastType, { color: string; on: string; bg: string }> = {
+  default: { color: 'var(--fg-default)', on: 'var(--bg-card)', bg: 'var(--bg-muted)' },
   success: { color: 'var(--k-success)', on: 'var(--k-success-on)', bg: 'var(--k-success-bg)' },
   error: { color: 'var(--k-danger)', on: 'var(--k-danger-on)', bg: 'var(--k-danger-bg)' },
   info: { color: 'var(--k-info)', on: 'var(--k-info-on)', bg: 'var(--k-info-bg)' },
@@ -81,15 +106,22 @@ const TONES: Record<ToastType, { color: string; on: string; bg: string }> = {
 };
 
 const VARIANTS: Record<ToastVariant, string> = {
-  accent:
-    'border border-l-4 border-[var(--border-default,#e2e8f0)] border-l-[var(--k-tone)] bg-[var(--bg-card,#ffffff)]',
+  // Tarjeta neutra: la señal de estado la lleva la pastilla del icono y la barra de tiempo, no una banda.
+  accent: 'border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)]',
   // El tinte va superpuesto a la superficie de tarjeta, no suelto: en modo
   // oscuro `--k-*-bg` es translúcido y, sin una base opaca debajo, se
   // transparentaría lo que hubiera detrás del aviso.
-  soft: 'border border-[var(--k-tone)] bg-[var(--bg-card,#ffffff)]',
+  soft: 'bg-[var(--bg-card,#ffffff)] border border-[color-mix(in_srgb,var(--k-tone)_38%,transparent)]',
   solid: 'border border-[var(--k-tone)] bg-[var(--k-tone)]',
-  outline: 'border-2 border-[var(--k-tone)] bg-[var(--bg-card,#ffffff)]',
+  outline: 'border-[1.5px] border-[var(--k-tone)] bg-[var(--bg-card,#ffffff)]',
+  minimal: 'border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)]',
+  glass:
+    'border border-[color-mix(in_srgb,var(--fg-default)_14%,transparent)] bg-[color-mix(in_srgb,var(--bg-card)_68%,transparent)] backdrop-blur-xl backdrop-saturate-150',
+  invert: 'border border-[var(--k-tone)] bg-[var(--k-tone)]',
 };
+
+/** Formas que pintan sobre un relleno: su texto usa `--k-tone-on`. */
+const FILLED: ReadonlySet<ToastVariant> = new Set<ToastVariant>(['solid', 'invert']);
 
 /**
  * Un aviso.
@@ -105,6 +137,8 @@ export const Toast: React.FC<ToastProps> = ({
   leaving = false,
   side = 'right',
   swipeToDismiss = true,
+  peek = false,
+  peekHeight,
 }) => {
   const {
     id,
@@ -115,11 +149,18 @@ export const Toast: React.FC<ToastProps> = ({
     animation = 'slide',
     duration = 5000,
     action,
+    cancel,
+    closeStyle = 'inline',
+    custom,
   } = toast;
   const dismissible = toast.dismissible ?? type !== 'loading';
   const tone = TONES[type];
-  const solid = variant === 'solid';
-  const Icon = ICONS[type];
+  const filled = FILLED.has(variant);
+  const minimal = variant === 'minimal';
+  const iconName = ICONS[type];
+  const hasIcon = toast.icon !== false && (toast.icon !== undefined || iconName !== null);
+  // `invert` rellena con el color de texto del tema, pero el icono conserva el del tipo.
+  const surfaceTone = variant === 'invert' ? TONES.default : tone;
 
   // Arrastre táctil. Mientras el dedo está encima el temporizador se detiene:
   // si no, el aviso se cerraría solo justo cuando se está manipulando.
@@ -191,7 +232,7 @@ export const Toast: React.FC<ToastProps> = ({
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     // Con ratón no se arrastra: estorbaría a la selección de texto y ya hay X.
-    if (!swipeToDismiss || !dismissible || e.pointerType === 'mouse') return;
+    if (!swipeToDismiss || !dismissible || peek || e.pointerType === 'mouse') return;
     dragStart.current = e.clientX;
     setDrag(0);
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -207,7 +248,128 @@ export const Toast: React.FC<ToastProps> = ({
     setDrag(null);
   };
 
-  const textOn = solid ? 'text-[var(--k-tone-on)]' : undefined;
+  const textOn = filled ? 'text-[var(--k-tone-on)]' : undefined;
+  // La barra solo tiene sentido si el aviso se cierra solo; en 'loading' (fijo) no hay cuenta atrás.
+  const countdown = Number.isFinite(duration) && duration > 0 && type !== 'loading';
+  const iconColor = filled && variant === 'solid' ? 'text-[var(--k-tone-on)]' : 'text-[var(--k-type)]';
+  const body = (
+    <>
+      {custom ? (
+        <div className="min-w-0 flex-1">{custom(id)}</div>
+      ) : (
+        <>
+          {hasIcon && (
+            <span
+              className={cn(
+                'shrink-0',
+                minimal
+                  ? 'mt-px grid h-5 w-5 place-items-center'
+                  : 'mt-px grid h-8 w-8 place-items-center rounded-[var(--k-radius-sm,4px)]',
+                !minimal &&
+                  (variant === 'solid'
+                    ? 'bg-[color-mix(in_srgb,var(--k-tone-on)_18%,transparent)]'
+                    : 'bg-[color-mix(in_srgb,var(--k-type)_14%,transparent)]'),
+                iconColor,
+              )}
+            >
+              {toast.icon !== undefined && toast.icon !== false ? (
+                toast.icon
+              ) : (
+                <UiIcon
+                  slot={iconName!}
+                  size={minimal ? 18 : 17}
+                  className={cn(type === 'loading' && 'animate-spin')}
+                />
+              )}
+            </span>
+          )}
+
+          <div className="min-w-0 flex-1 py-px">
+            {title && (
+              <p
+                className={cn(
+                  'font-semibold leading-snug tracking-[-0.005em]',
+                  minimal ? 'text-[14px]' : 'text-[13.5px]',
+                  textOn ?? 'text-[var(--fg-default,#0a1628)]',
+                )}
+              >
+                {title}
+              </p>
+            )}
+            <p
+              className={cn(
+                'break-words leading-snug',
+                minimal ? 'text-[13.5px]' : 'text-[13px]',
+                title ? 'mt-0.5' : hasIcon && !minimal ? 'mt-[5px] font-medium' : 'font-medium',
+                textOn ??
+                  (title ? 'text-[var(--fg-muted,#52606f)]' : 'text-[var(--fg-default,#0a1628)]'),
+                filled && title && 'opacity-90',
+              )}
+            >
+              {message}
+            </p>
+            {(action || cancel) && (
+              <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                {action && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      action.onClick();
+                      onClose(id);
+                    }}
+                    className={cn(
+                      'inline-flex h-7 items-center rounded-[var(--k-radius-xs,2px)] border px-2.5 text-[12px] font-semibold transition-colors',
+                      'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
+                      filled
+                        ? 'border-[color-mix(in_srgb,var(--k-tone-on)_45%,transparent)] text-[var(--k-tone-on)] hover:bg-[color-mix(in_srgb,var(--k-tone-on)_14%,transparent)]'
+                        : 'border-[var(--border-default,#e2e8f0)] text-[var(--fg-default,#0a1628)] hover:border-[var(--k-type)] hover:bg-[color-mix(in_srgb,var(--k-type)_8%,transparent)]',
+                    )}
+                  >
+                    {action.label}
+                  </button>
+                )}
+                {cancel && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      cancel.onClick();
+                      onClose(id);
+                    }}
+                    className={cn(
+                      'inline-flex h-7 items-center rounded-[var(--k-radius-xs,2px)] px-2 text-[12px] font-medium transition-colors',
+                      'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
+                      filled
+                        ? 'text-[var(--k-tone-on)] opacity-75 hover:opacity-100'
+                        : 'text-[var(--fg-muted,#52606f)] hover:text-[var(--fg-default,#0a1628)]',
+                    )}
+                  >
+                    {cancel.label}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {dismissible && closeStyle === 'inline' && (
+        <button
+          type="button"
+          onClick={() => onClose(id)}
+          aria-label="Cerrar aviso"
+          className={cn(
+            '-mr-1 -mt-1 grid h-7 w-7 shrink-0 place-items-center rounded-[var(--k-radius-xs,2px)] transition-colors',
+            'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
+            filled
+              ? 'text-[var(--k-tone-on)] opacity-70 hover:bg-[color-mix(in_srgb,var(--k-tone-on)_16%,transparent)] hover:opacity-100'
+              : 'text-[var(--fg-subtle,#657486)] hover:bg-[var(--bg-hover,#f1f5f9)] hover:text-[var(--fg-default,#0a1628)]',
+          )}
+        >
+          <UiIcon slot="x" size={14} />
+        </button>
+      )}
+    </>
+  );
 
   return (
     <div
@@ -215,13 +377,19 @@ export const Toast: React.FC<ToastProps> = ({
       role={type === 'error' || type === 'warning' ? 'alert' : 'status'}
       aria-live={type === 'error' || type === 'warning' ? 'assertive' : 'polite'}
       aria-atomic="true"
+      aria-hidden={peek || undefined}
+      data-k-surface=""
+      data-type={type}
+      data-variant={variant}
+      data-peek={peek || undefined}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
       style={{
-        ['--k-tone' as string]: tone.color,
-        ['--k-tone-on' as string]: tone.on,
+        ['--k-type' as string]: tone.color,
+        ['--k-tone' as string]: surfaceTone.color,
+        ['--k-tone-on' as string]: surfaceTone.on,
         ['--k-tone-bg' as string]: tone.bg,
         // `pan-y` deja el desplazamiento vertical al navegador y reserva el
         // horizontal para el gesto de descarte.
@@ -229,6 +397,7 @@ export const Toast: React.FC<ToastProps> = ({
         ...(variant === 'soft'
           ? { backgroundImage: 'linear-gradient(var(--k-tone-bg), var(--k-tone-bg))' }
           : null),
+        ...(peek && peekHeight ? { height: peekHeight } : null),
         ...(dragging
           ? {
               transform: `translateX(${drag}px)`,
@@ -238,74 +407,59 @@ export const Toast: React.FC<ToastProps> = ({
           : null),
       }}
       className={cn(
-        'k-toast pointer-events-auto flex w-full max-w-sm items-start gap-3 p-3 shadow-lg',
-        'rounded-[var(--k-radius-sm,4px)] transition-all duration-200 ease-out',
+        'k-toast group pointer-events-auto relative flex w-full max-w-sm items-start gap-3 shadow-lg',
+        minimal ? 'p-3.5' : 'p-3.5',
+        minimal ? 'rounded-[var(--k-radius-lg,12px)]' : 'rounded-[var(--k-radius-md,8px)]',
+        'transition-[opacity,transform,height] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]',
         VARIANTS[variant],
+        peek && 'overflow-hidden',
         leaving || !entered ? offscreen : 'opacity-100 translate-x-0 translate-y-0 scale-100',
       )}
     >
-      <span className="mt-0.5 shrink-0">
-        <Icon
-          size={18}
-          className={cn(
-            solid ? 'text-[var(--k-tone-on)]' : 'text-[var(--k-tone)]',
-            type === 'loading' && 'animate-spin',
-          )}
-        />
-      </span>
-
-      <div className="min-w-0 flex-1">
-        {title && (
-          <p
-            className={cn(
-              'text-[13px] font-semibold leading-tight',
-              textOn ?? 'text-[var(--fg-default,#0a1628)]',
-            )}
-          >
-            {title}
-          </p>
+      {/* Con la pila plegada, las capas de fondo solo enseñan su borde: el contenido se funde. */}
+      <div
+        className={cn(
+          'flex min-w-0 flex-1 items-start gap-3 transition-opacity duration-200',
+          peek && 'pointer-events-none opacity-0',
         )}
-        <p
-          className={cn(
-            'break-words text-[13px] leading-snug',
-            title ? 'mt-0.5' : 'font-medium',
-            textOn ??
-              (title ? 'text-[var(--fg-muted,#52606f)]' : 'text-[var(--fg-default,#0a1628)]'),
-          )}
-        >
-          {message}
-        </p>
-        {action && (
-          <button
-            type="button"
-            onClick={() => {
-              action.onClick();
-              onClose(id);
-            }}
-            className={cn(
-              'mt-1.5 text-[12px] font-semibold hover:underline',
-              solid ? 'text-[var(--k-tone-on)]' : 'text-accent',
-            )}
-          >
-            {action.label}
-          </button>
-        )}
+      >
+        {body}
       </div>
 
-      {dismissible && (
+      {dismissible && closeStyle === 'corner' && !peek && (
         <button
           type="button"
           onClick={() => onClose(id)}
           aria-label="Cerrar aviso"
           className={cn(
-            'shrink-0 rounded-[var(--k-radius-xs,2px)] p-1 transition-colors',
-            solid
-              ? 'text-[var(--k-tone-on)] opacity-70 hover:bg-black/10 hover:opacity-100'
-              : 'text-[var(--fg-subtle,#657486)] hover:bg-[var(--bg-hover,#f1f5f9)] hover:text-[var(--fg-default,#0a1628)]',
+            'absolute -left-2 -top-2 grid h-6 w-6 place-items-center rounded-full border shadow-sm transition-opacity',
+            'border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] text-[var(--fg-muted,#52606f)] hover:text-[var(--fg-default,#0a1628)]',
+            'opacity-0 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent group-hover:opacity-100 [@media(hover:none)]:opacity-100',
           )}
         >
-          <X size={14} />
+          <UiIcon slot="x" size={12} />
         </button>
+      )}
+
+      {/* Tiempo restante. Se detiene con el ratón encima o al arrastrar, igual que el temporizador. */}
+      {countdown && !leaving && !custom && (
+        <span
+          aria-hidden="true"
+          className={cn(
+            'pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit] transition-opacity duration-200',
+            peek && 'opacity-0',
+          )}
+        >
+          <span
+            key={`${id}-${duration}`}
+            className="k-toast-progress absolute inset-x-0 bottom-0 block h-[3px] origin-left"
+            style={{
+              background: variant === 'solid' ? 'var(--k-tone-on)' : 'var(--k-type)',
+              animationDuration: `${duration}ms`,
+              animationPlayState: detenido ? 'paused' : 'running',
+            }}
+          />
+        </span>
       )}
     </div>
   );

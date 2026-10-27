@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { Input, type InputProps } from './Input';
 import {
@@ -136,7 +136,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
         aria-label="Aumentar"
         className="flex items-center justify-center px-1.5 h-1/2 text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors disabled:opacity-40"
       >
-        <ChevronUp className="h-3 w-3" />
+        <UiIcon slot="chevron-up" className="h-3 w-3" />
       </button>
       <button
         type="button"
@@ -146,7 +146,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
         aria-label="Disminuir"
         className="flex items-center justify-center px-1.5 h-1/2 text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors disabled:opacity-40"
       >
-        <ChevronDown className="h-3 w-3" />
+        <UiIcon slot="chevron-down" className="h-3 w-3" />
       </button>
     </span>
   ) : null;

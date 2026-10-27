@@ -36,10 +36,10 @@ export const KpiCard: React.FC<KpiCardProps> = ({
     // Mismas alturas y márgenes que el contenido real, para que no salte nada
     // cuando llegan los datos.
     return (
-      <div
+      <div data-k-surface=""
         aria-busy="true"
         className={cn(
-          'p-7 bg-[var(--bg-card,#ffffff)] border border-[var(--border-default,#e2e8f0)]',
+          'p-7 bg-[var(--bg-card,#ffffff)] border border-[var(--border-default,#e2e8f0)] rounded-[var(--k-radius-sm,4px)]',
           className,
         )}
       >
@@ -65,9 +65,10 @@ export const KpiCard: React.FC<KpiCardProps> = ({
 
   return (
     <Wrapper
+      data-k-surface=""
       {...(onClick ? { type: 'button' as const, onClick } : {})}
       className={cn(
-        'p-7 bg-[var(--bg-card,#ffffff)] border border-[var(--border-default,#e2e8f0)] relative',
+        'p-7 bg-[var(--bg-card,#ffffff)] border border-[var(--border-default,#e2e8f0)] rounded-[var(--k-radius-sm,4px)] relative',
         onClick &&
           'text-left w-full cursor-pointer transition-colors hover:border-[var(--border-strong)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
         className,

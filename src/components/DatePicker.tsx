@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
-import { Calendar, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
 
@@ -467,7 +467,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             aria-label={view === 'days' ? 'Mes anterior' : view === 'months' ? 'Año anterior' : 'Década anterior'}
             className={navButton}
           >
-            <ChevronLeft className="h-4 w-4" />
+            <UiIcon slot="chevron-left" className="h-4 w-4" />
           </button>
           {headerLabel}
           <button
@@ -477,7 +477,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             aria-label={view === 'days' ? 'Mes siguiente' : view === 'months' ? 'Año siguiente' : 'Década siguiente'}
             className={navButton}
           >
-            <ChevronRight className="h-4 w-4" />
+            <UiIcon slot="chevron-right" className="h-4 w-4" />
           </button>
         </div>
 
@@ -561,7 +561,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           </span>
           <span className="flex items-center gap-1">
             {clearable && value && !disabled && (
-              <X
+              <UiIcon slot="x"
                 role="button"
                 aria-label="Limpiar fecha"
                 tabIndex={0}
@@ -572,7 +572,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                 }}
               />
             )}
-            <Calendar className="h-3.5 w-3.5 text-[var(--fg-subtle,#657486)]" />
+            <UiIcon slot="calendar" className="h-3.5 w-3.5 text-[var(--fg-subtle,#657486)]" />
           </span>
         </button>
       </div>

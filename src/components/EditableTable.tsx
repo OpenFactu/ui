@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Check, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { Table, type TableColumn, type TableProps } from './Table';
 import { Input } from './Input';
@@ -237,7 +237,7 @@ export function EditableTable<T extends Record<string, any>>({
                     title="Guardar"
                     className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--k-success-fg)] hover:bg-[var(--k-success-bg)] transition-colors disabled:opacity-40"
                   >
-                    <Check className="h-3.5 w-3.5" />
+                    <UiIcon slot="check" className="h-3.5 w-3.5" />
                   </button>
                   <button
                     type="button"
@@ -247,7 +247,7 @@ export function EditableTable<T extends Record<string, any>>({
                     title="Cancelar"
                     className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-[var(--fg-default,#0a1628)] transition-colors"
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <UiIcon slot="x" className="h-3.5 w-3.5" />
                   </button>
                 </>
               ) : (
@@ -260,7 +260,7 @@ export function EditableTable<T extends Record<string, any>>({
                       title="Editar"
                       className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                     >
-                      <Pencil className="h-3.5 w-3.5" />
+                      <UiIcon slot="pencil" className="h-3.5 w-3.5" />
                     </button>
                   )}
                   {onDelete && (
@@ -271,7 +271,7 @@ export function EditableTable<T extends Record<string, any>>({
                       title="Eliminar"
                       className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <UiIcon slot="trash-2" className="h-3.5 w-3.5" />
                     </button>
                   )}
                 </>
@@ -301,7 +301,7 @@ export function EditableTable<T extends Record<string, any>>({
             title="Quitar línea"
             className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <UiIcon slot="trash-2" className="h-3.5 w-3.5" />
           </button>
         ),
       });
@@ -336,7 +336,7 @@ export function EditableTable<T extends Record<string, any>>({
       }}
       className="flex w-full items-center gap-1.5 px-4 py-2 text-[12px] font-medium text-accent hover:bg-[var(--bg-hover,#f1f5f9)] transition-colors"
     >
-      <Plus className="h-3.5 w-3.5" />
+      <UiIcon slot="plus" className="h-3.5 w-3.5" />
       {addLabel}
     </button>
   ) : undefined;

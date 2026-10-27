@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Clock, Search, X } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { Input, type InputProps } from './Input';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
@@ -201,7 +201,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
                     : 'text-[var(--fg-body,#2d3a4a)]',
                 )}
               >
-                {item.icon ?? <Clock className="h-3 w-3 shrink-0 text-[var(--fg-subtle,#657486)]" />}
+                {item.icon ?? <UiIcon slot="clock" className="h-3 w-3 shrink-0 text-[var(--fg-subtle,#657486)]" />}
                 <span className="flex-1 min-w-0 truncate">{item.label}</span>
                 {item.description && (
                   <span className="shrink-0 text-[10px] text-[var(--fg-muted,#52606f)]">
@@ -274,7 +274,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
             aria-label="Limpiar búsqueda"
             className="p-1 text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors"
           >
-            <X className="h-3.5 w-3.5" />
+            <UiIcon slot="x" className="h-3.5 w-3.5" />
           </button>
         )
       )}
@@ -294,7 +294,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
         >
           {token.label ?? `${token.field}:${token.value}`}
           {onTokensChange && (
-            <X
+            <UiIcon slot="x"
               role="button"
               aria-label={`Quitar filtro ${token.field}`}
               className="h-2.5 w-2.5 cursor-pointer hover:text-[var(--k-danger-fg)]"
@@ -327,7 +327,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
       role="searchbox"
       value={value}
       placeholder={placeholder}
-      leftIcon={<Search className="h-3.5 w-3.5" />}
+      leftIcon={<UiIcon slot="search" className="h-3.5 w-3.5" />}
       suffix={hasSuffix ? suffix : undefined}
       suffixInteractive
       containerClassName={containerClassName}

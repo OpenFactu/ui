@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronRight } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { MenuItemButton, MenuSeparator, MenuItemShape } from './internal/MenuItemButton';
 
 export interface ContextMenuItem extends MenuItemShape {
@@ -73,7 +73,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose }
             onSelect={() => {}}
             active={openSub === i}
             trailing={
-              <ChevronRight className="h-3 w-3 text-[var(--fg-subtle,#657486)]" />
+              <UiIcon slot="chevron-right" className="h-3 w-3 text-[var(--fg-subtle,#657486)]" />
             }
           />
           {openSub === i && (

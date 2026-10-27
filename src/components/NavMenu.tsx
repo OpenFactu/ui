@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
 
@@ -252,7 +252,7 @@ const GrupoDesplegable: React.FC<GrupoDesplegableProps> = ({
         )}
       >
         {group.name}
-        <ChevronDown
+        <UiIcon slot="chevron-down"
           size={SIZES[size].icon}
           className={cn('transition-transform duration-150', abierto && 'rotate-180')}
         />

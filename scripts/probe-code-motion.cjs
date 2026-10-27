@@ -1,0 +1,96 @@
+const assert = require('node:assert/strict');
+const { chromium } = require('playwright-core');
+const base = process.env.LADLE_URL || 'http://localhost:61000';
+(async () => {
+  const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
+  try {
+    const page = await browser.newPage({ reducedMotion: 'no-preference' });
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.goto(`${base}/?story=code-editor--basico&mode=preview`);
+    const input = page.getByRole('textbox', { name: 'Código', exact: true });
+    await input.waitFor();
+    await page.evaluate(() => document.fonts.ready);
+    await input.fill('SOLANA ');
+    await page.evaluate(async () => { await Promise.all(document.querySelector('.k-code-motion-caret').getAnimations().map(animation => animation.finished.catch(() => {}))); });
+    for (const key of ['2', '0', '2', '6', '.', '5', 'Backspace']) {
+      await input.press(key);
+      const gap = await page.locator('.k-code-motion-caret').evaluate(el => Math.abs(new DOMMatrixReadOnly(el.style.transform).m41 - new DOMMatrixReadOnly(getComputedStyle(el).transform).m41));
+      assert.ok(gap < 0.5, `caret must follow typing/deletion immediately (${key}: ${gap.toFixed(2)}px behind)`);
+    }
+    assert.equal(await input.inputValue(), 'SOLANA 2026.');
+    console.log('OK typing numbers and deleting do not leave the caret behind');
+    await input.fill('const one = 1;\nconst two = 2;\nconst three = 3;');
+    await input.press('Control+Home');
+    assert.equal(await page.locator('.k-code-editor').getAttribute('data-motion'), 'true');
+    const caret = page.locator('.k-code-motion-caret');
+    await page.waitForFunction(() => document.querySelector('.k-code-motion-caret')?.dataset.visible === 'true');
+    const before = await caret.evaluate(el => el.style.transform);
+    await input.press('ArrowDown');
+    const after = await caret.evaluate(el => el.style.transform);
+    assert.notEqual(after, before);
+    assert.ok(await caret.evaluate(el => el.getAnimations().some(animation => animation.effect.getTiming().duration === 100)));
+    assert.equal(await input.inputValue(), 'const one = 1;\nconst two = 2;\nconst three = 3;');
+    console.log('OK caret and active line move without changing text');
+    const rect = await input.boundingBox();
+    await page.mouse.move(rect.x + 17, rect.y + 20);
+    await page.mouse.down();
+    try {
+      await page.mouse.move(rect.x + 150, rect.y + 64, { steps: 6 });
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      assert.ok(await input.evaluate(el => el.selectionEnd > el.selectionStart));
+      assert.ok(await page.locator('.k-code-motion-selection [data-visible="true"]').count() >= 2, 'selection stays visible during drag, before mouseup');
+      assert.equal(await caret.getAttribute('data-visible'), 'false');
+    } finally { await page.mouse.up(); }
+    console.log('OK pointer drag updates selection continuously');
+    await input.press('Control+a');
+    assert.ok(await page.locator('.k-code-motion-selection [data-visible="true"]').count() >= 3);
+    assert.equal(await caret.getAttribute('data-visible'), 'false');
+    assert.ok(await page.locator('.k-code-highlight [data-selection="true"]').count() > 0);
+    await input.press('x'); await input.press('Control+z');
+    assert.equal(await input.inputValue(), 'const one = 1;\nconst two = 2;\nconst three = 3;');
+    console.log('OK animated selection preserves native replacement and undo');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.waitForFunction(() => document.querySelector('.k-code-editor').dataset.motion !== 'true');
+    assert.notEqual(await input.evaluate(el => getComputedStyle(el).caretColor), 'rgba(0, 0, 0, 0)');
+    console.log('OK reduced motion keeps native caret and selection');
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.emulateMedia({ forcedColors: 'active' });
+    await page.waitForFunction(() => document.querySelector('.k-code-editor').dataset.motion !== 'true');
+    assert.notEqual(await input.evaluate(el => getComputedStyle(el).caretColor), 'rgba(0, 0, 0, 0)');
+    await page.emulateMedia({ forcedColors: 'none' });
+    await input.fill('');
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Input.imeSetComposition', { text: 'に', selectionStart: 1, selectionEnd: 1 });
+    assert.notEqual(await page.locator('.k-code-editor').getAttribute('data-motion'), 'true');
+    await cdp.send('Input.insertText', { text: '日本' });
+    assert.equal(await input.inputValue(), '日本');
+    await cdp.detach();
+    console.log('OK IME composition uses native rendering');
+    await input.fill('');
+    await page.waitForFunction(() => document.querySelector('.k-code-motion-caret')?.dataset.visible === 'true');
+    await input.fill('\tconst emoji = "👋";\n\n');
+    await input.press('Control+End');
+    assert.equal(await caret.getAttribute('data-visible'), 'true');
+    await page.goto(`${base}/?story=code-editor--estados&mode=preview`);
+    const minimal = page.locator('.k-code-editor').filter({ has: page.getByRole('textbox', { name: 'Solo código', exact: true }) });
+    await minimal.getByRole('textbox').fill('hello');
+    assert.equal(await minimal.getAttribute('data-motion'), 'true');
+    assert.equal(await minimal.locator('.k-code-toolbar').count(), 0);
+    await page.goto(`${base}/?story=code-editor--documento-grande&mode=preview`);
+    await page.locator('textarea').press('Control+End');
+    await page.waitForFunction(() => document.querySelector('.k-code-motion-caret')?.dataset.visible === 'true');
+    assert.ok(await page.locator('.k-code-highlight').evaluate(el => el.querySelectorAll('*').length < 2100));
+    await page.locator('textarea').press('Control+a');
+    await page.evaluate(async () => {
+      await Promise.all([...document.querySelectorAll('.k-code-motion-selection > div')].flatMap(el => el.getAnimations()).map(animation => animation.finished.catch(() => {})));
+      document.querySelector('textarea').scrollTop = 2200;
+    });
+    await page.waitForFunction(() => document.querySelector('.k-code-gutter').textContent.trim().startsWith('97\n'));
+    assert.ok(await page.locator('.k-code-motion-selection').evaluate(el => [...el.children].every(rect => !rect.getAnimations().some(animation => animation.playState === 'running'))), 'virtualized scroll snaps selection without replaying motion');
+    await page.goto(`${base}/?story=code-editor--temas&mode=preview`);
+    assert.equal(await page.locator('.k-code-editor[data-motion="true"]').count(), 0);
+    assert.deepEqual(errors, []);
+    console.log('OK optional motion works in minimal and large editors, default remains native');
+  } finally { await browser.close(); }
+})().catch(error => { console.error(error); process.exitCode = 1; });

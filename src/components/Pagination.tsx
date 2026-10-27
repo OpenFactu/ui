@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { Select } from './Select';
 
@@ -64,7 +64,7 @@ export const Pagination: React.FC<PaginationProps> = ({
             onClick={() => onPageChange(page - 1)}
             disabled={page <= 1}
           >
-            <ChevronLeft className="h-3.5 w-3.5" />
+            <UiIcon slot="chevron-left" className="h-3.5 w-3.5" />
             Anterior
           </button>
           <span className="font-mono text-[11px] px-1 whitespace-nowrap">
@@ -77,7 +77,7 @@ export const Pagination: React.FC<PaginationProps> = ({
             disabled={page >= totalPages}
           >
             Siguiente
-            <ChevronRight className="h-3.5 w-3.5" />
+            <UiIcon slot="chevron-right" className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, ChevronDown, Check, Plus, X } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
@@ -354,7 +354,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
         style={popoverStyle}
       >
         <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] px-3 py-2 shrink-0">
-          <Search className="h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle)]" />
+          <UiIcon slot="search" className="h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle)]" />
           <input
             ref={inputRef}
             role="combobox"
@@ -380,7 +380,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
           id={listboxId}
           role="listbox"
           aria-multiselectable={props.multiple || undefined}
-          className="max-h-[220px] overflow-y-auto p-1 scrollbar-thin scrollbar-thumb-[var(--border-default)]"
+          className="max-h-[220px] overflow-y-auto space-y-1 p-1 scrollbar-thin scrollbar-thumb-[var(--border-default)]"
         >
           {rows.length > 0 ? (
             rows.map((row) => {
@@ -411,7 +411,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
                       highlighted && 'bg-[var(--bg-hover,#f1f5f9)]',
                     )}
                   >
-                    <Plus className="h-3.5 w-3.5 shrink-0" />
+                    <UiIcon slot="plus" className="h-3.5 w-3.5 shrink-0" />
                     <span className="truncate">{createLabel.replace('{term}', row.term)}</span>
                   </div>
                 );
@@ -434,7 +434,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
                   className={cn(
                     'group flex items-center justify-between rounded-[var(--k-radius-xs,2px)] px-2.5 py-1.5 text-[12px] cursor-pointer transition-colors',
                     selected
-                      ? 'bg-accent text-[color:var(--color-accent-fg)]'
+                      ? 'bg-accent text-[color:var(--k-accent-on,#0f172a)]'
                       : highlighted
                         ? 'bg-[var(--bg-hover,#f1f5f9)] text-[var(--fg-body,#2d3a4a)]'
                         : 'text-[var(--fg-body,#2d3a4a)]',
@@ -464,7 +464,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
                       <span
                         className={cn(
                           'text-[9px] font-mono mt-0.5',
-                          selected ? 'opacity-80' : 'text-[var(--fg-subtle)]',
+                          !selected && 'text-[var(--fg-subtle)]',
                         )}
                       >
                         {opt.secondaryLabel}
@@ -472,7 +472,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
                     )}
                     </div>
                   </div>
-                  {selected && <Check className="h-3.5 w-3.5 shrink-0" />}
+                  {selected && <UiIcon slot="check" className="h-3.5 w-3.5 shrink-0" />}
                 </div>
               );
             })
@@ -530,7 +530,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
               >
                 <span className="truncate">{opt.label}</span>
                 {!disabled && (
-                  <X
+                  <UiIcon slot="x"
                     role="button"
                     aria-label={`Quitar ${opt.label}`}
                     className="h-3 w-3 shrink-0 hover:text-[var(--k-danger-fg)] transition-colors"
@@ -557,7 +557,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
         )}
         <span className="flex items-center gap-1 shrink-0">
           {clearable && hasValue && !disabled && (
-            <X
+            <UiIcon slot="x"
               role="button"
               aria-label={props.multiple ? 'Limpiar todo' : 'Limpiar selección'}
               className="h-3.5 w-3.5 text-[var(--fg-subtle)] hover:text-[var(--k-danger-fg)] transition-colors"
@@ -567,7 +567,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
               }}
             />
           )}
-          <ChevronDown
+          <UiIcon slot="chevron-down"
             className={cn(
               'h-3 w-3 text-[var(--fg-subtle)] transition-transform duration-200',
               isOpen && 'rotate-180',

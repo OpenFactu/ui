@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Loader2 } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 
 export interface LoaderProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -35,7 +35,7 @@ export const Loader = React.forwardRef<HTMLDivElement, LoaderProps>(
         {...props}
       >
         <div className="relative">
-          <Loader2 className={cn('animate-spin', sizeClasses[size], variantClasses[variant])} />
+          <UiIcon slot="loader-2" className={cn('animate-spin', sizeClasses[size], variantClasses[variant])} />
           {size === 'xl' && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-2 h-2 bg-accent rounded-full animate-ping" />

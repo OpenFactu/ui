@@ -1,0 +1,84 @@
+/* Material de cristal y fondo de la aplicación.
+ *
+ * Nada de esto actúa con los valores de fábrica: `applyTheme` (o `themeToAttrs`
+ * en un subárbol) pone `data-k-material` solo cuando el tema pide desenfoque o
+ * transparencia, y `data-k-backdrop` cuando define un fondo propio. */
+
+/* Superficies: tarjetas marcadas, diálogos, menús y listas desplegables. */
+[data-k-material] :is([data-k-surface], [role='dialog'], [role='alertdialog'], [role='menu'], [role='listbox']):not([role='dialog'] [role='listbox']) {
+  background-color: color-mix(in srgb, var(--bg-card, #ffffff) calc(var(--k-surface-alpha, 1) * 100%), transparent);
+  -webkit-backdrop-filter: blur(var(--k-surface-blur, 0px)) saturate(var(--k-surface-saturate, 1));
+  backdrop-filter: blur(var(--k-surface-blur, 0px)) saturate(var(--k-surface-saturate, 1));
+  border-color: var(--k-surface-border, var(--border-default, #e2e8f0));
+  box-shadow: var(--k-surface-highlight, 0 0 0 0 transparent), var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow, 0 0 #0000);
+}
+/* Las franjas internas (cabeceras, pies) llevan su propio relleno de tarjeta: dentro del cristal se funden con él. */
+[data-k-material] :is([data-k-surface], [role='dialog'], [role='alertdialog']) :is([class*='bg-[var(--bg-card'], [class*='bg-bg-card']) { background-color: transparent; }
+
+/* Menús y listas flotan sobre otras superficies: un poco más opacos para seguir legibles. */
+[data-k-material] :is([role='menu'], [role='listbox']):not([role='dialog'] [role='listbox']) {
+  background-color: color-mix(in srgb, var(--bg-card, #ffffff) calc(min(1, var(--k-surface-alpha, 1) + .2) * 100%), transparent);
+}
+
+/* Módulo AI: el espacio de trabajo y el compositor son las superficies; lo de dentro se funde con ellas. */
+[data-k-material] :is(.ai-workspace, .ai-composer) {
+  background-color: color-mix(in srgb, var(--bg-card, #ffffff) calc(var(--k-surface-alpha, 1) * 100%), transparent);
+  -webkit-backdrop-filter: blur(var(--k-surface-blur, 0px)) saturate(var(--k-surface-saturate, 1));
+  backdrop-filter: blur(var(--k-surface-blur, 0px)) saturate(var(--k-surface-saturate, 1));
+  border-color: var(--k-surface-border, var(--border-default, #e2e8f0));
+  box-shadow: var(--k-surface-highlight, 0 0 0 0 transparent);
+}
+[data-k-material] :is(.ai-workspace-sidebar, .ai-artifact-panel, .ai-artifact-tabs, .ai-code-header, .ai-diff-header) { background: transparent; }
+[data-k-material] .ai-workspace-sidebar { background: color-mix(in srgb, var(--bg-muted, #fafbfc) 55%, transparent); }
+[data-k-material] :is(.ai-code, .ai-diff, .ai-tool, .ai-activity) { background: color-mix(in srgb, var(--bg-muted, #fafbfc) 45%, transparent); border-color: var(--k-surface-border, var(--border-default, #e2e8f0)); }
+
+[data-k-material] .ai-context-card, [data-k-material] .ai-context-trigger { background-color: color-mix(in srgb, var(--bg-card, #ffffff) calc(min(1, var(--k-surface-alpha, 1) + .2) * 100%), transparent); -webkit-backdrop-filter: blur(var(--k-surface-blur, 0px)); backdrop-filter: blur(var(--k-surface-blur, 0px)); border-color: var(--k-surface-border, var(--border-default, #e2e8f0)); }
+[data-k-material] .ai-terminal-output { background: color-mix(in srgb, var(--bg-muted, #fafbfc) 45%, transparent); }
+
+/* Fondo de la aplicación: es lo que el cristal difumina. */
+html[data-k-backdrop] { background: var(--k-app-backdrop); background-attachment: fixed; }
+html[data-k-backdrop] body { background: transparent; }
+[data-k-backdrop]:not(html) { background: var(--k-app-backdrop); }
+
+/* Quien pide menos transparencia, o usa colores forzados, recibe superficies opacas y sin desenfoque. */
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+  [data-k-material] :is([data-k-surface], [role='dialog'], [role='alertdialog'], [role='menu'], [role='listbox'], .ai-workspace, .ai-composer) {
+    background-color: var(--bg-card, #ffffff);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Fondo en movimiento: una capa que solo se traslada y gira (transform), sin repintar el degradado. */
+html[data-k-backdrop-motion] { background: none; }
+html[data-k-backdrop-motion]::before, [data-k-backdrop-motion]:not(html)::before {
+  content: ''; position: fixed; inset: -22%; z-index: -1; pointer-events: none;
+  background: var(--k-app-backdrop);
+  animation: k-backdrop-drift var(--k-backdrop-duration, 60s) ease-in-out infinite alternate;
+  will-change: transform;
+}
+[data-k-backdrop-motion]:not(html) { position: relative; isolation: isolate; overflow: hidden; background: none; }
+[data-k-backdrop-motion]:not(html)::before { position: absolute; }
+@keyframes k-backdrop-drift {
+  0%   { transform: translate3d(-3%, -2%, 0) rotate(0deg) scale(1); }
+  50%  { transform: translate3d(3%, 2%, 0) rotate(2deg) scale(1.06); }
+  100% { transform: translate3d(-1%, 3%, 0) rotate(-2deg) scale(1.02); }
+}
+@media (prefers-reduced-motion: reduce) { [data-k-backdrop-motion]::before { animation: none !important; } }
+
+/* Foco y selección propios del tema: solo si el tema los define. Gana a los anillos de cada componente. */
+[data-k-focus] :focus-visible, [data-k-focus]:focus-visible {
+  outline: var(--k-focus-width, 2px) var(--k-focus-style, solid) var(--k-focus-color, var(--k-accent-500)) !important;
+  outline-offset: var(--k-focus-offset, 2px) !important;
+  box-shadow: none !important;
+}
+[data-k-selection] ::selection, [data-k-selection]::selection { background: var(--k-selection-bg); color: var(--k-selection-fg); }
+
+/* Cambio de tema con fundido: `applyTheme(tema, undefined, { transition: true })` pone la clase unos instantes. */
+.k-theme-transition, .k-theme-transition *, .k-theme-transition *::before, .k-theme-transition *::after {
+  transition-property: background-color, color, border-color, outline-color, fill, stroke, box-shadow, opacity !important;
+  transition-duration: var(--k-theme-transition, 280ms) !important;
+  transition-timing-function: var(--k-ease, ease) !important;
+  transition-delay: 0s !important;
+}
+@media (prefers-reduced-motion: reduce) { .k-theme-transition, .k-theme-transition * { transition: none !important; } }

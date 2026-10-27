@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { SkeletonList } from './Skeleton';
 import { EmptyState, type EmptyStateProps } from './EmptyState';
@@ -352,7 +352,7 @@ export const ListSection: React.FC<ListSectionProps> = ({
         </span>
       )}
       {collapsible && (
-        <ChevronDown
+        <UiIcon slot="chevron-down"
           className={cn(
             'h-3.5 w-3.5 text-[var(--fg-subtle,#657486)] transition-transform',
             !open && '-rotate-90',

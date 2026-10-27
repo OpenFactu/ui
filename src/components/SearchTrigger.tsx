@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Search } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 
 export interface SearchTriggerProps {
@@ -80,7 +80,7 @@ export const SearchTrigger: React.FC<SearchTriggerProps> = ({
       className,
     )}
   >
-    <Search className="h-3.5 w-3.5 shrink-0" />
+    <UiIcon slot="search" className="h-3.5 w-3.5 shrink-0" />
     <span className="flex-1 truncate text-left">{placeholder}</span>
     {shortcut && (
       <kbd className="pointer-events-none shrink-0 select-none rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] px-1.5 py-0.5 font-mono text-[10px]">

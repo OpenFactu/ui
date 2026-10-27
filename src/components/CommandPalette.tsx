@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
-import { Clock, CornerDownLeft, Search } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { useEscapeStack } from '../internal/escapeStack';
 import { useScrollLock } from '../hooks/useScrollLock';
@@ -241,7 +241,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         )}
       >
         <div className="flex items-center gap-2.5 px-4 border-b border-[var(--border-default,#e2e8f0)]">
-          <Search className="h-4 w-4 shrink-0 text-[var(--fg-subtle,#657486)]" />
+          <UiIcon slot="search" className="h-4 w-4 shrink-0 text-[var(--fg-subtle,#657486)]" />
           <input
             ref={inputRef}
             value={term}
@@ -272,7 +272,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           {!term && recientes.length > 0 && (onSearch || flat.length === 0) ? (
             <div>
               <div className="flex items-center gap-1.5 px-2 pt-2 pb-1 text-[9px] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
-                <Clock className="h-3 w-3" />
+                <UiIcon slot="clock" className="h-3 w-3" />
                 Búsquedas recientes
                 <button
                   type="button"
@@ -292,7 +292,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                   }}
                   className="flex w-full items-center gap-2.5 rounded-[var(--k-radius-xs,2px)] px-2.5 py-2 text-left text-[13px] text-[var(--fg-body,#2d3a4a)] transition-colors hover:bg-[var(--bg-hover)]"
                 >
-                  <Clock className="h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle,#657486)]" />
+                  <UiIcon slot="clock" className="h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle,#657486)]" />
                   {texto}
                 </button>
               ))}
@@ -378,7 +378,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                         </span>
                       )}
                       {active && !item.shortcut && !item.meta && (
-                        <CornerDownLeft className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                        <UiIcon slot="corner-down-left" className="h-3.5 w-3.5 shrink-0 opacity-60" />
                       )}
                     </div>
                   );

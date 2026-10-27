@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { useAnimatedPresence } from '../hooks/useAnimatedPresence';
 
@@ -91,7 +91,7 @@ export const Drawer: React.FC<DrawerProps> = ({
                 aria-label="Cerrar panel"
                 className="p-1.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--bg-hover)] rounded-[var(--k-radius-xs,2px)] transition-colors shrink-0"
               >
-                <X size={18} />
+                <UiIcon slot="x" size={18} />
               </button>
             )}
           </div>

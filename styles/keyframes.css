@@ -31,7 +31,7 @@
   }
 }
 .k-card-in {
-  animation: k-card-in 0.45s cubic-bezier(0.2, 0, 0, 1) both;
+  animation: k-card-in calc(0.45s * var(--k-motion, 1)) cubic-bezier(0.2, 0, 0, 1) both;
 }
 
 /* Chip que pulsa al aparecer. */
@@ -50,7 +50,7 @@
   }
 }
 .k-pop-in {
-  animation: k-pop-in 0.35s cubic-bezier(0.2, 0, 0.2, 1.3) both;
+  animation: k-pop-in calc(0.35s * var(--k-motion, 1)) cubic-bezier(0.2, 0, 0.2, 1.3) both;
 }
 
 /* Barrido de los esqueletos de carga (`<Skeleton animation="shimmer">`). */
@@ -63,6 +63,16 @@
   }
 }
 
+/* Cuenta atrás de un aviso: la barra se vacía en `duration` ms (la fija el componente). */
+@keyframes k-toast-progress {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+.k-toast-progress {
+  opacity: 0.5;
+  animation: k-toast-progress 5s linear forwards;
+}
+
 /* Quien pida menos movimiento, no lo recibe. */
 @media (prefers-reduced-motion: reduce) {
   .k-card-in,
@@ -71,8 +81,13 @@
   }
   /* Los avisos entran y salen con una transición, no con una animación: se
      desactiva la transición y el cambio de estado se aplica de golpe. */
-  .k-toast {
+  .k-toast,
+  .k-toast-slot {
     transition: none !important;
+  }
+  /* Sin movimiento la cuenta atrás no se anima: se oculta, el aviso se cierra igual. */
+  .k-toast-progress {
+    display: none;
   }
   [style*='k-row-in'],
   [style*='k-skeleton-shimmer'] {

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { AlertTriangle, Check, X } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 
 export type InputStatus = 'default' | 'success' | 'warning' | 'error' | 'loading';
@@ -59,9 +59,9 @@ const STATUS_RING: Record<InputStatus, string> = {
 
 const STATUS_ICON: Record<InputStatus, React.ReactNode> = {
   default: null,
-  success: <Check className="h-3.5 w-3.5 text-[var(--k-success-fg)]" />,
-  warning: <AlertTriangle className="h-3.5 w-3.5 text-[var(--k-warning-fg)]" />,
-  error: <X className="h-3.5 w-3.5 text-[var(--k-danger-fg)]" />,
+  success: <UiIcon slot="check" className="h-3.5 w-3.5 text-[var(--k-success-fg)]" />,
+  warning: <UiIcon slot="alert-triangle" className="h-3.5 w-3.5 text-[var(--k-warning-fg)]" />,
+  error: <UiIcon slot="x" className="h-3.5 w-3.5 text-[var(--k-danger-fg)]" />,
   loading: (
     <span className="h-3.5 w-3.5 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
   ),

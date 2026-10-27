@@ -22,6 +22,7 @@ const REGLAS = [
 const PERMITIDOS = new Set([
   'src/components/Select.tsx',
   'src/components/Textarea.tsx',
+  'src/components/CodeEditor.tsx', // Su superficie de edición nativa; el tema usa Select.
   'src/components/DatePicker.tsx',
   'src/components/SearchableSelect.tsx',
 ]);

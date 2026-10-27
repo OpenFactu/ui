@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Check, Eye, EyeOff, RefreshCw, X } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { Input, type InputProps } from './Input';
 
@@ -92,7 +92,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
           title="Generar contraseña"
           className="px-2 py-1.5 text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors"
         >
-          <RefreshCw className="h-3.5 w-3.5" />
+          <UiIcon slot="refresh-cw" className="h-3.5 w-3.5" />
         </button>
       )}
       {toggleVisibility && (
@@ -103,7 +103,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
           title={isVisible ? 'Ocultar' : 'Mostrar'}
           className="px-2.5 py-1.5 text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors"
         >
-          {isVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+          {isVisible ? <UiIcon slot="eye-off" className="h-3.5 w-3.5" /> : <UiIcon slot="eye" className="h-3.5 w-3.5" />}
         </button>
       )}
     </span>
@@ -156,7 +156,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
                   met ? 'text-[var(--k-success-fg)]' : 'text-[var(--fg-subtle,#657486)]',
                 )}
               >
-                {met ? <Check className="h-3 w-3 shrink-0" /> : <X className="h-3 w-3 shrink-0" />}
+                {met ? <UiIcon slot="check" className="h-3 w-3 shrink-0" /> : <UiIcon slot="x" className="h-3 w-3 shrink-0" />}
                 {req.label}
               </li>
             );

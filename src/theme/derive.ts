@@ -97,7 +97,10 @@ const FG_DARK: Rgb = [15, 23, 42];
  * dejaba texto blanco por debajo del mínimo legible.
  */
 export function contrastingFgRgb(rgb: Rgb): Rgb {
-  return contrastRatio(rgb, FG_DARK) > contrastRatio(rgb, FG_LIGHT) ? FG_DARK : FG_LIGHT;
+  const preferred = contrastRatio(rgb, FG_DARK) > contrastRatio(rgb, FG_LIGHT) ? FG_DARK : FG_LIGHT;
+  // Near middle luminance neither white nor the brand's dark ink reaches AA.
+  // Pure black fills that narrow gap without changing existing readable pairs.
+  return contrastRatio(rgb, preferred) >= 4.5 ? preferred : [0, 0, 0];
 }
 
 /** Versión hex de {@link contrastingFgRgb}. */

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { File as FileIcon, Upload, X } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 
 export type FileRejectReason = 'size' | 'type' | 'count';
@@ -171,7 +171,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
           key={`${file.name}-${i}`}
           className="flex items-center gap-2 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] px-2 py-1.5 text-[12px]"
         >
-          <FileIcon className="h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle,#657486)]" />
+          <UiIcon slot="file" className="h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle,#657486)]" />
           <span className="flex-1 truncate text-[var(--fg-body,#2d3a4a)]">
             {file.name}
           </span>
@@ -185,7 +185,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
               aria-label={`Quitar ${file.name}`}
               className="shrink-0 p-0.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors"
             >
-              <X className="h-3 w-3" />
+              <UiIcon slot="x" className="h-3 w-3" />
             </button>
           )}
         </li>
@@ -208,7 +208,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
             dragging && 'border-accent bg-accent/5',
           )}
         >
-          {icon ?? <Upload className="h-3.5 w-3.5" />}
+          {icon ?? <UiIcon slot="upload" className="h-3.5 w-3.5" />}
           {isUploading ? uploadingLabel : label}
         </button>
         {fileList}
@@ -245,7 +245,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
         {children ?? (
           <>
             <span className="text-[var(--fg-subtle,#657486)]">
-              {icon ?? <Upload className={variant === 'area' ? 'h-7 w-7' : 'h-4 w-4'} />}
+              {icon ?? <UiIcon slot="upload" className={variant === 'area' ? 'h-7 w-7' : 'h-4 w-4'} />}
             </span>
             <span className="flex flex-col gap-0.5">
               <span className="text-[12px] font-medium text-[var(--fg-body,#2d3a4a)]">

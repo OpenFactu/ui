@@ -12,6 +12,10 @@
       "types": "./dist/charts/index.d.ts",
       "default": "./dist/charts/index.js"
     },
+    "./ai": {
+      "types": "./dist/ai/index.d.ts",
+      "default": "./dist/ai/index.js"
+    },
     "./styles.css": "./styles/index.css",
     "./tokens.css": "./styles/tokens.css",
     "./keyframes.css": "./styles/keyframes.css",
@@ -32,6 +36,8 @@
     "build": "tsc",
     "build:ladle": "ladle build",
     "typecheck": "tsc --noEmit -p tsconfig.stories.json",
+    "test": "node --test scripts/code-editor.test.cjs scripts/ai.test.cjs scripts/theme.test.cjs",
+    "test:browser": "node scripts/test-browser.cjs",
     "shots": "node scripts/shots.mjs",
     "prepublishOnly": "npm run build"
   },
@@ -46,7 +52,9 @@
   "dependencies": {
     "clsx": "^2.1.1",
     "lucide-react": "^1.8.0",
+    "react-markdown": "10.1.0",
     "react-router-dom": "^7.14.0",
+    "remark-gfm": "4.0.1",
     "tailwind-merge": "^2.3.0"
   },
   "devDependencies": {

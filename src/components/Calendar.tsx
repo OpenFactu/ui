@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import {
   DIAS_SEMANA,
@@ -367,7 +367,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               onClick={() => paso(-1)}
               className="rounded-[var(--k-radius-xs,2px)] p-1.5 text-[var(--fg-muted,#52606f)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--fg-default,#0a1628)]"
             >
-              <ChevronLeft size={16} />
+              <UiIcon slot="chevron-left" size={16} />
             </button>
             <button
               type="button"
@@ -382,7 +382,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               onClick={() => paso(1)}
               className="rounded-[var(--k-radius-xs,2px)] p-1.5 text-[var(--fg-muted,#52606f)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--fg-default,#0a1628)]"
             >
-              <ChevronRight size={16} />
+              <UiIcon slot="chevron-right" size={16} />
             </button>
             <span className="ml-2 text-[13px] font-semibold text-[var(--fg-default,#0a1628)]">
               {titulo}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import type { LucideIcon } from 'lucide-react';
+import type { IconLike } from '../icons';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -11,7 +11,8 @@ function cn(...inputs: ClassValue[]) {
 interface NavItemProps {
   label: string;
   path: string;
-  icon: LucideIcon;
+  /** Cualquier componente de icono (de cualquier librería) que acepte size y className. */
+  icon: IconLike;
   isActive: boolean;
   onClick?: () => void;
   className?: string;

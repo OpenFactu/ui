@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, Check } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
 
@@ -31,6 +31,9 @@ export interface SelectProps {
   disabled?: boolean;
   containerClassName?: string;
   className?: string;
+  /** Optional styling for the portaled dropdown (for independently themed surfaces). */
+  dropdownClassName?: string;
+  dropdownStyle?: React.CSSProperties;
   id?: string;
   /** Nombre accesible cuando no hay `label` visible. */
   ariaLabel?: string;
@@ -48,6 +51,8 @@ export const Select: React.FC<SelectProps> = ({
   disabled = false,
   containerClassName,
   className,
+  dropdownClassName,
+  dropdownStyle,
   id,
   ariaLabel,
 }) => {
@@ -155,14 +160,15 @@ export const Select: React.FC<SelectProps> = ({
         className={cn(
           'z-[var(--k-z-popover,999999)] rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-1 shadow-lg animate-in fade-in-50 duration-150 flex flex-col',
           !ready && 'invisible',
+          dropdownClassName,
         )}
-        style={style}
+        style={{ ...dropdownStyle, ...style }}
       >
         <div
           ref={listRef}
           id={listboxId}
           role="listbox"
-          className="max-h-[240px] overflow-y-auto scrollbar-thin scrollbar-thumb-[var(--border-default)]"
+          className="max-h-[240px] overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-[var(--border-default)]"
         >
           {options.map((opt, idx) => {
             const isSelected = opt.value === value;
@@ -180,7 +186,7 @@ export const Select: React.FC<SelectProps> = ({
                 className={cn(
                   'flex items-center justify-between gap-2 rounded-[var(--k-radius-xs,2px)] px-2.5 py-1.5 text-[12px] cursor-pointer transition-colors',
                   isSelected
-                    ? 'bg-accent text-white font-semibold'
+                    ? 'bg-accent text-[color:var(--k-accent-on,#0f172a)] font-semibold'
                     : highlighted
                       ? 'bg-[var(--bg-hover)] text-[var(--fg-body,#2d3a4a)]'
                       : 'text-[var(--fg-body,#2d3a4a)]',
@@ -188,7 +194,7 @@ export const Select: React.FC<SelectProps> = ({
                 )}
               >
                 <span className="truncate">{opt.label}</span>
-                {isSelected && <Check className="h-3.5 w-3.5 shrink-0" />}
+                {isSelected && <UiIcon slot="check" className="h-3.5 w-3.5 shrink-0" />}
               </div>
             );
           })}
@@ -256,7 +262,7 @@ export const Select: React.FC<SelectProps> = ({
         >
           {selectedOption ? selectedOption.label : placeholder}
         </span>
-        <ChevronDown
+        <UiIcon slot="chevron-down"
           className={cn(
             'h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle,#657486)] transition-transform duration-200',
             isOpen && 'rotate-180',

@@ -1,6 +1,6 @@
 import type { ResolvedTheme, ThemeInput } from './types';
 import { THEME_PRESETS, type ThemePreset } from './presets';
-import { resolveTheme } from './tokens';
+import { isGlassTheme, resolveTheme } from './tokens';
 import { contrastRatio, hexToRgb, isValidHex, normalizeHex } from './derive';
 
 /**
@@ -237,6 +237,40 @@ export function validateTheme(theme: ThemeInput): ThemeValidation {
         field,
         message: `${what} queda en ${ratio.toFixed(2)}:1, por debajo de ${min}:1.`,
       });
+    }
+  }
+
+  // Densidad, movimiento, texto y material: los valores fuera de rango se acotan al resolver; aquí se avisa.
+  const range = (field: string, value: unknown, min: number, max: number) => {
+    if (typeof value === 'number' && (value < min || value > max)) {
+      issues.push({ level: 'warning', field, message: `${value} queda fuera de ${min}–${max}; se ajustará.` });
+    }
+  };
+  range('material.blur', theme.material?.blur, 0, 80);
+  range('material.alpha', theme.material?.alpha, 0.05, 1);
+  range('material.saturate', theme.material?.saturate, 0.5, 3);
+  range('density', theme.density, 0.6, 1.6);
+  range('motion.speed', theme.motion?.speed, 0, 4);
+  range('typography.scale', theme.typography?.scale, 0.8, 1.4);
+
+  if (isGlassTheme(resolved)) {
+    if (resolved.backdrop === 'none') {
+      issues.push({ level: 'warning', field: 'backdrop', message: 'Un tema de cristal sin `backdrop` no tiene nada que difuminar y se verá como uno plano.' });
+    } else {
+      // Peor caso: la superficie translúcida sobre cada color del fondo. Es una estimación
+      // (los degradados se miden por sus colores hexadecimales), pero atrapa el error típico
+      // de poner texto oscuro sobre un fondo vivo.
+      const surface = hexToRgb(resolved.colors.bgCard);
+      const text = hexToRgb(resolved.colors.fgDefault);
+      const alpha = resolved.material.alpha;
+      const worst = (resolved.backdrop.match(/#[0-9a-f]{6}|#[0-9a-f]{3}/gi) ?? []).reduce<number>((min, hex) => {
+        const behind = hexToRgb(normalizeHex(hex));
+        const mixed = surface.map((channel, i) => Math.round(channel * alpha + behind[i] * (1 - alpha))) as [number, number, number];
+        return Math.min(min, contrastRatio(text, mixed));
+      }, Infinity);
+      if (worst < MIN_TEXT_CONTRAST) {
+        issues.push({ level: 'warning', field: 'material.alpha', message: `el texto principal sobre el cristal queda en ${worst.toFixed(2)}:1 en la zona más clara/viva del fondo, por debajo de ${MIN_TEXT_CONTRAST}:1. Sube \`alpha\` u oscurece el fondo.` });
+      }
     }
   }
 

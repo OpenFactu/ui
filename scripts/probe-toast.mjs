@@ -64,7 +64,7 @@ check(
 
 const inBody = await toasts()
   .first()
-  .evaluate((el) => el.parentElement?.parentElement === document.body);
+  .evaluate((el) => el.closest('[data-layout]')?.parentElement === document.body);
 check('se monta en un portal colgado de body', inBody);
 
 await page.screenshot({ path: `${OUT}/tipos-claro.png` });

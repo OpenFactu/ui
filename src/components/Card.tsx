@@ -47,6 +47,7 @@ export const Card = ({
 
   return (
     <div
+      data-k-surface=""
       aria-busy={isLoading || undefined}
       className={cn(
         'bg-[var(--bg-card,#ffffff)] border border-[var(--border-default,#e2e8f0)] rounded-[var(--k-radius-sm,4px)] overflow-hidden',

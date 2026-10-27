@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ChevronDown } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 
 export interface AccordionItem {
@@ -66,7 +66,7 @@ export const Accordion: React.FC<AccordionProps> = ({
               )}
             >
               {item.title}
-              <ChevronDown
+              <UiIcon slot="chevron-down"
                 className={cn(
                   'h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle,#657486)] transition-transform duration-200',
                   isOpen && 'rotate-180',

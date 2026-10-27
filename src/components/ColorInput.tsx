@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { X } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { isValidHex, normalizeHex } from '../theme/derive';
 
@@ -130,7 +130,7 @@ export const ColorInput: React.FC<ColorInputProps> = ({
                 aria-label="Quitar color"
                 className="px-1.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors"
               >
-                <X className="h-3 w-3" />
+                <UiIcon slot="x" className="h-3 w-3" />
               </button>
             )}
           </div>

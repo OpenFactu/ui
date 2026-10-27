@@ -43,6 +43,7 @@ const LIGHT_SHADOWS = {
   sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
   md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
   lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+  xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
   overlay: '0 25px 50px -12px rgb(0 0 0 / 0.25)',
 };
 
@@ -74,6 +75,7 @@ const DARK_SHADOWS = {
   sm: '0 1px 2px 0 rgb(0 0 0 / 0.3)',
   md: '0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4)',
   lg: '0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5)',
+  xl: '0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.6)',
   overlay: '0 25px 50px -12px rgb(0 0 0 / 0.7)',
 };
 
@@ -136,6 +138,7 @@ export const DEFAULT_THEME: ResolvedTheme = {
     sans: "'DM Sans', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif",
     display: "'Space Grotesk', system-ui, sans-serif",
     mono: "'JetBrains Mono', 'SFMono-Regular', Menlo, monospace",
+    scale: 1,
   },
   radius: RADIUS_SCALES.md,
   shadows: LIGHT_SHADOWS,
@@ -148,8 +151,65 @@ export const DEFAULT_THEME: ResolvedTheme = {
     toast: 1000000,
     tooltip: 1000001,
   },
+  material: { blur: 0, alpha: 1, saturate: 1, border: 'var(--border-default)', highlight: '' },
+  backdrop: 'none',
+  backdropMotion: 'none',
+  border: { width: 1 },
+  focus: { width: 2, offset: 2, color: 'var(--k-accent-500)', style: 'solid', enabled: false },
+  selection: { background: 'var(--k-accent-100)', color: 'var(--fg-default)', enabled: false },
+  density: 1,
+  motion: { speed: 1, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' },
   vars: {},
 };
+
+/** Presets con nombre de densidad y de velocidad: el tema también acepta el número directamente. */
+export const DENSITY_SCALES = { compact: 0.88, normal: 1, comfortable: 1.12 } as const;
+export const MOTION_SPEEDS = { none: 0, fast: 0.6, normal: 1, slow: 1.6 } as const;
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+function resolveDensity(density: Theme['density'], fallback: number): number {
+  if (density === undefined) return fallback;
+  return clamp(typeof density === 'number' ? density : DENSITY_SCALES[density] ?? 1, 0.6, 1.6);
+}
+function resolveMotion(motion: Theme['motion'], fallback: ResolvedTheme['motion']): ResolvedTheme['motion'] {
+  const speed = motion?.speed === undefined ? fallback.speed
+    : clamp(typeof motion.speed === 'number' ? motion.speed : MOTION_SPEEDS[motion.speed] ?? 1, 0, 4);
+  return { speed, easing: motion?.easing ?? fallback.easing };
+}
+function resolveMaterial(material: Theme['material'], fallback: ResolvedTheme['material']): ResolvedTheme['material'] {
+  return {
+    blur: clamp(material?.blur ?? fallback.blur, 0, 80),
+    alpha: clamp(material?.alpha ?? fallback.alpha, 0.05, 1),
+    saturate: clamp(material?.saturate ?? fallback.saturate, 0.5, 3),
+    border: material?.border ?? fallback.border,
+    highlight: material?.highlight ?? fallback.highlight,
+  };
+}
+function resolveFocus(focus: Theme['focus'], fallback: ResolvedTheme['focus']): ResolvedTheme['focus'] {
+  if (!focus) return fallback;
+  return { width: clamp(focus.width ?? fallback.width, 1, 6), offset: clamp(focus.offset ?? fallback.offset, 0, 8), color: focus.color ?? fallback.color, style: focus.style ?? fallback.style, enabled: true };
+}
+function resolveSelection(selection: Theme['selection'], fallback: ResolvedTheme['selection']): ResolvedTheme['selection'] {
+  if (!selection) return fallback;
+  return { background: selection.background ?? fallback.background, color: selection.color ?? fallback.color, enabled: true };
+}
+/** ¿El tema pide superficies de cristal? Con los valores de fábrica no se activa nada. */
+export const isGlassTheme = (theme: ResolvedTheme): boolean => theme.material.blur > 0 || theme.material.alpha < 1;
+
+/**
+ * Atributos que activan el CSS de material y de fondo (`styles/material.css`).
+ * `applyTheme` los pone solo; con `themeToStyle` (subárboles) hay que esparcirlos
+ * junto al estilo: `<div style={themeToStyle(t)} {...themeToAttrs(t)}>`.
+ */
+export function themeToAttrs(theme: ResolvedTheme): Record<string, string> {
+  return {
+    ...(isGlassTheme(theme) ? { 'data-k-material': 'glass' } : {}),
+    ...(theme.backdrop !== 'none' ? { 'data-k-backdrop': '' } : {}),
+    // El fondo solo se mueve si hay fondo, movimiento activo y el tema lo pide; reduced-motion lo corta además en CSS.
+    ...(theme.backdrop !== 'none' && theme.backdropMotion === 'drift' && theme.motion.speed > 0 ? { 'data-k-backdrop-motion': 'drift' } : {}),
+    ...(theme.focus.enabled ? { 'data-k-focus': '' } : {}),
+    ...(theme.selection.enabled ? { 'data-k-selection': '' } : {}),
+  };
+}
 
 function resolveRadius(radius: Theme['radius']): Required<ThemeRadius> {
   if (!radius) return DEFAULT_THEME.radius;
@@ -295,7 +355,7 @@ export function resolveTheme(input?: ThemeInput, base: ResolvedTheme = DEFAULT_T
       warningOn: normalizeHex(c.warningOn ?? contrastingFg(warning)),
       dangerOn: normalizeHex(c.dangerOn ?? contrastingFg(danger)),
       infoOn: normalizeHex(c.infoOn ?? contrastingFg(info)),
-      accentOn: normalizeHex(c.accentOn ?? contrastingFg(accent)),
+      accentOn: normalizeHex(c.accentOn ?? c.accentFg ?? contrastingFg(accent)),
       bgApp: normalizeHex(c.bgApp ?? (isDark ? darkSurfaces.bgApp : base.colors.bgApp)),
       bgCard: normalizeHex(c.bgCard ?? (isDark ? darkSurfaces.bgCard : base.colors.bgCard)),
       bgSidebar: sidebar,
@@ -334,10 +394,19 @@ export function resolveTheme(input?: ThemeInput, base: ResolvedTheme = DEFAULT_T
       sans: input?.typography?.sans ?? font?.sans ?? base.typography.sans,
       display: input?.typography?.display ?? font?.display ?? base.typography.display,
       mono: input?.typography?.mono ?? base.typography.mono,
+      scale: clamp(input?.typography?.scale ?? base.typography.scale, 0.8, 1.4),
     },
     radius: input?.radius ? resolveRadius(input.radius) : base.radius,
     shadows: { ...(isDark ? DARK_SHADOWS : LIGHT_SHADOWS), ...input?.shadows },
     zIndex: { ...base.zIndex, ...input?.zIndex },
+    material: resolveMaterial(input?.material, base.material),
+    backdrop: input?.backdrop ?? base.backdrop,
+    backdropMotion: input?.backdropMotion ?? base.backdropMotion,
+    border: { width: clamp(input?.border?.width ?? base.border.width, 0.5, 4) },
+    focus: resolveFocus(input?.focus, base.focus),
+    selection: resolveSelection(input?.selection, base.selection),
+    density: resolveDensity(input?.density, base.density),
+    motion: resolveMotion(input?.motion, base.motion),
     vars: Object.fromEntries(
       Object.entries({ ...base.vars, ...input?.vars }).map(([k, v]) => [
         k.startsWith('--') ? k : `--${k}`,
@@ -349,10 +418,19 @@ export function resolveTheme(input?: ThemeInput, base: ResolvedTheme = DEFAULT_T
 
 /** Convierte un tema resuelto en el mapa `--variable` → valor. */
 export function themeToCssVars(theme: ResolvedTheme): ThemeCssVars {
-  const { colors, typography, radius, shadows, zIndex } = theme;
+  const { colors, typography, radius, shadows, zIndex, material, backdrop, density, motion, border, focus, selection } = theme;
   const rgb = (hex: string) => rgbToSpaceString(hexToRgb(hex));
 
   return {
+    // Alias de color completo. El CSS publicado los deriva de las tripletas `-rgb`, pero una
+    // variable que se resuelve en :root no vuelve a calcularse en un subárbol tematizado: ahí
+    // «--color-accent-fg» seguía valiendo el del tema raíz (texto blanco sobre un acento blanco).
+    // Emitirlos con el tema los mantiene coherentes en cualquier nivel.
+    '--color-primary': colors.primary,
+    '--color-primary-hover': colors.primaryHover,
+    '--color-primary-fg': colors.primaryFg,
+    '--color-accent': colors.accent,
+    '--color-accent-fg': colors.accentFg,
     '--color-primary-rgb': rgb(colors.primary),
     '--color-primary-hover-rgb': rgb(colors.primaryHover),
     '--color-primary-fg-rgb': rgb(colors.primaryFg),
@@ -434,7 +512,27 @@ export function themeToCssVars(theme: ResolvedTheme): ThemeCssVars {
     '--k-shadow-sm': shadows.sm,
     '--k-shadow-md': shadows.md,
     '--k-shadow-lg': shadows.lg,
+    '--k-shadow-xl': shadows.xl,
     '--k-shadow-overlay': shadows.overlay,
+
+    '--k-surface-blur': `${material.blur}px`,
+    '--k-surface-alpha': String(material.alpha),
+    '--k-surface-saturate': String(material.saturate),
+    '--k-surface-border': material.border,
+    '--k-surface-highlight': material.highlight || '0 0 0 0 transparent',
+    '--k-app-backdrop': backdrop,
+    '--k-backdrop-duration': `${Math.round(60 / Math.max(motion.speed, 0.25))}s`,
+    '--k-border-width': `${border.width}px`,
+    '--k-focus-width': `${focus.width}px`,
+    '--k-focus-offset': `${focus.offset}px`,
+    '--k-focus-color': focus.color,
+    '--k-focus-style': focus.style,
+    '--k-selection-bg': selection.background,
+    '--k-selection-fg': selection.color,
+    '--k-density': String(density),
+    '--k-motion': String(motion.speed),
+    '--k-ease': motion.easing,
+    '--k-text-scale': String(typography.scale),
 
     '--k-z-sticky': String(zIndex.sticky),
     '--k-z-dropdown': String(zIndex.dropdown),

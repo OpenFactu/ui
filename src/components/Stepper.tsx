@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { AlertCircle, Check } from 'lucide-react';
+import { UiIcon } from '../icons';
 import { cn } from '../utils';
 
 export type StepStatus = 'hecha' | 'actual' | 'pendiente' | 'error';
@@ -103,9 +103,9 @@ export const Stepper: React.FC<StepperProps> = ({
           >
             {step.icon ??
               (estado === 'hecha' ? (
-                <Check size={spec.icono} strokeWidth={3} />
+                <UiIcon slot="check" size={spec.icono} strokeWidth={3} />
               ) : estado === 'error' ? (
-                <AlertCircle size={spec.icono} />
+                <UiIcon slot="alert-circle" size={spec.icono} />
               ) : (
                 i + 1
               ))}
