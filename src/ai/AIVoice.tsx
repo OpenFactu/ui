@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useAudioRecording } from '../hooks/useAudioRecording';
 import { UiIcon } from '../icons';
 import { Select } from '../components/Select';
 import { Button } from '../components/Button';
@@ -40,92 +41,21 @@ export function AIAudioPlayer({ src, blob, title, labels, className }: AIAudioPl
 }
 
 export interface AIVoiceRecorderProps extends AIUIProps { onRecorded: (blob: Blob) => void | Promise<void>; disabled?: boolean; /** Botón de icono para la barra del compositor. */ compact?: boolean }
-type RecordingState = 'idle' | 'requesting' | 'recording' | 'paused' | 'stopping' | 'recorded' | 'sending';
 export function AIVoiceRecorder({ onRecorded, disabled, compact, labels, className }: AIVoiceRecorderProps) {
   const l = aiLabels(labels);
-  const [available, setAvailable] = React.useState<boolean | null>(null);
-  const [state, setState] = React.useState<RecordingState>('idle');
-  const [blob, setBlob] = React.useState<Blob>();
-  const [elapsed, setElapsed] = React.useState(0);
-  const [error, setError] = React.useState('');
-  const recorder = React.useRef<MediaRecorder | null>(null);
-  const stream = React.useRef<MediaStream | null>(null);
-  const request = React.useRef(0);
-  const mounted = React.useRef(true);
-  const chunks = React.useRef<Blob[]>([]);
-  const started = React.useRef(0);
-  const accumulated = React.useRef(0);
-
-  function release() {
-    const current = recorder.current;
-    if (current) {
-      current.ondataavailable = null; current.onstop = null; current.onerror = null;
-      if (current.state !== 'inactive') try { current.stop(); } catch { /* Device may have disconnected. */ }
-    }
-    recorder.current = null;
-    stream.current?.getTracks().forEach(track => track.stop()); stream.current = null;
-  }
-  React.useEffect(() => {
-    mounted.current = true;
-    setAvailable(typeof MediaRecorder !== 'undefined' && !!navigator.mediaDevices?.getUserMedia && window.isSecureContext);
-    return () => { mounted.current = false; request.current++; release(); };
-  }, []);
-  React.useEffect(() => {
-    if (state !== 'recording') return;
-    const timer = setInterval(() => setElapsed((accumulated.current + Date.now() - started.current) / 1000), 200);
-    return () => clearInterval(timer);
-  }, [state]);
-  React.useEffect(() => { if (disabled) { request.current++; release(); setBlob(undefined); setState('idle'); } }, [disabled]);
-  async function start() {
-    if (!available || state !== 'idle' || disabled) return;
-    const id = ++request.current;
-    setState('requesting'); setError(''); setBlob(undefined); setElapsed(0); accumulated.current = 0;
-    try {
-      const input = await navigator.mediaDevices.getUserMedia({ audio: true });
-      if (!mounted.current || id !== request.current) { input.getTracks().forEach(track => track.stop()); return; }
-      stream.current = input;
-      const mimeType = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm'].find(type => MediaRecorder.isTypeSupported(type));
-      const next = new MediaRecorder(input, mimeType ? { mimeType } : undefined);
-      recorder.current = next; chunks.current = [];
-      next.ondataavailable = event => { if (event.data.size) chunks.current.push(event.data); };
-      next.onerror = () => { if (mounted.current && id === request.current) { release(); setError(l.microphoneUnavailable); setState('idle'); } };
-      next.onstop = () => {
-        if (!mounted.current || id !== request.current) return;
-        const result = new Blob(chunks.current, { type: next.mimeType || chunks.current[0]?.type || 'audio/webm' });
-        release();
-        if (result.size) { setBlob(result); setState('recorded'); }
-        else { setError(l.audioUnavailable); setState('idle'); }
-      };
-      next.start(250); started.current = Date.now(); setState('recording');
-    } catch (cause) {
-      if (!mounted.current || id !== request.current) return;
-      release(); setState('idle');
-      setError(cause instanceof DOMException && cause.name === 'NotAllowedError' ? l.microphoneDenied : l.microphoneUnavailable);
-    }
-  }
-  function cancel() { request.current++; release(); setBlob(undefined); setElapsed(0); setError(''); setState('idle'); }
+  const recording = useAudioRecording(disabled, l);
+  const { available, state, blob, elapsed, error, start, cancel } = recording;
   const active = state === 'recording' || state === 'paused';
   return <div className={cn('ai-surface ai-recorder', compact && 'ai-recorder-compact', className)}>
     {state === 'idle' && (compact ? <AIIconButton label={l.record} disabled={disabled || !available} onClick={() => void start()}><UiIcon slot="mic" size={16} /></AIIconButton> : <Button size="sm" variant="secondary" disabled={disabled || !available} onClick={() => void start()}><UiIcon slot="mic" size={14} />{l.record}</Button>)}
     {state === 'requesting' && <AIStatus>{l.loading}</AIStatus>}
     {active && <div className="ai-inline-actions"><span className="ai-recording-state" role="status"><UiIcon slot="mic" size={14} className="ai-rec-mic" /><span className="ai-wave" aria-hidden="true" data-paused={state === 'paused' || undefined}><i /><i /><i /><i /><i /></span>{state === 'paused' ? l.recordingPaused : l.recording} · {clock(elapsed)}</span>
-      <AIIconButton label={state === 'paused' ? l.resume : l.pause} onClick={() => {
-        if (state === 'recording') { accumulated.current += Date.now() - started.current; recorder.current?.pause(); setElapsed(accumulated.current / 1000); setState('paused'); }
-        else { started.current = Date.now(); recorder.current?.resume(); setState('recording'); }
-      }}>{state === 'paused' ? <UiIcon slot="play" size={14} /> : <UiIcon slot="pause" size={14} />}</AIIconButton>
-      <AIIconButton label={l.finishRecording} onClick={() => {
-        if (state === 'recording') accumulated.current += Date.now() - started.current;
-        setElapsed(accumulated.current / 1000); setState('stopping'); recorder.current?.stop();
-        stream.current?.getTracks().forEach(track => track.stop());
-      }}><UiIcon slot="square" size={13} /></AIIconButton>
+      <AIIconButton label={state === 'paused' ? l.resume : l.pause} onClick={recording.togglePause}>{state === 'paused' ? <UiIcon slot="play" size={14} /> : <UiIcon slot="pause" size={14} />}</AIIconButton>
+      <AIIconButton label={l.finishRecording} onClick={recording.finish}><UiIcon slot="square" size={13} /></AIIconButton>
     </div>}
     {state === 'stopping' && <AIStatus>{l.loading}</AIStatus>}
     {blob && <AIAudioPlayer blob={blob} labels={labels} />}
-    {(state === 'recorded' || state === 'sending') && blob && <Button size="sm" disabled={state === 'sending' || disabled} onClick={async () => {
-      const id = request.current;
-      setState('sending'); setError('');
-      try { await onRecorded(blob); if (mounted.current && id === request.current) cancel(); } catch (cause) { if (mounted.current && id === request.current) { setState('recorded'); setError(cause instanceof Error ? cause.message : l.error); } }
-    }}><UiIcon slot="check" size={14} />{l.useRecording}</Button>}
+    {(state === 'recorded' || state === 'sending') && blob && <Button size="sm" disabled={state === 'sending' || disabled} onClick={() => void recording.useRecording(onRecorded)}><UiIcon slot="check" size={14} />{l.useRecording}</Button>}
     {state !== 'idle' && state !== 'sending' && <AIIconButton label={l.cancel} onClick={cancel}><UiIcon slot="x" size={14} /></AIIconButton>}
     {available === false && <p className="ai-muted" role="status">{l.recordingUnsupported}</p>}
     {error && <p role="alert" className="ai-error">{error}</p>}

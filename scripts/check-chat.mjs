@@ -1,0 +1,210 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { chromium } from 'playwright-core';
+
+const base = process.env.LADLE_URL ?? 'http://localhost:61000';
+const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
+const page = await browser.newPage({ viewport: { width: 1280, height: 1000 }, reducedMotion: 'reduce' });
+const errors = [];
+page.on('pageerror', error => errors.push(error.message));
+page.setDefaultTimeout(10000);
+const go = async (story = 'mensajeria', theme = 'light') => {
+  await page.goto(`${base}/?story=chat--${story}&mode=preview&theme=${theme}`, { waitUntil: 'networkidle' });
+  await page.getByRole('region', { name: 'Conversaciones', exact: true, includeHidden: true }).waitFor({ state: 'attached' });
+};
+const field = () => page.getByRole('textbox', { name: 'Mensaje', exact: true });
+const conversation = name => page.getByRole('region', { name: 'Conversaciones', exact: true }).getByRole('button', { name });
+const bubble = text => page.locator('article.k-chat-message').filter({ has: page.locator('.k-chat-message-text').getByText(text, { exact: true }) });
+const submit = async text => { await field().fill(text); await page.getByRole('button', { name: 'Enviar mensaje', exact: true }).click(); };
+const simulation = async () => { await page.getByText('Simular eventos del chat', { exact: true }).click(); };
+const check = async (name, run) => { await run(); console.log(`✓ ${name}`); };
+const savedScroll = () => page.locator('.k-chat-scroll').evaluate(element => ({ top: element.scrollTop, height: element.scrollHeight, viewport: element.clientHeight }));
+
+try {
+  await go();
+  await check('Cada conversación conserva su borrador y la búsqueda filtra por nombre', async () => {
+    await field().fill('Borrador para Ana');
+    await conversation(/Equipo de producto/).click();
+    assert.equal(await field().inputValue(), '');
+    await field().fill('Borrador del equipo');
+    await conversation(/Ana López/).click();
+    assert.equal(await field().inputValue(), 'Borrador para Ana');
+    const search = page.getByRole('searchbox', { name: 'Buscar conversaciones' });
+    await search.fill('Luis');
+    assert.equal(await conversation(/Ana López/).count(), 0);
+    assert.equal(await conversation(/Luis Romero/).count(), 1);
+    await search.fill('');
+  });
+  await check('Intro envía, Mayús+Intro añade línea y la composición IME no se envía', async () => {
+    await field().fill('Dos');
+    await field().press('Shift+Enter');
+    await field().press('x');
+    assert.equal(await field().inputValue(), 'Dos\nx');
+    await field().evaluate(element => element.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true })));
+    await field().press('Enter');
+    assert.equal(await page.getByLabel('Enviando', { exact: true }).count(), 0);
+    await field().evaluate(element => element.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true })));
+    await field().fill('Enviado con teclado');
+    await field().press('Enter');
+    await bubble('Enviado con teclado').getByLabel('Entregado', { exact: true }).waitFor();
+    assert.equal(await field().inputValue(), '');
+  });
+  await check('El texto se muestra escapado y los espacios vacíos no se envían', async () => {
+    await field().fill('   ');
+    assert.equal(await page.getByRole('button', { name: 'Enviar mensaje', exact: true }).isDisabled(), true);
+    await submit('<img src=x onerror="window.chatUnsafe=true">');
+    await page.locator('.k-chat-message-text').getByText('<img src=x onerror="window.chatUnsafe=true">', { exact: true }).waitFor();
+    assert.equal(await page.locator('.k-chat-bubble img').count(), 0);
+    assert.equal(await page.evaluate(() => window.chatUnsafe), undefined);
+  });
+  await simulation();
+  await check('Un rechazo mantiene el mensaje y reintentar no duplica ni borra el borrador nuevo', async () => {
+    await page.getByRole('button', { name: 'Fallar próximo envío', exact: true }).click();
+    await submit('Envío que falla');
+    await field().fill('Sigo escribiendo');
+    await page.getByText('Sin conexión. Puedes reintentar el envío.', { exact: true }).waitFor();
+    assert.equal(await field().inputValue(), 'Sigo escribiendo');
+    await page.getByRole('button', { name: 'Reintentar envío', exact: true }).click();
+    await bubble('Envío que falla').getByLabel('Entregado', { exact: true }).waitFor();
+    assert.equal(await bubble('Envío que falla').count(), 1);
+    assert.equal(await field().inputValue(), 'Sigo escribiendo');
+  });
+  await check('Envíos simultáneos y ecos se reconcilian sin rebajar Leído ni perder borradores', async () => {
+    await page.getByRole('button', { name: 'Pausar confirmaciones', exact: true }).click();
+    await submit('Pendiente Ana');
+    await field().fill('Nuevo Ana');
+    await conversation(/Equipo de producto/).click();
+    await submit('Pendiente equipo');
+    await field().fill('Nuevo equipo');
+    await page.getByRole('button', { name: 'Recibir confirmación por evento', exact: true }).click();
+    await bubble('Pendiente equipo').getByLabel('Leído', { exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Confirmar envíos', exact: true }).click();
+    await page.getByText('Envíos en curso: 0', { exact: true }).waitFor();
+    assert.equal(await field().inputValue(), 'Nuevo equipo');
+    assert.equal(await bubble('Pendiente equipo').count(), 1);
+    await conversation(/Ana López/).click();
+    await bubble('Pendiente Ana').getByLabel('Leído', { exact: true }).waitFor();
+    assert.equal(await bubble('Pendiente Ana').count(), 1);
+    assert.equal(await field().inputValue(), 'Nuevo Ana');
+  });
+  await check('Dos conversaciones pueden reintentar mensajes con el mismo ID sin bloquearse entre sí', async () => {
+    await page.getByRole('button', { name: 'Simular errores simultáneos', exact: true }).click();
+    await page.getByRole('button', { name: 'Pausar confirmaciones', exact: true }).click();
+    await bubble('Error pendiente ana').getByRole('button', { name: 'Reintentar envío', exact: true }).click();
+    await conversation(/Equipo de producto/).click();
+    await bubble('Error pendiente team').getByRole('button', { name: 'Reintentar envío', exact: true }).click();
+    await page.getByText('Envíos en curso: 2', { exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Confirmar envíos', exact: true }).click();
+    await page.getByText('Envíos en curso: 0', { exact: true }).waitFor();
+    await bubble('Error pendiente team').getByLabel('Entregado', { exact: true }).waitFor();
+    await conversation(/Ana López/).click();
+    await bubble('Error pendiente ana').getByLabel('Entregado', { exact: true }).waitFor();
+  });
+  await check('Responder mantiene el texto pendiente y cancelar solo retira la referencia', async () => {
+    await page.getByRole('button', { name: /Responder a Ana López: ¡Buenos días/ }).click();
+    assert.equal(await field().inputValue(), 'Nuevo Ana');
+    assert.equal(await field().evaluate(element => element === document.activeElement), true);
+    await page.getByRole('button', { name: 'Cancelar respuesta', exact: true }).click();
+    assert.equal(await field().inputValue(), 'Nuevo Ana');
+    await page.getByRole('button', { name: /Responder a Ana López: ¡Buenos días/ }).click();
+    await submit('Respuesta con referencia');
+    await bubble('Respuesta con referencia').getByLabel('Entregado', { exact: true }).waitFor();
+    assert.ok((await bubble('Respuesta con referencia').locator('blockquote').innerText()).includes('los cambios del pedido'));
+  });
+  await check('Los eventos actualizan escritura y no leídos; abrir la conversación los limpia', async () => {
+    await page.getByRole('button', { name: 'Recibir en equipo', exact: true }).click();
+    await conversation(/Equipo de producto/).getByLabel('1 sin leer').waitFor();
+    await page.getByRole('button', { name: 'Alternar escritura de Ana', exact: true }).click();
+    await page.getByText('Ana López está escribiendo…', { exact: true }).waitFor();
+    await conversation(/Equipo de producto/).click();
+    assert.equal(await conversation(/Equipo de producto/).getByLabel('1 sin leer').count(), 0);
+  });
+  await go(); await simulation();
+  await check('Un fallo del historial permite reintentar y anteponer conserva el mensaje visible', async () => {
+    await page.getByRole('button', { name: 'Fallar historial', exact: true }).click();
+    await page.getByRole('button', { name: 'Cargar mensajes anteriores', exact: true }).click();
+    await page.getByText('No se ha podido cargar el historial. Vuelve a intentarlo.', { exact: true }).waitFor();
+    const first = page.locator('[data-message-id="ana-1"]');
+    const before = await first.boundingBox();
+    const bottomSlack = await page.locator('.k-chat-scroll').evaluate(element => Math.max(0, element.clientHeight - element.firstElementChild.getBoundingClientRect().height));
+    await page.getByRole('button', { name: 'Reintentar historial', exact: true }).click();
+    await page.locator('[data-message-id="older-23"]').waitFor({ state: 'attached' });
+    await page.waitForFunction(() => document.querySelector('.k-chat-scroll').scrollTop > 100);
+    const after = await first.boundingBox();
+    // If the original content did not fill the viewport, native scroll limits clamp the anchor by that empty space.
+    assert.ok(Math.abs(before.y - after.y) <= bottomSlack + 3, `El ancla cambió de ${before.y} a ${after.y}; hueco inferior ${bottomSlack}`);
+    await page.locator('.k-chat-scroll').evaluate(element => { element.scrollTop = 0; element.dispatchEvent(new Event('scroll')); });
+    const loaded = page.locator('[data-message-id="older-0"]');
+    await page.getByRole('button', { name: 'Pausar confirmaciones', exact: true }).click();
+    await page.getByRole('button', { name: 'Cargar mensajes anteriores', exact: true }).click();
+    await page.locator('.k-chat-scroll').evaluate(element => { element.scrollTop = 150; element.dispatchEvent(new Event('scroll')); });
+    const loadedBefore = await loaded.boundingBox();
+    await page.getByRole('button', { name: 'Confirmar envíos', exact: true }).click();
+    await page.locator('[data-message-id="older-47"]').waitFor({ state: 'attached' });
+    const loadedAfter = await loaded.boundingBox();
+    assert.ok(Math.abs(loadedBefore.y - loadedAfter.y) < 3, `El ancla del historial cambió de ${loadedBefore.y} a ${loadedAfter.y}`);
+    assert.equal(await page.getByRole('button', { name: 'Cargar mensajes anteriores', exact: true }).count(), 0);
+  });
+  await check('Al leer arriba un mensaje nuevo no roba el scroll y permite saltar al final', async () => {
+    await page.locator('.k-chat-scroll').evaluate(element => { element.scrollTop = 200; element.dispatchEvent(new Event('scroll')); });
+    const before = await savedScroll();
+    await page.getByRole('button', { name: 'Recibir mensaje', exact: true }).click();
+    await page.getByRole('button', { name: 'Mensajes nuevos', exact: true }).waitFor();
+    const after = await savedScroll();
+    assert.ok(Math.abs(before.top - after.top) < 2);
+    await page.getByRole('button', { name: 'Mensajes nuevos', exact: true }).click();
+    const bottom = await savedScroll();
+    assert.ok(bottom.height - bottom.top - bottom.viewport < 3);
+  });
+  await check('Cambiar de usuario descarta borradores y envíos de la sesión anterior', async () => {
+    await page.getByRole('button', { name: 'Pausar confirmaciones', exact: true }).click();
+    await submit('Pendiente de otra sesión');
+    await field().fill('Borrador privado');
+    await page.getByRole('button', { name: 'Cambiar usuario', exact: true }).click();
+    assert.equal(await field().inputValue(), '');
+    assert.equal(await bubble('Pendiente de otra sesión').count(), 0);
+    await simulation();
+    await page.getByRole('button', { name: 'Confirmar envíos', exact: true }).click();
+    await page.getByText('Envíos en curso: 0', { exact: true }).waitFor();
+    assert.equal(await field().inputValue(), '');
+    assert.equal(await bubble('Pendiente de otra sesión').count(), 0);
+  });
+  await check('La composición por piezas comparte el provider y permite acciones propias', async () => {
+    await go('composicion');
+    await page.getByRole('button', { name: 'Respuesta rápida', exact: true }).click();
+    assert.equal(await field().inputValue(), '¡Gracias! Lo reviso ahora.');
+    await page.getByRole('button', { name: 'Enviar mensaje', exact: true }).click();
+    await bubble('¡Gracias! Lo reviso ahora.').getByLabel('Enviado', { exact: true }).waitFor();
+    assert.equal(await page.getByRole('button', { name: 'Cargar mensajes anteriores', exact: true }).count(), 0);
+  });
+  await check('Solo lectura y estados vacíos no ofrecen acciones que no se pueden ejecutar', async () => {
+    await go('solo-lectura');
+    assert.equal(await field().isDisabled(), true);
+    assert.equal(await page.getByRole('button', { name: 'Enviar mensaje', exact: true }).isDisabled(), true);
+    assert.equal(await page.getByRole('button', { name: /^Responder a/ }).count(), 0);
+    await go('sin-conversaciones');
+    await page.getByText('Todavía no hay conversaciones.', { exact: true }).waitFor();
+    assert.equal(await field().count(), 0);
+  });
+  await check('En móvil se navega con teclado, vuelve a la lista y no hay desbordamiento en oscuro', async () => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await go('mensajeria', 'dark');
+    await page.getByLabel('Tema del chat', { exact: true }).selectOption('keirost-carbon');
+    await page.getByRole('button', { name: 'Volver a conversaciones', exact: true }).click();
+    assert.equal(await field().isVisible(), false);
+    await conversation(/Ana López/).focus();
+    await page.keyboard.press('Enter');
+    await field().waitFor();
+    await field().fill('Una línea muy larga '.repeat(30));
+    await page.getByRole('button', { name: 'Enviar mensaje', exact: true }).click();
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
+    assert.equal(await page.locator('html').evaluate(element => element.classList.contains('dark')), true);
+    fs.mkdirSync('.shots/chat', { recursive: true });
+    await page.screenshot({ path: '.shots/chat/mobile-dark.png', fullPage: true });
+    await page.setViewportSize({ width: 1280, height: 1000 });
+    await go('mensajeria', 'light');
+    await page.screenshot({ path: '.shots/chat/desktop.png', fullPage: true });
+  });
+  assert.deepEqual(errors, [], 'Errores JavaScript del chat');
+  console.log('Chat: todas las comprobaciones pasaron.');
+} finally { await browser.close(); }

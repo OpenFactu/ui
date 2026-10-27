@@ -536,6 +536,22 @@ Las pruebas de navegador aceptan `LADLE_URL` y `CHROME_PATH` si el playground
 o Chrome están en otra ubicación. Reinicia Ladle si estaba abierto antes de
 añadir las stories del editor.
 
+## Chat entre personas
+
+`ChatProvider` comparte conversaciones, mensajes, borradores, respuestas,
+contadores sin leer e historial. `ChatWorkspace` reúne la lista de conversaciones,
+cabecera, mensajes y compositor; cada pieza también puede usarse por separado.
+Tu aplicación conecta el transporte con `onSendMessage` y los eventos con
+`useChatActions`. Incluye envío inmediato, errores con reintento, confirmaciones
+sin duplicados y navegación móvil. Consulta la [guía del chat](docs/chat.md).
+
+Incluye reacciones, emojis, edición/eliminación, archivos con iconos por tipo,
+menciones, notas de voz con controles propios, búsqueda, fijados y gestión de
+conversaciones. Todo se conecta mediante callbacks del provider.
+
+En Ladle: **Chat → Mensajeria** para probarlo y **Chat → Temas** para comparar
+seis estilos. También hay ejemplos de reacciones, adjuntos, edición, búsqueda y voz.
+
 ## Herramientas del compositor (`@openfactu/ui/ai`)
 
 La barra del compositor reúne en una fila adjuntar, herramientas, modelo, voz y

@@ -9,6 +9,12 @@ import type { IconSlot } from './slots';
  * librería, no estos. Es una tabla de mejor esfuerzo: para fijar uno concreto, usa `slots`.
  */
 export const ICON_ALIASES: Record<IconSlot, readonly string[]> = {
+  smile: ['Smile', 'Smiley', 'FaceSmile', 'EmojiSmile', 'SentimentSatisfied'],
+  'file-spreadsheet': ['FileSpreadsheet', 'FileXls', 'FileExcel', 'TableCells', 'FileEarmarkSpreadsheet'],
+  'file-image': ['FileImage', 'Image', 'ImageSquare', 'Photo', 'FileEarmarkImage'],
+  'file-audio': ['FileAudio', 'FileAudio2', 'FileMusic', 'MusicNote', 'FileEarmarkMusic'],
+  'file-video': ['FileVideo', 'FileVideo2', 'FileVideoCamera', 'VideoCamera', 'FileEarmarkPlay'],
+  'file-archive': ['FileArchive', 'FileZip', 'ArchiveBox', 'FileEarmarkZip'],
   'alert-circle': ['AlertCircle', 'CircleAlert', 'WarningCircle', 'ExclamationCircle', 'ErrorOutline', 'ExclamationCircleFill'],
   'alert-triangle': ['AlertTriangle', 'TriangleAlert', 'Warning', 'ExclamationTriangle', 'WarningAmber', 'ExclamationTriangleFill'],
   'triangle-alert': ['TriangleAlert', 'AlertTriangle', 'Warning', 'ExclamationTriangle', 'WarningAmber'],

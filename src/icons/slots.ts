@@ -5,6 +5,8 @@
  * `<Icon name="…" />`. Cada biblioteca decide con qué rellena cada hueco (`slots`).
  */
 export const ICON_SLOTS = [
+  'smile',
+  'file-spreadsheet', 'file-image', 'file-audio', 'file-video', 'file-archive',
   'arrow-down', 'arrow-up', 'arrow-up-right', 'bookmark', 'book-open', 'brain', 'calendar', 'check', 'check-circle', 'check-circle-2',
   'chevron-down', 'chevron-left', 'chevron-right', 'chevron-up', 'chevrons-up-down', 'circle', 'circle-x', 'clock', 'code-2', 'columns-3',
   'copy', 'corner-down-left', 'download', 'eye', 'eye-off', 'file', 'file-code-2', 'file-diff', 'flask-conical', 'folder', 'folder-open',

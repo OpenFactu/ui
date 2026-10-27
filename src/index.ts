@@ -86,3 +86,4 @@ export * from './theme';
 export * from './context/ThemeContext';
 export * from './utils';
 export * from './icons';
+export * from './chat';
