@@ -28,10 +28,14 @@ const REGLAS = [
     // respaldo del token, no una decisión de color.
     re: /#[0-9a-fA-F]{6}\b/g,
     permitir: (linea, indice) => {
-      const antes = linea.slice(0, indice);
-      const abre = (antes.match(/var\(/g) || []).length;
-      const cierra = (antes.match(/\)/g) || []).length;
-      return abre > cierra;
+      // Pila de paréntesis abiertos con el nombre de su función: el hex está permitido si
+      // alguno de los que siguen abiertos es `var(` (también dentro de un `color-mix(…)`).
+      const pila = [];
+      for (let i = 0; i < indice; i++) {
+        if (linea[i] === '(') pila.push(/([\w-]*)$/.exec(linea.slice(0, i))[1]);
+        else if (linea[i] === ')') pila.pop();
+      }
+      return pila.includes('var');
     },
   },
 ];

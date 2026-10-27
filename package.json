@@ -38,8 +38,14 @@
     "typecheck": "tsc --noEmit -p tsconfig.stories.json",
     "test": "node --test scripts/code-editor.test.cjs scripts/ai.test.cjs scripts/theme.test.cjs",
     "test:browser": "node scripts/test-browser.cjs",
+    "test:erp": "node scripts/check-erp.mjs",
+    "test:design": "node scripts/check-design.mjs",
     "shots": "node scripts/shots.mjs",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test:operations": "node scripts/check-operations.mjs",
+    "test:documents": "node scripts/check-document-pages.mjs",
+    "test:workspace": "node scripts/check-workspace-kit.mjs",
+    "test:data-entry": "node scripts/check-data-entry.mjs"
   },
   "publishConfig": {
     "access": "public"

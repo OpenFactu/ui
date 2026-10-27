@@ -22,6 +22,8 @@ export interface DatePickerProps {
   value: string | null;
   onChange: (value: string | null) => void;
   label?: string;
+  /** Nombre accesible cuando no se muestra una etiqueta encima. */
+  ariaLabel?: string;
   /** Marca visible junto a la etiqueta y `aria-required` en el control. */
   required?: boolean;
   error?: string;
@@ -105,6 +107,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   value,
   onChange,
   label,
+  ariaLabel,
   required,
   error,
   helperText,
@@ -537,6 +540,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           id={generatedId}
           type="button"
           aria-required={required || undefined}
+          aria-label={ariaLabel}
           disabled={disabled}
           onClick={() => (isOpen ? close() : openCalendar())}
           aria-haspopup="dialog"

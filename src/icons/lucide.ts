@@ -1,5 +1,5 @@
 import {
-  AlertCircle, AlertTriangle, ArrowDown, ArrowUp, ArrowUpRight, BookOpen, Bookmark, Brain, Calendar, Check, CheckCircle, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleX, Clock, Code2, Columns3, Copy, CornerDownLeft, Download, Eye, EyeOff, File, FileCode2, FileDiff, FlaskConical, Folder, FolderOpen, Gauge, Info, Layers, Link2, ListChecks, ListTodo, Loader2, MessageSquare, Mic, MoreHorizontal, PanelLeft, PanelRight, PanelRightOpen, Paperclip, Pause, Pencil, Pin, Play, Plus, Redo2, RefreshCw, RotateCcw, Search, Sparkles, Square, SquareTerminal, ThumbsDown, ThumbsUp, Trash2, TriangleAlert, Undo2, Upload, Volume2, Wand2, Wrench, X, XCircle,
+  Bell, Clock3, FileText, Mail, Menu, Minus, PanelLeftClose, PanelLeftOpen, Save, AlertCircle, AlertTriangle, ArrowDown, ArrowUp, ArrowUpRight, BookOpen, Bookmark, Brain, Calendar, Check, CheckCircle, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleX, Clock, Code2, Columns3, Copy, CornerDownLeft, Download, Eye, EyeOff, File, FileCode2, FileDiff, FlaskConical, Folder, FolderOpen, Gauge, Info, Layers, Link2, ListChecks, ListTodo, Loader2, MessageSquare, Mic, MoreHorizontal, PanelLeft, PanelRight, PanelRightOpen, Paperclip, Pause, Pencil, Pin, Play, Plus, Redo2, RefreshCw, RotateCcw, Search, Sparkles, Square, SquareTerminal, ThumbsDown, ThumbsUp, Trash2, TriangleAlert, Undo2, Upload, Volume2, Wand2, Wrench, X, XCircle,
 } from 'lucide-react';
 import type { IconComponent, IconLibrary } from './types';
 import type { IconSlot } from './slots';
@@ -14,10 +14,20 @@ import type { IconSlot } from './slots';
  */
 export const LUCIDE_COMPONENTS: Record<string, IconComponent> = {
   AlertCircle, AlertTriangle, ArrowDown, ArrowUp, ArrowUpRight, BookOpen, Bookmark, Brain, Calendar, Check, CheckCircle, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleX, Clock, Code2, Columns3, Copy, CornerDownLeft, Download, Eye, EyeOff, File, FileCode2, FileDiff, FlaskConical, Folder, FolderOpen, Gauge, Info, Layers, Link2, ListChecks, ListTodo, Loader2, MessageSquare, Mic, MoreHorizontal, PanelLeft, PanelRight, PanelRightOpen, Paperclip, Pause, Pencil, Pin, Play, Plus, Redo2, RefreshCw, RotateCcw, Search, Sparkles, Square, SquareTerminal, ThumbsDown, ThumbsUp, Trash2, TriangleAlert, Undo2, Upload, Volume2, Wand2, Wrench, X, XCircle,
+  Bell, Clock3, FileText, Mail, Menu, Minus, PanelLeftClose, PanelLeftOpen, Save,
 };
 
 /** Con qué rellena Lucide cada hueco de la interfaz. */
 export const LUCIDE_SLOTS: Record<IconSlot, string> = {
+  'bell': 'Bell',
+  'clock-3': 'Clock3',
+  'file-text': 'FileText',
+  'mail': 'Mail',
+  'menu': 'Menu',
+  'minus': 'Minus',
+  'panel-left-close': 'PanelLeftClose',
+  'panel-left-open': 'PanelLeftOpen',
+  'save': 'Save',
   'alert-circle': 'AlertCircle',
   'alert-triangle': 'AlertTriangle',
   'arrow-down': 'ArrowDown',

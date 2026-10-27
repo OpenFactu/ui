@@ -123,7 +123,8 @@ test('Tailwind shadow utilities follow the theme tokens, and hard-shadow presets
 test('every bordered box in the library follows the radius token (KpiCard included)', () => {
   const fs = require('node:fs'); const path = require('node:path');
   const source = fs.readFileSync(path.join(__dirname, '../src/components/KpiCard.tsx'), 'utf8');
-  assert.equal((source.match(/rounded-\[var\(--k-radius-sm/g) ?? []).length, 2);
+  assert.ok(/rounded-\[var\(--k-radius-sm/.test(source), 'the shared surface uses the radius token');
+  assert.ok(!/<div[^>]*aria-busy[^>]*className=\{cn\('p-7/.test(source), 'no hard-coded padding box left outside `surface`');
 });
 test('adapters translate size and stroke to each library convention', () => {
   const React = require('react'); const { renderToStaticMarkup } = require('react-dom/server');
