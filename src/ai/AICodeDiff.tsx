@@ -60,7 +60,7 @@ export const AICodeDiff = React.memo(function AICodeDiff({ id, original, modifie
     </header>
     <div className="ai-diff-body"><div className="ai-diff-lines">
       {rows.map(row => row.type === 'skip'
-        ? <button type="button" key={`skip-${row.from}`} className="ai-diff-skip" onClick={() => setExpanded(current => new Set(current).add(row.from))}><UiIcon slot="chevrons-up-down" size={13} aria-hidden="true" />{formatMessage(l.showUnchangedLines, { count: row.count })}</button>
+        ? <button type="button" key={`skip-${row.from}`} data-k-focus-inset="" className="ai-diff-skip" onClick={() => setExpanded(current => new Set(current).add(row.from))}><UiIcon slot="chevrons-up-down" size={13} aria-hidden="true" />{formatMessage(l.showUnchangedLines, { count: row.count })}</button>
         : <div key={`${row.type}-${row.oldLine ?? ''}-${row.newLine ?? ''}`} className="ai-diff-line" data-type={row.type}>
           <span className="ai-diff-num" aria-hidden="true">{row.oldLine ?? ''}</span><span className="ai-diff-num" aria-hidden="true">{row.newLine ?? ''}</span>
           <span className="ai-diff-sign" aria-hidden="true">{row.type === 'add' ? '+' : row.type === 'remove' ? '−' : ''}</span>

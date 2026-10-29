@@ -72,6 +72,12 @@ html[data-k-backdrop-motion]::before, [data-k-backdrop-motion]:not(html)::before
   outline-offset: var(--k-focus-offset, 2px) !important;
   box-shadow: none !important;
 }
+/* Pestañas, opciones, filas y elementos de menú viven en contenedores que recortan (desplazables, `overflow: hidden`):
+   un anillo por fuera se cortaría y quedaría solo una raya en un lado. Por dentro se ve entero. Cualquier otro
+   elemento en esa situación lo pide con `data-k-focus-inset`. */
+[data-k-focus] :is([role='tab'], [role='option'], [role='menuitem'], [role='menuitemradio'], [role='menuitemcheckbox'], [role='treeitem'], [role='row'], [role='gridcell'], [role='radio'], [data-k-focus-inset]):focus-visible {
+  outline-offset: calc(var(--k-focus-width, 2px) * -1) !important;
+}
 /* Composite fields already indicate focus on their outer surface. Keep tool
    buttons and standalone fields in the normal keyboard-focus system. */
 [data-k-focus] [data-k-focus-surface] [data-k-focus-input]:focus-visible {

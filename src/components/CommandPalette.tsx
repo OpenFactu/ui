@@ -207,9 +207,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           className,
         )}
       >
-        <div className="flex items-center gap-2.5 px-4 border-b border-[var(--border-default,#e2e8f0)]">
+        <div data-k-focus-surface="" className="flex items-center gap-2.5 px-4 border-b border-[var(--border-default,#e2e8f0)]">
           <UiIcon slot="search" className="h-4 w-4 shrink-0 text-[var(--fg-subtle,#657486)]" />
           <input
+            data-k-focus-input=""
             ref={inputRef}
             value={term}
             onChange={(e) => setTerm(e.target.value)}

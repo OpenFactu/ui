@@ -166,7 +166,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
   };
 
   const mobile = useIsMobile();
-  const mobileStep = (direction: number) => <button type="button" disabled={disabled || readOnly || (value != null && (direction > 0 ? max != null && value >= max : minimum != null && value <= minimum))} onMouseDown={event => event.preventDefault()} onClick={() => nudge(direction * step)} aria-label={direction > 0 ? numberTexts.increase : numberTexts.decrease} className="k-number-step"><UiIcon slot={direction > 0 ? 'plus' : 'minus'} size={18} /></button>;
+  const mobileStep = (direction: number) => <button type="button" disabled={disabled || readOnly || (value != null && (direction > 0 ? max != null && value >= max : minimum != null && value <= minimum))} onMouseDown={event => event.preventDefault()} onClick={() => nudge(direction * step)} data-k-focus-inset="" aria-label={direction > 0 ? numberTexts.increase : numberTexts.decrease} className="k-number-step"><UiIcon slot={direction > 0 ? 'plus' : 'minus'} size={18} /></button>;
   const steppers = showSteppers ? (
     <span className="flex flex-col">
       <button
@@ -175,6 +175,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
         disabled={disabled || readOnly}
         onMouseDown={(event) => event.preventDefault()}
         onClick={() => nudge(step)}
+        data-k-focus-inset=""
         aria-label={numberTexts.increase}
         className="flex items-center justify-center px-1.5 h-1/2 text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors disabled:opacity-40"
       >
@@ -186,6 +187,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
         disabled={disabled || readOnly}
         onMouseDown={(event) => event.preventDefault()}
         onClick={() => nudge(-step)}
+        data-k-focus-inset=""
         aria-label={numberTexts.decrease}
         className="flex items-center justify-center px-1.5 h-1/2 text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors disabled:opacity-40"
       >

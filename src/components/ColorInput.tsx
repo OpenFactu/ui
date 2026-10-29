@@ -94,6 +94,7 @@ export const ColorInput: React.FC<ColorInputProps> = ({
 
         {showHex && (
           <div
+            data-k-focus-surface=""
             className={cn(
               'flex items-center rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] transition-colors focus-within:border-accent',
               disabled && 'opacity-50',
@@ -102,6 +103,7 @@ export const ColorInput: React.FC<ColorInputProps> = ({
           >
             <span className="pl-2 font-mono text-[12px] text-[var(--fg-subtle,#657486)] select-none">#</span>
             <input
+              data-k-focus-input=""
               type="text"
               inputMode="text"
               spellCheck={false}

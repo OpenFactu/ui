@@ -621,9 +621,10 @@ const MapSearchBox: React.FC<{ geocoder: Geocoder; placeholder: string; onSelect
 
   return (
     <div data-map-ui className="k-map-search">
-      <div className="k-map-search-field">
+      <div data-k-focus-surface="" className="k-map-search-field">
         <UiIcon slot="search" size={15} />
         <input
+          data-k-focus-input=""
           type="search"
           role="combobox"
           aria-expanded={open && results.length > 0}

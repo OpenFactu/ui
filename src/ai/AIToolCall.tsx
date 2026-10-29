@@ -24,7 +24,7 @@ export const AIToolCall = React.memo(function AIToolCall({ tool, onApprove, onRe
     try { await callback(tool.id); } catch (error) { setActionError(error instanceof Error ? error.message : l.error); } finally { setBusy(false); }
   };
   return <section className={cn('ai-surface ai-tool', className)} data-status={tool.status}>
-    <button type="button" className="ai-disclosure" aria-expanded={open} onClick={() => setOpen(value => !value)}><UiIcon slot="wrench" size={14} /><strong>{tool.name}</strong><span className="ai-tool-state"><StatusIcon status={tool.status} />{statusLabel(tool.status, l)}{tool.status === 'completed' && tool.durationMs !== undefined ? ` · ${(tool.durationMs / 1000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} s` : ''}</span><UiIcon slot="chevron-right" size={14} className={open ? 'ai-rotated' : undefined} /></button>
+    <button type="button" data-k-focus-inset="" className="ai-disclosure" aria-expanded={open} onClick={() => setOpen(value => !value)}><UiIcon slot="wrench" size={14} /><strong>{tool.name}</strong><span className="ai-tool-state"><StatusIcon status={tool.status} />{statusLabel(tool.status, l)}{tool.status === 'completed' && tool.durationMs !== undefined ? ` · ${(tool.durationMs / 1000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} s` : ''}</span><UiIcon slot="chevron-right" size={14} className={open ? 'ai-rotated' : undefined} /></button>
     {open && <div className="ai-tool-body">{tool.status === 'approval-required' && <p className="ai-tool-ask"><UiIcon slot="alert-triangle" size={14} />{l.approvalPrompt}</p>}{tool.description && <p>{tool.description}</p>}
       {tool.input !== undefined && <div><h5>{l.toolInput}</h5><pre>{displayJson(tool.input, l.unserializable)}</pre></div>}
       {tool.output !== undefined && <div><h5>{l.toolOutput}</h5><pre>{displayJson(tool.output, l.unserializable)}</pre></div>}
@@ -38,7 +38,7 @@ export const AIAgentActivity = React.memo(function AIAgentActivity({ steps, labe
   const l = useAILabels(labels);
   const [open, setOpen] = React.useState(true);
   return <section className={cn('ai-surface ai-activity', className)} aria-label={l.activity}>
-    <button type="button" className="ai-disclosure" aria-expanded={open} onClick={() => setOpen(value => !value)}><UiIcon slot="chevron-right" size={14} className={open ? 'ai-rotated' : undefined} /><strong>{l.activity}</strong><span className="ai-muted">{steps.filter(step => step.status === 'completed').length}/{steps.length}</span></button>
+    <button type="button" data-k-focus-inset="" className="ai-disclosure" aria-expanded={open} onClick={() => setOpen(value => !value)}><UiIcon slot="chevron-right" size={14} className={open ? 'ai-rotated' : undefined} /><strong>{l.activity}</strong><span className="ai-muted">{steps.filter(step => step.status === 'completed').length}/{steps.length}</span></button>
     {open && <ol>{steps.map(step => <li key={step.id} data-status={step.status}><StatusIcon status={step.status} /><div><span>{step.title}</span>{step.description && <small>{step.description}</small>}</div><small>{statusLabel(step.status, l)}{step.durationMs !== undefined ? ` · ${(step.durationMs / 1000).toFixed(1)} s` : ''}</small></li>)}</ol>}
   </section>;
 });

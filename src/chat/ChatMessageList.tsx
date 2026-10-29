@@ -68,7 +68,7 @@ export function ChatMessageList({ className, renderMessage, searchQuery }: ChatM
     return () => observer.disconnect();
   }, []);
   return <section className={cn('k-chat-timeline', className)} aria-label={ct.history}>
-    <div ref={scroller} className="k-chat-scroll" tabIndex={0} aria-label={ct.scroll} onScroll={() => {
+    <div ref={scroller} data-k-focus-inset="" className="k-chat-scroll" tabIndex={0} aria-label={ct.scroll} onScroll={() => {
       const element = scroller.current!;
       nearBottom.current = element.scrollHeight - element.scrollTop - element.clientHeight < 64;
       before.current.top = element.scrollTop; before.current.height = element.scrollHeight;
