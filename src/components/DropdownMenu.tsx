@@ -18,6 +18,11 @@ export interface DropdownMenuProps {
   disabled?: boolean;
   className?: string;
   menuClassName?: string;
+  /**
+   * Nombre accesible del disparador cuando su contenido es solo un icono. Así no hace falta meter un `<button>` dentro
+   * (el disparador ya es un botón: uno dentro de otro confunde al lector de pantalla y al teclado).
+   */
+  'aria-label'?: string;
 }
 
 export const DropdownMenu: React.FC<DropdownMenuProps> = ({
@@ -28,6 +33,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
   className,
   menuClassName,
   mobilePresentation = 'auto',
+  'aria-label': ariaLabel,
 }) => {
   const mobile = useIsMobile();
   const presentation = resolveMobilePresentation(mobile, mobilePresentation, 'sheet');
@@ -123,6 +129,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
         role="button"
         tabIndex={disabled ? -1 : 0}
         aria-haspopup="menu"
+        aria-label={ariaLabel}
         aria-expanded={isOpen}
         aria-controls={isOpen ? menuId : undefined}
         onClick={() => {

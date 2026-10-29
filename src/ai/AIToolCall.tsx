@@ -24,13 +24,12 @@ export const AIToolCall = React.memo(function AIToolCall({ tool, onApprove, onRe
     try { await callback(tool.id); } catch (error) { setActionError(error instanceof Error ? error.message : l.error); } finally { setBusy(false); }
   };
   return <section className={cn('ai-surface ai-tool', className)} data-status={tool.status}>
-    <button type="button" className="ai-disclosure" aria-expanded={open} onClick={() => setOpen(value => !value)}><UiIcon slot="wrench" size={14} /><strong>{tool.name}</strong><span className="ai-tool-state"><StatusIcon status={tool.status} />{statusLabel(tool.status, l)}</span><UiIcon slot="chevron-right" size={14} className={open ? 'ai-rotated' : undefined} /></button>
-    {open && <div className="ai-tool-body">{tool.description && <p>{tool.description}</p>}
+    <button type="button" className="ai-disclosure" aria-expanded={open} onClick={() => setOpen(value => !value)}><UiIcon slot="wrench" size={14} /><strong>{tool.name}</strong><span className="ai-tool-state"><StatusIcon status={tool.status} />{statusLabel(tool.status, l)}{tool.status === 'completed' && tool.durationMs !== undefined ? ` · ${(tool.durationMs / 1000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} s` : ''}</span><UiIcon slot="chevron-right" size={14} className={open ? 'ai-rotated' : undefined} /></button>
+    {open && <div className="ai-tool-body">{tool.status === 'approval-required' && <p className="ai-tool-ask"><UiIcon slot="alert-triangle" size={14} />{l.approvalPrompt}</p>}{tool.description && <p>{tool.description}</p>}
       {tool.input !== undefined && <div><h5>{l.toolInput}</h5><pre>{displayJson(tool.input)}</pre></div>}
       {tool.output !== undefined && <div><h5>{l.toolOutput}</h5><pre>{displayJson(tool.output)}</pre></div>}
       {(tool.error || actionError) && <p className="ai-error" role="alert">{tool.error || actionError}</p>}
-      {tool.durationMs !== undefined && <small className="ai-muted">{(tool.durationMs / 1000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} s</small>}
-      {tool.status === 'approval-required' && <div className="ai-inline-actions">{onApprove && <Button size="sm" disabled={busy} onClick={() => void act(onApprove)}>{l.approve}</Button>}{onReject && <Button size="sm" variant="secondary" disabled={busy} onClick={() => void act(onReject)}>{l.reject}</Button>}</div>}
+      {tool.status === 'approval-required' && <div className="ai-inline-actions">{onApprove && <Button size="sm" disabled={busy} onClick={() => void act(onApprove)}><UiIcon slot="check" size={14} />{l.approve}</Button>}{onReject && <Button size="sm" variant="secondary" disabled={busy} onClick={() => void act(onReject)}>{l.reject}</Button>}</div>}
     </div>}
   </section>;
 });

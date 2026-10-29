@@ -59,7 +59,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
         dimensions,
         'shrink-0 cursor-pointer rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default)]',
         'bg-[var(--bg-muted)]',
-        'text-accent accent-[color:var(--k-teal-500)] focus:ring-1 focus:ring-accent focus:ring-offset-0',
+        'text-accent accent-[color:var(--k-teal-500)] focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--color-accent,#0d9488)]',
         'transition-colors',
         disabled && 'opacity-40 cursor-not-allowed',
         className,

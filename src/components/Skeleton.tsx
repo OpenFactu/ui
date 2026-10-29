@@ -96,7 +96,8 @@ export const Skeleton: React.FC<SkeletonProps> = ({
         key={i}
         aria-hidden
         className={cn(
-          'shrink-0',
+          // Un ancho fijo (`width={384}`) nunca desborda una pantalla estrecha: se queda en el ancho disponible.
+          'shrink-0 max-w-full',
           // Un solo token para los dos modos: `--bg-hover` ya se invierte
           // con `html.dark` y sigue al tema del tenant.
           'bg-[var(--bg-hover)]',

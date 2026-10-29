@@ -131,7 +131,8 @@ function ReplyActions() {
 export const Composicion: Story = () => {
   return <ChatProvider currentUser={people[0]} users={people} initialConversations={conversations} initialMessages={messages}
     initialConversationId="ana" onSendMessage={message => ({ ...message, status: 'sent' })}>
-    <div className="k-chat-workspace" style={{ height: 580 }}>
+    {/* `data-conversation-open`: en móvil se ve la conversación (como hace ChatWorkspace) en vez de las dos columnas apretadas. */}
+    <div className="k-chat-workspace" data-conversation-open="true" style={{ height: 580 }}>
       <ChatConversationList title="Mi equipo" />
       <div className="k-chat-thread"><ChatHeader actions={<ReplyActions />} /><ChatMessageList /><ChatComposer placeholder="Escribe a tu equipo…" /></div>
     </div>

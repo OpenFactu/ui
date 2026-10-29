@@ -129,3 +129,15 @@
    lista de un select adaptado) se quedaría con la rueda y el gesto aunque no tenga nada que desplazar, y la hoja no se
    movería. */
 .k-bottom-sheet-body [data-modal-body], .k-bottom-sheet-body .k-adaptive-content [role='listbox'] { overflow: visible !important; overscroll-behavior: auto; max-height: none; }
+
+/* Paneles lado a lado en un móvil son columnas de una palabra por línea: por debajo de 640 px se apilan (cada panel
+   a todo el ancho, uno debajo de otro) y el separador desaparece. El vertical se queda como está. */
+@media (max-width: 639px) {
+  .k-split[data-direction='horizontal'] { flex-direction: column; height: auto; overflow: visible; }
+  .k-split[data-direction='horizontal'] > .k-split-pane { flex-basis: auto !important; width: 100%; overflow: visible; }
+  .k-split[data-direction='horizontal'] > .k-split-pane + .k-split-handle, .k-split[data-direction='horizontal'] > .k-split-handle { flex: 0 0 1px; width: 100%; height: 1px; pointer-events: none; }
+  .k-split[data-direction='horizontal'] > .k-split-handle > * { display: none; }
+  /* Un panel apilado no tiene altura propia: un SplitPane dentro (que pide el 100 %) se quedaba a 0. */
+  .k-split[data-direction='horizontal'] > .k-split-pane > .k-split { height: 360px; }
+  .k-split[data-direction='horizontal'] > .k-split-pane-rest { flex: 1 1 auto; }
+}

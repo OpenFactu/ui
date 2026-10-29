@@ -30,7 +30,7 @@ function ComposerContextButton() { const c = useAIComposer(); return <button typ
 export const Modelos = () => { const [value, setValue] = React.useState('general'); return <Frame><AIModelSelector models={demoModels} value={value} onChange={setValue} /></Frame>; };
 export const Historial = () => { const { state, actions } = useAIDemo(); return <Frame><div style={{ width: 280, maxWidth: '100%', height: 600 }}><AIConversationHistory conversations={state.conversations} projects={state.projects} value={state.conversationId} onSelect={actions.onSelectConversation} onNew={actions.onNewConversation} onRename={actions.onRenameConversation} onDelete={actions.onDeleteConversation} onPin={actions.onPinConversation} onCreateProject={actions.onCreateProject} onRenameProject={actions.onRenameProject} onDeleteProject={actions.onDeleteProject} onMoveConversation={actions.onMoveConversation} /></div></Frame>; };
 export const Conversacion = () => <Frame><div style={{ height: 600, display: 'flex' }}><AIConversation messages={demoMessages} /></div></Frame>;
-export const Mensaje = () => <Frame><AIMessage message={{ ...demoMessages[0], name: 'Tú', avatar: demoArtifacts.find(artifact => artifact.kind === 'image')?.url }} /><AIMessage message={demoMessages[1]} /></Frame>;
+export const Mensaje = () => <Frame><AIMessage message={{ ...demoMessages[0], name: 'Tú' }} /><AIMessage message={demoMessages[1]} /></Frame>;
 export const Acciones = () => { const [action, setAction] = React.useState(''); return <Frame><AIMessageActions message={demoMessages[1]} onEdit={() => setAction('Editar')} actions={{ onRetry: () => setAction('Regenerar'), onFeedback: (_, value) => setAction(value), onReadAloud: () => setAction('Lectura solicitada (simulada)') }} /><p role="status">{action}</p></Frame>; };
 export const Sugerencias = () => { const [prompt, setPrompt] = React.useState(''); return <Frame><AIPromptSuggestions suggestions={demoSuggestions} onSelect={setPrompt} /><p>{prompt}</p></Frame>; };
 const markdown = '# Contenido enriquecido\n\nUna respuesta con **negrita**, _énfasis_, ~~tachado~~, [enlaces](https://react.dev) y una nota[^1].\n\n> Una cita breve.\n\n- [x] Revisar\n- [ ] Compartir\n\n| Campo | Valor |\n| --- | --- |\n| Ideas | 12 |\n\n```typescript\nconst greeting = "Hola";\nconsole.log(greeting);\n```\n\n[^1]: Una nota al pie.\n\n<img src=x onerror="window.__aiInjected=true">\n\n[Enlace bloqueado](javascript:alert(1))';
@@ -79,4 +79,20 @@ export const HerramientasExtensibles = () => {
     <AIComposer draft={draft} onDraftChange={setDraft} onSubmit={() => undefined} models={demoModels} modelId={model} onSelectModel={setModel} onFiles={() => undefined} onRecordAudio={() => undefined} />
     <p role="status">Herramientas activas: {draft.tools?.length ? draft.tools.join(', ') : 'ninguna'}</p>
   </Frame>;
+};
+
+/** Un mensaje generándose (avatar que respira, bloques que entran suaves), uno fallido con reintento y herramientas en cada estado. */
+export const EstadosDelMensaje = () => {
+  const [status, setStatus] = React.useState<'error' | 'streaming'>('error');
+  const [tool, setTool] = React.useState<AIToolStatus>('approval-required');
+  return <Frame><div className="ai-message-list">
+    <AIMessage message={{ id: 'p', role: 'user', name: 'Ana López', parts: [{ type: 'text', text: 'Resume las facturas vencidas de julio y avisa a los clientes.' }] }} />
+    <AIMessage message={{ id: 's', role: 'assistant', status: 'streaming', parts: [{ type: 'text', text: 'He encontrado **12 facturas vencidas** por un total de 18.430 €. Estoy agrupándolas por cliente' }] }} />
+    <AIMessage message={{ id: 'e', role: 'assistant', status, parts: [{ type: 'text', text: 'Preparando los avisos para los clientes…' }] }} actions={{ onRetry: () => { setStatus('streaming'); setTimeout(() => setStatus('error'), 2500); } }} />
+    <AIMessage message={{ id: 't', role: 'assistant', parts: [
+      { type: 'tool', tool: { id: 'q', name: 'consultar_facturas', status: 'completed', durationMs: 840, input: { mes: '2026-07', estado: 'vencida' }, output: { total: 12 } } },
+      { type: 'tool', tool: { id: 'r', name: 'calcular_intereses', status: 'running', input: { facturas: 12 } } },
+      { type: 'tool', tool: { id: 'm', name: 'enviar_correos', status: tool, description: 'Enviará 12 correos a clientes desde facturacion@empresa.es', input: { plantilla: 'recordatorio-pago', destinatarios: 12 } } },
+    ] }} actions={{ onApproveTool: () => setTool('completed'), onRejectTool: () => setTool('denied') }} />
+  </div></Frame>;
 };

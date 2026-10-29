@@ -1,0 +1,253 @@
+/* ── Tabla: barra superior, filtros, columnas fijas, acciones en lote y paginación ───────────────────────────── */
+
+.k-table { --k-table-fast: calc(150ms * var(--k-motion, 1)); position: relative; border-radius: var(--k-radius-md, 8px); }
+.k-table > .k-table-scroll { border-radius: inherit; }
+.k-table:has(> .k-table-toolbar) > .k-table-scroll { border-top-left-radius: 0; border-top-right-radius: 0; }
+
+/* Fila seleccionada: tinte del acento (la casilla marcada ya dice cuál es; sin franja lateral). */
+.k-table-row-selected { background: color-mix(in srgb, var(--color-accent, #0d9488) 8%, var(--bg-card, #ffffff)); }
+.k-table-row-selected:hover { background: color-mix(in srgb, var(--color-accent, #0d9488) 12%, var(--bg-card, #ffffff)); }
+
+/* Columnas fijas: la sombra del borde solo cuando hay contenido pasando por debajo. */
+.k-table-edge-left, .k-table-edge-right { transition: box-shadow var(--k-table-fast) ease; }
+.k-table[data-overflow-left] .k-table-edge-left { box-shadow: 8px 0 10px -8px rgb(15 23 42 / 0.22); }
+.k-table[data-overflow-right] .k-table-edge-right { box-shadow: -8px 0 10px -8px rgb(15 23 42 / 0.22); }
+.dark .k-table[data-overflow-left] .k-table-edge-left { box-shadow: 8px 0 10px -8px rgb(0 0 0 / 0.6); }
+.dark .k-table[data-overflow-right] .k-table-edge-right { box-shadow: -8px 0 10px -8px rgb(0 0 0 / 0.6); }
+
+/* Pie de totales: fijo abajo cuando la tabla tiene su propio scroll. */
+.k-table-foot-sticky { position: sticky; bottom: 0; z-index: 3; }
+.k-table-foot > tr > td { background: var(--bg-muted, #f8fafc); white-space: nowrap; }
+/* Códigos e importes (celdas monoespaciadas) no se parten en dos líneas. */
+.k-table td.font-mono { white-space: nowrap; }
+
+/* Barra superior */
+.k-table-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-default, #e2e8f0);
+}
+.k-table-toolbar[data-cards] { padding: 0; border: 0; }
+.k-table-toolbar-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.k-table-search { flex: 1 1 220px; max-width: 360px; }
+.k-table-toolbar-end { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.k-table-results { font-family: var(--font-mono, ui-monospace, monospace); font-size: 11px; font-variant-numeric: tabular-nums; color: var(--fg-muted, #52606f); white-space: nowrap; }
+.k-table-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-radius: var(--k-radius-sm, 6px);
+  background: var(--bg-card, #ffffff);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-body, #2d3a4a);
+  cursor: pointer;
+  transition: background-color var(--k-table-fast) ease;
+}
+.k-table-tool:hover { background: var(--bg-hover, #f1f5f9); }
+
+/* Filtros activos */
+.k-table-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.k-table-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 2px 4px 2px 10px;
+  border: 1px solid color-mix(in srgb, var(--color-accent, #0d9488) 35%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-accent, #0d9488) 8%, var(--bg-card, #ffffff));
+  font-size: 12px;
+  color: var(--fg-default, #0a1628);
+  animation: k-table-chip-in calc(220ms * var(--k-motion, 1)) var(--k-spring-pop, cubic-bezier(0.22, 1, 0.36, 1));
+}
+@keyframes k-table-chip-in { from { opacity: 0; transform: scale(0.9); } }
+.k-table-chip-key { font-weight: 600; color: var(--fg-muted, #52606f); }
+.k-table-chip-value { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.k-table-chip button {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: var(--fg-muted, #52606f);
+  transition: background-color var(--k-table-fast) ease, color var(--k-table-fast) ease;
+}
+.k-table-chip button:hover { background: color-mix(in srgb, var(--fg-default, #0a1628) 8%, transparent); color: var(--fg-default, #0a1628); }
+.k-table-clear { padding: 2px 6px; font-size: 12px; font-weight: 600; color: var(--fg-muted, #52606f); border-radius: 4px; }
+.k-table-clear:hover { color: var(--fg-default, #0a1628); background: var(--bg-hover, #f1f5f9); }
+
+/* Botón de filtro en la cabecera y en la barra de las tarjetas */
+.k-table-filter-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-left: 4px;
+  vertical-align: middle;
+  border-radius: 4px;
+  color: var(--fg-subtle, #657486);
+  opacity: 0.55;
+  transition: opacity var(--k-table-fast) ease, background-color var(--k-table-fast) ease, color var(--k-table-fast) ease;
+}
+th:hover .k-table-filter-btn, .k-table-filter-btn:focus-visible, .k-table-filter-btn[aria-expanded='true'] { opacity: 1; }
+.k-table-filter-btn:hover { background: var(--bg-hover, #f1f5f9); color: var(--fg-default, #0a1628); }
+.k-table-filter-btn[data-active] {
+  opacity: 1;
+  background: color-mix(in srgb, var(--color-accent, #0d9488) 14%, transparent);
+  color: color-mix(in srgb, var(--color-accent, #0d9488) 75%, var(--fg-default, #0a1628));
+}
+th[data-filtered] { color: color-mix(in srgb, var(--color-accent, #0d9488) 75%, var(--fg-default, #0a1628)); }
+.k-table-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-radius: 999px;
+  background: var(--bg-card, #ffffff);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-body, #2d3a4a);
+}
+/* Tira de opciones de la vista de tarjetas: una línea que se desliza, con un degradado que avisa de que hay más. */
+.k-table-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 -2px;
+  padding: 2px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+}
+.k-table-strip::-webkit-scrollbar { display: none; }
+.k-table-strip > * { flex: none; }
+.k-table-strip > :last-child { margin-right: 20px; }
+.k-table-strip-check {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-radius: 999px;
+  background: var(--bg-card, #ffffff);
+  font-size: 12px;
+}
+.k-table-filter-pill { cursor: pointer; white-space: nowrap; transition: background-color var(--k-table-fast, 150ms) ease, border-color var(--k-table-fast, 150ms) ease; }
+.k-table-filter-pill:hover { background: var(--bg-hover, #f1f5f9); }
+.k-table-toolbar[data-cards] .k-table-search { flex-basis: 100%; max-width: none; }
+.k-table-results-end { margin-left: auto; }
+.k-table-strip-check label { font-size: 12px; }
+.k-table-strip button[aria-label='Mostrar u ocultar columnas'] {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 32px;
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-radius: 999px;
+  background: var(--bg-card, #ffffff);
+}
+/* En móvil todo control mide 48 px de alto (área táctil): la tira y los chips se igualan a esa altura. */
+/* En móvil los controles sueltos miden 48 px; dentro de la tira todos a 44 px, iguales entre sí y sin comerse la
+   pantalla (sigue por encima del mínimo táctil de 24 px y del recomendado de 44). */
+@media (max-width: 767px) {
+  /* Más específico que `[data-k-mobile] button` (mobile.css va después): la tira y los chips miden 40 px. */
+  .k-table-cards .k-table-strip > *, .k-table-cards .k-table-strip button, .k-table-cards .k-table-strip [role='button'] { min-height: 40px; height: 40px; font-size: 13px; }
+  .k-table-cards .k-table-strip button[aria-label='Mostrar u ocultar columnas'] { width: 40px; }
+  .k-table-cards .k-table-strip-check [data-k-control='checkbox-group'] { min-height: 0; gap: 8px; }
+  .k-table-cards .k-table-strip-check [data-k-control='checkbox-group'] > label { min-height: 0; }
+  .k-table-cards .k-table-strip-check [data-k-control='checkbox-group'] > label > span:first-child { font-size: 13px; white-space: nowrap; }
+  .k-table-cards .k-table-strip-check input[type='checkbox'] { width: 18px; height: 18px; }
+  .k-table-cards .k-table-chip { min-height: 36px; padding-block: 0; font-size: 13px; }
+  .k-table-cards .k-table-chip button { min-height: 32px; min-width: 32px; }
+}
+
+/* Panel de filtro dentro de la hoja móvil: sin marco propio (ya lo pone la hoja) ni título repetido. */
+@media (max-width: 767px) {
+  .k-table-filter-panel { padding: 0; border: 0; border-radius: 0; box-shadow: none; }
+  .k-table-filter-head > span { display: none; }
+  .k-table-filter-head { justify-content: flex-end; }
+  .k-table-filter-head:not(:has(button)) { display: none; }
+  .k-table-filter-options { max-height: none; overflow: visible; gap: 0; }
+}
+/* Las opciones van alineadas a la izquierda, pegadas a su casilla. */
+.k-table-filter-options [data-k-control='checkbox-group'] { align-items: center; }
+.k-table-filter-options [data-k-control='checkbox-group'] > label { align-items: flex-start; text-align: left; }
+.k-table-filter-pill[data-active] { border-color: var(--color-accent, #0d9488); background: color-mix(in srgb, var(--color-accent, #0d9488) 8%, var(--bg-card, #ffffff)); }
+.k-table-filter-btn:focus-visible, .k-table-filter-pill:focus-visible, .k-table-chip button:focus-visible, .k-table-clear:focus-visible, .k-table-tool:focus-visible {
+  outline: 2px solid var(--color-accent, #0d9488);
+  outline-offset: 1px;
+}
+
+/* Panel del filtro */
+.k-table-filter-panel {
+  z-index: var(--k-z-popover, 999999);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px 12px;
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-radius: var(--k-radius-md, 8px);
+  background: var(--bg-card, #ffffff);
+  box-shadow: var(--k-shadow-lg, 0 12px 32px -12px rgb(15 23 42 / 0.3));
+}
+.k-table-filter-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.k-table-filter-head span {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--fg-subtle, #657486);
+}
+.k-table-filter-head button { font-size: 12px; font-weight: 600; color: var(--fg-muted, #52606f); }
+.k-table-filter-head button:hover { color: var(--fg-default, #0a1628); }
+.k-table-filter-options { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
+.k-table-filter-range { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* Barra de selección: ver `SelectionBar` (styles/extras.css). En móvil va fija abajo: hueco para que no tape
+   la última tarjeta. */
+@media (max-width: 767px) {
+  .k-table-cards:has(.k-selection-bar[data-state='open']) { padding-bottom: 80px; }
+}
+
+/* Paginación con números */
+.k-pages { display: inline-flex; align-items: center; gap: 2px; }
+.k-pages-btn {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: var(--k-radius-sm, 6px);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-body, #2d3a4a);
+  transition: background-color var(--k-table-fast, 150ms) ease, color var(--k-table-fast, 150ms) ease;
+}
+.k-pages-btn:hover { background: var(--bg-hover, #f1f5f9); }
+.k-pages-btn[aria-current='page'] { background: var(--color-accent, #0d9488); font-weight: 600; color: var(--k-accent-on, #0f172a); }
+.k-pages-btn:focus-visible { outline: 2px solid var(--color-accent, #0d9488); outline-offset: 1px; }
+.k-pages-gap { min-width: 18px; text-align: center; color: var(--fg-subtle, #657486); }
+@media (max-width: 640px) {
+  .k-pages-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+
+/* Paginación en móvil: botones de 36 px (la regla general de 48 px convertía la página actual en un bloque alto). */
+@media (max-width: 767px) {
+  [data-k-mobile='Pagination'] .k-pages-btn { min-width: 36px; height: 36px; min-height: 36px; }
+  [data-k-mobile='Pagination'] > div button:not(.k-pages-btn) { min-height: 36px; height: 36px; }
+  [data-k-mobile='Pagination'] button[data-k-control='select'] { min-height: 36px; padding-block: 6px; font-size: 14px; }
+  .k-pages { gap: 0; }
+}
+.k-pages-btn:focus-visible { outline-offset: 0; }
+
+/* Casilla de cada tarjeta: zona táctil de 44 px alrededor de la casilla (que sigue midiendo lo mismo). */
+.k-table-card-check { display: inline-grid; flex: none; place-items: center; width: 44px; height: 44px; margin: -12px -10px -12px -12px; cursor: pointer; }

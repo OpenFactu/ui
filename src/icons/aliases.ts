@@ -39,6 +39,7 @@ export const ICON_ALIASES: Record<IconSlot, readonly string[]> = {
   clock: ['Clock', 'ClockCircle', 'Schedule', 'AccessTime', 'ClockHistory'],
   'code-2': ['Code2', 'Code', 'CodeSimple', 'CodeBracket', 'CodeSlash'],
   'columns-3': ['Columns3', 'Columns', 'Kanban', 'ViewColumn', 'ViewColumns', 'LayoutColumns'],
+  filter: ['ListFilter', 'Filter', 'Funnel', 'FilterList', 'FilterAlt', 'FiFilter', 'FunnelSimple'],
   copy: ['Copy', 'CopySimple', 'DocumentDuplicate', 'ContentCopy', 'Files', 'Clipboard'],
   'corner-down-left': ['CornerDownLeft', 'ArrowElbowDownLeft', 'ArrowTurnDownLeft', 'KeyboardReturn', 'ArrowReturnLeft'],
   download: ['Download', 'DownloadSimple', 'ArrowDownTray', 'FileDownload'],

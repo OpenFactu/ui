@@ -25,7 +25,7 @@ export const Variantes: Story = () => (
     </div>
     <div>
       <Label>rect y circle</Label>
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         <Skeleton variant="circle" width={48} />
         <Skeleton variant="rect" width={120} height={48} radius="sm" />
         <Skeleton variant="rect" width={200} height={48} radius="md" />

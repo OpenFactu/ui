@@ -200,6 +200,9 @@ export function usePopover<A extends HTMLElement = HTMLElement>(
     const handleMouseDown = (event: MouseEvent) => {
       const target = event.target as Node;
       if (anchorRef.current?.contains(target) || popoverRef.current?.contains(target)) return;
+      // Un popover abierto desde dentro de este (un selector de fechas en un filtro) vive en otro portal: pulsar en
+      // él no es pulsar fuera.
+      if (target instanceof Element && target.closest('[data-role="pop"]')) return;
       onClose();
     };
 

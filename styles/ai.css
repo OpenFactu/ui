@@ -504,3 +504,124 @@
   .ai-artifact-toolbar { flex-wrap: wrap; }
   .ai-artifact-tab > button[role='tab'] { min-height: 48px; }
 }
+
+/* ── Mensajes, estados, herramientas y compositor (segunda pasada) ─────────────────────────────────────────── */
+
+/* Avatares: destello sobre el acento para el asistente, iniciales sobre un tinte para la persona. */
+.ai-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 650;
+  user-select: none;
+}
+.ai-avatar[data-role='assistant'] {
+  color: var(--k-accent-on, #ffffff);
+  background: linear-gradient(135deg, var(--ai-accent, #0d9488), var(--ai-accent-strong, #0f766e));
+  box-shadow: 0 4px 12px -6px color-mix(in srgb, var(--ai-accent, #0d9488) 70%, transparent);
+}
+.ai-avatar[data-role='user'] {
+  color: color-mix(in srgb, var(--ai-accent, #0d9488) 70%, var(--fg-default, #0a1628));
+  background: var(--ai-accent-soft, rgb(13 148 136 / 0.12));
+  box-shadow: inset 0 0 0 1px var(--ai-accent-line, rgb(13 148 136 / 0.38));
+}
+.ai-message[data-streaming] .ai-avatar[data-role='assistant'] { animation: ai-avatar-breathe calc(1.6s * var(--k-motion, 1)) ease-in-out infinite; }
+@keyframes ai-avatar-breathe { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--ai-accent, #0d9488) 18%, transparent); } }
+@media (max-width: 767px) { .ai-avatar { width: 24px; height: 24px; font-size: 10px; } .ai-avatar svg { width: 12px; height: 12px; } }
+
+/* Burbuja de la persona: tinte del acento, sin borde, con la esquina junto al avatar más cerrada. */
+.ai-message[data-role='user'] .ai-message-content {
+  width: fit-content;
+  max-width: 100%;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 6px 16px 16px 16px;
+  background: color-mix(in srgb, var(--ai-accent, #0d9488) 9%, var(--bg-card, #ffffff));
+}
+
+/* Acciones del mensaje: aparecen al pasar o enfocar; siempre visibles en el último y en pantallas táctiles. */
+.ai-message .ai-message-actions { opacity: 0; transition: opacity var(--ai-dur-fast, 140ms) var(--ai-ease, ease); }
+.ai-message:hover .ai-message-actions,
+.ai-message:focus-within .ai-message-actions,
+.ai-message-list > .ai-message:last-of-type .ai-message-actions { opacity: 1; }
+@media (hover: none) { .ai-message .ai-message-actions { opacity: 1; } }
+.ai-message-header time { opacity: 0.8; }
+
+/* Respuesta fallida */
+.ai-message-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--k-danger, #dc2626) 30%, transparent);
+  border-radius: var(--k-radius-md, 8px);
+  background: var(--k-danger-bg, #fef2f2);
+  font-size: 13px;
+  color: var(--k-danger-fg, #b42318);
+}
+.ai-message-error > span { flex: 1; min-width: 160px; }
+.ai-message-error .ai-text-button { display: inline-flex; align-items: center; gap: 6px; color: var(--fg-default, #0a1628); background: var(--bg-card, #ffffff); }
+
+/* Bloques que llegan mientras se genera: entran suaves en lugar de aparecer de golpe. */
+.ai-message[data-streaming] .ai-message-content > :last-child { animation: ai-block-in calc(260ms * var(--k-motion, 1)) var(--ai-ease, ease) both; }
+@keyframes ai-block-in { from { opacity: 0; transform: translateY(4px); } }
+.ai-message-header .ai-thinking { padding: 0; font-size: 11px; }
+
+/* Herramientas: estado visible de un vistazo. */
+.ai-tool { transition: border-color var(--ai-dur-fast, 140ms) ease, box-shadow var(--ai-dur-fast, 140ms) ease; }
+.ai-tool[data-status='running'] { border-color: var(--ai-accent-line, rgb(13 148 136 / 0.38)); }
+.ai-tool[data-status='running'] .ai-disclosure strong { animation: ai-tool-pulse calc(1.4s / max(var(--k-motion, 1), 0.01)) ease-in-out infinite; }
+@keyframes ai-tool-pulse { 50% { opacity: 0.55; } }
+.ai-tool[data-status='approval-required'] {
+  border-color: color-mix(in srgb, var(--k-warning, #d97706) 45%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-warning, #d97706) 12%, transparent);
+}
+.ai-tool[data-status='approval-required'] > .ai-disclosure { background: color-mix(in srgb, var(--k-warning, #d97706) 7%, var(--bg-card, #ffffff)); }
+.ai-tool[data-status='error'] { border-color: color-mix(in srgb, var(--k-danger, #dc2626) 40%, transparent); }
+.ai-tool[data-status='denied'] .ai-disclosure strong, .ai-tool[data-status='cancelled'] .ai-disclosure strong { text-decoration: line-through; text-decoration-color: var(--fg-subtle, #657486); color: var(--fg-muted, #52606f); }
+.ai-tool-ask { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; font-weight: 500; color: var(--fg-default, #0a1628); }
+.ai-tool-ask > svg { flex: none; margin-top: 2px; color: var(--k-warning-fg, #b45309); }
+.ai-tool-body .ai-inline-actions .k-btn, .ai-tool-body .ai-inline-actions button { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Artefacto sin acción: misma tarjeta, sin aspecto de botón. */
+.ai-artifact-link[data-static] { cursor: default; }
+.ai-artifact-link[data-static]:hover { background: var(--bg-muted, #fafbfc); }
+
+/* Compositor: halo del acento al escribir y botón de enviar que se enciende cuando hay algo que mandar. */
+.ai-composer { transition: border-color var(--ai-dur-fast, 140ms) ease, box-shadow calc(200ms * var(--k-motion, 1)) ease; }
+.ai-composer:focus-within { border-color: var(--ai-accent-line, rgb(13 148 136 / 0.38)); box-shadow: 0 0 0 4px var(--ai-ring, rgb(13 148 136 / 0.18)); }
+.ai-submit:disabled { background: var(--bg-hover, #f1f5f9); color: var(--fg-subtle, #657486); }
+.ai-submit:not(:disabled) { box-shadow: 0 4px 12px -6px color-mix(in srgb, var(--ai-accent, #0d9488) 80%, transparent); }
+.ai-composer-dragging { outline-color: var(--ai-accent, #0d9488); background: color-mix(in srgb, var(--ai-accent, #0d9488) 5%, var(--bg-card, #ffffff)); }
+
+/* Cabecera del bloque de código en móvil: una sola fila. Con los 48 px generales, seis botones no cabían y la
+   cabecera se partía en dos con el título cortado. */
+@media (max-width: 767px) {
+  .ai-code-header { flex-wrap: wrap; row-gap: 2px; }
+  .ai-code-header .ai-inline-actions { flex-wrap: nowrap; gap: 0; margin-left: auto; }
+  .ai-surface .ai-code-header :is(.ai-icon-button, [role='button']) { min-width: 34px; min-height: 34px; width: 34px; height: 34px; }
+  .ai-surface .ai-code-header .ai-code-primary { min-height: 30px; }
+  .ai-code-actions { flex-wrap: nowrap; gap: 0; }
+  .ai-code-title { min-width: 48px; }
+}
+
+/* Barra del compositor en móvil: una sola fila (herramientas · modelo · micro · enviar). Con `flex-wrap` y los 48 px
+   generales se partía en tres y el botón de enviar acababa solo abajo a la izquierda. Si hay muchas herramientas, su
+   grupo se desliza en horizontal. */
+@media (max-width: 767px) {
+  .ai-composer .ai-composer-tools { flex-wrap: nowrap; gap: 4px; }
+  .ai-composer .ai-tools-group { flex-wrap: nowrap; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .ai-composer .ai-tools-group::-webkit-scrollbar { display: none; }
+  .ai-composer .ai-tools-group > * { flex: none; }
+  .ai-composer .ai-tools-spacer { flex: 1 1 0; min-width: 0; }
+  .ai-composer .ai-model-selector { flex: 0 1 auto; min-width: 0; max-width: 150px; }
+  .ai-surface .ai-composer :is(.ai-icon-button, .ai-attach, .ai-tool-chip, .ai-submit) { min-width: 40px; min-height: 40px; }
+  .ai-composer .ai-submit { flex: none; width: 40px; height: 40px; }
+  /* Nombre de la herramienta: una línea con puntos suspensivos, no partido a mitad de palabra. */
+  .ai-tool .ai-disclosure strong { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; overflow-wrap: normal; }
+}

@@ -119,7 +119,7 @@ export const Carousel: React.FC<CarouselProps> = ({
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
-      <div ref={viewport} className="k-carousel-viewport" tabIndex={0} onKeyDown={onKeyDown} onPointerDown={onPointerDown} onClickCapture={onClickCapture} aria-live={autoplay ? 'off' : 'polite'}>
+      <div ref={viewport} className="k-carousel-viewport" tabIndex={0} aria-label={`${label ?? 'Diapositivas'}: flechas para pasar`} onKeyDown={onKeyDown} onPointerDown={onPointerDown} onClickCapture={onClickCapture} aria-live={autoplay ? 'off' : 'polite'}>
         <div ref={track} className="k-carousel-track" style={{ gap }}>
           {slides.map((slide, i) => (
             <div

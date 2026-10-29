@@ -2,6 +2,7 @@ import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { Select } from './Select';
+import { pageItems } from './internal/tableFilters';
 
 export interface PaginationProps {
   /** Página actual, 1-based. */
@@ -65,10 +66,27 @@ export const Pagination: React.FC<PaginationProps> = ({
             disabled={page <= 1}
           >
             <UiIcon slot="chevron-left" className="h-3.5 w-3.5" />
-            Anterior
+            <span className="k-pages-label">Anterior</span>
           </button>
-          <span className="font-mono text-[11px] px-1 whitespace-nowrap">
-            {page} / {totalPages}
+          {/* Números de página con «…» en los saltos; siempre el mismo número de huecos para que no bailen. */}
+          <span className="k-pages" role="list">
+            {pageItems(page, totalPages).map((n, i) =>
+              n === null ? (
+                <span key={`gap-${i}`} role="listitem" className="k-pages-gap" aria-hidden="true">…</span>
+              ) : (
+                <span key={n} role="listitem">
+                  <button
+                    type="button"
+                    className="k-pages-btn"
+                    aria-label={`Página ${n}`}
+                    aria-current={n === page ? 'page' : undefined}
+                    onClick={() => n !== page && onPageChange(n)}
+                  >
+                    {n}
+                  </button>
+                </span>
+              ),
+            )}
           </span>
           <button
             type="button"
@@ -76,7 +94,7 @@ export const Pagination: React.FC<PaginationProps> = ({
             onClick={() => onPageChange(page + 1)}
             disabled={page >= totalPages}
           >
-            Siguiente
+            <span className="k-pages-label">Siguiente</span>
             <UiIcon slot="chevron-right" className="h-3.5 w-3.5" />
           </button>
         </div>

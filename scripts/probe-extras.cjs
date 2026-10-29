@@ -66,6 +66,9 @@ run(async ({ browser, check }) => {
   const tx = await page.locator('.k-carousel-track').evaluate((e) => new DOMMatrix(getComputedStyle(e).transform).m41);
   check('la pista se asienta exactamente en la diapositiva', Math.abs(tx + vb.width * 2 + 32) < 2, String(Math.round(tx)));
 
+  const punto = await page.locator('.k-carousel-dots button').nth(1).boundingBox();
+  check('cada punto del carrusel ofrece 24 px para pulsar', punto.width >= 24 && punto.height >= 24, `${Math.round(punto.width)}×${Math.round(punto.height)}`);
+
   console.log('\nLightbox');
   await open('lightbox--galeria');
   await page.getByRole('button', { name: /Ver Foto de demostración 2/ }).click();
@@ -147,6 +150,15 @@ run(async ({ browser, check }) => {
   check('la flecha izquierda rechaza', /Rechazado: Taxi aeropuerto/.test(await page.locator('ul').innerText()));
   await open('heatmap-calendar--basico');
   check('el mapa de calor pinta un año de días', (await page.locator('.k-heatmap-day[data-level]').count()) > 360);
+  const paradas = await page.locator('button.k-heatmap-day[tabindex="0"]').count();
+  check('con días pulsables hay una sola parada de tabulador', paradas === 1, String(paradas));
+  check('y los botones no quedan dentro de un role=img', (await page.locator('.k-heatmap-grid[role="group"]').count()) === 1);
+  await page.locator('button.k-heatmap-day[tabindex="0"]').focus();
+  const antesDia = await page.evaluate(() => document.activeElement.dataset.iso);
+  await page.keyboard.press('ArrowLeft'); await page.keyboard.press('ArrowUp');
+  const despuesDia = await page.evaluate(() => document.activeElement.dataset.iso);
+  const diff = (new Date(antesDia) - new Date(despuesDia)) / 86400000;
+  check('← una semana atrás y ↑ un día atrás', diff === 8, `${antesDia} → ${despuesDia}`);
   await open('bento-grid--basico');
   const big = await page.locator('.k-bento-item').first().boundingBox();
   const small = await page.locator('.k-bento-item').nth(1).boundingBox();

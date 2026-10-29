@@ -52,6 +52,7 @@ export * from './components/ScrollArea';
 export * from './components/VirtualList';
 export * from './components/TreeView';
 export * from './components/BottomSheet';
+export * from './components/SelectionBar';
 export * from './components/DateRangePicker';
 export * from './components/TimePicker';
 export * from './components/HeatmapCalendar';

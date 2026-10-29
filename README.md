@@ -258,6 +258,32 @@ Todos siguen el contrato de los demás controles: controlados (`value` + `onChan
   - `BentoGrid` y `BentoItem`: rejilla de bloques.
   - `SwipeCards`: tarjetas que se lanzan a izquierda o derecha para aprobar o descartar, también con botones y flechas.
 
+### Calendario, kanban y tablas
+
+- **`Calendar`:**
+  - **Vistas:** día, semana y mes. El número de un día abre su vista, y «+N más» en el mes abre ese día.
+  - **Eventos:** por defecto en estilo `soft`, con fondo tintado y barra de color, que se lee igual en claro y en oscuro. `eventStyle="solid"` vuelve al relleno entero.
+  - **Solapes:** los eventos que coinciden se reparten en columnas.
+  - **Todo el día:** los eventos de varios días son una sola barra.
+  - **Ahora:** una línea marca la hora actual a lo largo de la semana.
+  - **Crear arrastrando:** arrastrar en un hueco crea un rango con `onSlotSelect`. El botón «Nuevo evento» de la barra hace lo mismo sin arrastrar: una hora en el día que se ve.
+  - **Teclado:** las flechas mueven el bloque enfocado y Mayús + ↑/↓ cambia su duración. Avisa por `onEventChange` y se anuncia a los lectores de pantalla.
+- **`Kanban`:**
+  - **Tarjetas:** etiquetas de color, vencimiento coloreado por urgencia, responsables apilados, progreso de subtareas, comentarios, adjuntos y portada.
+  - **Columnas:** límite WIP con barra (ámbar al llegar, rojo al pasarse), plegables, con acciones en la cabecera y «Añadir tarjeta» (`onCardAdd`).
+  - **Arrastre:** la tarjeta flota y se inclina con la velocidad, se abre su hueco y el tablero se desplaza solo cerca del borde.
+  - **Teclado:** Espacio coge la tarjeta, las flechas eligen destino, Espacio la suelta y Escape cancela.
+  - **Carriles (`lanes`):** cada tarjeta va al de su `lane`, y `onCardMove` recibe `to.laneId`.
+- **`Table`:**
+  - **Búsqueda y filtros:** buscador (`searchable`) que ignora acentos. Filtros por columna (`filter`: `text`, `select`, `range` o `date-range`) con chips de los activos. En móvil, los filtros van en la barra.
+  - **Densidad:** selector con `densityToggle`.
+  - **Acciones en lote:** `bulkActions` muestra una barra flotante con el recuento y «Seleccionar las N».
+  - **Columnas fijas:** `pin: 'left' | 'right'`, con sombra solo cuando hay contenido debajo.
+  - **Totales:** `aggregate` (`sum`, `avg`, `min`, `max`, `count` o una función) calcula el pie sobre todas las filas filtradas.
+  - **Paginación:** con números de página.
+- **`DropdownMenu` con `aria-label`:** cuando el disparador es solo un icono, para no meter un `<button>` dentro de otro.
+- **Popovers anidados:** un popover abierto desde dentro de otro (el selector de fechas en un filtro) no cierra al de fuera.
+
 ### Cómo elegir el color de un texto
 
 La escala `--k-ink-*` es una **paleta fija**: sirve igual para texto que para

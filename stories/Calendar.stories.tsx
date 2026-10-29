@@ -36,6 +36,35 @@ const SEMANA: CalendarEvent[] = [
     end: '2026-07-24T14:00:00',
     status: 'bloqueada',
   },
+  // Tres que coinciden el jueves: se reparten en columnas en vez de taparse.
+  {
+    id: 'llamada',
+    title: 'Llamada al proveedor',
+    start: '2026-07-23T16:00:00',
+    end: '2026-07-23T17:00:00',
+    status: 'en-curso',
+  },
+  {
+    id: 'equipo',
+    title: 'Reunión de equipo',
+    start: '2026-07-23T17:00:00',
+    end: '2026-07-23T17:30:00',
+    status: 'hecha',
+  },
+  {
+    id: 'cafe',
+    title: 'Café',
+    start: '2026-07-22T10:30:00',
+    end: '2026-07-22T10:50:00',
+  },
+  {
+    id: 'obra',
+    title: 'Obra calle Mayor',
+    start: '2026-07-20T00:00:00',
+    end: '2026-07-22T23:59:00',
+    allDay: true,
+    status: 'en-curso',
+  },
   {
     id: 'festivo',
     title: 'Cierre por inventario',
@@ -82,8 +111,10 @@ export const Arrastrable: Story = () => {
     <div className="space-y-3">
       <p className="text-[13px] text-[var(--fg-muted,#52606f)]">
         Arrastra un bloque para moverlo, su borde inferior para alargarlo, o una tarjeta de «sin
-        programar» al calendario. Se avisa una sola vez, al soltar. Último cambio:{' '}
-        <strong className="text-accent">{ultimo}</strong>
+        programar» al calendario. Arrastra en un hueco vacío para crear un evento con su duración. Con un bloque
+        enfocado, las flechas lo mueven y Mayús + ↑/↓ cambia su duración. Se avisa una sola vez, al soltar. Último
+        cambio:{' '}
+        <strong className="text-[var(--fg-default,#0a1628)]">{ultimo}</strong>
       </p>
       <Calendar
         events={eventos}
@@ -102,10 +133,37 @@ export const Arrastrable: Story = () => {
           setCola((prev) => prev.filter((c) => c.id !== e.id));
           setEventos((prev) => [...prev, { ...e, start, end: fin, status: 'pendiente' }]);
         }}
-        onSlotClick={(d) => setUltimo(`Hueco libre: ${fmt(d)}`)}
+        onSlotSelect={({ start, end }) => {
+          setUltimo(`Nuevo: ${fmt(start)} → ${fmt(end)}`);
+          setEventos((prev) => [...prev, { id: `nuevo-${prev.length}`, title: 'Nuevo evento', start, end, status: 'en-curso' }]);
+        }}
       />
     </div>
   );
 };
 
 export const Vacio: Story = () => <Calendar events={[]} today={HOY} date={HOY} unscheduled={[]} />;
+
+export const Dia: Story = () => (
+  <Calendar events={SEMANA} today={HOY} date={HOY} view="day" onViewChange={() => {}} hourStart={7} hourEnd={20} />
+);
+
+/** Relleno de color entero, como antes: útil cuando el color es la información principal. */
+export const Relleno: Story = () => (
+  <Calendar events={SEMANA} today={HOY} date={HOY} eventStyle="solid" />
+);
+
+export const ColoresPropios: Story = () => (
+  <Calendar
+    today={HOY}
+    date={HOY}
+    hourStart={8}
+    hourEnd={14}
+    events={[
+      { id: 'p1', title: 'Diseño', start: '2026-07-20T09:00:00', end: '2026-07-20T11:00:00', color: '#7c3aed' },
+      { id: 'p2', title: 'Ventas', start: '2026-07-21T10:00:00', end: '2026-07-21T12:30:00', color: '#db2777' },
+      { id: 'p3', title: 'Soporte', start: '2026-07-22T08:30:00', end: '2026-07-22T09:30:00', color: '#ea580c' },
+      { id: 'p4', title: 'Contabilidad', start: '2026-07-24T11:00:00', end: '2026-07-24T13:00:00', color: '#2563eb' },
+    ]}
+  />
+);

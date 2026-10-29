@@ -36,7 +36,7 @@ export const Contadores: Story = () => {
 };
 
 export const Formatos: Story = () => (
-  <dl className="grid max-w-xl grid-cols-[10rem_1fr] gap-y-3 text-[14px]">
+  <dl className="grid max-w-xl grid-cols-[minmax(6rem,10rem)_minmax(0,1fr)] gap-x-3 gap-y-3 text-[14px]">
     <dt>Importe</dt><dd className="m-0"><Currency value={1234567.891} /></dd>
     <dt>Compacto</dt><dd className="m-0"><Currency value={1234567} compact /></dd>
     <dt>Con signo</dt><dd className="m-0"><Currency value={-420.5} signed /> · <Currency value={1890} signed /></dd>
@@ -44,9 +44,9 @@ export const Formatos: Story = () => (
     <dt>Variación</dt><dd className="m-0"><Delta value={0.125} /> · <Delta value={-0.034} /> · <Delta value={0.2} invert /></dd>
     <dt>Fecha relativa</dt><dd className="m-0"><RelativeTime date={Date.now() - 3 * 3600_000} /> · <RelativeTime date={Date.now() + 2 * 86400_000} /> · <RelativeTime date={Date.now() - 20_000} /></dd>
     <dt>Tamaño</dt><dd className="m-0"><FileSize bytes={512} /> · <FileSize bytes={1536} /> · <FileSize bytes={4_823_000} /> · <FileSize bytes={7.2e9} /></dd>
-    <dt>Truncado</dt><dd className="m-0 w-56"><Truncate>Descripción muy larga de una línea de factura que no cabe</Truncate></dd>
-    <dt>Nombre de archivo</dt><dd className="m-0 w-56"><Truncate middle keep={12}>informe-trimestral-de-ventas-2026-v3-final.pdf</Truncate></dd>
-    <dt>Dos líneas</dt><dd className="m-0 w-56"><Truncate lines={2}>{LOREM}</Truncate></dd>
+    <dt>Truncado</dt><dd className="m-0 w-56 max-w-full"><Truncate>Descripción muy larga de una línea de factura que no cabe</Truncate></dd>
+    <dt>Nombre de archivo</dt><dd className="m-0 w-56 max-w-full"><Truncate middle keep={12}>informe-trimestral-de-ventas-2026-v3-final.pdf</Truncate></dd>
+    <dt>Dos líneas</dt><dd className="m-0 w-56 max-w-full"><Truncate lines={2}>{LOREM}</Truncate></dd>
   </dl>
 );
 

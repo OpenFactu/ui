@@ -17,6 +17,7 @@ const definition = {
   submitting: 'Enviando…', streaming: 'Escribiendo…', waiting: 'Esperando una acción', cancelled: 'Respuesta detenida',
   error: 'Ha ocurrido un error', sources: 'Fuentes', activity: 'Actividad del agente', toolInput: 'Entrada', toolOutput: 'Resultado',
   pending: 'Pendiente', running: 'En ejecución', approval: 'Requiere aprobación', completed: 'Completado', denied: 'Rechazado',
+  approvalPrompt: 'El asistente quiere usar esta herramienta. ¿Le das permiso?', messageFailed: 'No se ha podido completar la respuesta.',
   approve: 'Aprobar', reject: 'Rechazar', openResult: 'Abrir resultado', results: 'Resultados', code: 'Código', preview: 'Vista previa',
   expandCode: 'Ver código completo', collapseCode: 'Contraer código',
   apply: 'Aplicar', applied: 'Aplicado', run: 'Ejecutar', runAgain: 'Volver a ejecutar', runningCode: 'Ejecutando…', output: 'Salida', clearOutput: 'Borrar salida', runError: 'No se pudo ejecutar el código.',

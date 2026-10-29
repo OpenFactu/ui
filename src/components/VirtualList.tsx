@@ -1,7 +1,7 @@
 import { useElementSize } from '../hooks/useResizeObserver';
 import * as React from 'react';
 import { cn } from '../utils';
-import { buildOffsets, computeRange, scrollOffsetFor } from './internal/virtual';
+import { buildOffsets, computeRange, indexAt, scrollOffsetFor } from './internal/virtual';
 
 export interface VirtualListHandle {
   scrollToIndex: (index: number, align?: 'start' | 'center' | 'end' | 'auto') => void;
@@ -62,11 +62,15 @@ function VirtualListInner<T>(
   // Medir las filas pintadas: un único cambio de estado por fotograma con todas las alturas nuevas.
   const pending = React.useRef(new Map<React.Key, number>());
   const frame = React.useRef(0);
-  const observer = React.useMemo(() => (typeof ResizeObserver === 'undefined' || !shouldMeasure ? null : new ResizeObserver((entries) => {
+  const observer = React.useMemo(() => (typeof ResizeObserver === 'undefined' || !shouldMeasure ? null : new ResizeObserver((entries, self) => {
     for (const entry of entries) {
-      const key = (entry.target as HTMLElement).dataset.vkey;
-      if (key === undefined) continue;
-      const h = Math.round((entry.target as HTMLElement).offsetHeight);
+      const el = entry.target as HTMLElement;
+      const key = el.dataset.vkey;
+      // Una fila que sale de la vista se desmonta y el observador aún la «mide» con 0 px: guardar ese 0 encogía la
+      // lista y la hacía retroceder al bajar. Tampoco vale un 0 de una lista oculta (pestaña, `display: none`).
+      if (!el.isConnected) { self.unobserve(el); continue; }
+      const h = Math.round(el.offsetHeight);
+      if (key === undefined || h === 0) continue;
       pending.current.set(isNaN(Number(key)) ? key : Number(key), h);
     }
     cancelAnimationFrame(frame.current);
@@ -80,6 +84,29 @@ function VirtualListInner<T>(
     });
   })), [shouldMeasure]);
   React.useEffect(() => () => { observer?.disconnect(); cancelAnimationFrame(frame.current); }, [observer]);
+  // Estable para que React solo la llame al montar y desmontar cada fila (no en cada render).
+  const observeRow = React.useCallback((el: HTMLDivElement | null) => {
+    if (!el || !observer) return;
+    observer.observe(el);
+    return () => observer.unobserve(el);
+  }, [observer]);
+
+  // Ancla del scroll: la fila de arriba y cuánto de ella queda por encima. Cuando una medición cambia la altura de
+  // filas anteriores (al saltar con `scrollToIndex` o arrastrando la barra), se recoloca el scroll para que lo que se
+  // ve no se mueva. Las filas van con `transform`, así que el anclaje nativo del navegador no actúa.
+  const anchor = React.useRef({ index: 0, delta: 0 });
+  const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const top = e.currentTarget.scrollTop;
+    const index = indexAt(offsets, items.length, top);
+    anchor.current = { index, delta: top - offsets[index] };
+    setScrollTop(top);
+  };
+  React.useLayoutEffect(() => {
+    const el = scroller.current; const { index, delta } = anchor.current;
+    if (!el || !shouldMeasure || index >= items.length) return;
+    const target = offsets[index] + delta;
+    if (Math.abs(target - el.scrollTop) >= 1) el.scrollTop = target;
+  }, [offsets, shouldMeasure, items.length]);
 
   // Aviso de final: una vez por cada crecimiento de la lista.
   const warnedAt = React.useRef(-1);
@@ -110,7 +137,7 @@ function VirtualListInner<T>(
       data-k-mobile="VirtualList"
       className={cn('k-virtual', className)}
       style={{ height: height ?? '100%' }}
-      onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
+      onScroll={onScroll}
       tabIndex={0}
     >
       {items.length === 0 ? empty : (
@@ -126,7 +153,7 @@ function VirtualListInner<T>(
                 data-vkey={String(key)}
                 className="k-virtual-row"
                 style={{ transform: `translateY(${offsets[index]}px)`, height: shouldMeasure ? undefined : offsets[index + 1] - offsets[index] }}
-                ref={(el) => { if (el && observer) observer.observe(el); }}
+                ref={observeRow}
               >
                 {renderItem(item, index)}
               </div>

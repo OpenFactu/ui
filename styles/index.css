@@ -17,6 +17,9 @@
 @import './controls.css';
 @import './layout.css';
 @import './extras.css';
+@import './calendar.css';
+@import './kanban.css';
+@import './table.css';
 @import './code-editor.css';
 @import './ai.css';
 @import './ai-elements.css';

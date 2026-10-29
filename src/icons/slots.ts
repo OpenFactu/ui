@@ -14,7 +14,7 @@ export const ICON_SLOTS = [
   'panel-right', 'panel-right-open', 'paperclip', 'pause', 'pencil', 'pin', 'play', 'plus', 'redo-2', 'refresh-cw', 'rotate-ccw', 'search', 'sliders-horizontal',
   'sparkles', 'square', 'square-terminal', 'thumbs-down', 'thumbs-up', 'trash-2', 'triangle-alert', 'alert-triangle', 'alert-circle',
   'bell', 'clock-3', 'file-text', 'mail', 'menu', 'minus', 'panel-left-close', 'panel-left-open', 'save',
-  'star', 'grip-vertical',
+  'star', 'grip-vertical', 'filter',
   'undo-2', 'upload', 'volume-2', 'wand-2', 'wrench', 'x', 'x-circle',
 ] as const;
 export type IconSlot = (typeof ICON_SLOTS)[number];

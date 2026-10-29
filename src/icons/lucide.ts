@@ -1,5 +1,5 @@
 import {
-  SlidersHorizontal, Smile,
+  SlidersHorizontal, Smile, ListFilter,
   FileSpreadsheet, FileImage, FileAudio, FileVideo, FileArchive,
   Bell, Clock3, FileText, Mail, Menu, Minus, PanelLeftClose, PanelLeftOpen, Save, AlertCircle, AlertTriangle, ArrowDown, ArrowUp, ArrowUpRight, BookOpen, Bookmark, Brain, Calendar, Check, CheckCircle, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleX, Clock, Code2, Columns3, Copy, CornerDownLeft, Download, Eye, EyeOff, File, FileCode2, FileDiff, FlaskConical, Folder, FolderOpen, Gauge, Info, Layers, Link2, ListChecks, ListTodo, Loader2, MessageSquare, Mic, MoreHorizontal, PanelLeft, PanelRight, PanelRightOpen, Paperclip, Pause, Pencil, Pin, Play, Plus, Redo2, RefreshCw, RotateCcw, Search, Sparkles, Square, SquareTerminal, ThumbsDown, ThumbsUp, Trash2, TriangleAlert, Undo2, Star, GripVertical, Upload, Volume2, Wand2, Wrench, X, XCircle,
 } from 'lucide-react';
@@ -17,7 +17,7 @@ import type { IconSlot } from './slots';
 export const LUCIDE_COMPONENTS: Record<string, IconComponent> = {
   AlertCircle, AlertTriangle, ArrowDown, ArrowUp, ArrowUpRight, BookOpen, Bookmark, Brain, Calendar, Check, CheckCircle, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleX, Clock, Code2, Columns3, Copy, CornerDownLeft, Download, Eye, EyeOff, File, FileCode2, FileDiff, FlaskConical, Folder, FolderOpen, Gauge, Info, Layers, Link2, ListChecks, ListTodo, Loader2, MessageSquare, Mic, MoreHorizontal, PanelLeft, PanelRight, PanelRightOpen, Paperclip, Pause, Pencil, Pin, Play, Plus, Redo2, RefreshCw, RotateCcw, Search, Sparkles, Square, SquareTerminal, ThumbsDown, ThumbsUp, Trash2, TriangleAlert, Undo2, Star, GripVertical, Upload, Volume2, Wand2, Wrench, X, XCircle,
   Bell, Clock3, FileText, Mail, Menu, Minus, PanelLeftClose, PanelLeftOpen, Save,
-  Smile, SlidersHorizontal, FileSpreadsheet, FileImage, FileAudio, FileVideo, FileArchive,
+  Smile, SlidersHorizontal, ListFilter, FileSpreadsheet, FileImage, FileAudio, FileVideo, FileArchive,
 };
 
 /** Con qué rellena Lucide cada hueco de la interfaz. */
@@ -57,6 +57,7 @@ export const LUCIDE_SLOTS: Record<IconSlot, string> = {
   'circle': 'Circle',
   'circle-x': 'CircleX',
   'clock': 'Clock',
+  filter: 'ListFilter',
   'code-2': 'Code2',
   'columns-3': 'Columns3',
   'copy': 'Copy',

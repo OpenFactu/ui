@@ -244,11 +244,110 @@ export const ColumnasAvanzadas: Story = () => (
   </div>
 );
 
+/** Factura con fecha, para los filtros de rango. */
+interface Factura extends Invoice {
+  date: string;
+  dueDays: number;
+}
+const FACTURAS: Factura[] = BIG_DATA.map((f, i) => ({
+  ...f,
+  date: `2026-${String((i % 7) + 1).padStart(2, '0')}-${String((i % 27) + 1).padStart(2, '0')}`,
+  dueDays: (i * 7) % 90,
+}));
+const euros = (n: number) => `${n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+
+const FILTRABLES: TableColumn<Factura>[] = [
+  { header: 'Número', accessor: 'number', primary: true, sortable: true, filter: { type: 'text', placeholder: 'FAC/2026/…' }, aggregate: 'count', aggregateFormat: (n) => `${n} facturas` },
+  { header: 'Cliente', accessor: 'partner', sortable: true, filter: { type: 'select', options: ['Acme S.L.', 'Globex', 'Initech', 'Umbrella', 'Stark Industries'].map((p) => ({ value: p, label: p })) } },
+  { header: 'Fecha', accessor: 'date', sortable: true, filter: { type: 'date-range' } },
+  {
+    header: 'Estado',
+    id: 'estado',
+    cell: (item) => STATUS_BADGE[item.status],
+    filterAccessor: (item) => item.status,
+    align: 'center',
+    filter: { type: 'select', options: [{ value: 'draft', label: 'Borrador' }, { value: 'posted', label: 'Contabilizada' }, { value: 'paid', label: 'Pagada' }] },
+  },
+  {
+    header: 'Total',
+    accessor: (item) => euros(item.total),
+    sortAccessor: (item) => item.total,
+    align: 'right',
+    sortable: true,
+    filter: { type: 'range', min: 0, unit: '€' },
+    aggregate: 'sum',
+    aggregateFormat: euros,
+  },
+];
+
+/** Buscador, filtros por columna (texto, opciones, fechas e importes), chips de filtros activos y totales al pie. */
+export const FiltrosYBusqueda: Story = () => (
+  <Table
+    columns={FILTRABLES}
+    data={FACTURAS}
+    searchable={{ placeholder: 'Buscar factura, cliente…' }}
+    defaultFilters={{ estado: ['paid', 'posted'] }}
+    densityToggle
+    pagination={{ pageSize: 10 }}
+  />
+);
+
+/** Al seleccionar aparece una barra flotante con el recuento y las acciones; «Seleccionar las N» toma todas las filtradas. */
+export const AccionesEnLote: Story = () => {
+  const [datos, setDatos] = React.useState(FACTURAS);
+  const [seleccion, setSeleccion] = React.useState<Set<string | number>>(new Set());
+  const [aviso, setAviso] = React.useState('—');
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-[13px] text-[var(--fg-muted,#52606f)]">Última acción: <strong>{aviso}</strong></p>
+      <Table
+        columns={FILTRABLES}
+        data={datos}
+        selectable
+        selectedKeys={seleccion}
+        onSelectionChange={setSeleccion}
+        pagination={{ pageSize: 10 }}
+        searchable
+        bulkActions={(rows) => [
+          { label: 'Exportar', onClick: () => setAviso(`exportadas ${rows.length}`) },
+          { label: 'Marcar pagadas', onClick: () => { setDatos((d) => d.map((f) => (seleccion.has(f.id) ? { ...f, status: 'paid' } : f))); setAviso(`${rows.length} pagadas`); }, disabled: rows.every((r) => r.status === 'paid') },
+          { label: 'Eliminar', destructive: true, onClick: () => { setDatos((d) => d.filter((f) => !seleccion.has(f.id))); setSeleccion(new Set()); setAviso(`eliminadas ${rows.length}`); } },
+        ]}
+      />
+    </div>
+  );
+};
+
+/** Columnas fijas a izquierda y derecha: al desplazar en horizontal, la sombra marca lo que pasa por debajo. */
+export const ColumnasFijasYTotales: Story = () => (
+  <div className="max-w-[760px]">
+    <Table
+      columns={[
+        { ...FILTRABLES[0], pin: 'left' },
+        { ...FILTRABLES[1], className: 'whitespace-nowrap' },
+        { ...FILTRABLES[2], className: 'whitespace-nowrap' },
+        FILTRABLES[3],
+        { header: 'Vence en', accessor: (f) => `${f.dueDays} días`, sortAccessor: (f) => f.dueDays, align: 'right', aggregate: 'avg', aggregateFormat: (n) => `media ${Math.round(n)} días` },
+        { header: 'Base', accessor: (f) => euros(f.total / 1.21), sortAccessor: (f) => f.total / 1.21, align: 'right', aggregate: 'sum', aggregateFormat: euros, filterAccessor: (f) => f.total / 1.21 },
+        { header: 'IVA', accessor: (f) => euros(f.total - f.total / 1.21), align: 'right', aggregate: 'sum', aggregateFormat: euros, filterAccessor: (f) => f.total - f.total / 1.21 },
+        { ...FILTRABLES[4], pin: 'right' },
+      ]}
+      data={FACTURAS.slice(0, 40)}
+      selectable
+      maxHeight={420}
+      rowActions={(f) => [{ label: 'Abrir', onClick: () => console.log(f.number) }, { label: 'Anular', destructive: true, onClick: () => {} }]}
+    />
+  </div>
+);
+
 export const TodoJunto: Story = () => (
   <Table
     columns={columns}
     data={BIG_DATA}
     selectable
+    searchable
+    densityToggle
+    bulkActions={(rows) => [{ label: 'Exportar', onClick: () => console.log('exportar', rows.length) }]}
     pagination={{ pageSize: 10 }}
     renderExpanded={(item) => (
       <p className="text-[12px]">

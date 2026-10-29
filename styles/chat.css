@@ -34,6 +34,10 @@
 .k-chat-header-copy h2 { margin: 0 0 3px; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
 .k-chat-header-copy p { margin: 0; font-size: 11px; color: var(--fg-muted); overflow-wrap: anywhere; }
 .k-chat-header-actions { display: flex; gap: 8px; }
+/* El título nunca se queda en una columna de una letra: con poco sitio, las acciones bajan a otra fila. */
+.k-chat-header { flex-wrap: wrap; }
+.k-chat-header-copy { min-width: 120px; }
+.k-chat-header-copy h2, .k-chat-header-copy p { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; overflow-wrap: normal; }
 .k-chat-icon-button { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; min-width: 36px; min-height: 36px; border: 0; border-radius: var(--k-radius-xs); color: var(--fg-muted); background: transparent; cursor: pointer; }
 .k-chat-icon-button:hover { color: var(--fg-default); background: var(--bg-muted); }
 .k-chat-back { display: none; }

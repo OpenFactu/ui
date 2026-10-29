@@ -8,9 +8,11 @@ import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import {
   DIAS_SEMANA,
+  DIA_MS,
   MESES_LARGOS,
   aFecha,
   aInstante,
+  capitalizar,
   conHoraDe,
   esFinde,
   hhmm,
@@ -21,8 +23,9 @@ import {
   sumarDias,
   sumarMinutos,
 } from '../internal/fechas';
+import { layoutLanes, layoutOverlaps, nudgeEvent, rangeFromDrag } from './internal/schedule';
 
-export type CalendarView = 'week' | 'month';
+export type CalendarView = 'day' | 'week' | 'month';
 
 /** Estado del evento. Decide el color del bloque si no se indica otro. */
 export type CalendarStatus = 'pendiente' | 'en-curso' | 'hecha' | 'bloqueada';
@@ -37,7 +40,7 @@ export interface CalendarEvent {
   status?: CalendarStatus;
   /** Color propio; manda sobre el del estado. */
   color?: string;
-  /** Texto sobre `color`. Solo hace falta con un color propio. */
+  /** Texto sobre `color` en el estilo `solid`. En `soft` el texto es siempre el del tema. */
   textColor?: string;
   /** Ni se mueve ni se redimensiona. */
   locked?: boolean;
@@ -51,12 +54,18 @@ export interface CalendarChange {
 }
 
 export interface CalendarProps {
-  /** En móvil, agenda legible por defecto; calendar conserva la rejilla original. */
+  /**
+   * En móvil: `calendar` (por defecto) adapta las vistas a la pantalla — día con su rejilla horaria, semana como tira
+   * de días más la rejilla del día elegido, y mes con puntos y la lista del día elegido debajo —; `agenda` las
+   * sustituye por una lista de eventos por día.
+   */
   mobileView?: 'agenda' | 'calendar';
   events: CalendarEvent[];
   view?: CalendarView;
   onViewChange?: (v: CalendarView) => void;
-  /** Día de referencia: define la semana o el mes que se ve. */
+  /** Vistas que ofrece el selector. Default día, semana y mes. */
+  views?: readonly CalendarView[];
+  /** Día de referencia: define el día, la semana o el mes que se ve. */
   date?: Date | string;
   onDateChange?: (d: Date) => void;
   /** Barra con «‹ Hoy ›» y el selector de vista. Default true. */
@@ -64,15 +73,22 @@ export interface CalendarProps {
   /** Primera y última hora de la rejilla. Default 6 y 22. */
   hourStart?: number;
   hourEnd?: number;
-  /** Alto en píxeles de cada hora. Default 36. */
+  /** Alto en píxeles de cada hora. Default 44. */
   hourHeight?: number;
+  /**
+   * `soft` (por defecto): fondo tintado con una barra del color a la izquierda; el texto es el del tema y se lee
+   * igual en claro y en oscuro. `solid`: relleno de color entero.
+   */
+  eventStyle?: 'soft' | 'solid';
   /** Qué día se considera hoy. Fijable para que las pruebas no dependan del reloj. */
   today?: Date | string;
-  /** Arrastrar para mover o cambiar duración. Sin esto es solo lectura. */
+  /** Arrastrar (o flechas con el bloque enfocado) para mover o cambiar duración. Sin esto es solo lectura. */
   onEventChange?: (e: CalendarEvent, c: CalendarChange) => void;
   onEventClick?: (e: CalendarEvent) => void;
   /** Pulsar un hueco vacío: crear rápido. */
   onSlotClick?: (start: Date) => void;
+  /** Arrastrar en un hueco vacío selecciona un rango (ajustado a media hora): crear con su duración. */
+  onSlotSelect?: (range: CalendarChange) => void;
   /** Tarjetas sin fecha; arrastrarlas al calendario las programa. */
   unscheduled?: CalendarEvent[];
   onSchedule?: (e: CalendarEvent, start: Date) => void;
@@ -85,30 +101,31 @@ export interface CalendarProps {
 }
 
 /**
- * Color del bloque y el texto que se lee encima. El segundo no es siempre
- * blanco: sobre el verde de «hecha» el blanco no llega al mínimo legible, y
- * para eso están los tokens `--k-*-on`.
+ * Color del estado y texto sobre el relleno (estilo `solid`). En `soft` el texto es el del tema, así que el
+ * contraste no depende del color. `--k-ink-500` y no `--fg-subtle` para «pendiente»: el segundo se invierte con el
+ * modo y en oscuro dejaba el texto blanco en 2.89:1.
  */
 const COLOR_ESTADO: Record<CalendarStatus, { bg: string; fg: string }> = {
-  // `--k-ink-500` y no `--fg-subtle`: el segundo se invierte con el modo, y en
-  // oscuro se volvía un gris claro que dejaba el texto blanco en 2.89:1. La
-  // escala de tinta es fija, así que aguanta en los dos modos (4.57:1).
   pendiente: { bg: 'var(--k-ink-500, #64748b)', fg: '#ffffff' },
-  'en-curso': { bg: 'rgb(var(--color-accent-rgb))', fg: 'var(--k-accent-on)' },
-  hecha: { bg: 'var(--k-success)', fg: 'var(--k-success-on)' },
-  bloqueada: { bg: 'var(--k-danger)', fg: 'var(--k-danger-on)' },
+  'en-curso': { bg: 'rgb(var(--color-accent-rgb, 13 148 136))', fg: 'var(--k-accent-on, #0f172a)' },
+  hecha: { bg: 'var(--k-success, #16a34a)', fg: 'var(--k-success-on, #0f172a)' },
+  bloqueada: { bg: 'var(--k-danger, #dc2626)', fg: 'var(--k-danger-on, #ffffff)' },
 };
 
-const colorDe = (e: CalendarEvent) => {
+const tonoDe = (e: CalendarEvent): React.CSSProperties => {
   const tono = COLOR_ESTADO[e.status ?? 'pendiente'];
   return {
-    bg: e.color ?? tono.bg,
-    fg: e.textColor ?? (e.color ? '#ffffff' : tono.fg),
-  };
+    '--k-ev': e.color ?? tono.bg,
+    '--k-ev-on': e.textColor ?? (e.color ? '#ffffff' : tono.fg),
+  } as React.CSSProperties;
 };
 
 /** Minutos a los que se ajusta un arrastre. Media hora es lo que se agenda. */
 const PASO_MIN = 30;
+/** Duración mínima con la que se pinta un evento (uno de 0 minutos sería invisible). */
+const MIN_VISIBLE = 20;
+/** Por debajo de este alto el bloque pasa a una sola línea. */
+const ALTO_COMPACTO = 42;
 
 interface Normalizado extends CalendarEvent {
   _inicio: Date;
@@ -133,21 +150,27 @@ type Arrastre = {
   desdeCola?: boolean;
 };
 
+/** Selección de un rango arrastrando en un hueco: minutos desde el inicio de la rejilla. */
+type Seleccion = { dia: number; a: number; b: number; top: number; movida: boolean };
+
+const soloDia = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+const NOMBRES_VISTA: Record<CalendarView, string> = { day: 'Día', week: 'Semana', month: 'Mes' };
+
 /**
- * Calendario de semana y de mes.
+ * Calendario de día, semana y mes.
  *
- * La vista de semana coloca los eventos por su hora sobre una rejilla horaria;
- * la de mes los apila dentro de la casilla del día. Arrastrando un bloque se
- * mueve de día y de hora, y por su borde inferior cambia de duración: durante
- * el gesto solo se mueve la vista, y al soltar se avisa **una vez** con las
- * fechas nuevas — así quien lo usa decide si guarda, y no hay una petición por
- * píxel arrastrado.
+ * Las vistas de día y semana colocan los eventos por su hora sobre una rejilla horaria (los que coinciden se
+ * reparten en columnas); la de mes los apila dentro de la casilla del día. Arrastrando un bloque se mueve de día y
+ * de hora, y por su borde inferior cambia de duración: durante el gesto solo se mueve la vista, y al soltar se avisa
+ * **una vez** con las fechas nuevas — así quien lo usa decide si guarda, y no hay una petición por píxel
+ * arrastrado. Con el bloque enfocado, las flechas lo mueven y Mayús + ↑/↓ cambia su duración.
  *
  * ```tsx
  * <Calendar
  *   events={tareas}
  *   unscheduled={sinFecha}
  *   onEventChange={(e, { start, end }) => guardar(e.id, start, end)}
+ *   onSlotSelect={({ start, end }) => crear(start, end)}
  *   onSchedule={(e, start) => programar(e.id, start)}
  * />
  * ```
@@ -156,16 +179,19 @@ export const Calendar: React.FC<CalendarProps> = ({
   events,
   view: viewProp,
   onViewChange,
+  views = ['day', 'week', 'month'],
   date: dateProp,
   onDateChange,
   toolbar = true,
   hourStart = 6,
   hourEnd = 22,
-  hourHeight = 36,
+  hourHeight = 44,
+  eventStyle = 'soft',
   today: todayProp,
   onEventChange,
   onEventClick,
   onSlotClick,
+  onSlotSelect,
   unscheduled,
   onSchedule,
   unscheduledLabel = 'Sin programar',
@@ -173,16 +199,18 @@ export const Calendar: React.FC<CalendarProps> = ({
   emptyMessage = 'No hay nada en estas fechas.',
   className,
   'aria-label': ariaLabel = 'Calendario',
-  mobileView = 'agenda',
+  mobileView = 'calendar',
 }) => {
   const mobile = useIsMobile();
+  /** Móvil con rejilla: la semana se ve día a día y el mes con puntos. */
+  const compacto = mobile && mobileView !== 'agenda';
   const hoy = React.useMemo(() => aFecha(todayProp ?? new Date()), [todayProp]);
 
   // Vista y fecha admiten ser controladas o no: la mayoría de pantallas solo
   // quieren un calendario que funcione sin cablear dos estados.
   const [viewInterna, setViewInterna] = React.useState<CalendarView>(viewProp ?? 'week');
-  const view = viewProp !== undefined && onViewChange !== undefined ? viewProp : viewInterna;
   const viewControlada = viewProp !== undefined && onViewChange !== undefined;
+  const view = viewControlada ? viewProp : viewInterna;
   const cambiarView = (v: CalendarView) => {
     if (!viewControlada) setViewInterna(v);
     onViewChange?.(v);
@@ -200,9 +228,37 @@ export const Calendar: React.FC<CalendarProps> = ({
   };
 
   const [arrastre, setArrastre] = React.useState<Arrastre | null>(null);
+  const [seleccion, setSeleccion] = React.useState<Seleccion | null>(null);
   const [scheduling, setScheduling] = React.useState<CalendarEvent | null>(null);
   const [scheduleDate, setScheduleDate] = React.useState<string | null>(null);
+  const [anuncio, setAnuncio] = React.useState('');
   const rejillaRef = React.useRef<HTMLDivElement>(null);
+  // Tras un arrastre de verdad el clic que llega al soltar no debe abrir el evento.
+  const huboArrastre = React.useRef(false);
+  // Un cambio con teclado puede llevar el bloque a otra columna (otro padre): se le devuelve el foco.
+  const focoPendiente = React.useRef<string | null>(null);
+
+  // La línea de «ahora» avanza sola, una vez por minuto.
+  const [reloj, setReloj] = React.useState(() => new Date());
+  React.useEffect(() => {
+    const t = setInterval(() => setReloj(new Date()), 60000);
+    return () => clearInterval(t);
+  }, []);
+  const ahora = todayProp ? conHoraDe(hoy, reloj) : reloj;
+
+  // Navegación con flechas por el mes en móvil: al cambiar de día, el foco va a su casilla.
+  const focoDia = React.useRef(false);
+  React.useLayoutEffect(() => {
+    if (!focoDia.current) return;
+    focoDia.current = false;
+    rejillaRef.current?.querySelector<HTMLElement>('[data-k-cal-selected]')?.focus();
+  });
+
+  React.useLayoutEffect(() => {
+    if (!focoPendiente.current) return;
+    rejillaRef.current?.querySelector<HTMLElement>(`[data-evento="${CSS.escape(focoPendiente.current)}"]`)?.focus();
+    focoPendiente.current = null;
+  });
 
   const normalizados = React.useMemo(() => events.map(normalizar), [events]);
   const horas = React.useMemo(
@@ -221,6 +277,14 @@ export const Calendar: React.FC<CalendarProps> = ({
     return Array.from({ length: 42 }, (_, i) => sumarDias(arranque, i));
   }, [fecha]);
 
+  /** Días de la rejilla horaria: uno en la vista de día, siete en la de semana. */
+  const dias = React.useMemo(
+    () => (view === 'day' || (compacto && view === 'week') ? [aFecha(fecha)] : diasSemana),
+    [view, fecha, diasSemana, compacto],
+  );
+  const columnas = view === 'month' ? 7 : dias.length;
+  const minutosRejilla = (hourEnd - hourStart) * 60;
+
   // ── Arrastre ──────────────────────────────────────────────────────────
   // Se traduce el desplazamiento del puntero a días y minutos con las mismas
   // medidas con las que se pinta, de modo que lo que se ve mientras se arrastra
@@ -229,7 +293,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   const anchoDia = () => {
     const el = rejillaRef.current;
     if (!el) return 1;
-    return el.getBoundingClientRect().width / 7;
+    return el.getBoundingClientRect().width / columnas;
   };
 
   const desplazamiento = (a: Arrastre) => {
@@ -264,15 +328,55 @@ export const Calendar: React.FC<CalendarProps> = ({
     e.stopPropagation();
     e.preventDefault();
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    huboArrastre.current = false;
     setArrastre({ id, modo, x0: e.clientX, y0: e.clientY, dx: 0, dy: 0, desdeCola });
   };
 
+  /** Pulsar en un hueco vacío de un día empieza una selección de rango. */
+  const empezarSeleccion = (e: React.PointerEvent<HTMLDivElement>, dia: number) => {
+    if (!onSlotSelect && !onSlotClick) return;
+    if (e.button !== 0 || (e.target as HTMLElement).closest('[data-evento]')) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const min = ((e.clientY - r.top) / hourHeight) * 60;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setSeleccion({ dia, a: min, b: min, top: r.top, movida: false });
+  };
+
   const mover = (e: React.PointerEvent) => {
+    if (seleccion) {
+      const b = Math.max(0, Math.min(minutosRejilla, ((e.clientY - seleccion.top) / hourHeight) * 60));
+      setSeleccion({ ...seleccion, b, movida: seleccion.movida || Math.abs(b - seleccion.a) * (hourHeight / 60) > 6 });
+      return;
+    }
     if (!arrastre) return;
-    setArrastre({ ...arrastre, dx: e.clientX - arrastre.x0, dy: e.clientY - arrastre.y0 });
+    const dx = e.clientX - arrastre.x0;
+    const dy = e.clientY - arrastre.y0;
+    if (Math.hypot(dx, dy) > 4) huboArrastre.current = true;
+    setArrastre({ ...arrastre, dx, dy });
+  };
+
+  const inicioDeRejilla = (d: Date) => {
+    const x = new Date(d.getTime());
+    x.setHours(hourStart, 0, 0, 0);
+    return x;
   };
 
   const soltar = (e: React.PointerEvent) => {
+    if (seleccion) {
+      const s = seleccion;
+      setSeleccion(null);
+      const base = inicioDeRejilla(dias[s.dia]);
+      if (!s.movida) {
+        const desde = Math.floor(s.a / PASO_MIN) * PASO_MIN;
+        if (onSlotClick) onSlotClick(sumarMinutos(base, desde));
+        else onSlotSelect?.({ start: sumarMinutos(base, desde), end: sumarMinutos(base, Math.min(minutosRejilla, desde + 60)) });
+        return;
+      }
+      const { from, to } = rangeFromDrag(s.a, s.b, PASO_MIN, minutosRejilla);
+      if (onSlotSelect) onSlotSelect({ start: sumarMinutos(base, from), end: sumarMinutos(base, to) });
+      else onSlotClick?.(sumarMinutos(base, from));
+      return;
+    }
     if (!arrastre) return;
     const actual = arrastre;
     setArrastre(null);
@@ -301,35 +405,68 @@ export const Calendar: React.FC<CalendarProps> = ({
     if (!el) return null;
     const r = el.getBoundingClientRect();
     if (clientX < r.left || clientX > r.right || clientY < r.top || clientY > r.bottom) return null;
-    const col = Math.floor(((clientX - r.left) / r.width) * (view === 'week' ? 7 : 7));
+    const col = Math.min(columnas - 1, Math.max(0, Math.floor(((clientX - r.left) / r.width) * columnas)));
     if (view === 'month') {
       const fila = Math.floor(((clientY - r.top) / r.height) * 6);
       return diasMes[Math.min(41, Math.max(0, fila * 7 + col))];
     }
     const minutos = ((clientY - r.top) / hourHeight) * 60;
     const ajustados = Math.round(minutos / PASO_MIN) * PASO_MIN;
-    const dia = diasSemana[Math.min(6, Math.max(0, col))];
-    const salida = new Date(dia.getTime());
-    salida.setHours(hourStart, 0, 0, 0);
-    return sumarMinutos(salida, ajustados);
+    return sumarMinutos(inicioDeRejilla(dias[col]), ajustados);
+  };
+
+  /**
+   * Crear sin arrastrar (teclado, lector de pantalla o quien no quiera arrastrar): una hora en el día que se ve, desde la
+   * próxima media hora si es hoy o a las 9:00 si es otro día, dentro del horario de la rejilla.
+   */
+  const crearAhora = () => {
+    const dia = aFecha(fecha);
+    const base = inicioDeRejilla(dia);
+    let desde = mismoDia(dia, hoy)
+      ? Math.ceil(((horaDecimal(ahora) - hourStart) * 60) / PASO_MIN) * PASO_MIN
+      : (9 - hourStart) * 60;
+    desde = Math.max(0, Math.min(minutosRejilla - 60, desde));
+    const start = sumarMinutos(base, desde);
+    if (onSlotSelect) onSlotSelect({ start, end: sumarMinutos(start, 60) });
+    else onSlotClick?.(start);
+  };
+
+  /** Flechas sobre un bloque enfocado: lo mueve (o con Mayús cambia su duración) y lo anuncia. */
+  const teclaEvento = (evt: React.KeyboardEvent, e: Normalizado) => {
+    if (evt.key === 'Enter') { evt.preventDefault(); onEventClick?.(e); return; }
+    if (!onEventChange || e.locked) return;
+    const siguiente = nudgeEvent(e._inicio, e._fin, evt.key, evt.shiftKey, PASO_MIN);
+    if (!siguiente) return;
+    evt.preventDefault();
+    focoPendiente.current = e.id;
+    onEventChange(e, siguiente);
+    const dia = siguiente.start.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric' });
+    setAnuncio(`${e.title}: ${dia}, de ${hhmm(siguiente.start)} a ${hhmm(siguiente.end)}`);
   };
 
   // ── Navegación ────────────────────────────────────────────────────────
 
   const paso = (signo: 1 | -1) => {
-    if (view === 'week') {
-      irA(sumarDias(fecha, 7 * signo));
-      return;
-    }
+    if (view === 'day') { irA(sumarDias(fecha, signo)); return; }
+    if (view === 'week') { irA(sumarDias(fecha, 7 * signo)); return; }
     const d = aFecha(fecha);
     d.setMonth(d.getMonth() + signo);
     irA(d);
   };
 
+  const verDia = (d: Date) => {
+    if (!views.includes('day')) return;
+    irA(d);
+    cambiarView('day');
+  };
+
   const titulo =
-    view === 'week'
-      ? `Semana del ${diasSemana[0].getDate()} de ${MESES_LARGOS[diasSemana[0].getMonth()]} al ${diasSemana[6].getDate()} de ${MESES_LARGOS[diasSemana[6].getMonth()]}`
-      : `${MESES_LARGOS[fecha.getMonth()]} de ${fecha.getFullYear()}`;
+    view === 'day' || (compacto && view === 'week')
+      ? capitalizar(fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }))
+      : view === 'week'
+        ? `Semana del ${diasSemana[0].getDate()} de ${MESES_LARGOS[diasSemana[0].getMonth()]} al ${diasSemana[6].getDate()} de ${MESES_LARGOS[diasSemana[6].getMonth()]}`
+        : `${MESES_LARGOS[fecha.getMonth()]} de ${fecha.getFullYear()}`;
+  const unidad = view === 'day' ? 'Día' : view === 'week' ? 'Semana' : 'Mes';
 
   /**
    * Un evento de todo el día ocupa TODOS los días de su rango, no solo el de
@@ -338,9 +475,8 @@ export const Calendar: React.FC<CalendarProps> = ({
    * comparación es por día natural, no por instante, para que un rango que
    * termina a las 00:00 no pierda su último día.
    */
-  const abarcaDia = (e: (typeof normalizados)[number], d: Date) => {
+  const abarcaDia = (e: Normalizado, d: Date) => {
     if (mismoDia(e._inicio, d)) return true;
-    const soloDia = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
     const dia = soloDia(d);
     return dia >= soloDia(e._inicio) && dia <= soloDia(e._fin);
   };
@@ -352,7 +488,38 @@ export const Calendar: React.FC<CalendarProps> = ({
   const conHora = (d: Date) => normalizados.filter((e) => !e.allDay && mismoDia(e._inicio, d));
   const deDia = (d: Date) => [...todoElDia(d), ...conHora(d)];
 
+  /** Barras de todo el día de la rejilla horaria: una por evento, de su primer a su último día visible. */
+  const barras = React.useMemo(() => {
+    const base = soloDia(dias[0]);
+    const indice = (d: Date) => Math.round((soloDia(d) - base) / DIA_MS);
+    const visibles = normalizados
+      .filter((e) => e.allDay)
+      .map((e) => ({ e, desde: indice(e._inicio), hasta: indice(e._fin) }))
+      .filter((b) => b.hasta >= 0 && b.desde <= dias.length - 1);
+    const carriles = layoutLanes(visibles.map((b) => ({ id: b.e.id, from: Math.max(0, b.desde), to: Math.min(dias.length - 1, b.hasta) })));
+    return visibles.map((b) => ({ ...b, carril: carriles.get(b.e.id) ?? 0 }));
+  }, [normalizados, dias]);
+
   const altoRejilla = horas.length * hourHeight;
+  const hoyVisible = dias.some((d) => mismoDia(d, hoy));
+  const horaAhora = horaDecimal(ahora);
+  const lineaAhora = view !== 'month' && hoyVisible && horaAhora >= hourStart && horaAhora <= hourEnd
+    ? (horaAhora - hourStart) * hourHeight
+    : null;
+
+  /** Bloques con hora de un día, con su columna de solape. */
+  const bloquesDe = (d: Date) => {
+    const suyos = conHora(d);
+    const huecos = layoutOverlaps(suyos.map((e) => ({
+      id: e.id,
+      start: e._inicio.getTime(),
+      end: Math.max(e._fin.getTime(), e._inicio.getTime() + MIN_VISIBLE * 60000),
+    })));
+    return suyos.map((e) => ({ e, hueco: huecos.get(e.id) ?? { col: 0, cols: 1, span: 1 } }));
+  };
+
+  const rangoAgenda = view === 'month' ? diasMes.filter((day) => day.getMonth() === fecha.getMonth()) : dias;
+  const textoHora = (e: Normalizado) => (e.allDay ? 'Todo el día' : `${hhmm(e._inicio)} – ${hhmm(e._fin)}`);
 
   return (
     <div data-k-mobile="Calendar"
@@ -363,251 +530,244 @@ export const Calendar: React.FC<CalendarProps> = ({
       // la rejilla no llegaban nunca y el gesto no hacía nada.
       onPointerMove={mover}
       onPointerUp={soltar}
-      onPointerCancel={soltar}
-      className={cn(
-        'overflow-hidden rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)]',
-        className,
-      )}
+      onPointerCancel={() => { setSeleccion(null); setArrastre(null); }}
+      data-event-style={eventStyle}
+      data-compact={compacto || undefined}
+      className={cn('k-cal', className)}
     >
-{onEventChange && <MobileScheduleActions allowZeroDuration={false} items={events} onChange={(id, start, end) => { const event = events.find(event => event.id === id); if (event) onEventChange(event, { start, end }); }} />}
+      {onEventChange && <MobileScheduleActions allowZeroDuration={false} items={events} onChange={(id, start, end) => { const event = events.find(event => event.id === id); if (event) onEventChange(event, { start, end }); }} />}
+      <span className="sr-only" aria-live="polite">{anuncio}</span>
 
       {toolbar && (
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-default,#e2e8f0)] px-3 py-2">
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              aria-label={view === 'week' ? 'Semana anterior' : 'Mes anterior'}
-              onClick={() => paso(-1)}
-              className="rounded-[var(--k-radius-xs,2px)] p-1.5 text-[var(--fg-muted,#52606f)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--fg-default,#0a1628)]"
-            >
+        <div className="k-cal-toolbar">
+          <div className="flex min-w-0 items-center gap-1">
+            <button type="button" className="k-cal-nav" aria-label={`${unidad} anterior`} onClick={() => paso(-1)}>
               <UiIcon slot="chevron-left" size={16} />
             </button>
-            <button
-              type="button"
-              onClick={() => irA(hoy)}
-              className="rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] px-2.5 py-1 text-[12px] font-medium text-[var(--fg-body,#2d3a4a)] transition-colors hover:bg-[var(--bg-hover)]"
-            >
-              Hoy
-            </button>
-            <button
-              type="button"
-              aria-label={view === 'week' ? 'Semana siguiente' : 'Mes siguiente'}
-              onClick={() => paso(1)}
-              className="rounded-[var(--k-radius-xs,2px)] p-1.5 text-[var(--fg-muted,#52606f)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--fg-default,#0a1628)]"
-            >
+            <button type="button" className="k-cal-today" onClick={() => irA(hoy)}>Hoy</button>
+            <button type="button" className="k-cal-nav" aria-label={`${unidad} siguiente`} onClick={() => paso(1)}>
               <UiIcon slot="chevron-right" size={16} />
             </button>
-            <span className="ml-2 text-[13px] font-semibold text-[var(--fg-default,#0a1628)]">
-              {titulo}
-            </span>
+            <span className="k-cal-title">{titulo}</span>
           </div>
 
-          <div
-            role="radiogroup"
-            aria-label="Vista"
-            className="flex overflow-hidden rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)]"
-          >
-            {(['week', 'month'] as const).map((v, i) => (
-              <button
-                key={v}
-                type="button"
-                role="radio"
-                aria-checked={view === v}
-                onClick={() => cambiarView(v)}
-                className={cn(
-                  'px-3 py-1 text-[12px] font-medium transition-colors',
-                  i > 0 && 'border-l border-[var(--border-default,#e2e8f0)]',
-                  view === v
-                    ? 'bg-accent text-[color:var(--color-accent-fg)]'
-                    : 'text-[var(--fg-muted,#52606f)] hover:bg-[var(--bg-hover)]',
-                )}
-              >
-                {v === 'week' ? 'Semana' : 'Mes'}
+          <div className="k-cal-toolbar-end">
+            {(onSlotSelect || onSlotClick) && (
+              <button type="button" className="k-cal-new" onClick={crearAhora}>
+                <UiIcon slot="plus" size={14} />
+                Nuevo evento
               </button>
-            ))}
+            )}
+            {views.length > 1 && (
+              <div role="radiogroup" aria-label="Vista" className="k-cal-views">
+                {views.map((v) => (
+                  <button key={v} type="button" role="radio" aria-checked={view === v} onClick={() => cambiarView(v)}>
+                    {NOMBRES_VISTA[v]}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {mobile && mobileView === 'agenda' ? <div className="k-mobile-agenda" role="list" aria-label="Agenda">{(view === 'week' ? diasSemana : diasMes.filter(day => day.getMonth() === fecha.getMonth())).filter(day => deDia(day).length > 0).map(day => <section key={day.toISOString()} role="listitem"><h3>{day.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</h3>{deDia(day).map(event => <div key={event.id} className="k-mobile-agenda-event">{onEventClick ? <button type="button" onClick={() => onEventClick(event)}><strong>{event.title}</strong><span>{event.allDay ? 'Todo el día' : hhmm(event._inicio) + ' – ' + hhmm(event._fin)}</span></button> : <><strong>{event.title}</strong><span>{event.allDay ? 'Todo el día' : hhmm(event._inicio) + ' – ' + hhmm(event._fin)}</span></>}</div>)}</section>)}{onSlotClick && <Button variant="secondary" onClick={() => onSlotClick(fecha)}>Añadir evento</Button>}</div> : (view === 'week' ? (
-        <div>
-          {/* Cabecera de días + banda de todo el día. */}
-          <div className="flex border-b border-[var(--border-default,#e2e8f0)]">
-            <div className="w-14 shrink-0 border-r border-[var(--border-default,#e2e8f0)]" />
-            <div className="grid flex-1 grid-cols-7">
+      {mobile && mobileView === 'agenda' ? <div className="k-mobile-agenda" role="list" aria-label="Agenda">{rangoAgenda.filter(day => deDia(day).length > 0).map(day => <section key={day.toISOString()} role="listitem"><h3>{day.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</h3>{deDia(day).map(event => <div key={event.id} className="k-mobile-agenda-event">{onEventClick ? <button type="button" onClick={() => onEventClick(event)}><strong>{event.title}</strong><span>{textoHora(event)}</span></button> : <><strong>{event.title}</strong><span>{textoHora(event)}</span></>}</div>)}</section>)}{onSlotClick && <Button variant="secondary" onClick={() => onSlotClick(fecha)}>Añadir evento</Button>}</div> : (view !== 'month' ? (
+        <div className="k-cal-time" data-view={view}>
+          {compacto && view === 'week' && (
+            <div className="k-cal-weekstrip" role="tablist" aria-label="Días de la semana">
               {diasSemana.map((d) => {
+                const elegido = mismoDia(d, fecha);
+                return (
+                  <button
+                    key={d.toISOString()}
+                    type="button"
+                    role="tab"
+                    aria-selected={elegido}
+                    aria-label={d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric' })}
+                    data-today={mismoDia(d, hoy) || undefined}
+                    data-weekend={esFinde(d) || undefined}
+                    onClick={() => irA(d)}
+                  >
+                    <span>{DIAS_SEMANA[d.getDay()].charAt(0).toUpperCase()}</span>
+                    <strong>{d.getDate()}</strong>
+                    <i aria-hidden="true" data-on={deDia(d).length > 0 || undefined} />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {/* Cabecera de días + banda de todo el día. */}
+          <div className="k-cal-head" hidden={compacto && view === 'week'} style={{ '--k-cal-cols': dias.length } as React.CSSProperties}>
+            <div className="k-cal-gutter" />
+            <div className="k-cal-days">
+              {dias.map((d) => {
                 const esHoy = mismoDia(d, hoy);
                 return (
-                  <div
-                    key={d.toISOString()}
-                    className={cn(
-                      'border-r border-[var(--border-subtle,#f1f5f9)] px-1 py-1.5 text-center last:border-r-0',
-                      esFinde(d) && 'bg-[var(--bg-muted)]',
+                  <div key={d.toISOString()} className="k-cal-dayhead" data-weekend={esFinde(d) || undefined} data-today={esHoy || undefined}>
+                    <span className="k-cal-weekday">{DIAS_SEMANA[d.getDay()]}</span>
+                    {view === 'week' && views.includes('day') ? (
+                      <button type="button" className="k-cal-daynum" aria-label={`Ver el ${d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric' })}`} onClick={() => verDia(d)}>
+                        {d.getDate()}
+                      </button>
+                    ) : (
+                      <span className="k-cal-daynum">{d.getDate()}</span>
                     )}
-                  >
-                    <div className="font-mono text-[9px] uppercase tracking-wider text-[var(--fg-subtle,#657486)]">
-                      {DIAS_SEMANA[d.getDay()]}
-                    </div>
-                    <div
-                      className={cn(
-                        'text-[15px] font-bold',
-                        esHoy ? 'text-accent' : 'text-[var(--fg-default,#0a1628)]',
-                      )}
-                    >
-                      {d.getDate()}
-                    </div>
-                    <div className="mt-1 flex flex-col gap-0.5">
-                      {todoElDia(d).map((e) => {
-                        const c = colorDe(e);
-                        return (
-                          <button
-                            key={e.id}
-                            type="button"
-                            onClick={() => onEventClick?.(e)}
-                            style={{ background: c.bg, color: c.fg }}
-                            className="truncate rounded-[var(--k-radius-xs,2px)] px-1 py-px text-[10px] font-medium"
-                          >
-                            {e.title}
-                          </button>
-                        );
-                      })}
-                    </div>
                   </div>
                 );
               })}
             </div>
           </div>
+          {barras.length > 0 && (
+            <div className="k-cal-allday-row" style={{ '--k-cal-cols': dias.length } as React.CSSProperties}>
+              <div className="k-cal-gutter"><span>Todo el día</span></div>
+              <div className="k-cal-allday">
+                {barras.map(({ e, desde, hasta, carril }) => (
+                  <button
+                    key={e.id}
+                    type="button"
+                    data-evento-dia={e.id}
+                    data-status={e.status ?? 'pendiente'}
+                    data-cut-start={desde < 0 || undefined}
+                    data-cut-end={hasta > dias.length - 1 || undefined}
+                    className="k-cal-bar"
+                    style={{
+                      ...tonoDe(e),
+                      gridColumn: `${Math.max(0, desde) + 1} / ${Math.min(dias.length - 1, hasta) + 2}`,
+                      gridRow: carril + 1,
+                    }}
+                    onClick={() => onEventClick?.(e)}
+                  >
+                    {e.title}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Rejilla horaria. */}
-          <div className="flex">
-            <div className="w-14 shrink-0 border-r border-[var(--border-default,#e2e8f0)]">
-              {horas.map((h) => (
-                <div
-                  key={h}
-                  style={{ height: hourHeight }}
-                  className="border-b border-[var(--border-subtle,#f1f5f9)] pr-1.5 text-right font-mono text-[10px] leading-[1] text-[var(--fg-subtle,#657486)]"
-                >
-                  <span className="relative -top-1">{String(h).padStart(2, '0')}:00</span>
-                </div>
+          <div className="k-cal-body">
+            <div className="k-cal-gutter k-cal-hours" style={{ height: altoRejilla }}>
+              {horas.slice(1).map((h) => (
+                <span key={h} style={{ top: (h - hourStart) * hourHeight }}>{String(h).padStart(2, '0')}:00</span>
               ))}
+              {lineaAhora !== null && (
+                <span className="k-cal-now-label" style={{ top: lineaAhora }}>{hhmm(ahora)}</span>
+              )}
             </div>
 
             <div
               ref={rejillaRef}
-              className="relative grid flex-1 grid-cols-7"
-              style={{ height: altoRejilla }}
+              className="k-cal-grid"
+              style={{ height: altoRejilla, '--k-cal-cols': dias.length, '--k-cal-hour': `${hourHeight}px` } as React.CSSProperties}
             >
-              {diasSemana.map((d) => (
-                <div
-                  key={d.toISOString()}
-                  className={cn(
-                    'relative border-r border-[var(--border-subtle,#f1f5f9)] last:border-r-0',
-                    esFinde(d) && 'bg-[var(--bg-muted)]',
-                  )}
-                >
-                  {horas.map((h) => (
-                    <div
-                      key={h}
-                      onClick={() => {
-                        if (!onSlotClick) return;
-                        const inicio = new Date(d.getTime());
-                        inicio.setHours(h, 0, 0, 0);
-                        onSlotClick(inicio);
-                      }}
-                      style={{ height: hourHeight }}
-                      className={cn(
-                        'border-b border-[var(--border-subtle,#f1f5f9)]',
-                        onSlotClick && 'cursor-pointer hover:bg-[var(--bg-hover)]',
-                      )}
-                    />
-                  ))}
-
-                  {/* Bloques del día, colocados por hora. */}
-                  {conHora(d).map((e) => {
-                    const inicio = aplicar(e._inicio, 'inicio', e.id);
-                    const fin = aplicar(e._fin, 'fin', e.id);
-                    const desde = Math.max(hourStart, horaDecimal(inicio));
-                    const hasta = Math.min(hourEnd, horaDecimal(fin));
-                    if (hasta <= hourStart || desde >= hourEnd) return null;
-                    const c = colorDe(e);
-                    const editable = Boolean(onEventChange) && !e.locked;
-                    const alto = Math.max(16, (hasta - desde) * hourHeight - 2);
-                    return (
-                      <div
-                        key={e.id}
-                        role="button"
-                        tabIndex={0}
-                        aria-label={`${e.title}, ${hhmm(inicio)} a ${hhmm(fin)}`}
-                        title={`${hhmm(inicio)}–${hhmm(fin)} · ${e.title}`}
-                        data-evento={e.id}
-                        onClick={() => onEventClick?.(e)}
-                        onPointerDown={(evt) => empezar(evt, e.id, 'mover')}
-                        style={{
-                          top: (desde - hourStart) * hourHeight + 1,
-                          height: alto,
-                          background: c.bg,
-                          color: c.fg,
-                        }}
-                        className={cn(
-                          'group absolute inset-x-0.5 overflow-hidden rounded-[var(--k-radius-xs,2px)] px-1 py-0.5 text-left shadow-sm',
-                          'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
-                          editable ? 'cursor-grab' : 'cursor-default',
-                          arrastre?.id === e.id && 'z-10 cursor-grabbing opacity-80 ring-1 ring-accent',
-                        )}
-                      >
-                        <div className="truncate font-mono text-[9px] opacity-80">
-                          {hhmm(inicio)}–{hhmm(fin)}
-                        </div>
-                        <div className="truncate text-[11px] font-medium leading-tight">
-                          {e.title}
-                        </div>
-                        {e.meta && <div className="truncate text-[10px] opacity-90">{e.meta}</div>}
-
-                        {editable && (
-                          <span
-                            onPointerDown={(evt) => empezar(evt, e.id, 'fin')}
-                            className="absolute inset-x-0 bottom-0 h-1.5 cursor-ns-resize opacity-0 transition-opacity group-hover:opacity-100"
-                            style={{ background: 'rgba(255,255,255,0.55)' }}
-                            aria-hidden="true"
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
-
-                  {/* Línea de la hora actual, solo en el día de hoy. */}
-                  {mismoDia(d, hoy) &&
-                    (() => {
-                      const ahora = todayProp ? conHoraDe(hoy, new Date()) : new Date();
-                      const h = horaDecimal(ahora);
-                      if (h < hourStart || h > hourEnd) return null;
+              {lineaAhora !== null && <div className="k-cal-now-track" aria-hidden="true" style={{ top: lineaAhora }} />}
+              {dias.map((d, indiceDia) => {
+                const esHoy = mismoDia(d, hoy);
+                return (
+                  <div
+                    key={d.toISOString()}
+                    className="k-cal-col"
+                    data-weekend={esFinde(d) || undefined}
+                    data-today={esHoy || undefined}
+                    data-selectable={onSlotSelect || onSlotClick ? true : undefined}
+                    onPointerDown={(evt) => empezarSeleccion(evt, indiceDia)}
+                  >
+                    {/* Bloques del día, colocados por hora y repartidos si coinciden. */}
+                    {bloquesDe(d).map(({ e, hueco }) => {
+                      const inicio = aplicar(e._inicio, 'inicio', e.id);
+                      const fin = aplicar(e._fin, 'fin', e.id);
+                      const desde = Math.max(hourStart, horaDecimal(inicio));
+                      const hasta = Math.min(hourEnd, Math.max(horaDecimal(fin), horaDecimal(inicio) + MIN_VISIBLE / 60));
+                      if (hasta <= hourStart || desde >= hourEnd) return null;
+                      const editable = Boolean(onEventChange) && !e.locked;
+                      const arrastrando = arrastre?.id === e.id && !arrastre.desdeCola;
+                      const alto = Math.max(18, (hasta - desde) * hourHeight - 2);
+                      const compacto = alto < ALTO_COMPACTO;
+                      const { dDias } = arrastrando ? desfase(e.id, 'inicio') : { dDias: 0 };
+                      // Mientras se arrastra va a todo el ancho y por encima: el reparto es de donde estaba.
+                      const col = arrastrando ? 0 : hueco.col;
+                      const span = arrastrando ? hueco.cols : hueco.span;
+                      const izquierda = (col / hueco.cols) * 100;
+                      const ancho = (span / hueco.cols) * 100;
+                      const origenTop = (Math.max(hourStart, horaDecimal(e._inicio)) - hourStart) * hourHeight + 1;
                       return (
-                        <div
-                          data-ahora
-                          aria-hidden="true"
-                          className="pointer-events-none absolute inset-x-0 z-20 h-px bg-[var(--k-danger)]"
-                          style={{ top: (h - hourStart) * hourHeight }}
-                        />
+                        <React.Fragment key={e.id}>
+                          {arrastrando && huboArrastre.current && (
+                            <div
+                              className="k-cal-origin"
+                              aria-hidden="true"
+                              style={{ top: origenTop, height: Math.max(18, (horaDecimal(e._fin) - horaDecimal(e._inicio)) * hourHeight - 2), left: `calc(${(hueco.col / hueco.cols) * 100}% + 2px)`, width: `calc(${(hueco.span / hueco.cols) * 100}% - 4px)` }}
+                            />
+                          )}
+                          <div
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`${e.title}, ${hhmm(inicio)} a ${hhmm(fin)}${editable ? '. Flechas para mover, Mayús y flechas para cambiar la duración' : ''}`}
+                            title={`${hhmm(inicio)}–${hhmm(fin)} · ${e.title}`}
+                            data-evento={e.id}
+                            data-status={e.status ?? 'pendiente'}
+                            data-compact={compacto || undefined}
+                            data-tall={alto >= 58 || undefined}
+                            data-dragging={arrastrando || undefined}
+                            data-editable={editable || undefined}
+                            onClick={() => { if (!huboArrastre.current) onEventClick?.(e); huboArrastre.current = false; }}
+                            onKeyDown={(evt) => teclaEvento(evt, e)}
+                            onPointerDown={(evt) => empezar(evt, e.id, 'mover')}
+                            style={{
+                              ...tonoDe(e),
+                              top: (desde - hourStart) * hourHeight + 1,
+                              height: alto,
+                              left: `calc(${izquierda}% + 2px)`,
+                              width: `calc(${ancho}% - 4px)`,
+                              transform: dDias ? `translateX(${dDias * 100}%)` : undefined,
+                              zIndex: arrastrando ? 30 : 1 + hueco.col,
+                            }}
+                            className="k-cal-event"
+                          >
+                            <span className="k-cal-event-title">{e.title}</span>
+                            <span className="k-cal-event-time">{hhmm(inicio)}{compacto ? '' : ` – ${hhmm(fin)}`}</span>
+                            {e.meta && alto >= 58 && <span className="k-cal-event-meta">{e.meta}</span>}
+                            {editable && (
+                              <span
+                                onPointerDown={(evt) => empezar(evt, e.id, 'fin')}
+                                className="k-cal-event-resize"
+                                aria-hidden="true"
+                              />
+                            )}
+                          </div>
+                        </React.Fragment>
+                      );
+                    })}
+
+                    {seleccion?.dia === indiceDia && seleccion.movida && (() => {
+                      const { from, to } = rangeFromDrag(seleccion.a, seleccion.b, PASO_MIN, minutosRejilla);
+                      const base = inicioDeRejilla(d);
+                      return (
+                        <div className="k-cal-ghost" aria-hidden="true" style={{ top: (from / 60) * hourHeight + 1, height: ((to - from) / 60) * hourHeight - 2 }}>
+                          <strong>Nuevo evento</strong>
+                          <span>{hhmm(sumarMinutos(base, from))} – {hhmm(sumarMinutos(base, to))}</span>
+                        </div>
                       );
                     })()}
-                </div>
-              ))}
+
+                    {/* Línea de la hora actual: fuerte en el día de hoy, tenue en el resto de la semana. */}
+                    {esHoy && lineaAhora !== null && (
+                      <div data-ahora className="k-cal-now" aria-hidden="true" style={{ top: lineaAhora }} />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
       ) : (
-        <div>
-          <div className="grid grid-cols-7 border-b border-[var(--border-default,#e2e8f0)]">
+        <div className="k-cal-month">
+          <div className="k-cal-month-head">
             {diasSemana.map((d) => (
-              <div
-                key={d.toISOString()}
-                className="py-1.5 text-center font-mono text-[9px] uppercase tracking-wider text-[var(--fg-subtle,#657486)]"
-              >
-                {DIAS_SEMANA[d.getDay()]}
-              </div>
+              <div key={d.toISOString()} data-weekend={esFinde(d) || undefined}>{DIAS_SEMANA[d.getDay()]}</div>
             ))}
           </div>
-          <div ref={rejillaRef} className="grid grid-cols-7 grid-rows-6" style={{ minHeight: 420 }}>
+          <div ref={rejillaRef} className="k-cal-month-grid grid grid-cols-7 grid-rows-6">
             {diasMes.map((d) => {
               const delMes = d.getMonth() === fecha.getMonth();
               const esHoy = mismoDia(d, hoy);
@@ -616,101 +776,118 @@ export const Calendar: React.FC<CalendarProps> = ({
               return (
                 <div
                   key={d.toISOString()}
-                  onClick={() => onSlotClick?.(d)}
-                  className={cn(
-                    'flex min-h-[70px] flex-col gap-0.5 border-b border-r border-[var(--border-subtle,#f1f5f9)] p-1',
-                    !delMes && 'bg-[var(--bg-muted)]',
-                    onSlotClick && 'cursor-pointer hover:bg-[var(--bg-hover)]',
-                  )}
+                  onClick={() => (compacto ? irA(d) : onSlotClick?.(d))}
+                  className="k-cal-cell"
+                  data-outside={!delMes || undefined}
+                  data-weekend={esFinde(d) || undefined}
+                  data-today={esHoy || undefined}
+                  data-selected={(compacto && mismoDia(d, fecha)) || undefined}
+                  data-selectable={onSlotClick || compacto ? true : undefined}
+                  role={compacto ? 'button' : undefined}
+                  // Un solo día enfocable a la vez (el elegido); las flechas se mueven por la rejilla.
+                  tabIndex={compacto ? (mismoDia(d, fecha) ? 0 : -1) : undefined}
+                  data-k-cal-selected={(compacto && mismoDia(d, fecha)) || undefined}
+                  onKeyDown={compacto ? (evt) => {
+                    const salto: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
+                    if (evt.key === 'Enter' || evt.key === ' ') { evt.preventDefault(); irA(d); return; }
+                    if (salto[evt.key] === undefined) return;
+                    evt.preventDefault();
+                    focoDia.current = true;
+                    irA(sumarDias(d, salto[evt.key]));
+                  } : undefined}
+                  aria-label={compacto ? `${d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}${suyos.length ? `, ${suyos.length} eventos` : ''}` : undefined}
                 >
-                  <span
-                    className={cn(
-                      'self-end text-[11px] font-semibold',
-                      esHoy
-                        ? 'rounded-full bg-accent px-1.5 text-[color:var(--color-accent-fg)]'
-                        : delMes
-                          ? 'text-[var(--fg-body,#2d3a4a)]'
-                          : 'text-[var(--fg-subtle,#657486)]',
-                    )}
-                  >
-                    {d.getDate()}
-                  </span>
-                  {visibles.map((e) => {
-                    const c = colorDe(e);
-                    return (
-                      <button
-                        key={e.id}
-                        type="button"
-                        data-evento={e.id}
-                        onClick={(evt) => {
-                          evt.stopPropagation();
-                          onEventClick?.(e);
-                        }}
-                        style={{ background: c.bg, color: c.fg }}
-                        className="truncate rounded-[var(--k-radius-xs,2px)] px-1 py-px text-left text-[10px] font-medium"
-                      >
-                        {e.allDay ? '' : `${hhmm(e._inicio)} `}
-                        {e.title}
-                      </button>
-                    );
-                  })}
-                  {suyos.length > visibles.length && (
-                    <span className="px-1 text-[10px] text-[var(--fg-subtle,#657486)]">
+                  <span className="k-cal-cell-num">{d.getDate()}</span>
+                  {compacto ? (
+                    suyos.length > 0 && (
+                      <span className="k-cal-dots" aria-hidden="true">
+                        {suyos.slice(0, 3).map((e) => <i key={e.id} style={tonoDe(e)} />)}
+                      </span>
+                    )
+                  ) : visibles.map((e) => (
+                    <button
+                      key={e.id}
+                      type="button"
+                      data-evento={e.id}
+                      data-status={e.status ?? 'pendiente'}
+                      data-all-day={e.allDay || undefined}
+                      className="k-cal-chip"
+                      style={tonoDe(e)}
+                      onClick={(evt) => {
+                        evt.stopPropagation();
+                        onEventClick?.(e);
+                      }}
+                    >
+                      {!e.allDay && <span className="k-cal-chip-time">{hhmm(e._inicio)}</span>}
+                      <span className="k-cal-chip-title">{e.title}</span>
+                    </button>
+                  ))}
+                  {!compacto && suyos.length > visibles.length && (
+                    <button
+                      type="button"
+                      className="k-cal-more"
+                      onClick={(evt) => { evt.stopPropagation(); verDia(d); }}
+                      disabled={!views.includes('day')}
+                    >
                       +{suyos.length - visibles.length} más
-                    </span>
+                    </button>
                   )}
                 </div>
               );
             })}
           </div>
+          {compacto && (
+            <section className="k-cal-dayagenda" aria-label={`Eventos del ${fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}`}>
+              <h3>{capitalizar(fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }))}</h3>
+              {deDia(fecha).length === 0 ? <p className="k-cal-dayagenda-empty">Nada este día.</p> : deDia(fecha).map((e) => (
+                <button key={e.id} type="button" className="k-cal-agenda-item" data-evento={e.id} style={tonoDe(e)} onClick={() => onEventClick?.(e)}>
+                  <span className="k-cal-agenda-time">{e.allDay ? 'Todo el día' : hhmm(e._inicio)}</span>
+                  <span className="k-cal-agenda-title">{e.title}</span>
+                </button>
+              ))}
+              {onSlotClick && <Button size="sm" variant="secondary" onClick={() => onSlotClick(fecha)}>Añadir evento</Button>}
+            </section>
+          )}
         </div>
       ))}
 
-      {(events.length === 0 || (mobile && mobileView === 'agenda' && !(view === 'week' ? diasSemana : diasMes.filter(day => day.getMonth() === fecha.getMonth())).some(day => deDia(day).length))) && (
-        <div className="border-t border-[var(--border-default,#e2e8f0)] py-6 text-center text-[13px] text-[var(--fg-muted,#52606f)]">
-          {emptyMessage}
-        </div>
+      {(events.length === 0 || (mobile && mobileView === 'agenda' && !rangoAgenda.some(day => deDia(day).length))) && (
+        <div className="k-cal-empty">{emptyMessage}</div>
       )}
 
       {unscheduled && (
-        <div className="border-t border-[var(--border-default,#e2e8f0)] bg-[var(--bg-muted)] p-2">
-          <div className="mb-1.5 flex items-center gap-2 px-1">
-            <span className="font-mono text-[9px] font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
-              {unscheduledLabel}
-            </span>
-            <span className="font-mono text-[10px] text-[var(--fg-subtle,#657486)]">
-              {unscheduled.length}
-            </span>
+        <div className="k-cal-tray">
+          <div className="k-cal-tray-head">
+            <span>{unscheduledLabel}</span>
+            <span className="k-cal-tray-count">{unscheduled.length}</span>
           </div>
           {unscheduled.length === 0 ? (
-            <p className="px-1 pb-1 text-[11px] italic text-[var(--fg-subtle,#657486)]">
-              No queda nada sin programar.
-            </p>
+            <p className="k-cal-tray-empty">No queda nada sin programar.</p>
           ) : (
             <div className="flex flex-wrap gap-1.5">
-              {unscheduled.map((e) => {
-                const c = colorDe(e);
-                return (
-                  <div
-                    key={e.id}
-                    role="button"
-                    tabIndex={0}
-                    data-sin-programar={e.id}
-                    aria-label={`${e.title}, sin programar`}
-                    onPointerDown={(evt) => { if (!mobile) empezar(evt, e.id, 'mover', true); }}
-                    onClick={() => { if (mobile && onSchedule) { setScheduling(e); setScheduleDate(null); } }}
-                    onKeyDown={(evt) => { if (onSchedule && (evt.key === 'Enter' || evt.key === ' ')) { evt.preventDefault(); setScheduling(e); setScheduleDate(null); } }}
-                    style={{ background: c.bg, color: c.fg }}
-                    className={cn(
-                      'rounded-[var(--k-radius-xs,2px)] px-2 py-1 text-[11px] font-medium shadow-sm',
-                      onSchedule ? 'cursor-grab' : 'cursor-default',
-                      arrastre?.id === e.id && 'cursor-grabbing opacity-70',
-                    )}
-                  >
-                    {e.title}
-                  </div>
-                );
-              })}
+              {unscheduled.map((e) => (
+                <div
+                  key={e.id}
+                  role="button"
+                  tabIndex={0}
+                  data-sin-programar={e.id}
+                  data-status={e.status ?? 'pendiente'}
+                  data-dragging={arrastre?.id === e.id || undefined}
+                  aria-label={`${e.title}, sin programar`}
+                  onPointerDown={(evt) => { if (!mobile) empezar(evt, e.id, 'mover', true); }}
+                  onClick={() => { if (mobile && onSchedule) { setScheduling(e); setScheduleDate(null); } }}
+                  onKeyDown={(evt) => { if (onSchedule && (evt.key === 'Enter' || evt.key === ' ')) { evt.preventDefault(); setScheduling(e); setScheduleDate(null); } }}
+                  style={{
+                    ...tonoDe(e),
+                    ...(arrastre?.id === e.id && arrastre.desdeCola ? { transform: `translate(${arrastre.dx}px, ${arrastre.dy}px)` } : null),
+                  }}
+                  className="k-cal-chip k-cal-tray-item"
+                  data-draggable={onSchedule ? true : undefined}
+                >
+                  {onSchedule && <UiIcon slot="grip-vertical" size={12} className="k-cal-tray-grip" aria-hidden="true" />}
+                  <span className="k-cal-chip-title">{e.title}</span>
+                </div>
+              ))}
             </div>
           )}
         </div>

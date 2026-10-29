@@ -48,7 +48,10 @@ export const AlturasVariablesYCargaInfinita: Story = () => {
       className="max-w-md rounded-[var(--k-radius-md,8px)] border border-[var(--border-default,#e2e8f0)]"
       height={440}
       items={items}
+      // 64 px es solo la estimación: `measure` mide la altura real de cada fila (en móvil el texto ocupa más líneas
+      // y, sin medir, las filas se pisaban).
       itemHeight={64}
+      measure
       getKey={(c) => c.id}
       onEndReached={more}
       footer={loading ? <Spinner size="sm" variant="dots" label="Cargando más" /> : items.length >= 400 ? <span className="text-[12px] text-[var(--fg-muted,#52606f)]">No hay más</span> : null}

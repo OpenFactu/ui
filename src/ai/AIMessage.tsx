@@ -8,7 +8,7 @@ import { Select } from '../components/Select';
 import { cn } from '../utils';
 import type { AIMessageData, AIMessagePart, AIUIProps, AIWorkspaceActions } from './types';
 import { aiLabels } from './labels';
-import { AICopyButton, AIIconButton, AIStatus } from './internal/ui';
+import { AICopyButton, AIIconButton, AIThinking } from './internal/ui';
 import { currentMessageParts, messageText, safeUrl } from './internal/helpers';
 import { AIMarkdown } from './AIMarkdown';
 import { AICodeBlock } from './AICodeBlock';
@@ -67,23 +67,40 @@ export const AIMessageContent = React.memo(function AIMessageContent({ parts, ro
       case 'sources': return <AISources key={index} sources={part.sources} labels={labels} />;
       case 'tool': return <AIToolCall key={part.tool.id} tool={part.tool} onApprove={actions?.onApproveTool} onReject={actions?.onRejectTool} labels={labels} />;
       case 'activity': return <AIAgentActivity key={index} steps={part.steps} labels={labels} />;
-      case 'artifact': return actions?.onOpenArtifact ? <button type="button" key={part.artifactId} className="ai-artifact-link" onClick={() => actions.onOpenArtifact!(part.artifactId)}><UiIcon slot="panel-right-open" size={16} /><span><strong>{part.title}</strong><small>{l.openResult}</small></span></button> : <span key={part.artifactId}>{part.title}</span>;
+      case 'artifact': return actions?.onOpenArtifact ? <button type="button" key={part.artifactId} className="ai-artifact-link" onClick={() => actions.onOpenArtifact!(part.artifactId)}><UiIcon slot="panel-right-open" size={16} /><span><strong>{part.title}</strong><small>{l.openResult}</small></span></button> : <div key={part.artifactId} className="ai-artifact-link" data-static=""><UiIcon slot="panel-right" size={16} /><span><strong>{part.title}</strong></span></div>;
     }
   })}</div>;
 });
-export interface AIMessageProps extends AIUIProps { message: AIMessageData; actions?: AIMessageCallbacks; onOpenCode?: (code: string, language?: string) => void; /** Anima la entrada del mensaje (lo decide la conversación). */ fresh?: boolean }
-export const AIMessage = React.memo(function AIMessage({ message, actions, onOpenCode, fresh, labels, className }: AIMessageProps) {
+/**
+ * Avatar del mensaje: la imagen si la hay; si no, el asistente lleva un destello sobre el acento y la persona sus
+ * iniciales sobre un tinte del acento (antes ambos eran círculos oscuros iguales).
+ */
+function MessageAvatar({ message, name }: { message: AIMessageData; name: string }) {
+  const src = safeUrl(message.avatar, 'media');
+  if (src) return <Avatar name={name} src={src} size="sm" />;
+  if (message.role === 'assistant') return <span className="ai-avatar" data-role="assistant" title={name}><UiIcon slot="sparkles" size={15} /></span>;
+  const initials = name.trim().split(/\s+/).slice(0, 2).map(word => word[0]?.toUpperCase() ?? '').join('');
+  return <span className="ai-avatar" data-role="user" title={name}>{initials}</span>;
+}
+export interface AIMessageProps extends AIUIProps {
+  message: AIMessageData; actions?: AIMessageCallbacks; onOpenCode?: (code: string, language?: string) => void;
+  /** Anima la entrada del mensaje (lo decide la conversación). */ fresh?: boolean;
+  /** Aviso de respuesta fallida con «Reintentar». La conversación lo apaga cuando ya muestra el error de la ejecución. Default true. */
+  showError?: boolean;
+}
+export const AIMessage = React.memo(function AIMessage({ message, actions, onOpenCode, fresh, showError = true, labels, className }: AIMessageProps) {
   const l = aiLabels(labels);
   const [editing, setEditing] = React.useState(false); const [text, setText] = React.useState('');
   const name = message.name ?? ({ user: l.user, assistant: l.assistant, system: l.system })[message.role];
   const parts = currentMessageParts(message);
   const created = message.createdAt ? new Date(message.createdAt) : undefined;
   return <article className={cn('ai-surface ai-message', className)} data-role={message.role} data-message-id={message.id} data-fresh={fresh || undefined} data-streaming={message.status === 'streaming' || undefined} aria-label={name}>
-    <div className="ai-message-avatar"><Avatar name={name} src={safeUrl(message.avatar, 'media')} size="sm" /></div>
+    <div className="ai-message-avatar"><MessageAvatar message={message} name={name} /></div>
     <div className="ai-message-main"><header className="ai-message-header"><strong>{name}</strong>{created && !Number.isNaN(created.getTime()) && <time dateTime={message.createdAt}>{formatTimeOfDay(created)}</time>}
-      {message.status === 'streaming' && <AIStatus>{l.streaming}</AIStatus>}</header>
+      {message.status === 'streaming' && <AIThinking>{l.streaming}</AIThinking>}</header>
       {editing ? <form className="ai-message-edit" onSubmit={event => { event.preventDefault(); actions?.onEditMessage?.(message.id, text); setEditing(false); }}><Textarea aria-label={l.edit} autoFocus value={text} onChange={event => setText(event.target.value)} /><div className="ai-inline-actions"><Button type="submit" size="sm" disabled={!text.trim()}>{l.save}</Button><Button size="sm" variant="secondary" onClick={() => setEditing(false)}>{l.cancel}</Button></div></form>
         : <AIMessageContent parts={parts} role={message.role} actions={actions} onOpenCode={onOpenCode} labels={labels} />}
+      {message.status === 'error' && showError && <div className="ai-message-error" role="alert"><UiIcon slot="alert-circle" size={15} /><span>{l.messageFailed}</span>{actions?.onRetry && <button type="button" className="ai-text-button" onClick={() => actions.onRetry!(message.id)}><UiIcon slot="refresh-cw" size={13} />{l.retry}</button>}</div>}
       <div className="ai-message-footer"><AIMessageActions message={message} actions={actions} labels={labels} onEdit={actions?.onEditMessage && !editing ? () => { setText(messageText(message)); setEditing(true); } : undefined} />
         {!!message.versions?.length && actions?.onVersionChange && <div className="ai-version-selector"><Select ariaLabel={l.version} value={message.versionId ?? message.versions[0].id} options={message.versions.map((version, index) => ({ value: version.id, label: version.label ?? `${l.version} ${index + 1}` }))} onChange={id => actions.onVersionChange!(message.id, id)} /></div>}
       </div>

@@ -158,8 +158,8 @@ export const PantallaCompleta: Story = () => {
             </h1>
             <p className="text-[12px] text-[var(--fg-muted)] mt-0.5">Ejercicio 2026 · Acme S.L.</p>
           </div>
-          <div className="flex items-center gap-2">
-            <SearchInput value={query} onChange={setQuery} containerClassName="w-56" />
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+            <SearchInput value={query} onChange={setQuery} containerClassName="min-w-0 flex-1 sm:w-56 sm:flex-none" />
             <Button variant="accent">
               <Plus className="h-3.5 w-3.5" /> Nueva factura
             </Button>

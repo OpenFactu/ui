@@ -22,18 +22,38 @@ button.k-range-day:disabled { opacity: 0.35; cursor: not-allowed; }
 button.k-range-day:focus-visible { outline: 2px solid var(--color-accent, #0d9488); outline-offset: -2px; z-index: 1; }
 .k-range-day[data-today]::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; border-radius: 50%; background: var(--color-accent, #0d9488); }
 .k-range-day[data-in-range] { background: color-mix(in srgb, var(--color-accent, #0d9488) 14%, transparent); }
-.k-range-day[data-start], .k-range-day[data-end] { background: var(--color-accent, #0d9488) !important; color: var(--color-accent-fg, #ffffff); font-weight: 600; }
+.k-range-day[data-start], .k-range-day[data-end] { background: var(--color-accent, #0d9488) !important; color: var(--k-accent-on, #0f172a); font-weight: 600; }
 .k-range-day[data-start] { border-radius: var(--k-radius-sm, 4px) 0 0 var(--k-radius-sm, 4px); }
 .k-range-day[data-end] { border-radius: 0 var(--k-radius-sm, 4px) var(--k-radius-sm, 4px) 0; }
 .k-range-day[data-start][data-end] { border-radius: var(--k-radius-sm, 4px); }
-.k-range-day[data-today][data-start]::after, .k-range-day[data-today][data-end]::after { background: var(--color-accent-fg, #ffffff); }
+.k-range-day[data-today][data-start]::after, .k-range-day[data-today][data-end]::after { background: var(--k-accent-on, #0f172a); }
 /* En móvil va dentro de la hoja: atajos arriba en fila y un solo mes a lo ancho. */
 @media (max-width: 767px) {
   .k-range-panel { flex-direction: column; border: 0; box-shadow: none; }
-  .k-range-presets { flex-direction: row; flex-wrap: wrap; min-width: 0; border-right: 0; border-bottom: 1px solid var(--border-default, #e2e8f0); }
-  .k-range-presets button { min-height: 40px; }
+  .k-range-presets {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 6px;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-right: 0;
+    border-bottom: 1px solid var(--border-default, #e2e8f0);
+  }
+  .k-range-presets::-webkit-scrollbar { display: none; }
+  .k-range-panel .k-range-presets button {
+    flex: none;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  /* El mes ocupa todo el ancho de la hoja: sin esto la rejilla se encogía a su contenido y los días se apretaban. */
+  .k-range-calendars, .k-range-months, .k-range-months > *, .k-range-grid { width: 100%; }
+  .k-range-months > * { flex: 1; min-width: 0; }
   .k-range-row { grid-template-columns: repeat(7, minmax(0, 1fr)); }
-  .k-range-day { width: 100%; height: 44px; }
+  .k-range-panel .k-range-day { width: 100%; height: 44px; min-height: 44px; }
 }
 
 /* ── Lista de horas ────────────────────────────────────────────────────── */
@@ -139,7 +159,7 @@ button.k-heatmap-day:focus-visible, button.k-heatmap-day:hover { outline: 2px so
     color-mix(in srgb, var(--k-cd-fg) 86%, var(--bg-card, #ffffff)) 0 50%,
     var(--k-cd-fg) 50% 100%
   );
-  box-shadow: 0 6px 14px -6px rgb(15 23 42 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.12);
+  box-shadow: var(--k-shadow-md, 0 6px 14px -6px rgb(15 23 42 / 0.45)), inset 0 1px 0 rgb(255 255 255 / 0.12);
 }
 .k-countdown[data-variant='flip'] .k-countdown-value::after {
   content: '';
@@ -154,7 +174,7 @@ button.k-heatmap-day:focus-visible, button.k-heatmap-day:hover { outline: 2px so
     color-mix(in srgb, var(--k-cd-accent) 82%, var(--bg-card, #ffffff)) 0 50%,
     var(--k-cd-accent) 50% 100%
   );
-  color: var(--color-accent-fg, #ffffff);
+  color: var(--k-accent-on, #0f172a);
 }
 
 /* Anillos */
@@ -186,7 +206,7 @@ button.k-heatmap-day:focus-visible, button.k-heatmap-day:hover { outline: 2px so
 .k-countdown[data-variant='display'] { --k-cd-gap: 28px; --k-cd-colon-top: 0.12em; --k-cd-colon-size: 3.2em; }
 .k-countdown[data-variant='display'] .k-countdown-value { font-size: 3.6em; font-weight: 300; letter-spacing: -0.03em; }
 .k-countdown[data-variant='display'] .k-countdown-unit small { margin-top: 10px; font-size: 0.68em; letter-spacing: 0.18em; }
-.k-countdown[data-variant='display'][data-separator] .k-countdown-unit + .k-countdown-unit::before { font-weight: 200; color: var(--border-strong, #94a3b8); }
+.k-countdown[data-variant='display'][data-separator] .k-countdown-unit + .k-countdown-unit::before { font-weight: 200; color: var(--fg-subtle, #657486); }
 
 /* Compactas: texto en línea (inline) o dentro de una pastilla. */
 .k-countdown[data-variant='inline'], .k-countdown[data-variant='pill'] {
@@ -234,9 +254,18 @@ button.k-heatmap-day:focus-visible, button.k-heatmap-day:hover { outline: 2px so
 .k-carousel-arrow:hover:not(:disabled) { transform: scale(1.08); }
 .k-carousel-arrow:disabled { opacity: 0; pointer-events: none; }
 .k-carousel-arrow:focus-visible { outline: 2px solid var(--color-accent, #0d9488); outline-offset: 2px; }
-.k-carousel-dots { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
-.k-carousel-dots button { width: 8px; height: 8px; padding: 0; border-radius: 999px; background: var(--border-strong, #cbd5e1); transition: width calc(var(--k-spring-move-duration, 380ms) * var(--k-motion, 1)) var(--k-spring-move, cubic-bezier(0.22, 1, 0.36, 1)), background-color 150ms; }
-.k-carousel-dots button[data-active] { width: 22px; background: var(--color-accent, #0d9488); }
+.k-carousel-dots { display: flex; justify-content: center; gap: 0; margin-top: 6px; }
+/* El botón mide 24 px (zona táctil mínima, WCAG 2.5.8) y el punto se dibuja dentro. */
+.k-carousel-dots button { display: grid; place-items: center; min-width: 24px; height: 24px; padding: 0 2px; border-radius: 999px; }
+.k-carousel-dots button::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border-strong, #cbd5e1);
+  transition: width calc(var(--k-spring-move-duration, 380ms) * var(--k-motion, 1)) var(--k-spring-move, cubic-bezier(0.22, 1, 0.36, 1)), background-color 150ms;
+}
+.k-carousel-dots button[data-active]::after { width: 22px; background: var(--color-accent, #0d9488); }
 .k-carousel-dots button:focus-visible { outline: 2px solid var(--color-accent, #0d9488); outline-offset: 2px; }
 
 /* ── Lightbox ───────────────────────────────────────────────────────────── */
@@ -329,7 +358,25 @@ button.k-heatmap-day:focus-visible, button.k-heatmap-day:hover { outline: 2px so
 .k-banner-actions { display: flex; gap: 6px; flex-shrink: 0; }
 .k-banner-close { display: grid; place-items: center; width: 28px; height: 28px; flex-shrink: 0; border-radius: var(--k-radius-xs, 2px); color: var(--fg-muted, #52606f); }
 .k-banner-close:hover { background: color-mix(in srgb, var(--k-banner) 15%, transparent); color: var(--fg-default, #0a1628); }
-@media (max-width: 767px) { .k-banner { flex-wrap: wrap; } .k-banner-actions { flex-basis: 100%; justify-content: flex-end; } }
+/* Móvil: rejilla fija (icono · texto · X arriba, acciones debajo del texto). Con flex-wrap cada pieza caía en su
+   propia fila y la X acababa sola abajo a la izquierda. */
+@media (max-width: 767px) {
+  .k-banner {
+    display: grid;
+    grid-template-areas: 'icon text close' '. actions actions';
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 8px 10px;
+    padding: 12px;
+  }
+  .k-banner:not(:has(> .k-banner-icon)) { grid-template-areas: 'text close' 'actions actions'; grid-template-columns: minmax(0, 1fr) auto; }
+  .k-banner-icon { grid-area: icon; }
+  .k-banner-text { grid-area: text; flex-direction: column; align-self: center; }
+  .k-banner .k-banner-close { grid-area: close; width: 36px; height: 36px; min-height: 36px; margin: -6px -6px 0 0; }
+  .k-banner-actions { grid-area: actions; flex-wrap: wrap; justify-content: flex-start; }
+  .k-banner:not(:has(> .k-banner-actions)) { grid-template-areas: 'icon text close'; }
+  .k-banner .k-banner-actions :is(button, a) { min-height: 36px; }
+}
 
 /* ── Checklist de bienvenida ────────────────────────────────────────────── */
 .k-checklist { border: 1px solid var(--border-default, #e2e8f0); border-radius: var(--k-radius-md, 8px); background: var(--bg-card, #ffffff); }
@@ -390,9 +437,9 @@ li[data-done] .k-checklist-item-title { color: var(--fg-muted, #52606f); text-de
 .k-bento-item[data-interactive] { cursor: pointer; }
 .k-bento-item[data-interactive]:hover { border-color: var(--border-strong, #cbd5e1); transform: translateY(-2px); box-shadow: var(--k-shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1)); }
 .k-bento-item[data-interactive]:focus-visible { outline: 2px solid var(--color-accent, #0d9488); outline-offset: 2px; }
-.k-bento-item[data-featured] { border-color: transparent; background: var(--color-accent, #0d9488); color: var(--color-accent-fg, #ffffff); }
+.k-bento-item[data-featured] { border-color: transparent; background: var(--color-accent, #0d9488); color: var(--k-accent-on, #0f172a); }
 .k-bento-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--k-radius-md, 8px); background: color-mix(in srgb, var(--color-accent, #0d9488) 12%, transparent); color: var(--color-accent, #0d9488); }
-.k-bento-item[data-featured] .k-bento-icon { background: color-mix(in srgb, var(--color-accent-fg, #ffffff) 20%, transparent); color: inherit; }
+.k-bento-item[data-featured] .k-bento-icon { background: color-mix(in srgb, var(--k-accent-on, #0f172a) 20%, transparent); color: inherit; }
 .k-bento-text { display: flex; flex-direction: column; gap: 4px; }
 .k-bento-text strong { font-size: 15px; color: var(--fg-default, #0a1628); }
 .k-bento-text span { font-size: 13px; line-height: 1.45; color: var(--fg-muted, #52606f); }
@@ -461,4 +508,76 @@ li[data-done] .k-checklist-item-title { color: var(--fg-muted, #52606f); text-de
   font-size: 12px;
   line-height: 1.4;
   text-align: center;
+}
+
+/* ── Barra de selección ────────────────────────────────────────────────── */
+.k-selection-bar {
+  --k-sb-fast: calc(150ms * var(--k-motion, 1));
+  position: sticky;
+  bottom: 12px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
+  max-width: calc(100% - 24px);
+  margin: 10px auto;
+  padding: 5px 6px;
+  border-radius: 999px;
+  background: var(--fg-default, #0a1628);
+  color: var(--bg-card, #ffffff);
+  box-shadow: var(--k-shadow-overlay, 0 18px 40px -16px rgb(15 23 42 / 0.55));
+  white-space: nowrap;
+  transition:
+    opacity calc(var(--k-spring-exit-duration, 200ms) * var(--k-motion, 1)) ease,
+    transform calc(var(--k-spring-pop-duration, 320ms) * var(--k-motion, 1)) var(--k-spring-pop, cubic-bezier(0.22, 1, 0.36, 1));
+}
+.k-selection-bar[data-state='closed'] { opacity: 0; transform: translateY(14px) scale(0.96); }
+.k-selection-bar[data-position='fixed'] {
+  position: fixed;
+  right: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  left: 12px;
+  width: auto;
+  max-width: none;
+  margin: 0;
+}
+/* Con el contenedor delante para ganar a la regla general de 48 px de mobile.css: la barra es una sola línea. */
+.k-selection-bar :is(.k-selection-bar-close, .k-selection-bar-action, .k-selection-bar-all) {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  min-height: 36px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: inherit;
+  transition: background-color var(--k-sb-fast) ease, opacity var(--k-sb-fast) ease;
+}
+.k-selection-bar-close { width: 36px; opacity: 0.8; }
+.k-selection-bar-action, .k-selection-bar-all { padding: 0 12px; }
+.k-selection-bar-close:hover, .k-selection-bar-action:hover:not(:disabled), .k-selection-bar-all:hover { opacity: 1; background: color-mix(in srgb, var(--bg-card, #ffffff) 14%, transparent); }
+.k-selection-bar-count { padding: 0 6px 0 2px; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.k-selection-bar-all { font-weight: 500; text-decoration: underline; text-underline-offset: 3px; opacity: 0.85; }
+.k-selection-bar-sep { flex: none; width: 1px; height: 18px; margin: 0 4px; background: color-mix(in srgb, var(--bg-card, #ffffff) 25%, transparent); }
+.k-selection-bar-actions { display: flex; flex: 1; align-items: center; justify-content: flex-end; gap: 2px; min-width: 0; }
+.k-selection-bar-action:disabled { opacity: 0.45; }
+.k-selection-bar-action[data-destructive] { color: color-mix(in srgb, var(--k-danger, #dc2626) 45%, var(--bg-card, #ffffff)); }
+.k-selection-bar-more { width: 36px; padding: 0; cursor: pointer; }
+.k-selection-bar button:focus-visible, .k-selection-bar-more:focus-visible { outline: 2px solid var(--bg-card, #ffffff); outline-offset: 1px; }
+
+/* ── Ajustes móviles ──────────────────────────────────────────────────────
+   `mobile.css` da 48 px de alto a todo botón dentro de un componente móvil (área táctil). En piezas pequeñas
+   (puntos, casillas de un mapa de calor, iconos del dock) eso las deformaba: aquí recuperan su tamaño. */
+.k-swipe { width: 100%; }
+[data-k-mobile='Carousel'] .k-carousel-dots button { min-height: 0; }
+[data-k-mobile='HeatmapCalendar'] button.k-heatmap-day { min-height: 0; }
+@media (max-width: 767px) {
+  .k-dock { --k-dock-size: 34px; gap: 4px; max-width: 100%; padding: 6px 8px; }
+  [data-k-mobile='Dock'] .k-dock-item { min-height: 0; }
+  /* Sin ratón no hay lupa: el dock se queda quieto. */
+  .k-dock-item { --k-dock-scale: 1 !important; }
 }

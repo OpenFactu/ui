@@ -23,8 +23,8 @@ const Curve: React.FC<{ config: Required<SpringConfig>; label: string }> = ({ co
     return `${((i / 60) * W).toFixed(1)},${mapY(1 + springAt(t, config, -1, 0).value).toFixed(1)}`;
   }).join(' ');
   return (
-    <figure className="m-0 flex flex-col gap-1">
-      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`Curva ${label}`} className="rounded-[var(--k-radius-sm,4px)] bg-[var(--bg-muted,#fafbfc)] border border-[var(--border-default,#e2e8f0)]">
+    <figure className="m-0 flex min-w-0 flex-col gap-1">
+      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`Curva ${label}`} className="h-auto w-full max-w-[180px] rounded-[var(--k-radius-sm,4px)] bg-[var(--bg-muted,#fafbfc)] border border-[var(--border-default,#e2e8f0)]">
         <line x1="0" x2={W} y1={mapY(1)} y2={mapY(1)} stroke="var(--border-strong,#cbd5e1)" strokeDasharray="3 3" />
         <polyline points={points} fill="none" stroke="var(--color-accent,#0d9488)" strokeWidth="2" strokeLinejoin="round" />
       </svg>

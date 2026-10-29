@@ -43,6 +43,30 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
   const total = React.useMemo(() => { let n = 0; values.forEach((v, iso) => { if (iso >= first && iso <= last) n += v; }); return n; }, [values, first, last]);
   const describe = formatDay ?? ((iso: string, v: number) => { const p = parseIso(iso)!; return `${p.d} ${MESES[p.m - 1]} ${p.y}: ${formatNumber(v)}`; });
 
+  // Con días pulsables: un único día enfocable a la vez y flechas (↑↓ un día, ←→ una semana, Inicio/Fin). Con 365
+  // botones como paradas de tabulador, cruzar el componente con el teclado era imposible.
+  const [activo, setActivo] = React.useState(last);
+  const enfocar = React.useRef(false);
+  const grid = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => { if (activo < first || activo > last) setActivo(last); }, [first, last, activo]);
+  React.useLayoutEffect(() => {
+    if (!enfocar.current) return;
+    enfocar.current = false;
+    grid.current?.querySelector<HTMLElement>(`[data-iso="${activo}"]`)?.focus();
+  });
+  const mover = (event: React.KeyboardEvent) => {
+    const salto: Record<string, number> = { ArrowUp: -1, ArrowDown: 1, ArrowLeft: -7, ArrowRight: 7 };
+    let siguiente: string | null = null;
+    if (event.key in salto) siguiente = addDays(activo, salto[event.key]);
+    else if (event.key === 'Home') siguiente = first;
+    else if (event.key === 'End') siguiente = last;
+    if (!siguiente) return;
+    event.preventDefault();
+    siguiente = siguiente < first ? first : siguiente > last ? last : siguiente;
+    enfocar.current = true;
+    setActivo(siguiente);
+  };
+
   return (
     <figure className={cn('k-heatmap', className)} data-k-mobile="HeatmapCalendar">
       <div className="k-heatmap-scroll k-scrollbar">
@@ -51,14 +75,15 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
             {months.map((mo) => <span key={`${mo.y}-${mo.m}`} style={{ gridColumn: mo.column + 1 }}>{capitalizar(MESES[mo.m - 1])}</span>)}
           </div>
           <div className="k-heatmap-weekdays" aria-hidden="true">{WEEKDAY_LABELS.map((d, i) => <span key={i}>{d}</span>)}</div>
-          <div className="k-heatmap-grid" role="img" aria-label={`${label}: ${formatNumber(total)} en total, máximo ${formatNumber(max)} en un día`}>
+          {/* `img` solo si no hay nada que pulsar: dentro de un `img` los botones dejan de existir para el lector. */}
+          <div ref={grid} className="k-heatmap-grid" role={onDayClick ? 'group' : 'img'} aria-label={`${label}: ${formatNumber(total)} en total, máximo ${formatNumber(max)} en un día`} onKeyDown={onDayClick ? mover : undefined}>
             {columns.map((week, w) => (
               <div key={w} className="k-heatmap-week">
                 {week.map((cell) => {
                   if (!cell.inRange) return <span key={cell.iso} className="k-heatmap-day" data-empty />;
                   const title = describe(cell.iso, cell.value);
                   return onDayClick
-                    ? <button key={cell.iso} type="button" className="k-heatmap-day" data-level={cell.level} title={title} aria-label={title} onClick={() => onDayClick(cell.iso, cell.value)} />
+                    ? <button key={cell.iso} type="button" className="k-heatmap-day" data-iso={cell.iso} data-level={cell.level} title={title} aria-label={title} tabIndex={cell.iso === activo ? 0 : -1} onFocus={() => setActivo(cell.iso)} onClick={() => onDayClick(cell.iso, cell.value)} />
                     : <span key={cell.iso} className="k-heatmap-day" data-level={cell.level} title={title} />;
                 })}
               </div>
