@@ -289,7 +289,7 @@ export const Chart: React.FC<ChartProps> = ({
   }
 
   return (
-    <div className={cn('w-full', className)}>
+    <div data-k-mobile="Chart" className={cn('w-full', className)}>
       <div style={{ height }} role="img" aria-label={rest['aria-label']}>
         <ResponsiveContainer width="100%" height="100%">
           {chart}

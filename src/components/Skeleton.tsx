@@ -115,7 +115,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
 
   if (repeat === 1) return items[0];
   return (
-    <div className="flex flex-col w-full" style={{ gap: toCssSize(gap) }}>
+    <div data-k-mobile="Skeleton" className="flex flex-col w-full" style={{ gap: toCssSize(gap) }}>
       {items}
     </div>
   );

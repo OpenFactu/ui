@@ -72,7 +72,8 @@ export interface AIMessageData {
   versionId?: string;
   feedback?: 'positive' | 'negative';
 }
-export interface AIConversationItem { id: string; title: string; description?: string; group?: string; pinned?: boolean; updatedAt?: string }
+export interface AIConversationProject { id: string; title: string }
+export interface AIConversationItem { id: string; title: string; description?: string; group?: string; projectId?: string; pinned?: boolean; updatedAt?: string }
 interface AIArtifactBase { id: string; title: string; filename?: string }
 export type AIArtifact = AIArtifactBase & (
   | { kind: 'markdown' | 'code' | 'html'; content: string; language?: string; editable?: boolean }
@@ -84,6 +85,8 @@ export type AIArtifactRenderer = (artifact: AIArtifact) => React.ReactNode;
 
 export interface AIWorkspaceState {
   conversations: AIConversationItem[];
+  /** Proyectos disponibles. Si se omite, el historial conserva su presentación simple. */
+  projects?: AIConversationProject[];
   conversationId?: string;
   messages: AIMessageData[];
   draft: AIDraft;
@@ -108,7 +111,12 @@ export interface AIWorkspaceActions {
   onReadAloud?: (id: string, text: string) => void;
   onVersionChange?: (messageId: string, versionId: string) => void;
   onSelectConversation: (id: string) => void;
-  onNewConversation?: () => void;
+  onNewConversation?: (projectId?: string) => void;
+  onCreateProject?: (title: string) => void;
+  onRenameProject?: (id: string, title: string) => void;
+  /** El consumidor elimina el proyecto y quita su projectId de las conversaciones, conservando sus mensajes. */
+  onDeleteProject?: (id: string) => void;
+  onMoveConversation?: (id: string, projectId?: string) => void;
   onRenameConversation?: (id: string, title: string) => void;
   onDeleteConversation?: (id: string) => void;
   onPinConversation?: (id: string, pinned: boolean) => void;

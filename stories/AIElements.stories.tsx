@@ -110,6 +110,7 @@ export const ContextoYCitas = () => {
       <AIContextUsage usedTokens={used} maxTokens={200000} modelLabel="Asistente general" breakdown={breakdown} details={[{ label: 'Entrada', value: '41,2 k' }, { label: 'Salida', value: '8,4 k' }, { label: 'Coste', value: '0,38 €' }]} onCompact={() => new Promise(resolve => { setTimeout(() => { setUsed(34000); resolve(); }, 700); })} />
       <AIContextUsage usedTokens={168000} maxTokens={200000} placement="top" align="start" />
       <AIContextUsage usedTokens={197500} maxTokens={200000} />
+      <AIContextUsage usedTokens={20000} maxTokens={200000} variant="plain" />
     </div>
     <p>Prisma recomienda sembrar tras el reset <AIInlineCitation sources={[{ id: 's', title: 'Seeding your database', url: 'https://www.prisma.io/docs/orm/prisma-migrate/workflows/seeding', description: 'Guía oficial de siembra con Prisma Migrate.' }, { id: 't', title: 'migrate reset', url: 'https://www.prisma.io/docs/orm/reference/prisma-cli-reference', description: 'Referencia de la CLI.' }, { id: 'u', title: 'Discusión en GitHub', url: 'https://github.com/prisma/prisma/discussions' }]} /> y mantener las fixtures completas <AIInlineCitation source={{ id: 'v', title: 'React', url: 'https://react.dev/learn' }} />.</p>
     <AICheckpoint label="Antes de resetear la base de datos" onRestore={() => new Promise(resolve => setTimeout(resolve, 600))} />

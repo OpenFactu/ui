@@ -56,6 +56,7 @@ export const Tabs: React.FC<TabsProps> = ({
   className,
 }) => {
   const listRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => { const list = listRef.current; if (!list || window.innerWidth >= 768) return; const active = Array.from(list.querySelectorAll<HTMLElement>('[data-tab-key]')).find(element => element.dataset.tabKey === value); active?.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }, [value]);
 
   // Navegación con flechas entre tabs habilitadas (patrón WAI-ARIA tablist).
   const handleKeyDown = (event: React.KeyboardEvent, currentKey: string) => {
@@ -79,12 +80,13 @@ export const Tabs: React.FC<TabsProps> = ({
       ref={listRef}
       role="tablist"
       className={cn(
-        'flex',
-        isUnderline && 'border-b border-[var(--border-default,#e2e8f0)]',
+        'k-tabs flex',
+        isUnderline &&
+          'border-b border-[var(--border-default,#e2e8f0)] max-sm:overflow-x-auto max-sm:[scrollbar-width:none] max-sm:[&::-webkit-scrollbar]:hidden',
         variant === 'pill' && 'items-center gap-1',
         isSegmented &&
           'items-stretch w-fit rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] overflow-hidden',
-        scrollable && 'overflow-x-auto',
+        scrollable && 'overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
         className,
       )}
     >

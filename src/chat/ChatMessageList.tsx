@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { ChatTypingIndicator } from './ChatTypingIndicator';
 import { Button } from '../components/Button';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
@@ -90,6 +91,7 @@ export function ChatMessageList({ className, renderMessage, searchQuery }: ChatM
           {renderMessage ? renderMessage(message) : <ChatMessage message={message} fresh={fresh(message, index)} grouped={grouped.has(message.clientId ?? message.id)} searchQuery={searchQuery} />}
         </React.Fragment>)}
       </div>
+      <ChatTypingIndicator />
     </div></div>
     {hasNew && <button type="button" className="k-chat-jump" onClick={() => {
       nearBottom.current = true; scroller.current!.scrollTop = scroller.current!.scrollHeight; setHasNew(false);

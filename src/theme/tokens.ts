@@ -556,5 +556,5 @@ export function themeToCssText(theme: ResolvedTheme, selector = ':root'): string
 
 /** Estilo inline para tematizar un subárbol concreto (previsualizaciones). */
 export function themeToStyle(theme: ResolvedTheme): Record<string, string> {
-  return themeToCssVars(theme);
+  return { ...themeToCssVars(theme), colorScheme: theme.mode };
 }

@@ -1,5 +1,8 @@
 import * as React from 'react';
 import { cn } from '../utils';
+import { useIsNarrow } from '../hooks/useMediaQuery';
+import { MobileOverlay } from './internal/MobileOverlay';
+import { Button } from './Button';
 
 export interface PageHeaderProps {
   title: React.ReactNode;
@@ -56,13 +59,17 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   sticky = false,
   className,
 }) => {
+  const mobile = useIsNarrow(768); const [moreOpen, setMoreOpen] = React.useState(false); const moreAnchor = React.useRef<HTMLButtonElement>(null);
+  const flatten = (nodes: React.ReactNode): React.ReactNode[] => React.Children.toArray(nodes).flatMap(node => React.isValidElement<{ children?: React.ReactNode }>(node) && node.type === React.Fragment ? flatten(node.props.children) : [node]);
+  const actionItems = flatten(actions);
   const showDivider = divider ?? !!tabs;
 
   return (
     <header
       className={cn(
-        'flex flex-col gap-4',
-        showDivider && 'pb-0 border-b border-[var(--border-default,#e2e8f0)]',
+        'k-page-header flex flex-col gap-4',
+        // Con pestañas, estas se pegan a la línea; sin ellas, el contenido necesita aire.
+        showDivider && (tabs ? 'pb-0' : 'pb-4') + ' border-b border-[var(--border-default,#e2e8f0)]',
         sticky &&
           'sticky top-0 z-[var(--k-z-sticky,30)] bg-[var(--bg-app,#fafbfc)]/95 backdrop-blur-sm',
         className,
@@ -96,7 +103,10 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             </p>
           )}
         </div>
-        {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+        {actions && (
+          // En móvil bajan bajo el título y pueden partirse en varias líneas.
+          <div className="k-page-header-actions flex items-center gap-2 shrink-0 max-sm:w-full max-sm:flex-wrap">{mobile && actionItems.length > 1 ? <>{actionItems[0]}<Button ref={moreAnchor} variant="secondary" onClick={() => setMoreOpen(true)}>Más acciones</Button><MobileOverlay open={moreOpen} onClose={() => setMoreOpen(false)} title="Acciones" presentation="sheet" anchorRef={moreAnchor}><div className="k-page-secondary-actions">{actionItems.slice(1)}</div></MobileOverlay></> : actions}</div>
+        )}
       </div>
 
       {toolbar}

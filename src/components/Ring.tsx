@@ -54,7 +54,7 @@ export const Ring: React.FC<RingProps> = ({
       : TONE_COLORS[tone];
 
   return (
-    <span
+    <span data-k-mobile="Ring"
       className={cn('relative inline-flex items-center justify-center shrink-0', className)}
       style={{ width: size, height: size }}
       role="progressbar"

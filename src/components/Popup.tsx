@@ -1,4 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useEscapeStack } from '../internal/escapeStack';
+import { OverlayDepthContext } from './internal/overlayDepth';
 import { createPortal } from 'react-dom';
 import { UiIcon } from '../icons';
 import { Button } from './Button';
@@ -46,19 +49,16 @@ export const PopupFrame: React.FC<PopupFrameProps> = ({
   // scroll del que sigue abierto debajo.
   useScrollLock(true);
 
-  useEffect(() => {
-    const onEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && dismissible) onClose();
-    };
-    window.addEventListener('keydown', onEsc);
-    return () => window.removeEventListener('keydown', onEsc);
-  }, [onClose, dismissible]);
+  const depth = React.useContext(OverlayDepthContext);
+  const panel = React.useRef<HTMLDivElement>(null);
+  useFocusTrap(panel, { enabled: true, priority: depth });
 
   // Un diálogo que el lector de pantalla no anuncia como diálogo es, para quien
   // no mira la pantalla, texto que aparece de la nada. `Modal` ya lo hacía bien;
   // esto no, y es lo que usan TODAS las confirmaciones.
   const titleId = React.useId();
   const subtitleId = React.useId();
+  useEscapeStack(titleId, dismissible, onClose);
 
   const widthClass = {
     sm: 'max-w-sm',
@@ -75,11 +75,12 @@ export const PopupFrame: React.FC<PopupFrameProps> = ({
   }[maxWidth];
 
   return createPortal(
-    <div
+    <OverlayDepthContext.Provider value={depth + 1}><div
       className="fixed inset-0 z-[var(--k-z-modal,99999)] flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--k-ink-900)_45%,transparent)] backdrop-blur-sm animate-in fade-in duration-200"
       onClick={() => dismissible && onClose()}
     >
       <div
+        ref={panel}
         // 'alertdialog' y no 'dialog': un popup con tono interrumpe y espera una
         // respuesta, que es justo la diferencia entre los dos papeles.
         role={tone ? 'alertdialog' : 'dialog'}
@@ -128,7 +129,7 @@ export const PopupFrame: React.FC<PopupFrameProps> = ({
           </div>
         )}
       </div>
-    </div>,
+    </div></OverlayDepthContext.Provider>,
     document.body,
   );
 };

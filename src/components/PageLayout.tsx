@@ -31,7 +31,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   contentClassName,
   ...header
 }) => (
-  <div
+  <div data-k-mobile="PageLayout"
     className={cn(
       'mx-auto flex w-full min-w-0 flex-col gap-6 text-[var(--fg-default)]',
       {

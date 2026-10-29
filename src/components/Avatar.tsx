@@ -48,7 +48,7 @@ export const Avatar: React.FC<AvatarProps> = ({ name, src, size = 'md', status, 
     <span className={cn('relative inline-flex shrink-0', className)}>
       <span
         className={cn(
-          'inline-flex items-center justify-center rounded-full overflow-hidden font-semibold text-white bg-gradient-to-br from-[var(--k-ink-700)] to-[var(--k-ink-900)] select-none',
+          'inline-flex items-center justify-center rounded-full overflow-hidden font-semibold text-white bg-[var(--k-ink-900,#0a1628)] bg-gradient-to-br from-[var(--k-ink-700)] to-[var(--k-ink-900)] select-none',
           sizeClasses[size],
         )}
         title={name}

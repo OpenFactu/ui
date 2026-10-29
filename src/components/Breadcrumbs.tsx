@@ -16,7 +16,7 @@ export interface BreadcrumbsProps {
 }
 
 export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className }) => (
-  <nav aria-label="Migas de pan" className={cn('flex items-center', className)}>
+  <nav data-k-mobile="Breadcrumbs" aria-label="Migas de pan" className={cn('flex items-center', className)}>
     <ol className="flex items-center gap-1.5 text-[12px]">
       {items.map((item, idx) => {
         const isLast = idx === items.length - 1;

@@ -56,7 +56,7 @@ export const ColorInput: React.FC<ColorInputProps> = ({
   };
 
   return (
-    <div className={cn('flex flex-col gap-1.5', containerClassName)}>
+    <div data-k-mobile="ColorInput" className={cn('flex flex-col gap-1.5', containerClassName)}>
       {label && (
         <label
           htmlFor={inputId}

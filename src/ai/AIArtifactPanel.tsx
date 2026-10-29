@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { CodeEditor } from '../components/CodeEditor';
-import { Textarea } from '../components/Textarea';
 import { Table } from '../components/Table';
 import { cn } from '../utils';
 import { aiLabels } from './labels';
@@ -21,7 +20,7 @@ function CodeArtifact({ artifact, onChange, labels }: AIUIProps & { artifact: Ex
     apply: editable && selection ? (next: string) => { onChange!(artifact.id, artifact.content.slice(0, selection.start) + next + artifact.content.slice(selection.end)); setSelection(null); } : undefined };
   const actions = useCodeActions('selection', context);
   return <div className="ai-code-artifact" onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setSelection(null); }}>
-    <CodeEditor aria-label={artifact.title} value={artifact.content} onChange={content => onChange?.(artifact.id, content)} language={artifact.language} readOnly={!editable} minimal height="100%"
+    <CodeEditor aria-label={artifact.title} value={artifact.content} onChange={content => onChange?.(artifact.id, content)} language={artifact.kind === 'html' ? 'html' : artifact.kind === 'markdown' ? 'markdown' : artifact.language} readOnly={!editable} minimal height="100%"
       onSelect={event => { const { selectionStart: start, selectionEnd: end, value } = event.currentTarget; setSelection(end > start ? { start, end, text: value.slice(start, end) } : null); }} />
     {selection && actions.length > 0 && <div className="ai-selection-bar" role="toolbar" aria-label={l.selectionActions}><AICodeActionBar actions={actions} context={context} max={3} labels={labels} /></div>}
   </div>;
@@ -39,8 +38,8 @@ function ArtifactView({ artifact, mode, onChange, renderers, labels }: Omit<AIAr
   React.useEffect(() => setImageFailed(false), [artifact.id]);
   if (renderers?.[artifact.kind]) return <>{renderers[artifact.kind]!(artifact)}</>;
   if (artifact.kind === 'code') return <CodeArtifact artifact={artifact} onChange={onChange} labels={labels} />;
-  if (artifact.kind === 'html' && mode === 'code') return <CodeEditor aria-label={artifact.title} value={artifact.content} onChange={content => onChange?.(artifact.id, content)} language={artifact.kind === 'html' ? 'html' : artifact.language} readOnly={!onChange || artifact.editable === false} minimal height="100%" />;
-  if (artifact.kind === 'markdown') return mode === 'code' && onChange && artifact.editable !== false ? <Textarea aria-label={artifact.title} value={artifact.content} onChange={event => onChange(artifact.id, event.target.value)} className="ai-document-editor" /> : <AIMarkdown labels={labels}>{artifact.content}</AIMarkdown>;
+  if ((artifact.kind === 'html' || artifact.kind === 'markdown') && mode === 'code') return <CodeArtifact artifact={artifact} onChange={onChange} labels={labels} />;
+  if (artifact.kind === 'markdown') return <AIMarkdown labels={labels}>{artifact.content}</AIMarkdown>;
   if (artifact.kind === 'html') return <iframe className="ai-html-preview" title={artifact.title} sandbox="allow-scripts" referrerPolicy="no-referrer" srcDoc={document} />;
   if (artifact.kind === 'table') return <Table<Record<string, unknown>> data={artifact.rows} rowKey={(_, index) => index} columns={artifact.columns.map(column => ({ id: column.key, header: column.label, cell: row => displayJson(row[column.key]) }))} emptyMessage={l.noResults} />;
   if (artifact.kind === 'image') return imageFailed || !safeUrl(artifact.url, 'media') ? <p className="ai-muted">{l.imageUnavailable}</p> : <img className="ai-artifact-image" src={safeUrl(artifact.url, 'media')} alt={artifact.alt ?? artifact.title} onError={() => setImageFailed(true)} />;
@@ -55,7 +54,7 @@ export function AIArtifactPanel({ artifacts, value, onSelect, onClose, onChange,
   React.useEffect(() => setMode('preview'), [artifact?.id]);
   const tabsRef = React.useRef<HTMLDivElement>(null);
   if (!artifact) return <aside className={cn('ai-surface ai-artifact-panel ai-artifact-empty', className)}><UiIcon slot="file" size={26} /><p>{l.noResults}</p></aside>;
-  const canSource = artifact.kind === 'html' || (artifact.kind === 'markdown' && onChange && artifact.editable !== false);
+  const canSource = artifact.kind === 'html' || artifact.kind === 'markdown';
   return <aside className={cn('ai-surface ai-artifact-panel', className)} aria-label={l.results}>
     <div className="ai-artifact-tabs" role="tablist" aria-label={l.results} ref={tabsRef} onKeyDown={event => {
       if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key) || (event.target as HTMLElement).getAttribute('role') !== 'tab') return;
@@ -72,6 +71,6 @@ export function AIArtifactPanel({ artifacts, value, onSelect, onClose, onChange,
         else { const url = safeUrl(artifact.url, 'media'); if (url) { const link = window.document.createElement('a'); link.href = url; link.download = artifact.filename ?? artifact.title; link.click(); } }
       }}><UiIcon slot="download" size={14} /></AIIconButton>
     </div></div>
-    <div id={`${id}-panel`} aria-labelledby={`${id}-${artifact.id}`} className={cn('ai-artifact-body', (artifact.kind === 'html' || artifact.kind === 'code') && 'ai-artifact-fill')} role="tabpanel"><ArtifactView key={artifact.id} artifact={artifact} mode={mode} onChange={onChange} renderers={renderers} labels={labels} /></div>
+    <div id={`${id}-panel`} aria-labelledby={`${id}-${artifact.id}`} className={cn('ai-artifact-body', (artifact.kind === 'html' || artifact.kind === 'code' || artifact.kind === 'markdown' && mode === 'code') && 'ai-artifact-fill')} role="tabpanel"><ArtifactView key={artifact.id} artifact={artifact} mode={mode} onChange={onChange} renderers={renderers} labels={labels} /></div>
   </aside>;
 }

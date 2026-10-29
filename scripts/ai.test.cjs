@@ -1,6 +1,66 @@
 require('./test-support.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+
+test('context usage exposes a borderless variant without changing its accessible indicator', () => {
+  const React = require('react'); const { renderToStaticMarkup } = require('react-dom/server');
+  const { AIContextUsage } = require('../src/ai/AIContext.tsx');
+  const html = renderToStaticMarkup(React.createElement(AIContextUsage, { usedTokens: 20, maxTokens: 100, variant: 'plain' }));
+  assert.ok(html.includes('data-variant="plain"'));
+  assert.ok(html.includes('aria-label="Contexto usado: 20 %"'));
+});
+
+test('composer controls can be composed without injecting the default toolbar', () => {
+  const React = require('react'); const { renderToStaticMarkup } = require('react-dom/server');
+  const { AIComposer, useAIComposer } = require('../src/ai/AIComposer.tsx');
+  const h = React.createElement;
+  function CustomControl() { const c = useAIComposer(); return h('button', { type: 'button', disabled: c.disabled || c.busy, onClick: c.submit }, `Propio: ${c.draft.text}`); }
+  const html = renderToStaticMarkup(h(AIComposer, { draft: { text: 'Hola', attachments: [] }, onDraftChange() {}, onSubmit() {}, models: [{ id: 'm', label: 'Modelo de prueba' }], modelId: 'm', onSelectModel() {} },
+    h(AIComposer.Toolbar, { 'aria-label': 'Controles elegidos' }, h(AIComposer.ModelSelector), h(AIComposer.AttachButton)), h(AIComposer.Input), h(CustomControl)));
+  assert.ok(html.indexOf('Modelo de prueba') < html.indexOf('<textarea'));
+  assert.ok(html.includes('Propio: Hola'));
+  assert.ok(!html.includes('aria-label="Enviar mensaje"'), 'only explicit controls are mounted');
+  assert.equal((html.match(/class="ai-model-selector"/g) ?? []).length, 1);
+  assert.throws(() => renderToStaticMarkup(h(CustomControl)), /inside AIComposer/);
+});
+
+test('history resizing keeps a useful width and rejects invalid controlled values', () => {
+  const { clampHistoryWidth } = require('../src/ai/internal/history.ts');
+  assert.equal(clampHistoryWidth(1), 200);
+  assert.equal(clampHistoryWidth(900), 420);
+  assert.equal(clampHistoryWidth(315), 315);
+  assert.equal(clampHistoryWidth(NaN), 240);
+  assert.equal(clampHistoryWidth(Infinity), 240);
+});
+
+test('workspace side panels reserve room for the conversation when both are maximized', () => {
+  const { workspacePanelWidths } = require('../src/ai/internal/history.ts');
+  for (const available of [720, 942, 1360]) {
+    const widths = workspacePanelWidths(available, 420, 60, true, true);
+    assert.ok(available - widths.history - available * widths.results / 100 - 10 >= 320);
+    assert.ok(widths.history >= 200 && widths.history <= 420);
+    assert.ok(widths.results >= 25 && widths.results <= 60);
+  }
+});
+
+test('conversation projects group once, preserve pinned order and keep orphaned chats accessible', () => {
+  const { conversationSections } = require('../src/ai/internal/history.ts');
+  const items = [{ id: 'a', title: 'A', projectId: '__proto__' }, { id: 'b', title: 'B', projectId: '__proto__', pinned: true }, { id: 'c', title: 'C', projectId: 'deleted' }, { id: 'd', title: 'D' }];
+  const sections = conversationSections(items, [{ id: '__proto__', title: 'Proyecto' }, { id: 'empty', title: 'Vacío' }]);
+  assert.deepEqual(sections.map(section => section.conversations.map(item => item.id)), [['b', 'a'], [], ['c', 'd']]);
+  assert.equal(sections[0].project.id, '__proto__');
+  assert.deepEqual(items.map(item => item.id), ['a', 'b', 'c', 'd']);
+});
+
+test('project search matches names and conversations without hiding chats in collapsed sections', () => {
+  const { conversationSections } = require('../src/ai/internal/history.ts');
+  const projects = [{ id: 'one', title: 'Facturación' }, { id: 'two', title: 'Producto' }];
+  const items = [{ id: 'a', title: 'IVA', projectId: 'one' }, { id: 'b', title: 'Diseño', projectId: 'two' }, { id: 'c', title: 'Notas', description: 'IVA' }];
+  assert.deepEqual(conversationSections(items, projects, ' facturaCIÓN ').map(section => section.conversations.map(item => item.id)), [['a']]);
+  assert.deepEqual(conversationSections(items, projects, 'iva').map(section => section.conversations.map(item => item.id)), [['a'], ['c']]);
+  assert.deepEqual(conversationSections(items, projects, 'inexistente'), []);
+  assert.deepEqual(conversationSections(items, undefined).flatMap(section => section.conversations.map(item => item.id)), ['a', 'b', 'c']);
+});
 const fs = require('node:fs');
 const path = require('node:path');
 const load = () => {

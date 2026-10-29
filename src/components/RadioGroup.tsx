@@ -36,7 +36,7 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
   const groupName = name || generatedName;
 
   return (
-    <div role="radiogroup" aria-label={label} className={cn('flex flex-col gap-2', className)}>
+    <div role="radiogroup" data-k-control="radio-group" aria-label={label} className={cn('flex flex-col gap-2', className)}>
       {label && (
         <span className="text-[12px] font-medium text-[var(--fg-body,#2d3a4a)]">
           {label}
@@ -78,7 +78,7 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
                   )}
                 />
                 {isChecked && (
-                  <span aria-hidden className="absolute h-1.5 w-1.5 rounded-full bg-white" />
+                  <span aria-hidden className="absolute h-1.5 w-1.5 rounded-full bg-[var(--color-accent-fg,#ffffff)]" />
                 )}
               </span>
               <span className="flex flex-col">

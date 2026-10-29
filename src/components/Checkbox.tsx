@@ -73,7 +73,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   if (!label && !description) return casilla;
 
   return (
-    <div className={cn('flex items-start gap-2', containerClassName)}>
+    <div data-k-control="checkbox-group" className={cn('flex items-start gap-2', containerClassName)}>
       {size === 'sm' ? <span className="mt-0.5">{casilla}</span> : casilla}
       <label
         htmlFor={inputId}

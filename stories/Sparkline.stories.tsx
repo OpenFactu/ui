@@ -36,7 +36,7 @@ export const Sparklines: Story = () => (
 
 export const Anillos: Story = () => (
   <div className="flex flex-col gap-6">
-    <div className="flex items-center gap-6">
+    <div className="flex flex-wrap items-center gap-6">
       <Ring value={28} label ariaLabel="Uso: 28%" />
       <Ring value={72} tone="auto" label ariaLabel="Uso: 72%" />
       <Ring value={94} tone="auto" label ariaLabel="Uso: 94%" />

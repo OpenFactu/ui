@@ -44,7 +44,7 @@ export const Accordion: React.FC<AccordionProps> = ({
   };
 
   return (
-    <div
+    <div data-k-mobile="Accordion"
       className={cn(
         'w-full border border-[var(--border-default,#e2e8f0)] rounded-[var(--k-radius-sm,4px)] bg-[var(--bg-card,#ffffff)] divide-y divide-[var(--border-subtle,#f1f5f9)]',
         className,

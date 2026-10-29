@@ -52,7 +52,13 @@ const MEASURE = `(() => {
     });
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   };
-  const nums = (s) => (s.match(/[\\d.]+/g) || []).map(Number);
+  const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const nums = (s) => {
+    ctx.clearRect(0, 0, 1, 1); ctx.fillStyle = s; ctx.fillRect(0, 0, 1, 1);
+    const pixel = ctx.getImageData(0, 0, 1, 1).data;
+    return [pixel[0], pixel[1], pixel[2], pixel[3] / 255];
+  };
   const bgOf = (el) => {
     const layers = [];
     let n = el;
@@ -89,7 +95,7 @@ const MEASURE = `(() => {
 })()`;
 
 const browser = await chromium.launch({ executablePath: CHROME });
-const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
+const page = await browser.newPage({ viewport: { width: Number(process.env.CONTRAST_WIDTH || 1280), height: 1000 } });
 
 let failures = 0;
 let worst = { ratio: 99, text: '', story: '' };

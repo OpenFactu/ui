@@ -76,6 +76,7 @@ export function applyTheme(
 
   const el = target ?? document.documentElement;
   const isRoot = el === document.documentElement;
+  el.style.colorScheme = resolved.mode;
   if (transition) startTransition(el, resolved, typeof transition === 'number' ? transition : 280);
 
   // Los tokens de plugins van los últimos: pueden añadir variables propias y

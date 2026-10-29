@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { createPortal } from 'react-dom';
+import { adaptivePortal } from './internal/MobileOverlay';
 import { UiIcon } from '../icons';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import { cn } from '../utils';
@@ -158,11 +158,11 @@ export interface TableProps<T> {
   /** Texto bajo el spinner (solo con loadingVariant='spinner'). */
   loadingLabel?: string;
   /**
-   * Qué hacer cuando no cabe: 'scroll' (default) deja desplazar en horizontal;
+   * Qué hacer cuando no cabe: 'auto' (default) usa tarjetas en móvil; 'scroll' deja desplazar en horizontal;
    * 'cards' pinta una tarjeta por fila por debajo de `cardsBreakpoint`.
    */
-  responsive?: 'scroll' | 'cards';
-  /** Ancho por debajo del cual se pasa a tarjetas. Default 640. */
+  responsive?: 'auto' | 'scroll' | 'cards';
+  /** Ancho de tarjetas: 768 en auto y 640 en cards; un valor explícito tiene prioridad. */
   cardsBreakpoint?: number;
   /**
    * Fila de totales al pie, alineada con las columnas. Se le pasan las filas
@@ -211,8 +211,9 @@ function ColumnToggle({
   onToggle: (key: string) => void;
 }) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const mobile = useIsNarrow(768);
   const { anchorRef, popoverRef, style, ready } = usePopover<HTMLButtonElement>({
-    open: isOpen,
+    open: isOpen && !mobile,
     onClose: () => setIsOpen(false),
     align: 'end',
     minWidth: 180,
@@ -233,12 +234,12 @@ function ColumnToggle({
         <UiIcon slot="columns-3" className="h-3.5 w-3.5" />
       </button>
       {isOpen &&
-        createPortal(
+        adaptivePortal(
           <div
             ref={popoverRef}
             className={cn(
               'z-[var(--k-z-popover,999999)] min-w-[180px] rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-1 shadow-lg',
-              !ready && 'invisible',
+              !ready && !mobile && 'invisible',
             )}
             style={style}
           >
@@ -261,6 +262,7 @@ function ColumnToggle({
             ))}
           </div>,
           document.body,
+          { open: isOpen, onClose: () => setIsOpen(false), title: 'Columnas', presentation: mobile ? 'sheet' : 'anchored', anchorRef },
         )}
     </>
   );
@@ -269,10 +271,9 @@ function ColumnToggle({
 /**
  * Celda de acciones de fila.
  *
- * Con una sola acción no se pliega: esconder un único botón detrás de un menú
- * cuesta dos clics para llegar a lo mismo y no ahorra nada de ancho, así que se
- * pinta directo. A partir de dos sí compensa el desplegable. El menú de click
- * derecho de la fila sigue ofreciéndolas en ambos casos.
+ * Una única acción no destructiva con icono propio puede mostrarse directamente.
+ * Los tres puntos siempre abren el menú, incluso cuando solo hay una acción.
+ * Las acciones destructivas requieren elegir explícitamente el elemento.
  */
 const RowActionsCell: React.FC<{ actions: RowAction[] | null; alwaysVisible?: boolean }> = ({
   actions,
@@ -285,10 +286,12 @@ const RowActionsCell: React.FC<{ actions: RowAction[] | null; alwaysVisible?: bo
     : 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-within:opacity-100';
   const btnClass = cn(
     'p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent hover:bg-[var(--bg-hover)] transition-all disabled:opacity-40 disabled:pointer-events-none',
+    // En las tarjetas (pantalla táctil) el área de toque llega a 40 px.
+    alwaysVisible && 'inline-flex min-h-10 min-w-10 items-center justify-center',
     revealClass,
   );
 
-  if (actions.length === 1) {
+  if (actions.length === 1 && actions[0].icon && !actions[0].destructive) {
     const only = actions[0];
     const label = typeof only.label === 'string' ? only.label : 'Acción de la fila';
     return (
@@ -355,8 +358,8 @@ export function Table<T>({
   skeletonRows,
   skeletonRowHeight,
   loadingLabel = 'Sincronizando…',
-  responsive = 'scroll',
-  cardsBreakpoint = 640,
+  responsive = 'auto',
+  cardsBreakpoint = responsive === 'auto' ? 768 : 640,
   summaryRow,
   summaryByColumn,
   summaryLabel = 'Total',
@@ -648,7 +651,7 @@ export function Table<T>({
 
   // ── Vista de tarjetas en pantalla estrecha ────────────────────────────
   const narrow = useIsNarrow(cardsBreakpoint);
-  const asCards = responsive === 'cards' && narrow;
+  const asCards = responsive !== 'scroll' && narrow;
   const activateRow = (event: React.KeyboardEvent, item: T) => {
     if (event.target !== event.currentTarget || !onRowClick) return;
     if (event.key === 'Enter' || event.key === ' ') {
@@ -683,7 +686,7 @@ export function Table<T>({
       <div
         aria-label={ariaLabel}
         role={ariaLabel ? 'region' : undefined}
-        className={cn('w-full flex flex-col gap-2', className)}
+        data-k-mobile="TableCards" className={cn('k-table-cards w-full flex flex-col gap-2', className)}
       >
         {feedback}
         <div className="flex flex-wrap items-center justify-between gap-2 text-[12px] text-[var(--fg-muted,#52606f)]">
@@ -768,7 +771,15 @@ export function Table<T>({
                         </span>
                       )}
                       <div className="min-w-0">
-                        <div className="font-mono text-[13px] font-medium text-[var(--fg-default,#0a1628)] truncate">
+                        <div
+                          className={cn(
+                            'text-[var(--fg-default,#0a1628)] truncate',
+                            // La fuente monoespaciada es para códigos (columna `primary`); un nombre va en la del cuerpo.
+                            titleCol?.primary
+                              ? 'font-mono text-[13px] font-medium'
+                              : 'text-sm font-semibold',
+                          )}
+                        >
                           {titleCol && render(titleCol, item, rowIdx)}
                         </div>
                         {subtitleCols.map((col) => (
@@ -874,6 +885,7 @@ export function Table<T>({
 
   return (
     <div
+      data-k-mobile="Table"
       className={cn(
         'w-full bg-[var(--bg-card,#ffffff)] border border-[var(--border-default,#e2e8f0)] rounded-[var(--k-radius-xs,2px)]',
         className,

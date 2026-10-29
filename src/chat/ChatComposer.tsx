@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Textarea } from '../components/Textarea';
 import { Button } from '../components/Button';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
@@ -53,7 +54,7 @@ export function ChatComposer({ className, placeholder = 'Escribe un mensaje…',
       <button type="button" className="k-chat-icon-button" aria-label="Cancelar respuesta" onClick={() => setDraft({ ...draft, replyToId: undefined })}><UiIcon slot="x" size={16} /></button></div>}
     {Boolean(draft.attachments?.length) && conversation && <ChatAttachments attachments={draft.attachments!} draft conversationId={conversation.id} />}
     {uploadError && <p className="k-chat-message-error" role="alert">{uploadError}</p>}
-    <div className="k-chat-composer-input"><textarea ref={input} aria-label="Mensaje" aria-describedby={hintId} value={draft.text} rows={1}
+    <div data-k-focus-surface="" className="k-chat-composer-input"><Textarea data-k-focus-input="" inputRef={input} aria-label="Mensaje" aria-describedby={hintId} value={draft.text} rows={1}
       disabled={Boolean(locked)} placeholder={conversation?.readOnly ? 'Esta conversación es de solo lectura' : placeholder}
       onSelect={event => { const element = event.currentTarget; selection.current = { start: element.selectionStart, end: element.selectionEnd }; setCaret(element.selectionStart); }}
       onChange={event => { const text = event.target.value; setDraft({ ...draft, text, mentions: updateChatMentions(draft.text, text, draft.mentions) }); setCaret(event.target.selectionStart); setMentionIndex(0); }}

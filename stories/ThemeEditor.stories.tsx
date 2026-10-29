@@ -27,7 +27,7 @@ function Preview({ theme }: { theme: ReturnType<typeof resolveTheme> }) {
       <Card title="Formulario" subtitle="Prueba el foco con Tab y selecciona este texto">
         <div className="flex flex-col gap-3 p-4">
           <Input label="Cliente" placeholder="Nombre fiscal" />
-          <div className="flex items-center gap-3"><Switch checked={on} onChange={setOn} /><span className="text-[13px]">Enviar por correo</span><Badge variant="success">Activo</Badge></div>
+          <div className="flex items-center gap-3"><Switch checked={on} onChange={setOn} label="Enviar por correo" /><Badge variant="success">Activo</Badge></div>
           <Progress value={64} />
           <div className="flex gap-2"><Button variant="primary" size="sm">Guardar</Button><Button variant="secondary" size="sm">Cancelar</Button></div>
         </div>
@@ -71,7 +71,7 @@ export const Editor: Story = () => {
   const pick = (id: string) => { setPresetId(id); setImported(null); setEdit({}); setNotice(''); };
   const copy = async (value: string, what: string) => { try { await navigator.clipboard.writeText(value); setNotice(`${what} copiado.`); } catch { setNotice('No se pudo copiar; selecciona el texto de abajo.'); } };
   const source = themeToPresetSource({ id: 'mi-tema', label: 'Mi tema', description: 'Creado con el editor.' }, input);
-  return <div style={{ display: 'grid', gap: 12 }}>
+  return <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{THEME_PRESETS.map(item => <button key={item.id} type="button" aria-pressed={!imported && item.id === presetId} onClick={() => pick(item.id)} style={{ padding: '4px 10px', fontSize: 11, cursor: 'pointer', fontWeight: !imported && item.id === presetId ? 700 : 400 }}>{item.label}</button>)}</div>
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 10 }}>
       <div style={box}><strong style={{ fontSize: 12 }}>Color</strong>
@@ -102,7 +102,7 @@ export const Editor: Story = () => {
     </div>
     {issues.length > 0 && <ul style={{ margin: 0, fontSize: 11 }}>{issues.map(issue => <li key={issue.field + issue.message}><strong>{issue.field}</strong>: {issue.message}</li>)}</ul>}
     <Preview theme={theme} />
-    <div style={{ ...box, gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+    <div style={{ ...box, gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))' }}>
       <div style={{ display: 'grid', gap: 6 }}><strong style={{ fontSize: 12 }}>Exportar</strong>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}><button type="button" onClick={() => void copy(themeToJson(input), 'JSON')}>Copiar JSON</button><button type="button" onClick={() => void copy(source, 'Código')}>Copiar registerThemePreset</button></div>
         <textarea readOnly aria-label="Código exportado" value={source} rows={12} style={{ fontFamily: 'monospace', fontSize: 11, width: '100%' }} />

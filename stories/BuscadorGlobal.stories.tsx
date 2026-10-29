@@ -108,7 +108,7 @@ export const Cabecera: Story = () => {
         <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
           Keirost
         </span>
-        <div className="max-w-md flex-1">
+        <div className="min-w-0 max-w-md flex-1">
           <SearchTrigger
             onOpen={paleta.openPalette}
             placeholder="Buscar interlocutores, artículos o documentos…"

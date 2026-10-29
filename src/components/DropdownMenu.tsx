@@ -1,5 +1,8 @@
 import * as React from 'react';
-import { createPortal } from 'react-dom';
+import { mobileMenuKeyboard } from './internal/mobileMenuKeyboard';
+import { adaptivePortal } from './internal/MobileOverlay';
+import { resolveMobilePresentation, type MobilePresentation } from './internal/mobilePresentation';
+import { useIsNarrow } from '../hooks/useMediaQuery';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
 import { MenuItemButton, MenuSeparator, MenuItemShape } from './internal/MenuItemButton';
@@ -7,6 +10,7 @@ import { MenuItemButton, MenuSeparator, MenuItemShape } from './internal/MenuIte
 export interface DropdownMenuItem extends MenuItemShape {}
 
 export interface DropdownMenuProps {
+  mobilePresentation?: MobilePresentation;
   items: DropdownMenuItem[];
   /** Trigger: cualquier nodo; se envuelve en un span clicable. */
   children: React.ReactNode;
@@ -23,13 +27,16 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
   disabled = false,
   className,
   menuClassName,
+  mobilePresentation = 'auto',
 }) => {
+  const mobile = useIsNarrow(768);
+  const presentation = resolveMobilePresentation(mobile, mobilePresentation, 'sheet');
   const [isOpen, setIsOpen] = React.useState(false);
   const [activeIndex, setActiveIndex] = React.useState(-1);
   const menuId = React.useId();
 
   const { anchorRef, popoverRef, style, ready } = usePopover<HTMLSpanElement>({
-    open: isOpen,
+    open: isOpen && !mobile,
     onClose: () => setIsOpen(false),
     align,
     minWidth: 180,
@@ -79,14 +86,15 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
 
   const menu =
     isOpen &&
-    createPortal(
+    adaptivePortal(
       <div
         ref={popoverRef}
         id={menuId}
         role="menu"
+        onKeyDown={mobile ? mobileMenuKeyboard : undefined}
         className={cn(
           'z-[var(--k-z-popover,999999)] min-w-[180px] rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-1 shadow-lg animate-in fade-in-50 duration-150',
-          !ready && 'invisible',
+          !ready && !mobile && 'invisible',
           menuClassName,
         )}
         style={style}
@@ -103,6 +111,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
         ))}
       </div>,
       document.body,
+      { open: isOpen, onClose: () => setIsOpen(false), title: 'Acciones', presentation, anchorRef },
     );
 
   return (

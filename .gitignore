@@ -7,3 +7,6 @@ build/
 meta_tmp.json
 probe_*.mjs
 smoke_tmp.tsx
+
+# Adjuntos de sesiones de Codex (capturas pegadas; no son código)
+.codex-attachments/

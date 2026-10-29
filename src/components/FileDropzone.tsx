@@ -218,7 +218,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
   }
 
   return (
-    <div className={className}>
+    <div data-k-mobile="FileDropzone" className={className}>
       {hiddenInput}
       <div
         role="button"

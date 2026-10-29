@@ -65,8 +65,6 @@
 .k-chat-composer { flex-shrink: 0; min-width: 0; padding: 12px 20px 18px; border-top: 0; }
 .k-chat-composer-input { display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 12px; border: var(--k-border-width,1px) solid var(--border-default); border-radius: var(--k-radius-lg); background: color-mix(in srgb,var(--bg-muted) 35%,var(--bg-card)); box-shadow: var(--k-shadow-sm); transition: border-color calc(120ms * var(--k-motion,1)) var(--k-ease,cubic-bezier(.23,1,.32,1)); }
 .k-chat-composer-input:focus-within { border-color: color-mix(in srgb,var(--color-accent) 60%,var(--border-default)); }
-/* The composer is the focus surface; avoid a second theme ring around its internal text area. */
-[data-k-focus] .k-chat-composer textarea:focus-visible { outline: none !important; box-shadow: none !important; }
 .k-chat-composer-input:has(textarea:focus-visible) { border-color: var(--color-accent); }
 .k-chat-composer textarea { width: 100%; min-width: 0; min-height: 42px; max-height: 144px; padding: 2px 3px; resize: none; border: 0; outline: 0; background: transparent; color: inherit; font: inherit; line-height: 1.5; }
 .k-chat-composer textarea::placeholder { color: var(--fg-muted); }
@@ -207,3 +205,33 @@
   .k-chat-voice-controls { gap: 0; padding: 0 3px; }
   .k-chat-composer-input button span { display: none; }
 }
+.k-chat-details { display: grid; gap: 24px; }
+.k-chat-details section { display: grid; gap: 12px; min-width: 0; }
+.k-chat-details h3, .k-chat-details p { margin: 0; }
+.k-chat-details h3 { font-size: 15px; }
+.k-chat-details p { color: var(--fg-muted, #52606f); font-size: 13px; }
+.k-chat-details a, .k-chat-selection-list { overflow-wrap: anywhere; }
+.k-chat-selection-list { display: grid; gap: 12px; max-height: 280px; overflow: auto; padding: 8px; border: 1px solid var(--border-default, #e2e8f0); border-radius: var(--k-radius-sm, 4px); }
+.k-chat-receipt { display: inline-flex; align-items: center; gap: 5px; border: 0; padding: 4px; background: transparent; color: var(--fg-muted, #52606f); font: inherit; cursor: pointer; }
+.k-chat-receipt-checks { display: inline-flex; align-items: center; }
+.k-chat-receipt-checks > svg + svg { margin-left: -8px; }
+.k-chat-receipt[data-status='read'] { color: var(--k-info-fg, #0369a1); }
+.k-chat-receipt[data-status='error'] { color: var(--k-danger-fg, #b91c1c); }
+.k-chat-receipt-details { display: grid; gap: 16px; }
+.k-chat-receipt-details dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 20px; }
+.k-chat-receipt-details dd { margin: 0; }
+.k-chat-receipt-details ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.k-chat-receipt-details li { display: grid; gap: 4px; }
+.k-chat-receipt-details p, .k-chat-receipt-details h3 { margin: 0; }
+.k-chat-receipt-details li span { color: var(--fg-muted, #52606f); font-size: 13px; }
+@media (max-width: 767px) { .k-chat-receipt { min-height: 44px; } }
+.k-chat-typing { display: flex; align-items: center; gap: 10px; padding: 8px 0 12px; min-height: 48px; }
+.k-chat-typing-avatars { display: flex; flex-shrink: 0; padding-right: 4px; }
+.k-chat-typing-avatars > * + * { margin-left: -10px; }
+.k-chat-typing-copy { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; min-width: 0; color: var(--fg-muted, #52606f); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.k-chat-typing-dots { display: inline-flex; align-items: center; gap: 4px; height: 30px; padding: 0 12px; border-radius: var(--k-chat-bubble-radius, 8px); background: var(--k-chat-incoming-bg, var(--bg-muted, #f1f5f9)); }
+.k-chat-typing-dots i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; animation: k-chat-typing-pulse 1.2s ease-in-out infinite; }
+.k-chat-typing-dots i:nth-child(2) { animation-delay: 150ms; }
+.k-chat-typing-dots i:nth-child(3) { animation-delay: 300ms; }
+@keyframes k-chat-typing-pulse { 0%, 60%, 100% { transform: translateY(0); opacity: .45; } 30% { transform: translateY(-3px); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .k-chat-typing-dots i { animation: none; opacity: 1; } }

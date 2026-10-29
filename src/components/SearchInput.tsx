@@ -172,6 +172,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
       <div
         ref={popoverRef}
         role="listbox"
+        data-k-mobile="SearchSuggestions"
         style={panelStyle}
         className={cn(
           'z-[var(--k-z-popover,999999)] max-h-[280px] overflow-y-auto rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-1 shadow-lg',

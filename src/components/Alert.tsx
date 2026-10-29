@@ -50,7 +50,7 @@ export function Alert({
 }: AlertProps) {
   const iconSlot = ICONS[tone];
   return (
-    <div
+    <div data-k-mobile="Alert"
       role={role}
       className={cn(
         'flex items-start gap-3 rounded-[var(--k-radius-sm,4px)] border p-4 text-[13px]',

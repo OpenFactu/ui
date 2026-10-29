@@ -37,7 +37,7 @@ export const DocumentTotals: React.FC<DocumentTotalsProps> = ({
   className,
   'aria-label': ariaLabel = 'Resumen de importes',
 }) => (
-  <section
+  <section data-k-mobile="DocumentTotals"
     aria-label={ariaLabel}
     className={cn(
       'min-w-0 rounded-[var(--k-radius-sm)] border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--fg-default)]',

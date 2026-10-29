@@ -26,11 +26,11 @@ export const AIFileTree = React.memo(function AIFileTree({ files, selected, onSe
   const isOpen = (path: string) => defaultExpanded === 'all' ? !closed.has(path) : opened.has(path);
   const toggle = (path: string) => (defaultExpanded === 'all' ? setClosed : setOpened)(current => { const next = new Set(current); if (!next.delete(path)) next.add(path); return next; });
   const render = (nodes: AIFileNode[], depth: number): React.ReactNode => nodes.map(node => {
-    const indent = { paddingInlineStart: `calc(${depth} * 14px + 8px)` };
+    const indent = { paddingInlineStart: `calc(${depth} * 18px + 12px)` };
     if (node.kind === 'folder') {
       const open = isOpen(node.path);
       return <li key={node.path} role="treeitem" aria-expanded={open}>
-        <button type="button" className="ai-tree-row" style={indent} onClick={() => toggle(node.path)}>
+        <button type="button" className="ai-tree-row" style={indent} onClick={() => toggle(node.path)} title={node.path} aria-expanded={open}>
           <UiIcon slot="chevron-right" size={13} className="ai-tree-chevron" data-open={open || undefined} aria-hidden="true" />
           {open ? <UiIcon slot="folder-open" size={14} aria-hidden="true" /> : <UiIcon slot="folder" size={14} aria-hidden="true" />}<span className="ai-tree-name">{node.name}</span>
         </button>
@@ -40,7 +40,7 @@ export const AIFileTree = React.memo(function AIFileTree({ files, selected, onSe
     const { file } = node;
     return <li key={node.path} role="treeitem" aria-selected={selected === node.path}>
       <div className="ai-tree-file" data-selected={selected === node.path || undefined}>
-        <button type="button" className="ai-tree-row" style={indent} onClick={() => onSelect?.(node.path)} data-status={file.status} title={file.status ? l[STATUS_LABEL[file.status]] : undefined}>
+        <button type="button" className="ai-tree-row" style={indent} onClick={() => onSelect?.(node.path)} data-status={file.status} title={`${node.path}${file.status ? ' · ' + l[STATUS_LABEL[file.status]] : ''}`}>
           <UiIcon slot="file" size={14} aria-hidden="true" /><span className="ai-tree-name">{node.name}</span>
           {file.status && <span className="ai-sr-only"> ({l[STATUS_LABEL[file.status]]})</span>}
           {(file.additions !== undefined || file.deletions !== undefined) && <span className="ai-tree-stats" aria-hidden="true">{!!file.additions && <span data-kind="add">+{file.additions}</span>}{!!file.deletions && <span data-kind="remove">−{file.deletions}</span>}</span>}

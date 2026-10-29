@@ -30,7 +30,7 @@ const base = process.env.LADLE_URL || 'http://localhost:61000';
     assert.equal(await input().inputValue(), 'Borrador conservado');
     await page.getByRole('tab', { name: 'Resumen', exact: true }).click();
     await page.locator('.ai-artifact-toolbar').getByRole('button', { name: 'Código', exact: true }).click();
-    await page.locator('.ai-document-editor').fill('# Documento editado');
+    await page.locator('.ai-artifact-body .k-code-editor textarea').fill('# Documento editado');
     await page.locator('.ai-artifact-toolbar').getByRole('button', { name: 'Vista previa' }).click();
     await page.locator('.ai-artifact-body').getByRole('heading', { name: 'Documento editado' }).waitFor();
     const downloadPromise = page.waitForEvent('download');

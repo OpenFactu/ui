@@ -110,7 +110,7 @@ test('in dark presets the accent tints 50 and 100 stay light, because components
     assert.ok(contrastRatio(hexToRgb(theme.colors.accentScale[100]), hexToRgb(theme.colors.bgCard)) >= 3, preset.id);
   }
 });
-test('Tailwind shadow utilities follow the theme tokens, and hard-shadow presets define every step', () => {
+test('Tailwind shadow utilities follow the theme tokens, and monochrome presets define every step', () => {
   const { theme } = require('../tailwind/preset.cjs');
   for (const [key, token] of [['sm', '--k-shadow-sm'], ['md', '--k-shadow-md'], ['lg', '--k-shadow-lg'], ['xl', '--k-shadow-xl'], ['2xl', '--k-shadow-overlay']]) assert.ok(theme.extend.boxShadow[key].startsWith(`var(${token},`), key);
   const vars = themeToCssVars(resolveTheme({}));
@@ -118,6 +118,19 @@ test('Tailwind shadow utilities follow the theme tokens, and hard-shadow presets
   for (const id of ['keirost-mono', 'keirost-mono-dark']) {
     const shadows = THEME_PRESETS.find(item => item.id === id).theme.shadows;
     assert.deepEqual(Object.keys(shadows).sort(), ['lg', 'md', 'overlay', 'sm', 'xl'], id);
+  }
+});
+
+test('monochrome themes have softened shadows and a restrained keyboard focus', () => {
+  for (const id of ['keirost-mono', 'keirost-mono-dark']) {
+    const theme = resolveTheme(THEME_PRESETS.find(item => item.id === id).theme);
+    assert.equal(theme.focus.width, 2, id);
+    assert.equal(theme.focus.offset, 0, id);
+    for (const [step, shadow] of Object.entries(theme.shadows)) {
+      const values = /^(0|[\d.]+px)\s+([\d.]+px)\s+([\d.]+px)/.exec(shadow);
+      assert.ok(values && parseFloat(values[3]) > 0, `${id} ${step}: shadow needs blur`);
+      assert.equal(parseFloat(values[1]), 0, `${id} ${step}: avoid a hard sideways offset`);
+    }
   }
 });
 test('every bordered box in the library follows the radius token (KpiCard included)', () => {

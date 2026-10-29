@@ -152,7 +152,7 @@ export const Timeline: React.FC<TimelineProps> = ({
   const compacto = variant === 'compacto';
 
   return (
-    <ol aria-label={ariaLabel} className={cn('flex flex-col', className)}>
+    <ol data-k-mobile="Timeline" aria-label={ariaLabel} className={cn('flex flex-col', className)}>
       {filas.map((fila, i) => {
         if (fila.kind === 'dia') {
           return (

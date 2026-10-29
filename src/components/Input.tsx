@@ -156,6 +156,7 @@ export const Input: React.FC<InputProps> = ({
     <div className={cn('flex flex-col gap-1.5 w-full', containerClassName)}>
       {labelNode}
       <div
+        data-k-focus-surface={hasAddons ? '' : undefined}
         className={cn(
           'group flex w-full items-stretch',
           hasAddons &&
@@ -178,6 +179,8 @@ export const Input: React.FC<InputProps> = ({
             </span>
           )}
           <input
+            data-k-control="input"
+            data-k-focus-input={hasAddons ? '' : undefined}
             ref={inputRef}
             id={inputId}
             aria-invalid={effectiveStatus === 'error' || undefined}

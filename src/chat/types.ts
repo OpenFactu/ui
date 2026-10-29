@@ -8,6 +8,8 @@ export interface ChatUser {
 }
 
 export type ChatMessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'error';
+/** Confirmaciones proporcionadas por el transporte, nunca inferidas al abrir el chat. */
+export interface ChatReadReceipt { userId: string; deliveredAt?: string; readAt?: string }
 export interface ChatReaction { emoji: string; userIds: string[] }
 export interface ChatReactionChange { conversationId: string; messageId: string; userId: string; emoji: string; active: boolean }
 export interface ChatReactionSnapshot { conversationId: string; messageId: string; reactions: ChatReaction[]; revision?: number }
@@ -28,6 +30,9 @@ export interface ChatMessageData {
   /** ISO 8601 timestamp. */
   createdAt: string;
   status?: ChatMessageStatus;
+  deliveredAt?: string;
+  readAt?: string;
+  receipts?: ChatReadReceipt[];
   /** Preserve this ID in server echoes to reconcile optimistic messages. Also use it as an idempotency key. */
   clientId?: string;
   replyToId?: string;
@@ -75,6 +80,7 @@ export interface ChatState {
 }
 
 export interface ChatActions {
+  forwardMessage: (messageId: string, sourceConversationId: string, targetConversationId: string) => Promise<boolean>;
   selectConversation: (id: string | null) => void;
   setDraft: (draft: ChatDraft, conversationId?: string) => void;
   /** False means validation failed or transport rejected; failure stays visible on the message. */

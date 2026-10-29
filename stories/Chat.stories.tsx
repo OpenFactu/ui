@@ -20,7 +20,7 @@ const conversations: ChatConversationData[] = [
 ];
 const messages: ChatMessageData[] = [
   { id: 'ana-1', conversationId: 'ana', senderId: 'ana', text: '¡Buenos días! He dejado los cambios del pedido listos para revisar. 😊', createdAt: '2026-10-27T08:30:00Z', reactions: [{ emoji: '👍', userIds: ['me', 'ana'] }, { emoji: '🙌', userIds: ['luis'] }] },
-  { id: 'ana-2', conversationId: 'ana', senderId: 'me', text: 'Gracias, Ana. Estoy revisando las cantidades y el plazo de entrega.', createdAt: '2026-10-27T08:32:00Z', status: 'read' },
+  { id: 'ana-2', conversationId: 'ana', senderId: 'me', text: 'Gracias, Ana. Estoy revisando las cantidades y el plazo de entrega.', createdAt: '2026-10-27T08:32:00Z', status: 'read', deliveredAt: '2026-10-27T08:32:02Z', readAt: '2026-10-27T08:33:00Z', receipts: [{ userId: 'ana', deliveredAt: '2026-10-27T08:32:02Z', readAt: '2026-10-27T08:33:00Z' }] },
   { id: 'ana-3', conversationId: 'ana', senderId: 'ana', text: 'Perfecto. El proveedor nos confirma el jueves.\nSi necesitas que cambie algo, lo vemos por aquí.', createdAt: '2026-10-27T08:34:00Z' },
   { id: 'team-1', conversationId: 'team', senderId: 'luis', text: 'Ya tenemos la propuesta de la nueva bandeja de mensajes.', createdAt: '2026-10-27T08:15:00Z' },
   { id: 'team-2', conversationId: 'team', senderId: 'ana', text: 'La revisamos juntos esta tarde.', createdAt: '2026-10-27T08:40:00Z' },
@@ -50,6 +50,8 @@ function Simulation({ failNext, failHistory, hold, releases, switchUser, inFligh
         createdAt: new Date().toISOString(), status: 'error', error: 'Envío pendiente de reintento',
       })))}>Simular errores simultáneos</Button>
       <Button size="sm" variant="secondary" onClick={() => actions.setTyping('ana', state.conversations.find(item => item.id === 'ana')?.typingUserIds?.length ? [] : ['ana'])}>Alternar escritura de Ana</Button>
+      <Button size="sm" variant="secondary" onClick={() => { actions.selectConversation('team'); actions.setTyping('team', ['ana', 'luis']); }}>Ana y Luis escribiendo</Button>
+      <Button size="sm" variant="secondary" onClick={() => { actions.setTyping('team', []); actions.setTyping('ana', []); }}>Detener escritura</Button>
       <Button size="sm" variant="secondary" onClick={() => { hold.current = true; }}>Pausar confirmaciones</Button>
       <Button size="sm" variant="secondary" onClick={() => { hold.current = false; releases.current.splice(0).forEach(release => release()); }}>Confirmar envíos</Button>
       <Button size="sm" variant="secondary" onClick={() => {

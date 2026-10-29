@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { createPortal } from 'react-dom';
+import { adaptivePortal } from './internal/MobileOverlay';
+import { resolveMobilePresentation, type MobilePresentation } from './internal/mobilePresentation';
+import { useIsNarrow } from '../hooks/useMediaQuery';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
@@ -20,6 +22,7 @@ export interface SearchableSelectOption {
 }
 
 interface SearchableSelectBaseProps {
+  mobilePresentation?: MobilePresentation;
   options: SearchableSelectOption[];
   placeholder?: string;
   disabled?: boolean;
@@ -105,7 +108,10 @@ export function SearchableSelect(props: SearchableSelectProps) {
     onLoadMore,
     highlightMatch = true,
     grouped,
+    mobilePresentation = 'auto',
   } = props;
+  const mobile = useIsNarrow(768);
+  const presentation = resolveMobilePresentation(mobile, mobilePresentation, 'fullscreen');
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -122,7 +128,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
     style: popoverStyle,
     ready: coordsReady,
   } = usePopover<HTMLDivElement>({
-    open: isOpen,
+    open: isOpen && !mobile,
     onClose: () => setIsOpen(false),
     matchAnchorWidth: true,
     minWidth: 280,
@@ -346,8 +352,8 @@ export function SearchableSelect(props: SearchableSelectProps) {
 
   const dropdownContent =
     isOpen &&
-    coordsReady &&
-    createPortal(
+    (coordsReady || mobile) &&
+    adaptivePortal(
       <div
         ref={dropdownRef}
         className={cn(
@@ -355,10 +361,11 @@ export function SearchableSelect(props: SearchableSelectProps) {
         )}
         style={popoverStyle}
       >
-        <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] px-3 py-2 shrink-0">
+        <div data-k-focus-surface="" className="flex items-center gap-2 border-b border-[var(--border-subtle)] focus-within:border-accent px-3 py-2 shrink-0">
           <UiIcon slot="search" className="h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle)]" />
           <input
             ref={inputRef}
+            data-k-focus-input=""
             role="combobox"
             aria-expanded={isOpen}
             aria-controls={listboxId}
@@ -494,6 +501,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
         </div>
       </div>,
       document.body,
+      { open: isOpen, onClose: () => setIsOpen(false), title: typeof props.label === 'string' ? props.label : props.ariaLabel ?? placeholder, presentation, anchorRef: wrapperRef },
     );
 
   // Con etiqueta o mensaje, el `className` del consumidor va al envoltorio; sin
@@ -505,6 +513,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
       <div
         id={controlId}
         role="combobox"
+        data-k-control="search-select"
         aria-required={props.required || undefined}
         aria-label={props.ariaLabel}
         aria-invalid={props.error ? true : undefined}
@@ -533,17 +542,16 @@ export function SearchableSelect(props: SearchableSelectProps) {
               >
                 <span className="truncate">{opt.label}</span>
                 {!disabled && (
-                  <UiIcon slot="x"
-                    role="button"
+                  <button type="button"
                     aria-label={`Quitar ${opt.label}`}
-                    className="h-3 w-3 shrink-0 hover:text-[var(--k-danger-fg)] transition-colors"
+                    className="k-search-select-remove shrink-0 hover:text-[var(--k-danger-fg)] transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       (props.onChange as (v: string[]) => void)(
                         selectedValues.filter((v) => v !== opt.value),
                       );
                     }}
-                  />
+                  ><UiIcon slot="x" className="h-3 w-3" /></button>
                 )}
               </span>
             ))}

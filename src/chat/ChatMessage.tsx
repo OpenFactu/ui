@@ -1,16 +1,15 @@
 import * as React from 'react';
 import { Avatar } from '../components/Avatar';
-import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { useChatActions, useChatConversation } from './ChatProvider';
 import { ChatMessageActions } from './ChatMessageActions';
 import { ChatMessageReactions } from './ChatMessageReactions';
 import { ChatMessageEditor } from './ChatMessageEditor';
 import { ChatAttachments } from './ChatAttachments';
+import { ChatMessageReceipt } from './ChatMessageReceipt';
 import { chatTime } from './format';
-import type { ChatMessageData, ChatMessageStatus } from './types';
+import type { ChatMessageData } from './types';
 
-const statusLabels: Record<ChatMessageStatus, string> = { sending: 'Enviando', sent: 'Enviado', delivered: 'Entregado', read: 'Leído', error: 'No enviado' };
 export interface ChatMessageProps { message: ChatMessageData; className?: string; grouped?: boolean; searchQuery?: string; fresh?: boolean }
 export function ChatMessage({ message, className, grouped = false, searchQuery = '', fresh = false }: ChatMessageProps) {
   const { currentUser, users, messages, conversation } = useChatConversation(message.conversationId);
@@ -44,10 +43,7 @@ export function ChatMessage({ message, className, grouped = false, searchQuery =
         </>}
         <div className="k-chat-message-meta"><time dateTime={message.createdAt} title={message.createdAt}>{chatTime(message.createdAt)}</time>
           {message.editedAt && !message.deletedAt && <span>Editado</span>}
-          {own && <span className="k-chat-delivery" aria-label={statusLabels[status]} title={statusLabels[status]}>
-            <UiIcon slot={status === 'sending' ? 'clock' : status === 'error' ? 'alert-circle' : 'check'} size={12} />
-            <span className="k-chat-visually-hidden">{statusLabels[status]}</span>
-          </span>}
+          {own && !message.deletedAt && <ChatMessageReceipt message={message} />}
         </div>
       </div>
       {!message.deletedAt && !editing && <ChatMessageActions message={message} onEdit={() => setEditing(true)} />}

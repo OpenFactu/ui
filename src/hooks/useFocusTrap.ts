@@ -9,12 +9,17 @@ const FOCUSABLE = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(',');
 
+const traps: { element: HTMLElement; priority: number }[] = [];
+const activeTrap = () => traps.reduce<(typeof traps)[number] | undefined>((top, trap) => !top || trap.priority >= top.priority ? trap : top, undefined);
+
 export interface UseFocusTrapOptions {
   enabled: boolean;
   /** Elemento que recibe el foco al abrir. Por defecto, el primero enfocable. */
   initialFocusRef?: React.RefObject<HTMLElement | null>;
   /** Devolver el foco al elemento que lo tenía antes. Default true. */
   restoreFocus?: boolean;
+  /** Profundidad de superposición: solo la trampa superior captura Tab. */
+  priority?: number;
   /**
    * Selector de la zona preferente para el foco inicial. Sirve para que el
    * foco caiga en el primer campo del formulario y no en el botón de cerrar,
@@ -35,6 +40,7 @@ export function useFocusTrap(
     enabled,
     initialFocusRef,
     restoreFocus = true,
+    priority = 0,
     preferredRegionSelector,
   }: UseFocusTrapOptions,
 ): void {
@@ -42,6 +48,7 @@ export function useFocusTrap(
     if (!enabled || typeof document === 'undefined') return;
     const container = containerRef.current;
     if (!container) return;
+    const trap = { element: container, priority }; traps.push(trap);
 
     const previouslyFocused = document.activeElement as HTMLElement | null;
 
@@ -52,6 +59,7 @@ export function useFocusTrap(
 
     // Un frame de margen: el contenido puede montarse después del contenedor.
     const raf = requestAnimationFrame(() => {
+      if (activeTrap() !== trap) return;
       const region = preferredRegionSelector
         ? container.querySelector<HTMLElement>(preferredRegionSelector)
         : null;
@@ -63,6 +71,7 @@ export function useFocusTrap(
     });
 
     const onKeyDown = (event: KeyboardEvent) => {
+      if (activeTrap() !== trap) return;
       if (event.key !== 'Tab') return;
       const items = focusables();
       if (items.length === 0) {
@@ -83,11 +92,13 @@ export function useFocusTrap(
 
     document.addEventListener('keydown', onKeyDown);
     return () => {
+      const wasActive = activeTrap() === trap;
+      const index = traps.indexOf(trap); if (index !== -1) traps.splice(index, 1);
       cancelAnimationFrame(raf);
       document.removeEventListener('keydown', onKeyDown);
-      if (restoreFocus && previouslyFocused?.isConnected) {
+      if (wasActive && restoreFocus && previouslyFocused?.isConnected) {
         previouslyFocused.focus({ preventScroll: true });
       }
     };
-  }, [enabled, containerRef, initialFocusRef, restoreFocus]);
+  }, [enabled, containerRef, initialFocusRef, restoreFocus, priority]);
 }

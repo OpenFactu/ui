@@ -49,7 +49,7 @@ export const Card = ({
     );
 
   return (
-    <div
+    <div data-k-mobile="Card"
       data-k-surface=""
       aria-busy={isLoading || undefined}
       className={cn(
@@ -64,7 +64,7 @@ export const Card = ({
       )}
     >
       {showHeader && (
-        <div className="px-6 py-4 border-b border-[var(--border-default,#e2e8f0)] flex flex-wrap items-center justify-between gap-4">
+        <div className="px-6 py-4 border-b border-[var(--border-subtle,#f1f5f9)] flex flex-wrap items-center justify-between gap-4">
           <div className="min-w-0 flex-1 basis-48">
             {isLoading && skeletonHeader ? (
               <div className="flex flex-col gap-2">

@@ -4,6 +4,9 @@ const definition = {
   rename: 'Renombrar', delete: 'Eliminar', pin: 'Fijar', unpin: 'Desfijar', cancel: 'Cancelar', save: 'Guardar', close: 'Cerrar',
   deleteConversation: 'Eliminar conversación', deleteConversationHint: 'Esta acción eliminará la conversación seleccionada.',
   noConversations: 'No hay conversaciones', noSearchResults: 'No se encontraron resultados', pinned: 'Fijadas',
+  projects: 'Proyectos', newProject: 'Nuevo proyecto', projectName: 'Nombre del proyecto', renameProject: 'Renombrar proyecto',
+  deleteProject: 'Eliminar proyecto', deleteProjectHint: 'Las conversaciones se conservarán en «Sin proyecto».',
+  noProject: 'Sin proyecto', emptyProject: 'Todavía no hay conversaciones', moveToProject: 'Mover a proyecto', project: 'Proyecto',
   copy: 'Copiar', copied: 'Copiado', copyError: 'No se pudo copiar el contenido.', download: 'Descargar', edit: 'Editar',
   regenerate: 'Regenerar', positive: 'Respuesta útil', negative: 'Respuesta no útil', readAloud: 'Leer en voz alta', version: 'Versión',
   message: 'Mensaje', writeMessage: 'Escribe un mensaje…', send: 'Enviar mensaje', stop: 'Detener respuesta', retry: 'Reintentar',
@@ -35,6 +38,7 @@ const definition = {
   microphoneUnavailable: 'No se pudo acceder al micrófono.', recordingUnsupported: 'La grabación de audio no está disponible en este navegador.',
   play: 'Reproducir', volume: 'Volumen', playbackSpeed: 'Velocidad', audioPosition: 'Posición del audio', audioUnavailable: 'No se pudo reproducir el audio.',
   conversation: 'Conversación', openHistory: 'Abrir historial', resizeResults: 'Cambiar ancho de resultados',
+  resizeHistory: 'Cambiar ancho de conversaciones',
 };
 export type AILabels = typeof definition;
 export const DEFAULT_AI_LABELS: Readonly<AILabels> = Object.freeze(definition);

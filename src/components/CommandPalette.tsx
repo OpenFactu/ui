@@ -227,7 +227,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[var(--k-z-modal,99999)] flex items-start justify-center p-4 pt-[12vh] bg-[color-mix(in_srgb,var(--k-ink-900)_45%,transparent)] backdrop-blur-sm"
+      className="k-command-overlay fixed inset-0 z-[var(--k-z-modal,99999)] flex items-start justify-center p-4 pt-[12vh] bg-[color-mix(in_srgb,var(--k-ink-900)_45%,transparent)] backdrop-blur-sm"
       onClick={onClose}
     >
       <div

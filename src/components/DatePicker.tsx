@@ -1,5 +1,7 @@
 import * as React from 'react';
-import { createPortal } from 'react-dom';
+import { adaptivePortal } from './internal/MobileOverlay';
+import { resolveMobilePresentation, type MobilePresentation } from './internal/mobilePresentation';
+import { useIsNarrow } from '../hooks/useMediaQuery';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
@@ -18,6 +20,7 @@ export interface DatePickerLocale {
 }
 
 export interface DatePickerProps {
+  mobilePresentation?: MobilePresentation;
   /** Fecha en ISO 'YYYY-MM-DD' o null. */
   value: string | null;
   onChange: (value: string | null) => void;
@@ -123,7 +126,10 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   hideFooter = false,
   onViewChange,
   className,
+  mobilePresentation = 'auto',
 }) => {
+  const mobile = useIsNarrow(768);
+  const presentation = resolveMobilePresentation(mobile, mobilePresentation, 'sheet');
   const t = React.useMemo(() => ({ ...DEFAULT_LOCALE, ...locale }), [locale]);
 
   const [isOpen, setIsOpen] = React.useState(false);
@@ -142,7 +148,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   const gridRef = React.useRef<HTMLDivElement>(null);
 
   const { anchorRef, popoverRef, style, ready } = usePopover<HTMLDivElement>({
-    open: isOpen,
+    open: isOpen && !mobile,
     onClose: () => setIsOpen(false),
     minWidth: 280,
     estimatedMaxHeight: 360,
@@ -451,14 +457,14 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 
   const calendar =
     isOpen &&
-    createPortal(
+    adaptivePortal(
       <div
         ref={popoverRef}
         role="dialog"
         aria-label="Calendario"
         className={cn(
           'z-[var(--k-z-popover,999999)] w-[280px] rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-3 shadow-lg animate-in fade-in-50 duration-150',
-          !ready && 'invisible',
+          !ready && !mobile && 'invisible',
         )}
         style={style}
       >
@@ -518,6 +524,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         )}
       </div>,
       document.body,
+      { open: isOpen, onClose: close, title: label ?? ariaLabel ?? 'Seleccionar fecha', presentation, anchorRef },
     );
 
   return (
@@ -538,6 +545,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       <div ref={anchorRef} className="relative">
         <button
           id={generatedId}
+          data-k-control="select"
           type="button"
           aria-required={required || undefined}
           aria-label={ariaLabel}

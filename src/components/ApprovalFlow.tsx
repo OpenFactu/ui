@@ -38,7 +38,7 @@ export const ApprovalFlow: React.FC<ApprovalFlowProps> = ({
   if (!steps.length)
     return <p className={cn('py-4 text-sm text-[var(--fg-muted)]', className)}>{emptyMessage}</p>;
   return (
-    <ol aria-label={ariaLabel} className={cn('space-y-3', className)}>
+    <ol data-k-mobile="ApprovalFlow" aria-label={ariaLabel} className={cn('space-y-3', className)}>
       {steps.map((step, index) => {
         const state = states[step.status];
         const iconSlot = state.icon;

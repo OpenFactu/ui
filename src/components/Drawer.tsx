@@ -6,8 +6,10 @@ import { useAnimatedPresence } from '../hooks/useAnimatedPresence';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useEscapeStack } from '../internal/escapeStack';
+import type { MobilePresentation } from './internal/mobilePresentation';
 
 export interface DrawerProps {
+  mobilePresentation?: MobilePresentation;
   open: boolean;
   onClose: () => void;
   side?: 'left' | 'right';
@@ -45,6 +47,7 @@ export const Drawer: React.FC<DrawerProps> = ({
   dismissible = true,
   children,
   className,
+  mobilePresentation = 'auto',
 }) => {
   const { mounted, visible } = useAnimatedPresence({ open, duration: 300 });
   const id = React.useId();
@@ -71,12 +74,14 @@ export const Drawer: React.FC<DrawerProps> = ({
         ref={dialogRef}
         tabIndex={-1}
         role="dialog"
+        data-k-mobile-presentation={mobilePresentation === 'auto' ? 'fullscreen' : mobilePresentation}
+        data-visible={visible || undefined}
         aria-modal="true"
         aria-label={ariaLabel ?? (title == null ? 'Panel lateral' : undefined)}
         aria-labelledby={!ariaLabel && title != null ? `${id}-title` : undefined}
         aria-describedby={subtitle ? `${id}-description` : undefined}
         className={cn(
-          'absolute inset-y-0 flex flex-col w-full bg-[var(--bg-card,#ffffff)] text-[var(--fg-default)] shadow-2xl transition-transform duration-300 ease-out focus:outline-none',
+          'k-drawer absolute inset-y-0 flex flex-col w-full bg-[var(--bg-card,#ffffff)] text-[var(--fg-default)] shadow-2xl transition-transform duration-300 ease-out focus:outline-none',
           sizeClasses[size],
           side === 'right'
             ? cn(

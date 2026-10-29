@@ -1,5 +1,5 @@
 import * as React from 'react';
-import type { AIArtifact, AIConversationItem, AIDraft, AIMessageData, AIModel, AIRun, AIWorkspaceActions, AIWorkspaceState } from '../src/ai';
+import type { AIArtifact, AIConversationItem, AIConversationProject, AIDraft, AIMessageData, AIModel, AIRun, AIWorkspaceActions, AIWorkspaceState } from '../src/ai';
 
 export const demoModels: AIModel[] = [
   { id: 'general', label: 'Asistente general', description: 'Modelo simulado · texto, imágenes y audio', capabilities: { attachments: true, images: true, audio: true } },
@@ -30,6 +30,7 @@ interface Session { item: AIConversationItem; messages: AIMessageData[]; draft: 
 const blankDraft = (): AIDraft => ({ text: '', attachments: [] });
 const session = (id: string, title: string): Session => ({ item: { id, title }, messages: [], draft: blankDraft(), run: { status: 'idle' }, artifacts: [], modelId: 'general' });
 export function useAIDemo(empty = false) {
+  const [projects, setProjects] = React.useState<AIConversationProject[]>([{ id: 'ideas', title: 'Ideas y diseño' }, { id: 'operations', title: 'Operaciones' }]);
   const [sessions, setSessions] = React.useState<Record<string, Session>>(() => ({
     project: { ...session('project', 'Un nuevo proyecto'), item: { id: 'project', title: 'Un nuevo proyecto', pinned: true, group: 'Hoy' }, messages: empty ? [] : demoMessages.map(message => message.role === 'assistant' ? { ...message, versions: [{ id: 'full', label: 'Respuesta detallada', parts: message.parts }, { id: 'short', label: 'Respuesta breve', parts: [{ type: 'text', text: 'Empieza con una idea concreta. Añade contexto, revisa la propuesta y abre el panel para editarla.' }] }] } : message), artifacts: empty ? [] : demoArtifacts, artifactId: empty ? undefined : 'panel' },
     notes: { ...session('notes', 'Notas e ideas'), item: { id: 'notes', title: 'Notas e ideas', group: 'Ayer' } },
@@ -91,7 +92,11 @@ export function useAIDemo(empty = false) {
     onStop: () => { cancel(activeId); update(activeId, value => ({ ...value, run: { status: 'cancelled' }, messages: value.messages.map(message => ['submitting', 'waiting', 'streaming'].includes(message.status ?? '') ? { ...message, status: 'cancelled', parts: message.parts.map(part => part.type === 'tool' ? { ...part, tool: { ...part.tool, status: 'cancelled' } } : part) } : message) })); },
     onRetry: requestedId => { const value = live.current[activeId]; const target = requestedId ? value.messages.find(message => message.id === requestedId) : [...value.messages].reverse().find(message => message.role === 'assistant'); if (target) begin(activeId, { text: 'Reintentar', attachments: [] }, target.id, true); },
     onSelectConversation: setActiveId,
-    onNewConversation: () => { const id = crypto.randomUUID(); setSessions(values => ({ ...values, [id]: session(id, 'Nueva conversación') })); setActiveId(id); },
+    onNewConversation: projectId => { const id = crypto.randomUUID(); const next = session(id, 'Nueva conversación'); next.item.projectId = projectId; setSessions(values => ({ ...values, [id]: next })); setActiveId(id); },
+    onCreateProject: title => setProjects(values => [...values, { id: crypto.randomUUID(), title }]),
+    onRenameProject: (id, title) => setProjects(values => values.map(project => project.id === id ? { ...project, title } : project)),
+    onDeleteProject: id => { setProjects(values => values.filter(project => project.id !== id)); setSessions(values => Object.fromEntries(Object.entries(values).map(([key, value]) => [key, value.item.projectId === id ? { ...value, item: { ...value.item, projectId: undefined } } : value]))); },
+    onMoveConversation: (id, projectId) => update(id, value => ({ ...value, item: { ...value.item, projectId } })),
     onRenameConversation: (id, title) => update(id, value => ({ ...value, item: { ...value.item, title } })),
     onPinConversation: (id, pinned) => update(id, value => ({ ...value, item: { ...value.item, pinned } })),
     onDeleteConversation: id => { cancel(id); const rest = Object.values(live.current).filter(value => value.item.id !== id); if (!rest.length) { const replacement = session('replacement', 'Nueva conversación'); setSessions({ replacement }); setActiveId('replacement'); } else { setSessions(values => { const next = { ...values }; delete next[id]; return next; }); if (activeId === id) setActiveId(rest[0].item.id); } },
@@ -111,6 +116,6 @@ export function useAIDemo(empty = false) {
     onApplyCode: (_code, language) => setNotice(`Código ${language ?? ''} aplicado (simulación). La aplicación decide dónde va.`),
     onRunCode: async code => { await new Promise(resolve => setTimeout(resolve, 500)); return [`> ${code.split(/\n/).length} líneas evaluadas (simulación)`, 'Explorar una idea'].join('\n'); },
   };
-  const state: AIWorkspaceState = { conversations: Object.values(sessions).map(value => value.item), conversationId: active.item.id, messages: active.messages, draft: active.draft, models: demoModels, modelId: active.modelId, run: active.run, artifacts: active.artifacts, artifactId: active.artifactId };
+  const state: AIWorkspaceState = { conversations: Object.values(sessions).map(value => value.item), projects, conversationId: active.item.id, messages: active.messages, draft: active.draft, models: demoModels, modelId: active.modelId, run: active.run, artifacts: active.artifacts, artifactId: active.artifactId };
   return { state, actions, notice };
 }

@@ -1,4 +1,6 @@
 import * as React from 'react';
+import { useIsNarrow } from '../hooks/useMediaQuery';
+import { DropdownMenu } from './DropdownMenu';
 import { cn } from '../utils';
 
 export type KanbanTone = 'default' | 'accent' | 'success' | 'warning' | 'danger' | 'info';
@@ -107,6 +109,7 @@ export const Kanban: React.FC<KanbanProps> = ({
   className,
   'aria-label': ariaLabel = 'Tablero',
 }) => {
+  const mobile = useIsNarrow(768);
   const [arrastre, setArrastre] = React.useState<Arrastre | null>(null);
   const listas = React.useRef(new Map<string, HTMLDivElement | null>());
 
@@ -135,7 +138,7 @@ export const Kanban: React.FC<KanbanProps> = ({
   };
 
   const empezar = (e: React.PointerEvent, card: KanbanCard, desde: KanbanMove) => {
-    if (!onCardMove || card.locked) return;
+    if (!onCardMove || card.locked || mobile) return;
     e.preventDefault();
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     setArrastre({ card, desde, destino: desde });
@@ -167,7 +170,7 @@ export const Kanban: React.FC<KanbanProps> = ({
   };
 
   return (
-    <div
+    <div data-k-mobile="Kanban"
       aria-label={ariaLabel}
       onPointerMove={mover}
       onPointerUp={soltar}
@@ -231,9 +234,10 @@ export const Kanban: React.FC<KanbanProps> = ({
                   {soltandoAqui && arrastre?.destino?.index === index && <MarcaInsercion />}
                   <div
                     data-tarjeta={card.id}
-                    role="button"
+                    role={mobile && onCardMove ? 'group' : 'button'}
                     tabIndex={0}
                     onClick={() => onCardClick?.(card)}
+                    onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); onCardClick?.(card); } }}
                     onPointerDown={(e) => empezar(e, card, { columnId: col.id, index })}
                     className={cn(
                       'rounded-[var(--k-radius-xs,2px)] border border-l-2 border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-2 text-left shadow-sm transition-colors',
@@ -243,6 +247,11 @@ export const Kanban: React.FC<KanbanProps> = ({
                       arrastre?.card.id === card.id && 'cursor-grabbing opacity-40',
                     )}
                   >
+                    {mobile && onCardMove && !card.locked && <div className="k-kanban-mobile-actions" onClick={event => event.stopPropagation()} onPointerDown={event => event.stopPropagation()}><DropdownMenu items={[
+                      ...columns.filter(target => !target.locked && target.id !== col.id).map(target => ({ label: `Mover a ${typeof target.label === 'string' ? target.label : target.id}`, onClick: () => onCardMove(card, { columnId: target.id, index: target.cards.length }, { columnId: col.id, index }) })),
+                      { label: 'Subir', disabled: index === 0 || col.locked, onClick: () => onCardMove(card, { columnId: col.id, index: index - 1 }, { columnId: col.id, index }) },
+                      { label: 'Bajar', disabled: index === col.cards.length - 1 || col.locked, onClick: () => onCardMove(card, { columnId: col.id, index: index + 1 }, { columnId: col.id, index }) },
+                    ]}><button type="button" aria-label={`Mover tarjeta: ${typeof card.title === 'string' ? card.title : card.id}`}>Mover tarjeta</button></DropdownMenu></div>}
                     {renderCard ? (
                       renderCard(card, col)
                     ) : (

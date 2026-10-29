@@ -397,7 +397,7 @@ export const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>
   return (
     <div className={cn('w-full min-w-0 flex flex-col gap-1.5', containerClassName)}>
       {label && <label htmlFor={editorId} className="text-[12px] font-medium text-[var(--fg-body,#2d3a4a)]">{label}{textareaProps.required && <span aria-hidden="true" className="ml-0.5 text-[var(--k-danger-fg)]">*</span>}</label>}
-      <div className={cn('k-code-editor', className)} style={{ ...editorThemeStyle(editorTheme), tabSize: indentSize, ...style }} data-theme={themeId} data-motion={motionActive || undefined} data-disabled={disabled || undefined} data-error={!!error || undefined}>
+      <div data-k-focus-surface="" className={cn('k-code-editor', className)} style={{ ...editorThemeStyle(editorTheme), tabSize: indentSize, ...style }} data-theme={themeId} data-motion={motionActive || undefined} data-disabled={disabled || undefined} data-error={!!error || undefined}>
         {!minimal && <div className="k-code-toolbar" role="toolbar" aria-label="Herramientas de código" aria-controls={editorId}>
           <span className="k-code-language">{definition.label}</span>
           <div className="k-code-tools">
@@ -438,7 +438,7 @@ export const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>
                 start={lineStarts[visible.first] ?? value.length} stop={lineStarts[visible.first + visible.count] ?? value.length}
                 selection={motionActive && cursor.start !== cursor.end ? cursor : undefined} /></pre>
             </div>
-            <textarea {...textareaProps} ref={inputRef} id={editorId} value={value} disabled={disabled} readOnly={readOnly}
+            <textarea {...textareaProps} data-k-focus-input="" ref={inputRef} id={editorId} value={value} disabled={disabled} readOnly={readOnly}
               aria-label={textareaProps['aria-label'] ?? (label ? undefined : 'Editor de código')}
               aria-invalid={!!error || textareaProps['aria-invalid']} aria-describedby={description}
               aria-autocomplete="list" aria-controls={completion ? completionId : undefined}

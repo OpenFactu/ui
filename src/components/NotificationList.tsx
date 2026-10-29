@@ -17,6 +17,8 @@ export interface NotificationItem {
 export interface NotificationListProps {
   items: NotificationItem[];
   title?: string;
+  /** Acciones de cabecera adicionales, por ejemplo el cierre de una bandeja. */
+  headerActions?: React.ReactNode;
   onActivate?: (item: NotificationItem) => void;
   onReadChange?: (item: NotificationItem, read: boolean) => void;
   /** Recibe los IDs no leídos de la lista recibida, sin afectar otras páginas. */
@@ -31,6 +33,7 @@ export interface NotificationListProps {
 export const NotificationList: React.FC<NotificationListProps> = ({
   items,
   title = 'Notificaciones',
+  headerActions,
   onActivate,
   onReadChange,
   onMarkAllRead,
@@ -56,7 +59,7 @@ export const NotificationList: React.FC<NotificationListProps> = ({
           </h2>
           <Badge variant={unread.length ? 'info' : 'neutral'}>{unread.length} sin leer</Badge>
         </div>
-        {onMarkAllRead && (
+        <div className="flex items-center gap-2">{onMarkAllRead && (
           <Button
             type="button"
             variant="link"
@@ -66,7 +69,7 @@ export const NotificationList: React.FC<NotificationListProps> = ({
           >
             Marcar todas como leídas
           </Button>
-        )}
+        )}{headerActions}</div>
       </div>
       {!items.length ? (
         <EmptyState variant="compact" icon={<UiIcon slot="bell" size={24} />} title="No hay notificaciones" />

@@ -35,19 +35,22 @@ export const Switch: React.FC<SwitchProps> = ({
         id={switchId}
         type="button"
         role="switch"
+        data-k-control="switch"
+        data-size={size}
         aria-checked={checked}
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={cn(
           'relative inline-flex shrink-0 items-center rounded-full p-0.5 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-1',
           s.track,
-          checked ? 'bg-accent' : 'bg-[var(--border-strong)]',
+          checked ? 'bg-accent' : 'bg-[var(--bg-hover)]',
           disabled && 'opacity-50 cursor-not-allowed',
         )}
       >
         <span
           className={cn(
-            'pointer-events-none inline-block rounded-full bg-white shadow transition-transform duration-200',
+            'pointer-events-none inline-block rounded-full shadow-sm transition-[transform,background-color] duration-200 motion-reduce:transition-none',
+            checked ? 'bg-[var(--color-accent-fg)]' : 'bg-[var(--fg-muted)]',
             s.thumb,
             checked ? s.translate : 'translate-x-0',
           )}

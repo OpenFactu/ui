@@ -2,10 +2,13 @@ import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { DatePicker } from './DatePicker';
+import { Button } from './Button';
 import { Input } from './Input';
 import { SearchInput } from './SearchInput';
 import { Select } from './Select';
 import { SearchableSelect } from './SearchableSelect';
+import { useIsNarrow } from '../hooks/useMediaQuery';
+import { MobileOverlay } from './internal/MobileOverlay';
 
 export interface FilterBarConfig {
   key: string;
@@ -64,34 +67,22 @@ export function FilterBar({
   resultCount,
   ariaLabel = 'Filtros de registros',
 }: FilterBarProps) {
+  const mobile = useIsNarrow(768);
+  const filterButton = React.useRef<HTMLButtonElement>(null);
   const hayFiltros =
     Boolean(searchTerm) ||
     Object.values(activeFilters).some((v) => v !== '' && v !== null && v !== undefined);
+  const activos = config.filter((f) => {
+    const v = activeFilters[f.key];
+    return v !== '' && v !== null && v !== undefined;
+  }).length;
+  // En pantalla estrecha los filtros se pliegan tras un botón: abiertos de
+  // serie empujaban el listado varias líneas hacia abajo.
+  const [abiertos, setAbiertos] = React.useState(false);
 
-  return (
-    <div
-      role="search"
-      aria-label={ariaLabel}
-      className={cn(
-        'flex flex-wrap items-center gap-3 p-4 bg-[var(--bg-card,#ffffff)] border-b border-[var(--border-default,#e2e8f0)]',
-        className,
-      )}
-    >
-      <div className="flex-none w-full md:w-96">
-        <SearchInput
-          value={searchTerm}
-          onChange={onSearchChange}
-          placeholder={searchPlaceholder}
-          aria-label={searchPlaceholder}
-          shortcut={shortcut}
-          clearable
-        />
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        {config.map((filter) => {
+  const filterControls = <>{config.map((filter) => {
           const valor = activeFilters[filter.key] ?? '';
-          const ancho = { width: filter.width ?? 160 };
+          const ancho = { width: mobile ? '100%' : filter.width ?? 160 };
 
           if (filter.type === 'select') {
             return (
@@ -154,7 +145,54 @@ export function FilterBar({
               />
             </div>
           );
-        })}
+        })}</>;
+
+  return (
+    <div
+      role="search"
+      aria-label={ariaLabel}
+      className={cn(
+        'k-filter-bar flex flex-wrap items-center gap-3 p-4 bg-[var(--bg-card,#ffffff)] border-b border-[var(--border-default,#e2e8f0)]',
+        className,
+      )}
+    >
+      <div className="flex flex-none w-full md:w-96 gap-2">
+        <div className="flex-1 min-w-0">
+          <SearchInput
+            value={searchTerm}
+            onChange={onSearchChange}
+            placeholder={searchPlaceholder}
+            aria-label={searchPlaceholder}
+            shortcut={shortcut}
+            clearable
+          />
+        </div>
+        {config.length > 0 && (
+          <Button
+            ref={filterButton}
+            type="button"
+            variant="secondary"
+            className="md:hidden shrink-0 gap-1.5"
+            aria-expanded={abiertos}
+            onClick={() => setAbiertos((v) => !v)}
+          >
+            Filtros{activos > 0 ? ` (${activos})` : ''}
+            <UiIcon
+              slot="chevron-down"
+              size={14}
+              className={cn('transition-transform', abiertos && 'rotate-180')}
+            />
+          </Button>
+        )}
+      </div>
+
+      <div
+        className={cn(
+          'k-filter-inline flex flex-wrap items-center gap-2 max-md:w-full max-md:[&>div]:!w-full',
+          !abiertos && 'max-md:hidden',
+        )}
+      >
+        {filterControls}
 
         {hayFiltros && (
           <button
@@ -167,6 +205,9 @@ export function FilterBar({
           </button>
         )}
       </div>
+      {mobile && <MobileOverlay open={abiertos} onClose={() => setAbiertos(false)} title="Filtros" presentation="sheet" anchorRef={filterButton}><div className="k-mobile-filters">
+        {filterControls}<div className="k-mobile-filter-actions"><Button variant="secondary" onClick={onClear}>Limpiar filtros</Button><Button onClick={() => setAbiertos(false)}>Ver resultados</Button></div>
+      </div></MobileOverlay>}
       {actions && <div className="ml-auto flex flex-wrap items-center gap-2">{actions}</div>}
       {(resultCount !== undefined || (showActiveFilters && hayFiltros)) && (
         <div className="flex w-full flex-wrap items-center gap-2 text-[12px] text-[var(--fg-muted,#52606f)]">

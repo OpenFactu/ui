@@ -43,6 +43,7 @@ export interface AIComposerProps extends AIUIProps {
   tools?: AIComposerTool[];
   /** Cuántas herramientas caben en la barra antes de pasar al menú «más». Por defecto 3. */
   maxInlineTools?: number;
+  /** Composición explícita: solo se montan las piezas incluidas. Sin children se usa la distribución habitual. */
   children?: React.ReactNode;
 }
 interface ComposerContextValue extends AIComposerProps {
@@ -57,6 +58,33 @@ interface ComposerContextValue extends AIComposerProps {
 const ComposerContext = React.createContext<ComposerContextValue | null>(null);
 function useComposer() { const context = React.useContext(ComposerContext); if (!context) throw Error('AIComposer parts must be inside AIComposer.'); return context; }
 
+/** Estado y acciones compartidos para controles propios dentro de AIComposer. */
+export function useAIComposer() {
+  const c = useComposer();
+  return { draft: c.draft, setDraft: c.onDraftChange, models: c.models ?? [], modelId: c.modelId ?? c.draft.modelId,
+    model: c.models?.find(model => model.id === (c.modelId ?? c.draft.modelId)), selectModel: c.onSelectModel,
+    busy: c.busy, pending: c.pending, disabled: !!c.disabled, valid: c.valid, submit: c.submit, stop: c.onStop,
+    focusInput: () => c.inputRef.current?.focus(), filesAllowed: c.filesAllowed, audioAllowed: c.audioAllowed, labels: c.l };
+}
+
+function ComposerToolbar({ children, className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div {...props} className={cn('ai-composer-tools', className)}>{children}</div>;
+}
+function ComposerToolGroup({ children, className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  const c = useComposer();
+  return <div role="group" aria-label={c.l.tools} {...props} className={cn('ai-tools-group', className)}>{children}</div>;
+}
+function ComposerSpacer() { return <span className="ai-tools-spacer" aria-hidden="true" />; }
+function ComposerModelSelector({ className }: { className?: string }) {
+  const c = useComposer();
+  return <AIModelSelector models={c.models ?? []} value={c.modelId ?? c.draft.modelId} onChange={c.onSelectModel} disabled={c.busy || c.pending || c.disabled} labels={c.labels} className={className} />;
+}
+function ComposerAttachButton({ className }: { className?: string }) {
+  const c = useComposer();
+  return c.filesAllowed ? <FileDropzone variant="button" className={cn('ai-attach', className)} label={<span className="ai-sr-only">{c.l.attach}</span>} icon={<UiIcon slot="paperclip" size={16} />} multiple disabled={c.disabled || c.pending}
+    accept={c.accept} maxFiles={remainingFileCount(c.maxFiles, c.draft.attachments.length)} maxSizeMb={c.maxSizeMb} onFiles={c.receiveFiles} onReject={c.rejectFiles} /> : null;
+}
+
 function ComposerInput() {
   const c = useComposer();
   const composing = React.useRef(false);
@@ -65,7 +93,7 @@ function ComposerInput() {
     c.inputRef.current = input;
     if (input) { input.style.height = '0px'; input.style.height = `${Math.min(200, Math.max(48, input.scrollHeight))}px`; }
   }, [c.draft.text, c.inputId, c.inputRef]);
-  return <Textarea id={c.inputId} aria-label={c.l.message} value={c.draft.text} placeholder={c.l.writeMessage}
+  return <Textarea data-k-focus-input="" id={c.inputId} aria-label={c.l.message} value={c.draft.text} placeholder={c.l.writeMessage}
     containerClassName="ai-composer-input-wrap" className="ai-composer-input" rows={1} disabled={c.disabled}
     aria-autocomplete="list" aria-controls={c.items.length ? c.listId : undefined}
     aria-activedescendant={c.items.length ? `${c.listId}-${c.active}` : undefined}
@@ -105,7 +133,7 @@ function runTool(tool: AIComposerTool, context: AIComposerToolContext) {
   else if (tool.kind === 'toggle') context.setDraft({ ...context.draft, tools: context.active ? (context.draft.tools ?? []).filter(id => id !== tool.id) : [...(context.draft.tools ?? []), tool.id] });
   context.focusInput();
 }
-function ComposerTools({ children, voice = true }: { children?: React.ReactNode; voice?: boolean }) {
+function ComposerRegisteredTools() {
   const c = useComposer();
   const registered = useComposerTools();
   const model = c.models?.find(item => item.id === (c.modelId ?? c.draft.modelId));
@@ -117,23 +145,18 @@ function ComposerTools({ children, voice = true }: { children?: React.ReactNode;
   const limit = Math.max(0, c.maxInlineTools ?? 3);
   const inline = tools.slice(0, limit); const overflow = tools.slice(limit);
   const contextFor = (tool: AIComposerTool): AIComposerToolContext => ({ ...base, active: (c.draft.tools ?? []).includes(tool.id) });
-  return <div className="ai-composer-tools">
-    <div className="ai-tools-group" role="group" aria-label={c.l.tools}>
-      {c.filesAllowed && <FileDropzone variant="button" className="ai-attach" label={<span className="ai-sr-only">{c.l.attach}</span>} icon={<UiIcon slot="paperclip" size={16} />} multiple disabled={c.disabled || c.pending}
-        accept={c.accept} maxFiles={remainingFileCount(c.maxFiles, c.draft.attachments.length)} maxSizeMb={c.maxSizeMb} onFiles={c.receiveFiles} onReject={c.rejectFiles} />}
+  return <>
       {inline.map(tool => <ComposerToolButton key={tool.id} tool={tool} context={contextFor(tool)} />)}
-      {!!overflow.length && <DropdownMenu align="start" items={overflow.map(tool => { const context = contextFor(tool); return { label: tool.label, icon: context.active ? <UiIcon slot="check" size={14} /> : tool.icon, disabled: base.busy, onClick: () => runTool(tool, context) }; })}>
+      {!!overflow.length && <DropdownMenu align="start" items={overflow.map(tool => { const context = contextFor(tool); return { label: tool.label, icon: context.active ? <UiIcon slot="check" size={14} /> : tool.icon, disabled: base.busy || (typeof tool.disabled === 'function' ? tool.disabled(context) : tool.disabled), onClick: () => runTool(tool, context) }; })}>
         <span className="ai-tool-chip ai-tool-more"><UiIcon slot="plus" size={15} /><span className="ai-sr-only">{c.l.moreTools}</span>{overflow.some(tool => (c.draft.tools ?? []).includes(tool.id)) && <i className="ai-tool-dot" aria-hidden="true" />}</span>
       </DropdownMenu>}
-      {children}
-    </div>
-    <span className="ai-tools-spacer" />
-    <AIModelSelector models={c.models ?? []} value={c.modelId ?? c.draft.modelId} onChange={c.onSelectModel} disabled={c.busy || c.pending || c.disabled} labels={c.labels} />
-    {voice && <ComposerVoice compact />}
-    <ComposerSubmit />
-  </div>;
+  </>;
 }
-function ComposerVoice({ compact }: { compact?: boolean }) { const c = useComposer(); return c.onRecordAudio && c.audioAllowed ? <AIVoiceRecorder compact={compact} onRecorded={c.onRecordAudio} disabled={c.disabled || c.busy} labels={c.labels} /> : null; }
+/** Distribución histórica; Toolbar permite componer una barra vacía sin controles implícitos. */
+function ComposerTools({ children, voice = true }: { children?: React.ReactNode; voice?: boolean }) {
+  return <ComposerToolbar><ComposerToolGroup><ComposerAttachButton /><ComposerRegisteredTools />{children}</ComposerToolGroup><ComposerSpacer /><ComposerModelSelector />{voice && <ComposerVoice compact />}<ComposerSubmit /></ComposerToolbar>;
+}
+function ComposerVoice({ compact }: { compact?: boolean }) { const c = useComposer(); return c.onRecordAudio && c.audioAllowed ? <AIVoiceRecorder compact={compact} onRecorded={c.onRecordAudio} disabled={c.disabled || c.busy || c.pending} labels={c.labels} /> : null; }
 function ComposerRoot(props: AIComposerProps) {
   const { draft, onDraftChange, onSubmit, labels, className, disabled, run, models, modelId, children } = props;
   const l = aiLabels(labels);
@@ -204,7 +227,7 @@ function ComposerRoot(props: AIComposerProps) {
     else onDraftChange({ ...draft, attachments: [...draft.attachments, ...candidates.map(file => ({ id: crypto.randomUUID(), name: file.name, mediaType: file.type || 'application/octet-stream', size: file.size, file, status: 'ready' as const }))] });
   }
   const context: ComposerContextValue = { ...props, l, inputId, listId, inputRef, busy, pending, filesAllowed, audioAllowed, valid: canSubmit(draft, model), items, active, cursor, setCursor, setIndex, dismiss: () => setDismissed(queryKey), choose, submit: () => void submit(), receiveFiles, rejectFiles: () => setError(l.rejectedFiles) };
-  return <ComposerContext.Provider value={context}><form className={cn('ai-surface ai-composer', dragging && 'ai-composer-dragging', className)} aria-label={l.writeMessage}
+  return <ComposerContext.Provider value={context}><form data-k-focus-surface="" className={cn('ai-surface ai-composer', dragging && 'ai-composer-dragging', className)} aria-label={l.writeMessage}
     onSubmit={event => { event.preventDefault(); void submit(); }}
     onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDismissed(queryKey); }}
     onPaste={event => { const files = Array.from(event.clipboardData.files); if (files.length) { event.preventDefault(); receiveFiles(files); } }}
@@ -217,4 +240,5 @@ function ComposerRoot(props: AIComposerProps) {
     {!!draft.attachments.length && !canSubmit({ ...draft, attachments: draft.attachments.map(file => ({ ...file, status: 'ready' })) }, model) && <p className="ai-error" role="alert">{l.incompatibleAttachments}</p>}
   </form></ComposerContext.Provider>;
 }
-export const AIComposer = Object.assign(ComposerRoot, { Input: ComposerInput, Attachments: ComposerAttachments, Tools: ComposerTools, Submit: ComposerSubmit, Voice: ComposerVoice });
+export const AIComposer = Object.assign(ComposerRoot, { Input: ComposerInput, Attachments: ComposerAttachments, Tools: ComposerTools, Toolbar: ComposerToolbar, ToolGroup: ComposerToolGroup, Spacer: ComposerSpacer,
+  ModelSelector: ComposerModelSelector, AttachButton: ComposerAttachButton, RegisteredTools: ComposerRegisteredTools, Submit: ComposerSubmit, Voice: ComposerVoice });

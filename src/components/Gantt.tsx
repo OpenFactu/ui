@@ -1,3 +1,4 @@
+import { MobileScheduleActions } from './internal/MobileScheduleActions';
 import * as React from 'react';
 import { cn } from '../utils';
 import {
@@ -341,7 +342,7 @@ export const Gantt: React.FC<GanttProps> = ({
   }
 
   return (
-    <div
+    <>{onTaskChange && <MobileScheduleActions items={tasks.map(task => ({ ...task, title: task.name }))} onChange={(id, start, end) => { const task = tasks.find(task => task.id === id); if (task) onTaskChange(task, { start, end }); }} />}<div data-k-mobile="Gantt"
       role="table"
       aria-label={ariaLabel}
       className={cn(
@@ -539,7 +540,7 @@ export const Gantt: React.FC<GanttProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </div></>
   );
 };
 

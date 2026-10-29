@@ -5,6 +5,8 @@ import { aiLabels } from './labels';
 import type { AISource, AIUIProps } from './types';
 import { compactNumber, contextUsage, hostOf } from './internal/elements';
 import { safeUrl } from './internal/helpers';
+import { Modal } from '../components/Modal';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 
 /** Mantiene la ficha dentro de la ventana: si al abrir no cabe, voltea el lado o la dirección (una sola vez, sin bucles). */
 function useCardFit(open: boolean, placement: 'bottom' | 'top', align: 'start' | 'end') {
@@ -49,6 +51,8 @@ export interface AIContextBreakdownItem { id: string; label: string; tokens: num
 export interface AIContextUsageProps extends AIUIProps {
   usedTokens: number;
   maxTokens: number;
+  /** El indicador puede integrarse sin marco en una barra de herramientas. El detalle conserva su superficie. */
+  variant?: 'outlined' | 'plain';
   /** Nombre del modelo, en la cabecera del detalle. */
   modelLabel?: string;
   /** En qué se ha ido el contexto (sistema, mensajes, herramientas, archivos…). */
@@ -64,17 +68,18 @@ export interface AIContextUsageProps extends AIUIProps {
 const RING = { size: 18, radius: 7 };
 const CIRCUMFERENCE = 2 * Math.PI * RING.radius;
 /** Cuánto de la ventana de contexto se ha gastado: un anillo con el porcentaje y, al pasar, enfocar o tocar, el detalle. */
-export function AIContextUsage({ usedTokens, maxTokens, modelLabel, breakdown, details, onCompact, placement = 'bottom', align = 'end', labels, className }: AIContextUsageProps) {
+export function AIContextUsage({ usedTokens, maxTokens, variant = 'outlined', modelLabel, breakdown, details, onCompact, placement = 'bottom', align = 'end', labels, className }: AIContextUsageProps) {
   const l = aiLabels(labels);
   const { ratio, percent, level } = contextUsage(usedTokens, maxTokens);
   const [open, setOpen] = React.useState(false);
   const [pinned, setPinned] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const id = React.useId();
+  const narrow = useMediaQuery('(max-width: 767px)');
   const root = React.useRef<HTMLSpanElement>(null);
   const closeTimer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const show = () => { clearTimeout(closeTimer.current); setOpen(true); };
-  const hide = () => { if (pinned) return; clearTimeout(closeTimer.current); closeTimer.current = setTimeout(() => setOpen(false), 120); };
+  const show = () => { clearTimeout(closeTimer.current); if (!narrow) setOpen(true); };
+  const hide = () => { if (pinned || narrow) return; clearTimeout(closeTimer.current); closeTimer.current = setTimeout(() => setOpen(false), 120); };
   React.useEffect(() => () => clearTimeout(closeTimer.current), []);
   React.useEffect(() => {
     if (!pinned) return;
@@ -86,18 +91,7 @@ export function AIContextUsage({ usedTokens, maxTokens, modelLabel, breakdown, d
   const left = Math.max(0, maxTokens - usedTokens);
   const parts = (breakdown ?? []).filter(item => item.tokens > 0);
   const interactive = !!onCompact;
-  return <span ref={root} className={cn('ai-surface ai-context', className)} data-level={level} onMouseEnter={show} onMouseLeave={hide} onFocus={show}
-    onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) hide(); }}
-    onKeyDown={event => { if (event.key === 'Escape') { setPinned(false); setOpen(false); } }}>
-    <button type="button" className="ai-context-trigger" aria-expanded={open} aria-controls={open ? id : undefined} aria-label={`${l.contextUsed}: ${percent} %`}
-      onClick={() => { setPinned(value => !(value && open)); setOpen(value => !(pinned && value)); }}>
-      <svg className="ai-ring" width={RING.size} height={RING.size} viewBox={`0 0 ${RING.size} ${RING.size}`} aria-hidden="true">
-        <circle className="ai-ring-track" cx={RING.size / 2} cy={RING.size / 2} r={RING.radius} />
-        <circle className="ai-ring-value" cx={RING.size / 2} cy={RING.size / 2} r={RING.radius} strokeDasharray={CIRCUMFERENCE} strokeDashoffset={CIRCUMFERENCE * (1 - ratio)} transform={`rotate(-90 ${RING.size / 2} ${RING.size / 2})`} />
-      </svg>
-      <span className="ai-context-percent">{percent}<small> %</small></span>
-    </button>
-    {open && <div ref={fit.ref as React.RefObject<HTMLDivElement>} id={id} role={interactive ? 'dialog' : 'tooltip'} aria-label={l.contextUsed} className="ai-context-card" data-placement={fit.placement} data-align={fit.align}>
+  const content = <>
       <div className="ai-context-head"><span className="ai-context-model">{modelLabel ?? l.contextUsed}</span><span className="ai-context-big" data-level={level}>{percent}<small> %</small></span></div>
       <div className="ai-context-meter" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent} aria-label={l.contextUsed}>
         {parts.length
@@ -109,7 +103,21 @@ export function AIContextUsage({ usedTokens, maxTokens, modelLabel, breakdown, d
       {!!details?.length && <dl className="ai-context-details">{details.map(row => <div key={row.label}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}</dl>}
       {level !== 'ok' && <p className="ai-context-note" data-level={level} role="status">{level === 'danger' ? l.contextFull : l.contextFilling}</p>}
       {level !== 'ok' && onCompact && <button type="button" className="ai-code-primary" disabled={busy} onClick={async () => { setBusy(true); try { await onCompact(); } finally { setBusy(false); } }}>{l.compactChat}</button>}
-    </div>}
+  </>;
+  return <span ref={root} className={cn('ai-surface ai-context', className)} data-variant={variant} data-level={level} onMouseEnter={show} onMouseLeave={hide} onFocus={show}
+    onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) hide(); }}
+    onKeyDown={event => { if (event.key === 'Escape') { setPinned(false); setOpen(false); } }}>
+    <button type="button" className="ai-context-trigger" aria-haspopup={narrow || interactive ? 'dialog' : undefined} aria-expanded={open} aria-controls={!narrow && open ? id : undefined} aria-label={`${l.contextUsed}: ${percent} %`}
+      onClick={() => { if (narrow) { setPinned(false); setOpen(true); } else { setPinned(value => !(value && open)); setOpen(value => !(pinned && value)); } }}>
+      <svg className="ai-ring" width={RING.size} height={RING.size} viewBox={`0 0 ${RING.size} ${RING.size}`} aria-hidden="true">
+        <circle className="ai-ring-track" cx={RING.size / 2} cy={RING.size / 2} r={RING.radius} />
+        <circle className="ai-ring-value" cx={RING.size / 2} cy={RING.size / 2} r={RING.radius} strokeDasharray={CIRCUMFERENCE} strokeDashoffset={CIRCUMFERENCE * (1 - ratio)} transform={`rotate(-90 ${RING.size / 2} ${RING.size / 2})`} />
+      </svg>
+      <span className="ai-context-percent">{percent}<small> %</small></span>
+    </button>
+    {open && !narrow && <div ref={fit.ref as React.RefObject<HTMLDivElement>} id={id} role={interactive ? 'dialog' : 'tooltip'} aria-label={l.contextUsed} className="ai-context-card" data-placement={fit.placement} data-align={fit.align}>{content}</div>}
+    <Modal isOpen={narrow && open} onClose={() => { setPinned(false); setOpen(false); }} title={l.contextUsed} size="sm" hideCancel closeOnOverlayClick
+      className="ai-context-sheet" overlayClassName="ai-context-sheet-overlay"><div className="ai-surface ai-context-card ai-context-sheet-content" data-level={level}>{content}</div></Modal>
   </span>;
 }
 

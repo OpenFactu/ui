@@ -30,7 +30,7 @@ export const Progress: React.FC<ProgressProps> = ({
   const clamped = Math.min(100, Math.max(0, value));
 
   return (
-    <div className={cn('flex flex-col gap-1.5 w-full', className)}>
+    <div data-k-mobile="Progress" className={cn('flex flex-col gap-1.5 w-full', className)}>
       {(label || showValue) && (
         <div className="flex items-center justify-between gap-2">
           {label && (

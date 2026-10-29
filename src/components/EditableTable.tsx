@@ -95,6 +95,7 @@ function fieldOf<T>(col: EditableColumn<T>): string | undefined {
  * trae el control correcto de la librería, con su formato y su teclado.
  */
 export function EditableTable<T extends Record<string, any>>({
+  responsive = 'scroll',
   columns,
   data,
   onSave,
@@ -344,6 +345,7 @@ export function EditableTable<T extends Record<string, any>>({
   return (
     <div onKeyDown={handleKeyDown}>
       <Table
+        responsive={responsive}
         {...tableProps}
         data={data}
         rowKey={rowKey}

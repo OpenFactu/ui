@@ -80,7 +80,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({
   const Wrapper = onClick ? 'button' : 'div';
 
   return (
-    <Wrapper
+    <Wrapper data-k-mobile="KpiCard"
       data-k-surface=""
       {...(onClick ? { type: 'button' as const, onClick } : {})}
       className={cn(

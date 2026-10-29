@@ -5,6 +5,7 @@ import { cn } from '../utils';
 import { useChatActions, useChatConversation, useChatPeople, useChatState } from './ChatProvider';
 import { ChatPopover } from './ChatPopover';
 import { ChatPinnedMessages } from './ChatPinnedMessages';
+import { ChatConversationTools } from './ChatConversationTools';
 import { chatOperationKey } from './controller';
 import type { ChatConversationPatch } from './types';
 
@@ -22,10 +23,10 @@ export function ChatHeader({ className, actions, onSearch }: ChatHeaderProps) {
   return <header className={cn('k-chat-header', className)}>
     <button type="button" className="k-chat-back k-chat-icon-button" aria-label="Volver a conversaciones" onClick={() => selectConversation(null)}><UiIcon slot="chevron-left" size={20} /></button>
     <Avatar name={conversation.title} src={conversation.avatar ?? other?.avatar} status={conversation.participantIds.length <= 2 ? other?.status : undefined} size="sm" />
-    <div className="k-chat-header-copy"><h2>{conversation.title}</h2><p role="status">{description}</p></div>
+    <div className="k-chat-header-copy"><h2>{conversation.title}</h2><p>{description}</p></div>
     <div className="k-chat-header-actions">
       {onSearch && <button type="button" className="k-chat-icon-button" aria-label="Buscar mensajes" onClick={onSearch}><UiIcon slot="search" size={18} /></button>}
-      <ChatPinnedMessages />{actions}
+      <ChatPinnedMessages /><ChatConversationTools key={conversation.id} />{actions}
       {canManageConversations && <ChatPopover label="Gestionar conversación" trigger={<UiIcon slot="more-horizontal" size={18} />}>
         {close => {
           const operation = state.operations[chatOperationKey('conversation', conversation.id)];

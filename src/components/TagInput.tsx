@@ -72,7 +72,7 @@ export const TagInput: React.FC<TagInputProps> = ({
     inputRef.current?.focus();
   };
   return (
-    <div className={className}>
+    <div data-k-mobile="TagInput" className={className}>
       {label && (
         <label
           htmlFor={id}
@@ -83,6 +83,7 @@ export const TagInput: React.FC<TagInputProps> = ({
       )}
       <div
         ref={containerRef}
+        data-k-focus-surface=""
         className={cn(
           'flex min-w-0 flex-wrap items-center gap-2 rounded-[var(--k-radius-xs)] border bg-[var(--bg-card)] p-2 focus-within:border-accent',
           invalid ? 'border-[var(--k-danger)]' : 'border-[var(--border-default)]',
@@ -117,6 +118,7 @@ export const TagInput: React.FC<TagInputProps> = ({
         ))}
         <input
           ref={inputRef}
+          data-k-focus-input=""
           id={id}
           value={buffer}
           disabled={disabled}

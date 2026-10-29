@@ -51,7 +51,7 @@ function Mini({ draft }: { draft: AIDraft }) {
 /** El mismo mensaje en streaming bajo los nueve temas de fábrica. */
 export const NueveTemas = () => {
   const draft: AIDraft = { text: '', attachments: [] };
-  return <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 14 }}>
+  return <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 340px), 1fr))', gap: 14 }}>
     {THEME_PRESETS.map(preset => <Themed key={preset.id} theme={resolveTheme(preset.theme)}><p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 600 }}>{preset.label}</p><Mini draft={draft} /></Themed>)}
   </div>;
 };
@@ -63,7 +63,7 @@ export const Animaciones = () => {
   const draft: AIDraft = { text: '', attachments: [] };
   return <Themed theme={theme}><PresetPicker value={id} onChange={setId} />
     <button type="button" onClick={() => setRun(value => value + 1)} style={{ marginBottom: 12, padding: '5px 12px', cursor: 'pointer' }}>Repetir animaciones</button>
-    <div key={run} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 14 }}>
+    <div key={run} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: 14 }}>
       <div className="ai-surface" style={{ border: '1px solid var(--border-default, #e2e8f0)', borderRadius: 10, height: 420, display: 'flex', flexDirection: 'column' }}><AIConversation messages={[]} suggestions={demoSuggestions} onSelectPrompt={noop} /></div>
       <div className="ai-surface" style={{ border: '1px solid var(--border-default, #e2e8f0)', borderRadius: 10, height: 420, display: 'flex', flexDirection: 'column' }}><AIConversation messages={sample.slice(0, 1)} run={{ status: 'waiting' }} /></div>
       <Mini draft={draft} />

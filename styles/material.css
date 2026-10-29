@@ -72,6 +72,12 @@ html[data-k-backdrop-motion]::before, [data-k-backdrop-motion]:not(html)::before
   outline-offset: var(--k-focus-offset, 2px) !important;
   box-shadow: none !important;
 }
+/* Composite fields already indicate focus on their outer surface. Keep tool
+   buttons and standalone fields in the normal keyboard-focus system. */
+[data-k-focus] [data-k-focus-surface] [data-k-focus-input]:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
 [data-k-selection] ::selection, [data-k-selection]::selection { background: var(--k-selection-bg); color: var(--k-selection-fg); }
 
 /* Cambio de tema con fundido: `applyTheme(tema, undefined, { transition: true })` pone la clase unos instantes. */

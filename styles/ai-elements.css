@@ -82,6 +82,8 @@ li > .ai-tree-row:hover { background: var(--bg-hover, #f1f5f9); }
 .ai-context, .ai-citation { position: relative; display: inline-flex; }
 .ai-context-trigger { display: inline-flex; align-items: center; gap: 7px; height: 28px; padding: 0 10px 0 8px; border: 1px solid var(--border-default, #e2e8f0); border-radius: var(--k-radius-sm, 4px); background: var(--bg-card, #fff); color: var(--fg-body, #2d3a4a); font: 600 12px/1 var(--font-sans, system-ui, sans-serif); font-variant-numeric: tabular-nums; cursor: pointer; transition: border-color var(--ai-dur-fast) var(--ai-ease), background-color var(--ai-dur-fast) var(--ai-ease), transform var(--ai-dur-fast) var(--ai-ease); }
 .ai-context-trigger:hover, .ai-context-trigger[aria-expanded='true'] { border-color: var(--ai-accent-line); background: var(--bg-hover, #f1f5f9); }
+.ai-context[data-variant='plain'] > .ai-context-trigger { border: 0; background: transparent; box-shadow: none; }
+.ai-context[data-variant='plain'] > .ai-context-trigger:hover, .ai-context[data-variant='plain'] > .ai-context-trigger[aria-expanded='true'] { background: var(--bg-hover, #f1f5f9); }
 .ai-context-trigger:active { transform: scale(.97); }
 .ai-context-percent small, .ai-context-big small { font-size: .78em; font-weight: 500; color: var(--fg-muted, #52606f); }
 .ai-ring { flex: none; }
@@ -97,6 +99,10 @@ li > .ai-tree-row:hover { background: var(--bg-hover, #f1f5f9); }
 .ai-context-card[data-placement='top'] { top: auto; bottom: calc(100% + 8px); transform-origin: bottom right; }
 .ai-context-card[data-align='start'] { right: auto; left: 0; transform-origin: top left; }
 .ai-context-card[data-placement='top'][data-align='start'] { transform-origin: bottom left; }
+.ai-context-sheet-overlay.ai-context-sheet-overlay { align-items: flex-end; padding: 0; }
+[role='dialog'].ai-context-sheet { max-width: none; max-height: min(85dvh, 640px); border-radius: var(--k-radius-lg, 12px) var(--k-radius-lg, 12px) 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
+.ai-context-sheet-content { position: static; width: 100%; max-width: none; padding: 0; border: 0; background: transparent; box-shadow: none; animation: none; }
+.ai-context-sheet-content .ai-context-numbers { flex-wrap: wrap; }
 .ai-context-card > strong, .ai-context-model { color: var(--fg-default, #0a1628); font-weight: 600; }
 .ai-context-card > a { color: var(--k-info-fg, #1d4ed8); text-underline-offset: 3px; }
 .ai-context-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
@@ -135,3 +141,23 @@ li > .ai-tree-row:hover { background: var(--bg-hover, #f1f5f9); }
 .ai-citation-head { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .ai-citation-head > strong { min-width: 0; overflow-wrap: anywhere; }
 .ai-citation-mark { flex: none; display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: var(--k-radius-xs, 2px); background: var(--ai-accent-soft); color: var(--ai-accent-strong); font-size: 11px; font-weight: 700; }
+
+/* Árbol de cambios: filas legibles y cifras alineadas, con el tema heredado. */
+.ai-tree { padding: 8px; border: 1px solid var(--border-default, #e2e8f0); border-radius: var(--k-radius-md, 8px); background: var(--bg-card, #ffffff); }
+.ai-tree > li + li { margin-top: 4px; }
+.ai-tree-row { min-height: 36px; height: auto; padding-block: 8px; padding-inline-end: 12px; gap: 8px; line-height: 1.4; }
+.ai-tree-children { position: relative; }
+.ai-tree li > button.ai-tree-row { font-weight: 600; color: var(--fg-default, #0a1628); }
+.ai-tree-file[data-selected] { background: var(--bg-active, var(--bg-hover, #f1f5f9)); box-shadow: inset 3px 0 0 var(--color-accent, #0d9488); }
+.ai-tree-file[data-selected] .ai-tree-name { font-weight: 600; color: var(--fg-default, #0a1628); }
+.ai-tree-stats { flex: none; gap: 8px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.ai-tree-stats > span { min-width: 34px; text-align: right; }
+.ai-tree-row:focus-visible { outline: 2px solid var(--fg-default, #0a1628); outline-offset: -2px; }
+.ai-tree-actions { gap: 4px; }
+@media (max-width: 767px) {
+  .ai-tree { padding: 4px; }
+  .ai-tree-row { min-height: 48px; font-size: 14px; }
+  .ai-tree-stats { gap: 4px; font-size: 11px; }
+  .ai-tree-stats > span { min-width: 28px; }
+  .ai-tree-actions button { min-width: 48px; min-height: 48px; }
+}

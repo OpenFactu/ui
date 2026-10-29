@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { createPortal } from 'react-dom';
+import { adaptivePortal } from './internal/MobileOverlay';
+import { useIsNarrow } from '../hooks/useMediaQuery';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
@@ -143,8 +144,9 @@ const GrupoDesplegable: React.FC<GrupoDesplegableProps> = ({
   registrar,
 }) => {
   const [activo, setActivo] = React.useState(-1);
+  const mobile = useIsNarrow(768);
   const { anchorRef, popoverRef, style, ready } = usePopover<HTMLButtonElement>({
-    open: abierto,
+    open: abierto && !mobile,
     onClose: onCerrar,
     preferredPlacement: 'bottom',
     align: 'start',
@@ -260,7 +262,7 @@ const GrupoDesplegable: React.FC<GrupoDesplegableProps> = ({
 
       {abierto &&
         typeof document !== 'undefined' &&
-        createPortal(
+        adaptivePortal(
           <div
             ref={popoverRef}
             id={panelId}
@@ -311,6 +313,7 @@ const GrupoDesplegable: React.FC<GrupoDesplegableProps> = ({
             })}
           </div>,
           document.body,
+          { open: abierto, onClose: onCerrar, title: group.name, presentation: mobile ? 'sheet' : 'anchored', anchorRef },
         )}
     </>
   );
@@ -363,7 +366,7 @@ export const NavMenu: React.FC<NavMenuProps> = ({
   };
 
   return (
-    <div
+    <div data-k-mobile="NavMenu"
       role="menubar"
       aria-label={ariaLabel}
       className={cn(

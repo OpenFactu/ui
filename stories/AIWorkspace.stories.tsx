@@ -10,6 +10,12 @@ function Demo({ empty = false }: { empty?: boolean }) {
 }
 export const Completo = () => <Demo />;
 export const Vacio = () => <Demo empty />;
+export const Personalizable = () => {
+  const { state, actions } = useAIDemo();
+  const [width, setWidth] = React.useState(280);
+  return <div style={{ padding: 16 }}><p>Proyectos, ancho lateral controlado ({width} px) y compositor con el modelo arriba.</p><AIWorkspace state={state} actions={actions} sidebarWidth={width} onSidebarWidthChange={setWidth}
+    style={{ height: 'calc(100dvh - 130px)' }} composer={<><AIComposer.Toolbar><AIComposer.ModelSelector /><AIComposer.Spacer /><AIComposer.AttachButton /></AIComposer.Toolbar><AIComposer.Attachments /><AIComposer.Input /><AIComposer.Toolbar><AIComposer.RegisteredTools /><AIComposer.Spacer /><AIComposer.Submit /></AIComposer.Toolbar></>} /></div>;
+};
 export const ConversacionLarga = () => {
   const [messages, setMessages] = React.useState<AIMessageData[]>(() => Array.from({ length: 200 }, (_, index) => ({ id: `message-${index}`, role: index % 2 ? 'assistant' : 'user', parts: [{ type: 'text', text: `Mensaje ${index + 1}. ${index % 2 ? '**Respuesta de ejemplo.** Conserva la lectura al añadir mensajes al final.' : 'Pregunta breve para comprobar el historial largo.'}` }] })));
   const [draft, setDraft] = React.useState({ text: '', attachments: [] });

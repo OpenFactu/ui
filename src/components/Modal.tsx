@@ -1,4 +1,7 @@
 import * as React from 'react';
+import { OverlayDepthContext as ModalDepthContext } from './internal/overlayDepth';
+import { usePortalTheme } from '../hooks/usePortalTheme';
+import type { MobilePresentation } from './internal/mobilePresentation';
 import { createPortal } from 'react-dom';
 import { UiIcon } from '../icons';
 import { useEscapeStack } from '../internal/escapeStack';
@@ -41,6 +44,10 @@ export interface ModalProps {
 
   // ── Cabecera ──────────────────────────────────────────────────────────
   title?: React.ReactNode;
+  /** Nombre accesible cuando la cabecera se compone dentro del contenido. */
+  ariaLabel?: string;
+  mobilePresentation?: MobilePresentation;
+  style?: React.CSSProperties;
   subtitle?: React.ReactNode;
   /** Antetítulo en versales pequeñas sobre el título. */
   eyebrow?: React.ReactNode;
@@ -143,7 +150,6 @@ const TONE_CHIP: Record<ModalTone, string> = {
 };
 
 /** Profundidad de anidamiento, para apilar diálogos abiertos unos sobre otros. */
-const ModalDepthContext = React.createContext(0);
 
 
 
@@ -296,6 +302,9 @@ const ModalRoot: React.FC<ModalProps> = ({
   isOpen,
   onClose,
   title,
+  ariaLabel,
+  mobilePresentation = 'auto',
+  style,
   subtitle,
   eyebrow,
   icon,
@@ -335,13 +344,16 @@ const ModalRoot: React.FC<ModalProps> = ({
   children,
 }) => {
   const depth = React.useContext(ModalDepthContext);
+  const origin = React.useRef<HTMLSpanElement>(null);
   const panelRef = React.useRef<HTMLDivElement>(null);
   const titleId = React.useId();
   const { mounted, visible } = useAnimatedPresence({ open: isOpen, duration: 200 });
+  const inheritedTheme = usePortalTheme(origin, mounted);
 
   useScrollLock(lockScroll && mounted);
   useFocusTrap(panelRef, {
     enabled: mounted,
+    priority: depth,
     initialFocusRef,
     // Sin esto el foco iría al botón de cerrar, que en el DOM va antes.
     preferredRegionSelector: '[data-modal-body]',
@@ -350,7 +362,7 @@ const ModalRoot: React.FC<ModalProps> = ({
   const canDismiss = dismissible && !isBusy;
   useEscapeStack(titleId, mounted && closeOnEscape && canDismiss, onClose);
 
-  if (!mounted) return null;
+  if (!mounted) return <span hidden ref={origin} />;
 
   const widthClass = SIZE_CLASSES[maxWidth ?? size] ?? SIZE_CLASSES.md;
   const resolvedZ = zIndex ?? `calc(var(--k-z-modal, 99999) + ${depth * 10})`;
@@ -459,17 +471,29 @@ const ModalRoot: React.FC<ModalProps> = ({
       ref={panelRef}
       role="dialog"
       aria-modal="true"
-      aria-labelledby={title ? titleId : undefined}
+      aria-label={ariaLabel}
+      aria-labelledby={!ariaLabel && title ? titleId : undefined}
+      data-k-mobile-presentation={mobilePresentation === 'auto' ? fullHeight ? 'fullscreen' : 'sheet' : mobilePresentation}
+      style={{ ...inheritedTheme, ...style }}
       onClick={(e) => e.stopPropagation()}
       className={cn(
-        'w-full flex flex-col rounded-[var(--k-radius-md,8px)] shadow-xl bg-[var(--bg-card,#ffffff)] border border-[var(--border-default,#e2e8f0)] transition-all duration-200',
+        'k-modal w-full flex flex-col rounded-[var(--k-radius-md,8px)] shadow-xl bg-[var(--bg-card,#ffffff)] border border-[var(--border-default,#e2e8f0)] transition-all duration-200',
         widthClass,
         fullHeight ? 'h-[min(92vh,760px)]' : 'max-h-[90vh]',
         scrollBehavior === 'container' ? 'overflow-y-auto' : 'overflow-hidden',
         visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95',
+        // En pantallas estrechas es una hoja que sube desde abajo: ancho completo,
+        // esquinas superiores redondeadas y respeto del área segura del iPhone.
+        'max-sm:max-w-none max-sm:rounded-b-none max-sm:rounded-t-[var(--k-radius-lg,12px)] max-sm:border-b-0 max-sm:max-h-[92dvh] max-sm:pb-[env(safe-area-inset-bottom,0px)] max-sm:!scale-100',
+        fullHeight && 'max-sm:h-[92dvh]',
+        !visible && 'max-sm:translate-y-full',
         className,
       )}
     >
+      <div
+        className="sm:hidden mx-auto mt-2 mb-0.5 h-1 w-10 shrink-0 rounded-full bg-[var(--border-strong,#cbd5e1)]"
+        aria-hidden="true"
+      />
       {(title || subtitle || eyebrow || icon || tone !== 'default' || dismissible) && (
         <ModalHeader
           id={titleId}
@@ -494,13 +518,16 @@ const ModalRoot: React.FC<ModalProps> = ({
     </div>
   );
 
-  return createPortal(
+  return <><span hidden ref={origin} />{createPortal(
     <ModalDepthContext.Provider value={depth + 1}>
       <div
         style={{ zIndex: resolvedZ }}
+        data-k-material={origin.current?.closest('[data-k-material]')?.getAttribute('data-k-material') ?? undefined}
+        data-k-focus={origin.current?.closest('[data-k-focus]') ? '' : undefined}
+        data-k-selection={origin.current?.closest('[data-k-selection]') ? '' : undefined}
         onClick={() => closeOnOverlayClick && canDismiss && onClose()}
         className={cn(
-          'fixed inset-0 flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--k-ink-900)_45%,transparent)] backdrop-blur-sm transition-opacity duration-200',
+          'k-modal-overlay fixed inset-0 flex items-center justify-center p-4 max-sm:items-end max-sm:p-0 bg-[color-mix(in_srgb,var(--k-ink-900)_45%,transparent)] backdrop-blur-sm transition-opacity duration-200',
           visible ? 'opacity-100' : 'opacity-0',
           overlayClassName,
         )}
@@ -509,7 +536,7 @@ const ModalRoot: React.FC<ModalProps> = ({
       </div>
     </ModalDepthContext.Provider>,
     container ?? document.body,
-  );
+  )}</>;
 };
 
 type ModalComponent = React.FC<ModalProps> & {

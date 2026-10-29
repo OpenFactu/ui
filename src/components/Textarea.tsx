@@ -6,6 +6,7 @@ export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextArea
   error?: string;
   helperText?: string;
   containerClassName?: string;
+  inputRef?: React.Ref<HTMLTextAreaElement>;
 }
 
 export const Textarea: React.FC<TextareaProps> = ({
@@ -15,6 +16,7 @@ export const Textarea: React.FC<TextareaProps> = ({
   className,
   containerClassName,
   id,
+  inputRef,
   ...props
 }) => {
   const generatedId = React.useId();
@@ -36,6 +38,8 @@ export const Textarea: React.FC<TextareaProps> = ({
         </label>
       )}
       <textarea
+        ref={inputRef}
+        data-k-control="textarea"
         id={textareaId}
         className={cn(
           'flex w-full min-h-[80px] rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] text-[13px] text-[var(--fg-default,#0a1628)] px-3 py-2 transition-colors resize-y',

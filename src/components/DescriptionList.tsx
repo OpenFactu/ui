@@ -37,7 +37,7 @@ export function DescriptionList({
   ariaLabel,
 }: DescriptionListProps) {
   return (
-    <dl
+    <dl data-k-mobile="DescriptionList"
       aria-label={ariaLabel}
       className={cn('grid min-w-0 gap-x-6 gap-y-4', COLUMNS[columns], className)}
     >

@@ -1,0 +1,15 @@
+.notification-center { display: inline-flex; color: var(--fg-default, #0a1628); }
+.notification-center-trigger { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 1px solid transparent; border-radius: var(--k-radius-sm, 4px); background: transparent; color: var(--fg-body, #2d3a4a); cursor: pointer; }
+.notification-center-trigger:hover, .notification-center-trigger[aria-expanded='true'] { background: var(--bg-hover, #f1f5f9); }
+.notification-center-trigger:disabled { opacity: .5; cursor: not-allowed; }
+.notification-center-count { position: absolute; top: -3px; right: -4px; min-width: 17px; height: 17px; display: grid; place-items: center; padding: 0 4px; border-radius: 999px; background: var(--color-accent, #0d9488); color: var(--color-accent-fg, #ffffff); font: 600 10px/1 var(--font-sans, system-ui, sans-serif); font-variant-numeric: tabular-nums; }
+.notification-center-panel { z-index: var(--k-z-popover, 999999); display: flex; flex-direction: column; width: 390px; max-width: calc(100vw - 16px); overflow: hidden; border: 1px solid var(--border-default, #e2e8f0); border-radius: var(--k-radius-md, 8px); background: var(--bg-card, #ffffff); box-shadow: var(--k-shadow-lg, 0 10px 24px rgb(0 0 0 / .12)); }
+[role='dialog'] .notification-center-list { display: flex; flex: 1; flex-direction: column; min-height: 0; border: 0; border-radius: 0; color: var(--fg-default, #0a1628); font-family: var(--font-sans, system-ui, sans-serif); }
+.notification-center-list > ul { flex: 1; min-height: 0; }
+.notification-center-list > div:first-child { position: relative; padding-right: 52px; }
+.notification-center-close { position: absolute; top: 12px; right: 12px; display: inline-flex; align-items: center; justify-content: center; flex: none; width: 32px; height: 32px; border: 0; border-radius: var(--k-radius-xs, 2px); background: transparent; color: var(--fg-muted, #52606f); cursor: pointer; }
+.notification-center-close:hover { background: var(--bg-hover, #f1f5f9); color: var(--fg-default, #0a1628); }
+.notification-center-trigger:focus-visible, .notification-center-close:focus-visible { outline: 2px solid var(--color-accent, #0d9488); outline-offset: 2px; }
+.notification-center-mobile-overlay.notification-center-mobile-overlay { padding: 0; }
+[role='dialog'].notification-center-mobile { max-width: none; height: 100dvh; max-height: 100dvh; border: 0; border-radius: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.notification-center-mobile [data-modal-body] { display: flex; overflow: hidden; }

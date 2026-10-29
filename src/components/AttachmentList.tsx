@@ -49,7 +49,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
       />
     );
   return (
-    <ul aria-label={ariaLabel} className={cn('divide-y divide-[var(--border-default)]', className)}>
+    <ul data-k-mobile="AttachmentList" aria-label={ariaLabel} className={cn('divide-y divide-[var(--border-default)]', className)}>
       {items.map((item) => {
         const status = item.status ?? 'ready';
         const progress =

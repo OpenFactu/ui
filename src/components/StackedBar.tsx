@@ -57,7 +57,7 @@ export const StackedBar: React.FC<StackedBarProps> = ({
   const visible = segments.filter((s) => s.value > 0);
 
   return (
-    <div className={cn('flex flex-col gap-2 w-full', className)}>
+    <div data-k-mobile="StackedBar" className={cn('flex flex-col gap-2 w-full', className)}>
       <div
         role="img"
         aria-label={

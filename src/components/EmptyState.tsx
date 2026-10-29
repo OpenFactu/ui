@@ -21,7 +21,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   variant = 'default',
   className,
 }) => (
-  <div
+  <div data-k-mobile="EmptyState"
     className={cn(
       'flex flex-col items-center justify-center gap-2 px-4 text-center',
       variant === 'compact' ? 'py-6' : 'py-12',

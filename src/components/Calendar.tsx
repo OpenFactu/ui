@@ -1,4 +1,9 @@
+import { MobileScheduleActions } from './internal/MobileScheduleActions';
 import * as React from 'react';
+import { useIsNarrow } from '../hooks/useMediaQuery';
+import { Button } from './Button';
+import { Modal } from './Modal';
+import { DatePicker } from './DatePicker';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import {
@@ -46,6 +51,8 @@ export interface CalendarChange {
 }
 
 export interface CalendarProps {
+  /** En móvil, agenda legible por defecto; calendar conserva la rejilla original. */
+  mobileView?: 'agenda' | 'calendar';
   events: CalendarEvent[];
   view?: CalendarView;
   onViewChange?: (v: CalendarView) => void;
@@ -166,7 +173,9 @@ export const Calendar: React.FC<CalendarProps> = ({
   emptyMessage = 'No hay nada en estas fechas.',
   className,
   'aria-label': ariaLabel = 'Calendario',
+  mobileView = 'agenda',
 }) => {
+  const mobile = useIsNarrow(768);
   const hoy = React.useMemo(() => aFecha(todayProp ?? new Date()), [todayProp]);
 
   // Vista y fecha admiten ser controladas o no: la mayoría de pantallas solo
@@ -191,6 +200,8 @@ export const Calendar: React.FC<CalendarProps> = ({
   };
 
   const [arrastre, setArrastre] = React.useState<Arrastre | null>(null);
+  const [scheduling, setScheduling] = React.useState<CalendarEvent | null>(null);
+  const [scheduleDate, setScheduleDate] = React.useState<string | null>(null);
   const rejillaRef = React.useRef<HTMLDivElement>(null);
 
   const normalizados = React.useMemo(() => events.map(normalizar), [events]);
@@ -344,7 +355,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   const altoRejilla = horas.length * hourHeight;
 
   return (
-    <div
+    <div data-k-mobile="Calendar"
       aria-label={ariaLabel}
       // Los manejadores van en la raíz y no en la rejilla: al arrastrar una
       // tarjeta de «sin programar», la captura de puntero reencamina los
@@ -358,6 +369,8 @@ export const Calendar: React.FC<CalendarProps> = ({
         className,
       )}
     >
+{onEventChange && <MobileScheduleActions allowZeroDuration={false} items={events} onChange={(id, start, end) => { const event = events.find(event => event.id === id); if (event) onEventChange(event, { start, end }); }} />}
+
       {toolbar && (
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-default,#e2e8f0)] px-3 py-2">
           <div className="flex items-center gap-1">
@@ -416,7 +429,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         </div>
       )}
 
-      {view === 'week' ? (
+      {mobile && mobileView === 'agenda' ? <div className="k-mobile-agenda" role="list" aria-label="Agenda">{(view === 'week' ? diasSemana : diasMes.filter(day => day.getMonth() === fecha.getMonth())).filter(day => deDia(day).length > 0).map(day => <section key={day.toISOString()} role="listitem"><h3>{day.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</h3>{deDia(day).map(event => <div key={event.id} className="k-mobile-agenda-event">{onEventClick ? <button type="button" onClick={() => onEventClick(event)}><strong>{event.title}</strong><span>{event.allDay ? 'Todo el día' : hhmm(event._inicio) + ' – ' + hhmm(event._fin)}</span></button> : <><strong>{event.title}</strong><span>{event.allDay ? 'Todo el día' : hhmm(event._inicio) + ' – ' + hhmm(event._fin)}</span></>}</div>)}</section>)}{onSlotClick && <Button variant="secondary" onClick={() => onSlotClick(fecha)}>Añadir evento</Button>}</div> : (view === 'week' ? (
         <div>
           {/* Cabecera de días + banda de todo el día. */}
           <div className="flex border-b border-[var(--border-default,#e2e8f0)]">
@@ -651,9 +664,9 @@ export const Calendar: React.FC<CalendarProps> = ({
             })}
           </div>
         </div>
-      )}
+      ))}
 
-      {events.length === 0 && (
+      {(events.length === 0 || (mobile && mobileView === 'agenda' && !(view === 'week' ? diasSemana : diasMes.filter(day => day.getMonth() === fecha.getMonth())).some(day => deDia(day).length))) && (
         <div className="border-t border-[var(--border-default,#e2e8f0)] py-6 text-center text-[13px] text-[var(--fg-muted,#52606f)]">
           {emptyMessage}
         </div>
@@ -684,7 +697,9 @@ export const Calendar: React.FC<CalendarProps> = ({
                     tabIndex={0}
                     data-sin-programar={e.id}
                     aria-label={`${e.title}, sin programar`}
-                    onPointerDown={(evt) => empezar(evt, e.id, 'mover', true)}
+                    onPointerDown={(evt) => { if (!mobile) empezar(evt, e.id, 'mover', true); }}
+                    onClick={() => { if (mobile && onSchedule) { setScheduling(e); setScheduleDate(null); } }}
+                    onKeyDown={(evt) => { if (onSchedule && (evt.key === 'Enter' || evt.key === ' ')) { evt.preventDefault(); setScheduling(e); setScheduleDate(null); } }}
                     style={{ background: c.bg, color: c.fg }}
                     className={cn(
                       'rounded-[var(--k-radius-xs,2px)] px-2 py-1 text-[11px] font-medium shadow-sm',
@@ -700,6 +715,12 @@ export const Calendar: React.FC<CalendarProps> = ({
           )}
         </div>
       )}
+      <Modal isOpen={!!scheduling} onClose={() => setScheduling(null)} title="Programar evento" hideCancel>
+        <form onSubmit={event => { event.preventDefault(); if (scheduling && scheduleDate) { onSchedule?.(scheduling, aFecha(scheduleDate)); setScheduling(null); } }}>
+          <DatePicker label="Fecha" value={scheduleDate} onChange={setScheduleDate} />
+          <Button type="submit" disabled={!scheduleDate}>Programar</Button>
+        </form>
+      </Modal>
     </div>
   );
 };

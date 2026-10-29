@@ -95,7 +95,7 @@ export function SegmentedControl<T extends string = string>({
   const isRaised = variant === 'raised';
 
   return (
-    <div
+    <div data-k-mobile="SegmentedControl"
       ref={containerRef}
       role="radiogroup"
       aria-label={rest['aria-label']}

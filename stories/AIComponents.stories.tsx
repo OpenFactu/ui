@@ -1,4 +1,6 @@
 import * as React from 'react';
+import { useAIComposer } from '../src/ai';
+import { Button } from '../src/components/Button';
 import { AIComposer, AIModelSelector, AIConversationHistory, AIMessage, AIMessageActions, AIConversation, AIPromptSuggestions, AIMarkdown, AICodeBlock, AISources, AIAttachments, AIToolCall, AIAgentActivity, AIArtifactPanel, AIVoiceRecorder, AIAudioPlayer, type AIDraft, type AIArtifact, type AIToolStatus } from '../src/ai';
 import { Globe, Brain, FileText, Plug, ImageIcon, Code2 } from 'lucide-react';
 import { registerComposerTool, unregisterComposerToolSource, type AIComposerTool } from '../src/ai';
@@ -12,12 +14,23 @@ export const Compositor = () => {
 };
 export const CompositorPorPiezas = () => {
   const [draft, setDraft] = React.useState<AIDraft>({ text: '', attachments: [] });
-  return <Frame><AIComposer draft={draft} onDraftChange={setDraft} onSubmit={() => setDraft({ text: '', attachments: [] })}><AIComposer.Attachments /><AIComposer.Input /><AIComposer.Tools><small>Composición personalizada</small></AIComposer.Tools></AIComposer></Frame>;
+  const [model, setModel] = React.useState('general');
+  const [layout, setLayout] = React.useState('top');
+  const [sent, setSent] = React.useState('');
+  return <Frame><p>Elige la distribución. Las piezas comparten el borrador y las capacidades del modelo; no se añaden controles implícitos.</p>
+    <div className="ai-inline-actions">{[['top', 'Modelo arriba'], ['bottom', 'Modelo abajo'], ['minimal', 'Solo texto']].map(([id, label]) => <Button key={id} size="sm" variant="secondary" aria-pressed={layout === id} onClick={() => setLayout(id)}>{label}</Button>)}</div>
+    <AIComposer draft={draft} onDraftChange={setDraft} onSubmit={value => { setSent(value.text); setDraft({ text: '', attachments: [] }); }} models={demoModels} modelId={model} onSelectModel={setModel}
+      onRecordAudio={() => setSent('Audio recibido')} tools={[{ id: 'research', label: 'Investigar', kind: 'toggle', icon: <Brain size={14} /> }]}>
+      {layout === 'top' && <AIComposer.Toolbar aria-label="Controles superiores"><AIComposer.ModelSelector /><AIComposer.Spacer /><ComposerContextButton /></AIComposer.Toolbar>}
+      <AIComposer.Attachments /><AIComposer.Input />
+      <AIComposer.Toolbar aria-label="Controles inferiores"><AIComposer.ToolGroup>{layout !== 'minimal' && <><AIComposer.AttachButton /><AIComposer.RegisteredTools /><AIComposer.Voice compact /></>}</AIComposer.ToolGroup><AIComposer.Spacer />{layout === 'bottom' && <AIComposer.ModelSelector />}<AIComposer.Submit /></AIComposer.Toolbar>
+    </AIComposer><p role="status">Último envío: {sent}</p></Frame>;
 };
+function ComposerContextButton() { const c = useAIComposer(); return <button type="button" className="ai-tool-chip" disabled={c.disabled || c.busy || c.pending} onClick={() => { c.setDraft({ ...c.draft, text: `${c.draft.text}${c.draft.text ? '\n' : ''}Contexto del proyecto: ` }); c.focusInput(); }}>Añadir contexto</button>; }
 export const Modelos = () => { const [value, setValue] = React.useState('general'); return <Frame><AIModelSelector models={demoModels} value={value} onChange={setValue} /></Frame>; };
-export const Historial = () => { const { state, actions } = useAIDemo(); return <Frame><div style={{ width: 280, height: 500 }}><AIConversationHistory conversations={state.conversations} value={state.conversationId} onSelect={actions.onSelectConversation} onNew={actions.onNewConversation} onRename={actions.onRenameConversation} onDelete={actions.onDeleteConversation} onPin={actions.onPinConversation} /></div></Frame>; };
+export const Historial = () => { const { state, actions } = useAIDemo(); return <Frame><div style={{ width: 280, maxWidth: '100%', height: 600 }}><AIConversationHistory conversations={state.conversations} projects={state.projects} value={state.conversationId} onSelect={actions.onSelectConversation} onNew={actions.onNewConversation} onRename={actions.onRenameConversation} onDelete={actions.onDeleteConversation} onPin={actions.onPinConversation} onCreateProject={actions.onCreateProject} onRenameProject={actions.onRenameProject} onDeleteProject={actions.onDeleteProject} onMoveConversation={actions.onMoveConversation} /></div></Frame>; };
 export const Conversacion = () => <Frame><div style={{ height: 600, display: 'flex' }}><AIConversation messages={demoMessages} /></div></Frame>;
-export const Mensaje = () => <Frame><AIMessage message={demoMessages[1]} /></Frame>;
+export const Mensaje = () => <Frame><AIMessage message={{ ...demoMessages[0], name: 'Tú', avatar: demoArtifacts.find(artifact => artifact.kind === 'image')?.url }} /><AIMessage message={demoMessages[1]} /></Frame>;
 export const Acciones = () => { const [action, setAction] = React.useState(''); return <Frame><AIMessageActions message={demoMessages[1]} onEdit={() => setAction('Editar')} actions={{ onRetry: () => setAction('Regenerar'), onFeedback: (_, value) => setAction(value), onReadAloud: () => setAction('Lectura solicitada (simulada)') }} /><p role="status">{action}</p></Frame>; };
 export const Sugerencias = () => { const [prompt, setPrompt] = React.useState(''); return <Frame><AIPromptSuggestions suggestions={demoSuggestions} onSelect={setPrompt} /><p>{prompt}</p></Frame>; };
 const markdown = '# Contenido enriquecido\n\nUna respuesta con **negrita**, _énfasis_, ~~tachado~~, [enlaces](https://react.dev) y una nota[^1].\n\n> Una cita breve.\n\n- [x] Revisar\n- [ ] Compartir\n\n| Campo | Valor |\n| --- | --- |\n| Ideas | 12 |\n\n```typescript\nconst greeting = "Hola";\nconsole.log(greeting);\n```\n\n[^1]: Una nota al pie.\n\n<img src=x onerror="window.__aiInjected=true">\n\n[Enlace bloqueado](javascript:alert(1))';

@@ -81,7 +81,7 @@ export const Stepper: React.FC<StepperProps> = ({
     step.status ?? (i < current ? 'hecha' : i === current ? 'actual' : 'pendiente');
 
   return (
-    <ol
+    <ol data-k-mobile="Stepper"
       aria-label={ariaLabel}
       className={cn(vertical ? 'flex flex-col' : 'flex items-start', className)}
     >

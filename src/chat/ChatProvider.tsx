@@ -90,6 +90,15 @@ function ChatProviderScope(props: ChatProviderProps) {
       ...reactionActions, ...mutationActions, ...attachmentActions,
       selectConversation: id => { if (id !== snapshot.current.activeConversationId && navigationGuard.current?.(id) === false) return; commit({ type: 'select', conversationId: id }); },
       setDraft: (draft, conversationId) => { const id = activeId(conversationId); if (id !== null) commit({ type: 'draft', conversationId: id, draft }); },
+      async forwardMessage(messageId, sourceConversationId, targetConversationId) {
+        const source = snapshot.current.messages.find(item => item.id === messageId && item.conversationId === sourceConversationId);
+        const target = snapshot.current.conversations.find(item => item.id === targetConversationId);
+        if (!mounted.current || !source || source.deletedAt || ['sending', 'error'].includes(source.status ?? '') || !target || target.readOnly) return false;
+        const clientId = globalThis.crypto.randomUUID();
+        const message: ChatMessageData = { id: clientId, clientId, conversationId: target.id, senderId: currentUser.id, text: source.text, createdAt: new Date().toISOString(), status: 'sending', attachments: source.attachments?.map(item => ({ ...item })) };
+        receiveMessages([message]);
+        return deliver(message);
+      },
       async sendMessage(conversationId) {
         if (!mounted.current) return false;
         const id = activeId(conversationId);

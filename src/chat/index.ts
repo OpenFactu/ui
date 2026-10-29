@@ -19,3 +19,6 @@ export * from './ChatPinnedMessages';
 export * from './emojiCatalog';
 export * from './messageGroups';
 export * from './fileTypes';
+export * from './ChatConversationTools';
+export * from './ChatMessageReceipt';
+export * from './ChatTypingIndicator';

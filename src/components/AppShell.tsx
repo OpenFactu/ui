@@ -5,6 +5,7 @@ import { useIsNarrow } from '../hooks/useMediaQuery';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useEscapeStack } from '../internal/escapeStack';
+import { useMobileViewport } from '../hooks/useMobileViewport';
 
 export interface AppShellSidebarState {
   collapsed: boolean;
@@ -30,6 +31,7 @@ export interface AppShellProps {
   navigationLabel?: string;
   className?: string;
   contentClassName?: string;
+  mobileNavigation?: React.ReactNode | ((controls: { openMenu: () => void; closeMenu: () => void }) => React.ReactNode);
 }
 
 /** Marco de aplicación con navegación plegable y menú modal en móvil. Sin router propio. */
@@ -49,8 +51,10 @@ export function AppShell({
   navigationLabel = 'Navegación principal',
   className,
   contentClassName,
+  mobileNavigation,
 }: AppShellProps) {
   const mobile = useIsNarrow(768);
+  const viewport = useMobileViewport();
   const [internalCollapsed, setInternalCollapsed] = React.useState(defaultCollapsed);
   const [menuOpen, setMenuOpen] = React.useState(false);
   const collapsed = !mobile && (controlledCollapsed ?? internalCollapsed);
@@ -77,11 +81,13 @@ export function AppShell({
     typeof slot === 'function' ? slot({ collapsed, mobile, close }) : slot;
   return (
     <div
+      data-k-mobile-editing={mobile && viewport.editing || undefined}
+      data-k-mobile-navigation={mobileNavigation != null || undefined}
       className={cn(
-        'relative isolate flex w-full min-w-0 overflow-hidden bg-[var(--bg-app,#fafbfc)] font-sans text-[var(--fg-default,#0a1628)]',
+        'k-app-shell relative isolate flex w-full min-w-0 overflow-hidden bg-[var(--bg-app,#fafbfc)] font-sans text-[var(--fg-default,#0a1628)]',
         className,
       )}
-      style={{ height }}
+      style={{ height: mobile && height === '100dvh' && viewport.height ? viewport.height : height }}
     >
       <a
         href={`#${mainId}`}
@@ -102,11 +108,11 @@ export function AppShell({
           tabIndex={mobile ? -1 : undefined}
           className={cn(
             'flex shrink-0 flex-col border-r border-[var(--border-default,#e2e8f0)] bg-[var(--bg-sidebar,#0a1628)] text-[var(--sidebar-fg,#ffffff)]',
-            mobile && 'fixed inset-y-0 left-0 z-50 shadow-k-overlay',
+            mobile && 'k-app-shell-mobile-menu fixed inset-y-0 left-0 z-50 shadow-k-overlay',
           )}
           style={{
             width: mobile
-              ? `min(${sidebarWidth}px, 85vw)`
+              ? '100%'
               : collapsed
                 ? collapsedWidth
                 : sidebarWidth,
@@ -167,6 +173,7 @@ export function AppShell({
         >
           {children}
         </main>
+        {mobileNavigation != null && <div className="k-app-shell-bottom">{typeof mobileNavigation === 'function' ? mobileNavigation({ openMenu: () => setMenuOpen(true), closeMenu: close }) : mobileNavigation}</div>}
       </div>
     </div>
   );

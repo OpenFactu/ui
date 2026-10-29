@@ -1,5 +1,7 @@
 import * as React from 'react';
-import { createPortal } from 'react-dom';
+import { adaptivePortal } from './internal/MobileOverlay';
+import { resolveMobilePresentation, type MobilePresentation } from './internal/mobilePresentation';
+import { useIsNarrow } from '../hooks/useMediaQuery';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
@@ -15,6 +17,7 @@ export interface SelectOption {
  * búsqueda usa SearchableSelect.
  */
 export interface SelectProps {
+  mobilePresentation?: MobilePresentation;
   options: SelectOption[];
   value: string;
   onChange: (value: string) => void;
@@ -55,7 +58,10 @@ export const Select: React.FC<SelectProps> = ({
   dropdownStyle,
   id,
   ariaLabel,
+  mobilePresentation = 'auto',
 }) => {
+  const mobile = useIsNarrow(768);
+  const presentation = resolveMobilePresentation(mobile, mobilePresentation, 'sheet');
   const [isOpen, setIsOpen] = React.useState(false);
   const [highlightedIndex, setHighlightedIndex] = React.useState(-1);
   const generatedId = React.useId();
@@ -64,7 +70,7 @@ export const Select: React.FC<SelectProps> = ({
   const listRef = React.useRef<HTMLDivElement>(null);
 
   const { anchorRef, popoverRef, style, ready } = usePopover<HTMLButtonElement>({
-    open: isOpen,
+    open: isOpen && !mobile,
     onClose: () => setIsOpen(false),
     matchAnchorWidth: true,
     estimatedMaxHeight: 260,
@@ -86,7 +92,8 @@ export const Select: React.FC<SelectProps> = ({
     if (highlightedIndex < 0) return;
     const el = listRef.current?.querySelector(`[data-opt-index="${highlightedIndex}"]`);
     el?.scrollIntoView({ block: 'nearest' });
-  }, [highlightedIndex]);
+    if (mobile && el instanceof HTMLElement) el.focus({ preventScroll: true });
+  }, [highlightedIndex, mobile]);
 
   const selectOption = (opt: SelectOption) => {
     if (opt.disabled) return;
@@ -154,12 +161,12 @@ export const Select: React.FC<SelectProps> = ({
 
   const dropdown =
     isOpen &&
-    createPortal(
+    adaptivePortal(
       <div
         ref={popoverRef}
         className={cn(
           'z-[var(--k-z-popover,999999)] rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-1 shadow-lg animate-in fade-in-50 duration-150 flex flex-col',
-          !ready && 'invisible',
+          !ready && !mobile && 'invisible',
           dropdownClassName,
         )}
         style={{ ...dropdownStyle, ...style }}
@@ -179,6 +186,8 @@ export const Select: React.FC<SelectProps> = ({
                 id={`${listboxId}-opt-${idx}`}
                 data-opt-index={idx}
                 role="option"
+                tabIndex={mobile ? highlighted ? 0 : -1 : undefined}
+                onKeyDown={mobile ? handleKeyDown : undefined}
                 aria-selected={isSelected}
                 aria-disabled={opt.disabled || undefined}
                 onClick={() => selectOption(opt)}
@@ -208,6 +217,7 @@ export const Select: React.FC<SelectProps> = ({
         </div>
       </div>,
       document.body,
+      { open: isOpen, onClose: () => setIsOpen(false), title: typeof label === 'string' ? label : ariaLabel ?? placeholder, presentation, anchorRef },
     );
 
   return (
@@ -230,6 +240,7 @@ export const Select: React.FC<SelectProps> = ({
         id={selectId}
         type="button"
         role="combobox"
+        data-k-control="select"
         aria-required={required || undefined}
         aria-label={ariaLabel}
         aria-expanded={isOpen}

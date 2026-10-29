@@ -552,6 +552,45 @@ conversaciones. Todo se conecta mediante callbacks del provider.
 En Ladle: **Chat → Mensajeria** para probarlo y **Chat → Temas** para comparar
 seis estilos. También hay ejemplos de reacciones, adjuntos, edición, búsqueda y voz.
 
+## Centro de notificaciones
+
+Para la campana de avisos, `NotificationCenter` (entrada principal) reutiliza
+`NotificationList`: contador sin leer, lectura individual o en bloque, descarte
+y activación. En escritorio abre un panel anclado; en móvil ocupa la pantalla.
+
+```tsx
+<NotificationCenter items={notifications}
+  onActivate={openNotification}
+  onReadChange={(item, read) => updateRead(item.id, read)}
+  onMarkAllRead={markRead}
+  onDismiss={item => removeNotification(item.id)} />
+```
+
+Los datos siguen siendo controlados: abrir una notificación no altera su lectura
+automáticamente. `open` y `onOpenChange` permiten controlar también la apertura;
+`trigger` sustituye el icono interior de la campana. En Ladle:
+**Notification Center → Basico**.
+
+## Botón flotante de acciones
+
+`FloatingActionButton` recibe las acciones de la aplicación, sin opciones
+predefinidas. Móntalo en la raíz de la pantalla para anclarlo al viewport.
+
+```tsx
+<FloatingActionButton label="Crear" actions={[
+  { id: 'invoice', label: 'Nueva factura', icon: <InvoiceIcon />, onClick: openInvoice },
+  { id: 'message', label: 'Enviar mensaje', icon: <MessageIcon />, onClick: openChat },
+]} />
+```
+
+Cada acción admite `disabled` y un callback síncrono o asíncrono. Mientras se
+ejecuta, se evitan duplicados; un error se muestra en el menú para poder
+reintentarlo. `position="bottom-left"` cambia de lado, `style` ajusta los
+márgenes y `open`/`onOpenChange` permiten controlar la apertura. Se cierra al
+elegir una acción, tocar fuera o pulsar Escape. Incluye navegación con flechas,
+áreas táctiles de 48 px, zona segura del móvil y movimiento reducido.
+En Ladle: **Floating Action Button → Basico**.
+
 ## Herramientas del compositor (`@openfactu/ui/ai`)
 
 La barra del compositor reúne en una fila adjuntar, herramientas, modelo, voz y
@@ -577,6 +616,61 @@ llega a `onSubmit`. Con más de `maxInlineTools` (3 por defecto) el resto pasa a
 menú «+». `<AIComposer tools={[…]}>` añade herramientas solo a esa instancia, y
 `render` permite un control propio. `useComposerTools()` devuelve el catálogo
 reactivo.
+
+### Composición libre, proyectos y panel lateral
+
+`AIComposer` conserva la distribución habitual si no recibe `children`. Para
+elegir los controles y su posición, compón las piezas explícitamente:
+
+```tsx
+<AIComposer draft={draft} onDraftChange={setDraft} onSubmit={send}
+  models={models} modelId={modelId} onSelectModel={setModelId}>
+  <AIComposer.Toolbar>
+    <AIComposer.ModelSelector />
+    <AIComposer.Spacer />
+    <AIContextUsage usedTokens={used} maxTokens={limit} variant="plain" />
+  </AIComposer.Toolbar>
+  <AIComposer.Attachments />
+  <AIComposer.Input />
+  <AIComposer.Toolbar>
+    <AIComposer.ToolGroup>
+      <AIComposer.AttachButton />
+      <AIComposer.RegisteredTools />
+      <AIComposer.Voice compact />
+    </AIComposer.ToolGroup>
+    <AIComposer.Spacer />
+    <AIComposer.Submit />
+  </AIComposer.Toolbar>
+</AIComposer>
+```
+
+Solo se montan las piezas incluidas. `useAIComposer()` ofrece el borrador,
+modelo, capacidades, estado de envío y acciones para crear controles propios.
+`AIComposer.Tools` conserva la barra completa de las versiones anteriores.
+En `AIWorkspace`, `composer` recibe esta misma composición dentro del compositor
+gestionado por el espacio de trabajo.
+
+El historial acepta `projects: { id, title }[]` y `projectId` en cada conversación.
+Los proyectos se pliegan, muestran su contador y se incluyen en la búsqueda.
+Las acciones `onCreateProject`, `onRenameProject`, `onDeleteProject` y
+`onMoveConversation` se reciben directamente en `AIConversationHistory` o en
+`AIWorkspace.actions`; el consumidor mantiene y persiste los datos. Al eliminar
+un proyecto debe quitar su asignación de las conversaciones y conservar los
+mensajes. `onNewConversation(projectId?)` permite iniciar un chat en un proyecto.
+Las conversaciones sin proyecto, o con un proyecto que ya no existe, siguen
+accesibles en «Sin proyecto». Omitir `projects` conserva el historial simple.
+
+El lateral de `AIWorkspace` se ajusta arrastrando su separador o con las flechas,
+Inicio y Fin (200–420 px). Puede controlarse con `sidebarWidth` y
+`onSidebarWidthChange`; sin estas propiedades conserva el ancho localmente.
+Los límites se reducen cuando hay resultados abiertos para reservar espacio al
+chat. Si el contenedor es demasiado estrecho, el historial pasa a superposición.
+En móvil sigue abriéndose como un panel superpuesto.
+Por debajo de 768 px ocupa toda la pantalla, con una sola cabecera. El detalle
+de `AIContextUsage` se abre en un panel inferior en móvil; `variant="plain"`
+quita el borde del indicador conservando el foco de teclado.
+
+En Ladle: **AI Components → Compositor Por Piezas** y **AI Workspace → Personalizable**.
 
 ## IA sobre código (`@openfactu/ui/ai`)
 
@@ -1135,6 +1229,8 @@ Ejecuta `npm run test:workspace` con Ladle abierto; admite `LADLE_URL`,
 `CHROME_PATH` y `SHOTS_DIR` como las otras comprobaciones de navegador.
 
 ## Convenciones
+
+La librería se adapta automáticamente a móvil: navegación inferior, paneles, controles táctiles y tablas en tarjetas. Consulta [la guía móvil](docs/mobile.md) para configurar las presentaciones y conservar una tabla desplazable.
 
 - **Clases Tailwind literales**: nunca construidas por concatenación
   (`bg-${variante}` no funciona con el JIT del consumidor). Se usan mapas de
