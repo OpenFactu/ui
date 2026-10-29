@@ -7,6 +7,12 @@
  * `@openfactu/ui/styles.css`.
  */
 
+/* Giro de spinners (anillos, iconos de carga). */
+@keyframes k-spin { to { transform: rotate(360deg); } }
+
+/* Parpadeo de cursores (máquina de escribir, respuesta en curso). */
+@keyframes k-blink { 50% { opacity: 0; } }
+
 /* Entrada de fila de tabla — visible pero no invasiva. */
 @keyframes k-row-in {
   from {

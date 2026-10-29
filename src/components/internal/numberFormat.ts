@@ -1,3 +1,4 @@
+import { escapeRegExp } from '../../internal/text';
 /**
  * Utilidades numéricas de los campos de cifras.
  *
@@ -41,7 +42,7 @@ export function normalizePastedNumber(
   { decimalSeparator = ',', thousandSeparator = false }: FormatNumberOptions = {},
 ): string | null {
   let raw = text.trim();
-  const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const escape = escapeRegExp;
   if (thousandSeparator && thousandSeparator !== decimalSeparator) {
     const grouped = new RegExp(`^-?\\d{1,3}(?:${escape(thousandSeparator)}\\d{3})+(?:${escape(decimalSeparator)}\\d+)?$`);
     if (grouped.test(raw)) raw = raw.split(thousandSeparator).join('');

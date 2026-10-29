@@ -1,12 +1,14 @@
+import { matchesAccept } from '../internal/files';
+import { safeUrl } from '../internal/url';
 import * as React from 'react';
 import type { ChatController } from './controller';
 import { chatError, chatOperationKey } from './controller';
 import { getChatDraft } from './state';
 import type { ChatActions, ChatAttachment, ChatState } from './types';
 interface Upload { file: File; controller?: AbortController; localUrl: string; conversationId: string; duration?: number }
+/** URL de un adjunto si es segura (http, https o blob, sin caracteres de control). */
 export function chatAttachmentUrl(url?: string): string | undefined {
-  if (!url || /[\u0000-\u001f]/.test(url)) return undefined;
-  try { return ['http:', 'https:', 'blob:'].includes(new URL(url, 'https://chat.invalid').protocol) ? url : undefined; } catch { return undefined; }
+  return safeUrl(url, 'attachment');
 }
 export function useChatAttachments({ snapshot, mounted, commit, props }: ChatController, state: ChatState): Pick<ChatActions, 'addAttachments' | 'removeAttachment' | 'retryAttachment'> {
   const uploads = React.useRef(new Map<string, Upload>());
@@ -48,7 +50,7 @@ export function useChatAttachments({ snapshot, mounted, commit, props }: ChatCon
         const errors: string[] = []; const tasks: Promise<void>[] = []; const added: string[] = []; const cleanups: (() => void)[] = [];
         for (const file of files) {
           const draft = getChatDraft(snapshot.current, conversation.id);
-          const allowed = limits?.accept?.some(type => type.startsWith('.') ? file.name.toLowerCase().endsWith(type.toLowerCase()) : type.endsWith('/*') ? file.type.startsWith(type.slice(0, -1)) : type === file.type) ?? true;
+          const allowed = matchesAccept(file, limits?.accept);
           if ((draft.attachments?.length ?? 0) >= (limits?.maxFiles ?? 10) || file.size > (limits?.maxBytes ?? 25 * 1024 * 1024) || !allowed) { errors.push(`${file.name}: supera los límites de archivos o no es un formato admitido.`); continue; }
           const attachmentId = crypto.randomUUID(); const localUrl = URL.createObjectURL(file);
           uploads.current.set(attachmentId, { file, localUrl, conversationId: conversation.id, duration });

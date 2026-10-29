@@ -17,6 +17,10 @@ const pila: string[] = [];
  * (`React.useId()` sirve).
  */
 export function useEscapeStack(id: string, activo: boolean, alCerrar: () => void): void {
+  // El callback va en una ref: si estuviera en las dependencias, una función nueva en cada render volvería a apilar la
+  // capa y la pondría encima de otras que se abrieron después.
+  const cerrar = React.useRef(alCerrar);
+  cerrar.current = alCerrar;
   React.useEffect(() => {
     if (!activo) return;
     pila.push(id);
@@ -24,7 +28,7 @@ export function useEscapeStack(id: string, activo: boolean, alCerrar: () => void
       if (e.key !== 'Escape') return;
       if (pila[pila.length - 1] !== id) return;
       e.stopPropagation();
-      alCerrar();
+      cerrar.current();
     };
     // En `document`, no en un elemento concreto: si se escucha solo en el campo
     // de texto, en cuanto se pulsa cualquier botón de dentro el foco se va y
@@ -35,5 +39,5 @@ export function useEscapeStack(id: string, activo: boolean, alCerrar: () => void
       if (i !== -1) pila.splice(i, 1);
       document.removeEventListener('keydown', onKey);
     };
-  }, [id, activo, alCerrar]);
+  }, [id, activo]);
 }

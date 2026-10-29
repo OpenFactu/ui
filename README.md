@@ -168,6 +168,96 @@ registerThemePreset({
 - `validateTheme` avisa de un cristal sin fondo o de texto ilegible sobre el cristal
   (mide la superficie translúcida sobre los colores hexadecimales del `backdrop`).
 
+### Movimiento físico
+
+Lo que se abre y se cierra se mueve con **muelles** y no con curvas fijas: un oscilador amortiguado resuelto de forma exacta (sin dependencias) que da entradas fluidas, rebote cuando el tema lo pide y gestos con inercia. El carácter lo decide el **tema**.
+
+```ts
+const theme = { motion: { character: 'expressive' } };          // sober (por defecto) · smooth · expressive · playful
+const custom = { motion: { character: 'smooth', springs: { enter: { bounce: 0.35, duration: 0.5 } }, stagger: 20 } };
+```
+
+- **Papeles:** `enter`, `exit`, `pop` (menús y popovers), `move` (indicadores y pila de avisos), `gesture` (soltar tras arrastrar). Cada uno es un muelle: un preset (`'snappy'`, `'bouncy'`…), `{ bounce, duration }` o `{ stiffness, damping, mass }`.
+- **Extras del carácter:** `stagger` (ms entre elementos de una lista), `enterScale` y `enterBlur` (desde dónde crece lo que aparece).
+- **Variables CSS** que emite el tema: `--k-spring-<papel>` (curva `linear()`), `--k-spring-<papel>-duration`, `--k-stagger`, `--k-enter-scale`, `--k-enter-blur`. Con Tailwind: `ease-spring-pop duration-spring-pop`.
+- **En componentes:** `Modal`, `Drawer`, menús, selects, tooltips y avisos entran y salen con su muelle (`data-state="open|closed"` + clases `k-appear`, `k-sheet`, `k-scrim` de `styles/motion.css`). En móvil la hoja del `Modal` y el `Drawer` se arrastran para cerrar, y los avisos se descartan con un lanzamiento; `Tabs`, `SegmentedControl` y `BottomNavigation` llevan un indicador que viaja.
+- **Respeta** `prefers-reduced-motion`, `data-motion="off"` y `motion.speed` (0 = sin movimiento).
+
+Para tus propios componentes: `useAnimatedPresence`, `useSpring`, `useDragDismiss`, `useIndicator` y las funciones puras `spring`, `springAt`, `springToLinear` están en la entrada principal. `stories/Motion.stories.tsx` compara los caracteres y `ThemeEditor` los edita en vivo.
+
+### Loaders y texto en movimiento
+
+Todo con CSS y el acento del tema; respeta `motion.speed`, `prefers-reduced-motion` y `data-motion="off"`.
+
+- **Cargas:** `<Spinner variant="ring|dual|pulse|orbit|dots|bars|grid" size tone label />`, `<Thinking>` (texto con brillo para asistentes), `<Progress indeterminate | striped | glow />` y `<Skeleton animation="shimmer" />`.
+- **Efectos de texto:** `ShimmerText`, `GradientText` (`animated`), `Typewriter` (una o varias frases), `TextReveal` (por palabras o letras, con el muelle `enter`), `Highlight` (`marker | block | underline`, se dibuja al entrar en pantalla) y `CountUp` (cuenta con muelle y recuenta al cambiar).
+- **Párrafos:** `Heading`, `Paragraph` (`lead`, `small`, `caption`, `measure`, `balance`, `columns`, `dropCap`, `clamp` con «Ver más»), `Quote`, `Kbd`, `InlineCode`.
+- **Formatos de dato** (`Intl`, `es-ES` por defecto): `Currency`, `NumberValue`, `Delta`, `RelativeTime`, `FileSize`, `Truncate` (también por el centro para nombres de archivo).
+
+Mira `stories/Loaders.stories.tsx` y `stories/Texto.stories.tsx`.
+
+### Microinteracciones, listas, fondos y mapa
+
+- **Microinteracciones:** `<Ripple />` (onda táctil dentro de un botón `relative overflow-hidden`), `StatusMark` (círculo y signo que se dibujan), `shake(el)`, `fireConfetti({ x, y })`, `TextScramble`, `RollingNumber` (cifras que ruedan) y `SwapText`. Spinners extra: `blades` y `ripple`.
+- **Transiciones:** `PageTransition` (`transitionKey`, `rise | slide | fade`), `AnimatedList` (entra, sale y se reordena con FLIP y el muelle `move`), `SortableList` (arrastrar con física; teclado con Alt + ↑/↓), `Collapse` y `Accordion` con altura animada.
+- **Fondos:** `AuroraBackground`, `MeshBackground`, `PatternBackground` (`dots | grid | lines`), `NoiseOverlay`, `Spotlight` (sigue al puntero), `Particles` (canvas) y `GlowBorder`. Van detrás del contenido, con los colores del tema.
+- **Mapa** (`TileMap`): teselas sin dependencias, con arrastre inercial, pellizco, rueda con zoom en el puntero (`scrollZoom="ctrl"` para no secuestrar el scroll), doble clic, teclado y vuelo con el muelle `move` (`ref.flyTo`, `ref.fitBounds`, `ref.reset`). Es extensible por todas partes:
+  - **Estilos** (`mapStyle`): `standard`, `light`, `dark`, `mono` (blanco y negro), `mono-dark` (negro) y `auto` (sigue al tema). Todos salen de OpenStreetMap con filtros, sin clave. Los tuyos se añaden con `registerMapStyle({ id, label, tileUrl, attribution, filter? })` y aparecen en el selector. **Para producción usa tu proveedor**: la política de OSM no admite uso intensivo.
+  - **Buscador** (`geocoder`): `nominatimGeocoder()`, `localGeocoder(tusDatos, describir)`, `combineGeocoders(...)` o cualquier `(texto, signal) => Promise<GeocodeResult[]>`.
+  - **Controles integrados** (`controls`): `zoom`, `locate`, `fullscreen`, `reset`, `measure` (medir distancias) y `styles` (selector).
+  - **Tus acciones**: `<MapControl position="bottom-left"><MapButton>…</MapButton></MapControl>` en cualquier esquina, y `onMapClick` / `onMapContextMenu` con las coordenadas.
+  - **Capas**: `Marker` (con popup), `MarkerCluster`, `MapPath` (rutas y zonas), `MapCircle` (radio en metros), `MapPopup` y `useMap()` para las tuyas.
+  - La geometría (`mapGeo.project`, `distance`, `clusterPoints`, `fitBounds`) es pura y está probada.
+
+### Controles y paneles
+
+Todos siguen el contrato de los demás controles: controlados (`value` + `onChange(valor)`), con `label`, `helperText`, `error`, `id` enlazable desde `Field`, `aria-*` completos y `data-k-control` para el móvil.
+
+- **`Slider`**: un valor o un rango `[inicio, fin]`, con marcas, burbuja con el valor (`formatValue`) y `minGap`. Se arrastra, se pulsa en la pista (el pulgar viaja con el muelle del tema) y se maneja con flechas, RePág/AvPág, Inicio y Fin. `onChangeEnd` avisa al soltar.
+- **`Rating`**: estrellas o un icono propio, con medias estrellas, solo lectura con decimales y teclado.
+- **`OtpInput`**: código en casillas. Se puede **pegar** entero (aunque traiga espacios o guiones) y admite el autocompletado de SMS (`one-time-code`). Tiene `mask` para PIN, `groupSize` y `onComplete`; con error, se sacude.
+- **`ToggleGroup`**: botones de selección única o múltiple, como barra de herramientas accesible (un solo tabulador y flechas).
+- **`InlineEdit`**: texto que se edita en su sitio. Intro guarda y Esc cancela. Acepta `validate` y un `onSave` asíncrono, con error y marca al guardar.
+- **`ChoiceCards`**: tarjetas grandes de elección (plan, pago, tipo), radio o casilla por debajo.
+- **`SignaturePad`**: firma con trazo suavizado y grosor según la velocidad. Tiene deshacer y borrar, y exporta PNG y SVG (`ref.toDataURL()`, `ref.toSVG()`).
+- **`SplitPane`**: dos paneles con separador que se arrastra o se mueve con teclado. Se pliega con doble clic o Intro, respeta los mínimos y recuerda el tamaño (`storageKey`).
+- **`ScrollArea`**: scroll con las barras del tema y sombras en los bordes donde queda contenido. `autoHide` las oculta hasta pasar el ratón.
+- **`VirtualList`**: miles de filas pintando solo las visibles, con altura fija o variable (medida). Incluye `scrollToIndex` y `onEndReached` para la carga infinita.
+- **`TreeView`**: árbol accesible (flechas, Inicio y Fin, y búsqueda tecleando), con ramas animadas, casillas en tres estados, carga perezosa (`loadChildren`) y `filter`.
+- **`BottomSheet`**: hoja inferior con **puntos de anclaje** (`snapPoints={[0.3, 0.6, 1]}`, o `'auto'` para ajustarse a su contenido). Al soltarla va al anclaje que marcan la posición y la velocidad del dedo; lanzada hacia abajo desde el primero, se cierra. Con `modal={false}` convive con la página.
+  - **Es la hoja de toda la librería en móvil**: `Modal` (presentación `sheet`, la de por defecto), `Drawer` con `mobilePresentation="sheet"` y todos los menús y selectores que se adaptan al móvil (`DropdownMenu`, `Select`, `SearchableSelect`, `DatePicker`, `NavMenu`, menús de `Table`, `FilterBar`…) la usan, con anclaje `'auto'`. La presentación `fullscreen` sigue siendo un diálogo a pantalla completa.
+
+### Fechas, galería, guías y vitrina
+
+- **Fechas y horas:**
+  - `DateRangePicker`: dos meses, atajos («Últimos 7 días», «Este trimestre»…; los tuyos con `presets`), vista previa al pasar y teclado; en móvil, en la hoja.
+  - `TimePicker`: lista de horas y escritura libre; entiende «930», «9:30» y «21h».
+  - `HeatmapCalendar`: actividad por días al estilo GitHub, con los tonos del acento.
+  - `Countdown`: cuenta atrás con cifras que ruedan, en seis estilos:
+    - `blocks`: tarjetas.
+    - `flip`: fichas partidas.
+    - `ring`: anillos que se vacían.
+    - `display`: cifras grandes de portada.
+    - `pill`: pastilla con reloj y texto delante.
+    - `inline`: texto en línea.
+    
+    Además admite tres tamaños, tono de acento y `urgentBelow`, que la pone en rojo y la hace latir al final.
+- **Galería:**
+  - `Carousel`: arrastre físico con inercia y muelle, teclado, puntos y reproducción automática.
+  - `Lightbox`: zoom con rueda, pellizco y doble clic; deslizar para pasar de imagen.
+  - `CompareSlider`: antes y después.
+  - `Marquee`: cinta infinita que se para al pasar el ratón.
+- **Guías:**
+  - `Tour`: recorrido con foco que viaja de elemento en elemento; marca los destinos con `data-tour` y usa `tourTarget('nombre')`.
+  - `Coachmark`: faro que late junto a algo nuevo; se recuerda que ya se vio.
+  - `Banner`: anuncios que se pliegan al cerrarlos, con `storageKey` para no repetirlos.
+  - `OnboardingChecklist`: primeros pasos con progreso.
+- **Vitrina:**
+  - `Dock`: aumento al pasar el puntero, como en macOS.
+  - `TiltCard`: inclinación 3D con brillo.
+  - `BentoGrid` y `BentoItem`: rejilla de bloques.
+  - `SwipeCards`: tarjetas que se lanzan a izquierda o derecha para aprobar o descartar, también con botones y flechas.
+
 ### Cómo elegir el color de un texto
 
 La escala `--k-ink-*` es una **paleta fija**: sirve igual para texto que para
@@ -230,6 +320,34 @@ claro y en oscuro. De ahí salen tres reglas que el componente aplica solo:
   como una serie más.
 
 Si tocas `src/charts/palette.ts`, hay que volver a pasar el validador.
+
+## Códigos QR
+
+Igual que los gráficos, viven en su propia subruta porque codificar un QR necesita
+`uqr` (pequeña y sin dependencias), declarada como peerDependency **opcional**.
+
+```bash
+npm install uqr   # solo si usas @openfactu/ui/qr
+```
+
+```tsx
+import { QRCode, qrToSvg } from '@openfactu/ui/qr';
+
+<QRCode value="https://openfactu.es/f/2026-0042" size={160} />
+<QRCode value={url} modules="rounded" eyes="rounded" logo={<MiLogo />} />
+<QRCode value={urlVerifactu} level="M" margin={4} size="35mm" />   // impreso en factura
+
+const svg = qrToSvg(url, { margin: 4, size: 512 });   // texto SVG autónomo para descargar o meter en un PDF
+```
+
+- **Formas:** módulos `square`, `rounded` o `dots`, y ojos `square`, `rounded` o `circle`. Los patrones de
+  alineación y de sincronización se dibujan siempre macizos, porque los lectores se guían por ellos.
+- **Logo:** con `logo` se vacía un hueco central, y el nivel pasa a `H` salvo que indiques otro.
+- **Colores:** por defecto es oscuro sobre blanco también en modo oscuro, porque hay lectores que no leen un QR
+  invertido. Se cambia con `--k-qr-fg` y `--k-qr-bg`, o con `color`, `eyeColor` y `background`.
+- **Texto demasiado largo:** si no cabe, se muestra `fallback` en vez de romperse.
+- **Lectura comprobada:** todas las combinaciones de formas y el logo se leen con un lector real (jsQR), tanto en
+  los tests (`scripts/qr.test.cjs`) como en Chrome (`scripts/probe-qr.cjs`).
 
 ## Componentes
 

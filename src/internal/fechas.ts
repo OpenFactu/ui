@@ -102,12 +102,18 @@ export function horaDecimal(d: Date): number {
   return d.getHours() + d.getMinutes() / 60;
 }
 
+/** `2026-07-22` a partir de año, mes (1–12) y día. Sin pasar por `Date`, que desplazaría el día según el huso. */
+export function isoDate(y: number, m: number, d: number): string {
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+
 /** `2026-07-22`, para usar como clave o para devolver al servidor. */
 export function ymd(d: Date): string {
-  const mes = String(d.getMonth() + 1).padStart(2, '0');
-  const dia = String(d.getDate()).padStart(2, '0');
-  return `${d.getFullYear()}-${mes}-${dia}`;
+  return isoDate(d.getFullYear(), d.getMonth() + 1, d.getDate());
 }
+
+/** «enero» → «Enero». */
+export const capitalizar = (texto: string) => texto.charAt(0).toUpperCase() + texto.slice(1);
 
 /** `09:30`. */
 export function hhmm(d: Date): string {

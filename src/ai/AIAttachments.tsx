@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
-import { formatFileSize } from '../components/FileDropzone';
+import { formatBytes } from '../internal/format';
 import type { AIAttachment, AIUIProps } from './types';
 import { aiLabels } from './labels';
 import { safeUrl } from './internal/helpers';
@@ -16,7 +16,7 @@ function Attachment({ attachment, onRemove, labels }: AIUIProps & { attachment: 
   const [failed, setFailed] = React.useState(false);
   return <li className="ai-attachment" data-status={attachment.status}>
     <div className="ai-attachment-row">{attachment.mediaType.startsWith('image/') && url && !failed ? <img src={url} alt={attachment.name} onError={() => setFailed(true)} /> : <UiIcon slot="file" size={20} />}
-      <div className="ai-attachment-info"><strong>{attachment.name}</strong><small>{attachment.size !== undefined && formatFileSize(attachment.size)}{attachment.status === 'uploading' && ` · ${l.uploading} ${Math.round(attachment.progress ?? 0)}%`}</small></div>
+      <div className="ai-attachment-info"><strong>{attachment.name}</strong><small>{attachment.size !== undefined && formatBytes(attachment.size)}{attachment.status === 'uploading' && ` · ${l.uploading} ${Math.round(attachment.progress ?? 0)}%`}</small></div>
       {url && <a className="ai-icon-button" href={url} download={attachment.name} aria-label={`${l.download} ${attachment.name}`}><UiIcon slot="download" size={13} /></a>}
       {onRemove && <AIIconButton label={`${l.removeFile}: ${attachment.name}`} onClick={() => onRemove(attachment.id)}><UiIcon slot="x" size={13} /></AIIconButton>}
     </div>

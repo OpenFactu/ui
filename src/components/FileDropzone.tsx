@@ -1,3 +1,5 @@
+import { matchesAccept } from '../internal/files';
+import { formatBytes } from '../internal/format';
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
@@ -32,22 +34,9 @@ export interface FileDropzoneProps {
   children?: React.ReactNode;
 }
 
-function matchesAccept(file: File, accept?: string): boolean {
-  if (!accept) return true;
-  const patterns = accept.split(',').map((p) => p.trim().toLowerCase());
-  const name = file.name.toLowerCase();
-  const type = file.type.toLowerCase();
-  return patterns.some((pattern) => {
-    if (pattern.startsWith('.')) return name.endsWith(pattern);
-    if (pattern.endsWith('/*')) return type.startsWith(pattern.slice(0, -1));
-    return type === pattern;
-  });
-}
-
+/** Tamaño de archivo legible («1,5 MB»). Se mantiene por compatibilidad: es `formatBytes` con el idioma por defecto. */
 export function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return formatBytes(bytes);
 }
 
 export const FileDropzone: React.FC<FileDropzoneProps> = ({

@@ -1,3 +1,4 @@
+import { formatBytes } from '../internal/format';
 import { useChatActions } from './ChatProvider';
 import { chatAttachmentUrl } from './useChatAttachments';
 import { UiIcon } from '../icons';
@@ -13,7 +14,7 @@ export function ChatAttachments({ attachments, draft, conversationId }: ChatAtta
     return <div className="k-chat-attachment" key={item.id}>
       {url && item.mediaType.startsWith('image/') && <a href={url} target="_blank" rel="noreferrer" aria-label={`Ver ${item.name}`}><img src={url} alt={item.name} loading="lazy" /></a>}
       {url && item.mediaType.startsWith('audio/') && <ChatAudioPlayer src={url} duration={item.duration} title={item.name} />}
-      <div className="k-chat-attachment-info"><span className="k-chat-file-icon" data-file-kind={type.kind} title={type.label} aria-label={type.label}><UiIcon slot={type.slot} size={20} /><small>{type.extension || 'FILE'}</small></span><span><span>{item.mediaType.startsWith('audio/') ? 'Nota de voz' : item.name}</span><small>{Math.ceil(item.size / 1024)} KB{type.extension ? ` · ${type.extension}` : ''}</small></span>
+      <div className="k-chat-attachment-info"><span className="k-chat-file-icon" data-file-kind={type.kind} title={type.label} aria-label={type.label}><UiIcon slot={type.slot} size={20} /><small>{type.extension || 'FILE'}</small></span><span><span>{item.mediaType.startsWith('audio/') ? 'Nota de voz' : item.name}</span><small>{formatBytes(item.size)}{type.extension ? ` · ${type.extension}` : ''}</small></span>
         {!draft && url && <a href={url} download={item.name} target="_blank" rel="noreferrer" aria-label={`Descargar ${item.name}`}><UiIcon slot="download" size={16} /></a>}
         {draft && <button type="button" className="k-chat-icon-button" aria-label={`Quitar ${item.name}`} onClick={() => removeAttachment(item.id, conversationId)}><UiIcon slot="x" size={15} /></button>}
       </div>

@@ -1,3 +1,4 @@
+import { exitDelay } from '../motion/dom';
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '../utils';
@@ -141,7 +142,6 @@ const POSITIONS: Record<ToastPosition, string> = {
 };
 
 /** Duración de la animación de salida antes de quitarlo del árbol. */
-const EXIT_MS = 200;
 /** Cuánto asoma cada capa de fondo con la pila plegada, y cuánto se encoge. */
 const PEEK = 14;
 const PEEK_SCALE = 0.05;
@@ -235,7 +235,8 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({
       setLeaving((prev) => new Set(prev).add(id));
       timers.current.set(
         id,
-        setTimeout(() => remove(id), EXIT_MS),
+        // Lo que dura la salida en el tema (0 con movimiento reducido), más un margen para el último fotograma.
+        setTimeout(() => remove(id), exitDelay(document.documentElement)),
       );
     },
     [remove],
@@ -400,7 +401,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({
       <div
         key={`${t.id}#${seq.current.get(t.id) ?? 0}`}
         className={cn(
-          'k-toast-slot absolute inset-x-0 transition-[transform,opacity] duration-[400ms] ease-[cubic-bezier(0.21,1.02,0.73,1)]',
+          'k-toast-slot absolute inset-x-0 transition-[transform,opacity] duration-spring-move ease-spring-move',
           fromBottom ? 'bottom-0' : 'top-0',
           hidden ? 'pointer-events-none opacity-0' : 'opacity-100',
           behind && 'pointer-events-none',
@@ -443,7 +444,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({
       data-expanded={stacked ? open || undefined : undefined}
       className={cn(
         'pointer-events-none fixed z-[var(--k-z-toast,1000000)]',
-        stacked ? 'transition-[height] duration-[400ms] ease-[cubic-bezier(0.21,1.02,0.73,1)]' : 'flex flex-col gap-3',
+        stacked ? 'transition-[height] duration-spring-move ease-spring-move' : 'flex flex-col gap-3',
         // Móvil: de borde a borde con margen. Escritorio: columna anclada.
         'left-4 right-4 sm:left-auto sm:right-auto sm:w-full sm:max-w-sm',
         // Respeta la zona segura del móvil (barra de gestos).

@@ -52,7 +52,6 @@
 .k-chat-message-own .k-chat-bubble { background: var(--k-chat-outgoing-bg); color: var(--k-chat-outgoing-fg); }
 .k-chat-message-text { margin: 0; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
 .k-chat-message-meta { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: 6px; color: var(--fg-muted); font-size: 10px; font-variant-numeric: tabular-nums; }
-.k-chat-delivery { display: inline-flex; gap: 3px; align-items: center; }
 .k-chat-message-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-height: 21px; padding-top: 3px; }
 .k-chat-message-own .k-chat-message-actions { justify-content: flex-end; }
 .k-chat-message-actions button { border: 0; padding: 2px; color: var(--fg-muted); background: transparent; font: inherit; font-size: 10px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
@@ -84,9 +83,6 @@
 .k-chat-empty h2, .k-chat-empty h3 { margin: 7px 0 0; color: var(--fg-default); font-size: 16px; font-weight: 550; }
 .k-chat-empty p { max-width: 36ch; margin: 0; font-size: 12px; line-height: 1.6; }
 .k-chat-workspace button:focus-visible, .k-chat-scroll:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
-.k-chat-theme-preview { padding: 16px; border-radius: var(--k-radius-lg); background: var(--bg-app); color: var(--fg-default); font-family: var(--font-sans); }
-.k-chat-theme-controls { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; font-size: 13px; }
-.k-chat-theme-controls select { padding: 8px 12px; border: 1px solid var(--border-default); border-radius: var(--k-radius-sm); color: var(--fg-default); background: var(--bg-card); font: inherit; }
 .k-chat-avatar-space { flex: 0 0 32px; width: 32px; }
 .k-chat-message-grouped { margin-top: calc(-1 * var(--k-chat-message-gap) + 5px); }
 .k-chat-message-toolbar { position: absolute; top: -20px; right: 4px; display: flex; gap: 1px; align-items: center; padding: 2px; border: 1px solid var(--border-default); border-radius: var(--k-radius-md); background: var(--bg-card); box-shadow: var(--k-shadow-sm); opacity: 0; z-index: 2; }
@@ -134,9 +130,6 @@
 .k-chat-composer-tools { display: flex; align-items: center; gap: 3px; }
 .k-chat-composer-tools .k-chat-icon-button { min-width: 30px; min-height: 32px; }
 .k-chat-popover :focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
-.k-chat-theme-gallery { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; max-width: 1400px; margin: 0 auto; }
-.k-chat-theme-card .k-chat-conversations { display: none; }
-.k-chat-theme-card .k-chat-workspace { grid-template-columns: minmax(0,1fr); }
 .k-chat-mention-suggestions { display: grid; padding: 5px; margin-top: 5px; border: 1px solid var(--border-default); border-radius: var(--k-radius-sm); background: var(--bg-card); }
 .k-chat-mention-suggestions button { border: 0; text-align: left; padding: 8px; background: transparent; color: var(--fg-default); border-radius: var(--k-radius-xs); cursor: pointer; }
 .k-chat-mention-suggestions button[aria-selected='true'] { background: var(--bg-muted); }
@@ -185,8 +178,6 @@
   .k-chat-message[data-fresh='true'], .k-chat-voice-controls, .k-chat-popover[data-animate='true'] { animation: none; }
   .k-chat-message-toolbar, .k-chat-reaction, .k-chat-send, .k-chat-composer-input { transition: none; transform: none; }
 }
-@media (max-width: 850px) { .k-chat-theme-gallery { grid-template-columns: minmax(0,1fr); } }
-[data-k-material] .k-chat-workspace { background: color-mix(in srgb,var(--bg-card) calc(var(--k-surface-alpha) * 100%),transparent); backdrop-filter: blur(var(--k-surface-blur)) saturate(var(--k-surface-saturate)); border-color: var(--k-surface-border); box-shadow: var(--k-surface-highlight); }
 [data-k-material] .k-chat-conversations { background: color-mix(in srgb,var(--bg-muted) 30%,transparent); }
 @media (hover:none) { .k-chat-message-toolbar { opacity: 1; position: static; width: max-content; margin-top: 3px; border: 0; box-shadow: none; background: transparent; } }
 @media (max-width: 640px) {

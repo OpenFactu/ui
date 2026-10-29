@@ -1,4 +1,6 @@
 import * as React from 'react';
+import { afterNextPaint, exitDelay } from '../motion/dom';
+import { useEscapeStack } from '../internal/escapeStack';
 
 export type PopoverPlacement = 'top' | 'bottom' | 'left' | 'right';
 
@@ -32,6 +34,18 @@ export interface UsePopoverReturn<A extends HTMLElement> {
   ready: boolean;
   /** Recalcular posición manualmente (p.ej. si cambia el contenido). */
   update: () => void;
+  /**
+   * Renderizar el popover mientras sea true: está abierto **o** se está yendo. Si el componente lo condiciona a `open`,
+   * se desmonta de golpe y la salida no se ve.
+   */
+  mounted: boolean;
+  /** `open` o `closed`: para `data-state`. El estado `closed` se pinta un fotograma antes de abrir, para que la entrada anime. */
+  state: 'open' | 'closed';
+  /**
+   * Atributos para el elemento del popover (`data-state`, `data-side`, `data-role="pop"`). Junto a la clase `k-appear`
+   * (ver `styles/motion.css`) hacen que entre y salga con el muelle del tema, creciendo desde su disparador.
+   */
+  popoverProps: { 'data-state': 'open' | 'closed'; 'data-side': PopoverPlacement; 'data-role': 'pop' };
 }
 
 const VIEWPORT_MARGIN = 8;
@@ -61,17 +75,16 @@ export function usePopover<A extends HTMLElement = HTMLElement>(
   const anchorRef = React.useRef<A | null>(null);
   const popoverRef = React.useRef<HTMLDivElement | null>(null);
   const [ready, setReady] = React.useState(false);
+  const [mounted, setMounted] = React.useState(open);
+  const [state, setState] = React.useState<'open' | 'closed'>('closed');
   // position:fixed desde el PRIMER render: si el popover se montara en flujo
   // normal (static) ocuparía el ancho completo del body y la medición de
   // offsetWidth quedaría contaminada (bug de menús a ancho de viewport).
-  // transitionProperty none: clases como duration-200 (para animate-in)
-  // activan transition sobre `all`, y el salto desde (0,0) hasta las
-  // coordenadas calculadas se animaría como un deslizamiento visible.
+  // Sin `transition-property` inline: `k-appear` solo anima opacity, transform y filter, así que el salto de posición no se ve.
   const INITIAL_STYLE: React.CSSProperties = {
     position: 'fixed',
     top: 0,
     left: 0,
-    transitionProperty: 'none',
   };
   const [style, setStyle] = React.useState<React.CSSProperties>(INITIAL_STYLE);
   const [placement, setPlacement] = React.useState<PopoverPlacement>(preferredPlacement);
@@ -113,7 +126,10 @@ export function usePopover<A extends HTMLElement = HTMLElement>(
       }
     }
 
-    const next: React.CSSProperties = { position: 'fixed', transitionProperty: 'none' };
+    const next: React.CSSProperties = { position: 'fixed' };
+    // El popover crece desde el borde del disparador del que cuelga.
+    const edge = align === 'end' ? 'right' : 'left';
+    (next as Record<string, string>)['--k-origin'] = side === 'bottom' ? `top ${edge}` : side === 'top' ? `bottom ${edge}` : side === 'right' ? 'left top' : 'right top';
 
     if (side === 'bottom' || side === 'top') {
       const w = width ?? popW;
@@ -148,11 +164,21 @@ export function usePopover<A extends HTMLElement = HTMLElement>(
   // Cálculo inicial al abrir + refinado cuando el popover ya está montado y medible.
   React.useLayoutEffect(() => {
     if (open) {
+      setMounted(true);
       compute();
-    } else {
-      setReady(false);
     }
   }, [open, compute]);
+
+  // Entrada y salida. Se monta en estado `closed`, ya colocado, y un par de fotogramas después pasa a `open` para que
+  // la transición arranque; al cerrar, se queda montado lo que dura la salida del tema y entonces se retira.
+  React.useEffect(() => {
+    if (open) {
+      return afterNextPaint(() => setState('open'));
+    }
+    setState('closed');
+    const timer = setTimeout(() => { setMounted(false); setReady(false); }, exitDelay(popoverRef.current));
+    return () => clearTimeout(timer);
+  }, [open]);
 
   React.useLayoutEffect(() => {
     if (open && ready && popoverRef.current) compute();
@@ -176,21 +202,21 @@ export function usePopover<A extends HTMLElement = HTMLElement>(
       if (anchorRef.current?.contains(target) || popoverRef.current?.contains(target)) return;
       onClose();
     };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (closeOnEscape && event.key === 'Escape') onClose();
-    };
 
     window.addEventListener('scroll', handleScroll, { capture: true, passive: true });
     window.addEventListener('resize', handleResize);
     document.addEventListener('mousedown', handleMouseDown);
-    document.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('scroll', handleScroll, { capture: true });
       window.removeEventListener('resize', handleResize);
       document.removeEventListener('mousedown', handleMouseDown);
-      document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [open, scrollStrategy, closeOnEscape, onClose, compute]);
+  }, [open, scrollStrategy, onClose, compute]);
 
-  return { anchorRef, popoverRef, style, placement, ready, update: compute };
+  // Escape por la pila común: dentro de un diálogo solo se cierra el popover, no los dos.
+  const escapeId = React.useId();
+  useEscapeStack(escapeId, open && closeOnEscape, onClose);
+
+  const popoverProps = React.useMemo(() => ({ 'data-state': state, 'data-side': placement, 'data-role': 'pop' as const }), [state, placement]);
+  return { anchorRef, popoverRef, style, placement, ready, update: compute, mounted, state, popoverProps };
 }

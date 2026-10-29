@@ -1,11 +1,6 @@
 import React from 'react';
-import { useFocusTrap } from '../hooks/useFocusTrap';
-import { useEscapeStack } from '../internal/escapeStack';
-import { OverlayDepthContext } from './internal/overlayDepth';
-import { createPortal } from 'react-dom';
-import { UiIcon } from '../icons';
 import { Button } from './Button';
-import { useScrollLock } from '../hooks/useScrollLock';
+import { Modal, ModalFooter } from './Modal';
 
 export type PopupTone = 'info' | 'success' | 'warning' | 'danger';
 
@@ -19,21 +14,19 @@ export interface PopupFrameProps {
   children: React.ReactNode;
   /** Barra inferior con acciones — derecha. */
   footer?: React.ReactNode;
+  /**
+   * Abierto o saliendo. Si no se indica, se toma de `PopupProvider` (que lo deja montado lo que dura la salida) o se da
+   * por abierto.
+   */
+  open?: boolean;
 }
 
-// Los iconos usan los tokens de estado, no un azul y un verde de Tailwind:
-// esto sale en TODOS los diálogos de confirmación, así que un color fijo aquí
-// se ve en toda la aplicación por muy tematizada que esté.
-const TONE_ICONS: Record<PopupTone, React.ReactNode> = {
-  info: <UiIcon slot="info" size={20} className="text-[var(--k-info)]" />,
-  success: <UiIcon slot="check-circle" size={20} className="text-[var(--k-success)]" />,
-  warning: <UiIcon slot="alert-triangle" size={20} className="text-[var(--k-warning)]" />,
-  danger: <UiIcon slot="alert-circle" size={20} className="text-[var(--k-danger)]" />,
-};
+/** Abierto o saliendo, para los marcos que pinta `PopupProvider`. */
+export const PopupOpenContext = React.createContext(true);
 
 /**
- * Frame visual de un popup imperativo. Se usa internamente desde
- * `PopupContext`. Para componentes controlados, preferir `Modal`.
+ * Marco de un popup imperativo (`usePopup`) o de `ConfirmDialog`. Es un `Modal`: comparte sus iconos de tono, su
+ * entrada y salida con el muelle del tema y, en móvil, la hoja inferior. Para diálogos propios, usa `Modal`.
  */
 export const PopupFrame: React.FC<PopupFrameProps> = ({
   title,
@@ -44,93 +37,26 @@ export const PopupFrame: React.FC<PopupFrameProps> = ({
   onClose,
   children,
   footer,
+  open,
 }) => {
-  // Con contador: cerrar un popup abierto sobre otro ya no desbloquea el
-  // scroll del que sigue abierto debajo.
-  useScrollLock(true);
-
-  const depth = React.useContext(OverlayDepthContext);
-  const panel = React.useRef<HTMLDivElement>(null);
-  useFocusTrap(panel, { enabled: true, priority: depth });
-
-  // Un diálogo que el lector de pantalla no anuncia como diálogo es, para quien
-  // no mira la pantalla, texto que aparece de la nada. `Modal` ya lo hacía bien;
-  // esto no, y es lo que usan TODAS las confirmaciones.
-  const titleId = React.useId();
-  const subtitleId = React.useId();
-  useEscapeStack(titleId, dismissible, onClose);
-
-  const widthClass = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl',
-    '2xl': 'max-w-2xl',
-    '3xl': 'max-w-3xl',
-    '4xl': 'max-w-4xl',
-    '5xl': 'max-w-5xl',
-    '6xl': 'max-w-6xl',
-    '7xl': 'max-w-7xl',
-    full: 'max-w-[95vw]',
-  }[maxWidth];
-
-  return createPortal(
-    <OverlayDepthContext.Provider value={depth + 1}><div
-      className="fixed inset-0 z-[var(--k-z-modal,99999)] flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--k-ink-900)_45%,transparent)] backdrop-blur-sm animate-in fade-in duration-200"
-      onClick={() => dismissible && onClose()}
+  const contextOpen = React.useContext(PopupOpenContext);
+  return (
+    <Modal
+      isOpen={open ?? contextOpen}
+      onClose={onClose}
+      title={title}
+      subtitle={subtitle}
+      tone={tone ?? 'default'}
+      size={maxWidth}
+      dismissible={dismissible}
+      closeOnOverlayClick={dismissible}
+      // 'alertdialog' y no 'dialog': un popup con tono interrumpe y espera una respuesta.
+      role={tone ? 'alertdialog' : 'dialog'}
+      hideCancel
+      footer={footer ? <ModalFooter>{footer}</ModalFooter> : null}
     >
-      <div
-        ref={panel}
-        // 'alertdialog' y no 'dialog': un popup con tono interrumpe y espera una
-        // respuesta, que es justo la diferencia entre los dos papeles.
-        role={tone ? 'alertdialog' : 'dialog'}
-        aria-modal="true"
-        aria-labelledby={title ? titleId : undefined}
-        aria-describedby={subtitle ? subtitleId : undefined}
-        className={`w-full ${widthClass} max-h-[90vh] overflow-hidden rounded-[var(--k-radius-md,8px)] shadow-xl bg-[var(--bg-card,#ffffff)] border border-[var(--border-default,#e2e8f0)] animate-in zoom-in-95 duration-200 flex flex-col`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {(title || dismissible) && (
-          <div className="flex items-start justify-between gap-3 p-5 border-b border-[var(--border-default,#e2e8f0)]">
-            <div className="flex items-start gap-3 min-w-0">
-              {tone && <div className="mt-0.5">{TONE_ICONS[tone]}</div>}
-              <div className="min-w-0">
-                {title && (
-                  <h2
-                    id={titleId}
-                    className="text-lg font-black text-[var(--fg-default,#0a1628)] truncate"
-                  >
-                    {title}
-                  </h2>
-                )}
-                {subtitle && (
-                  <p id={subtitleId} className="text-sm text-[var(--fg-muted,#52606f)] mt-0.5">
-                    {subtitle}
-                  </p>
-                )}
-              </div>
-            </div>
-            {dismissible && (
-              <button
-                type="button"
-                aria-label="Cerrar"
-                onClick={onClose}
-                className="p-1.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--bg-hover)] rounded-[var(--k-radius-xs,2px)] transition-colors flex-shrink-0"
-              >
-                <UiIcon slot="x" size={18} />
-              </button>
-            )}
-          </div>
-        )}
-        <div className="flex-1 overflow-y-auto p-5">{children}</div>
-        {footer && (
-          <div className="flex justify-end gap-2 p-4 border-t border-[var(--border-default,#e2e8f0)] bg-[var(--bg-muted,#f8fafc)]">
-            {footer}
-          </div>
-        )}
-      </div>
-    </div></OverlayDepthContext.Provider>,
-    document.body,
+      {children}
+    </Modal>
   );
 };
 

@@ -11,7 +11,7 @@
 import fs from 'node:fs';
 import { chromium } from 'playwright-core';
 
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+const CHROME = process.env.CHROME_PATH ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const BASE = process.env.LADLE_URL ?? 'http://localhost:61000';
 const OUT = '.shots/toast';
 const PHONE = { width: 390, height: 844 };
@@ -88,14 +88,15 @@ check('un arrastre corto no lo cierra', (await toasts().count()) === 1);
 // Arrastre largo: se va.
 [cx, cy] = await centre();
 await swipe(cx, cy, cx + 160);
-await page.waitForTimeout(500);
+// El aviso vuela hasta fuera con el muelle del tema y después hace su salida: más largo que un simple fundido.
+await page.waitForTimeout(1300);
 check('deslizando a la derecha se descarta', (await toasts().count()) === 0);
 
 await page.getByRole('button', { name: 'Info', exact: true }).click();
 await page.waitForTimeout(400);
 [cx, cy] = await centre();
 await swipe(cx, cy, cx - 160);
-await page.waitForTimeout(500);
+await page.waitForTimeout(1300);
 check('y a la izquierda también', (await toasts().count()) === 0);
 
 // El temporizador se detiene mientras el dedo está encima.

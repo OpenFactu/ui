@@ -1,7 +1,7 @@
 import {
-  Smile,
+  SlidersHorizontal, Smile,
   FileSpreadsheet, FileImage, FileAudio, FileVideo, FileArchive,
-  Bell, Clock3, FileText, Mail, Menu, Minus, PanelLeftClose, PanelLeftOpen, Save, AlertCircle, AlertTriangle, ArrowDown, ArrowUp, ArrowUpRight, BookOpen, Bookmark, Brain, Calendar, Check, CheckCircle, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleX, Clock, Code2, Columns3, Copy, CornerDownLeft, Download, Eye, EyeOff, File, FileCode2, FileDiff, FlaskConical, Folder, FolderOpen, Gauge, Info, Layers, Link2, ListChecks, ListTodo, Loader2, MessageSquare, Mic, MoreHorizontal, PanelLeft, PanelRight, PanelRightOpen, Paperclip, Pause, Pencil, Pin, Play, Plus, Redo2, RefreshCw, RotateCcw, Search, Sparkles, Square, SquareTerminal, ThumbsDown, ThumbsUp, Trash2, TriangleAlert, Undo2, Upload, Volume2, Wand2, Wrench, X, XCircle,
+  Bell, Clock3, FileText, Mail, Menu, Minus, PanelLeftClose, PanelLeftOpen, Save, AlertCircle, AlertTriangle, ArrowDown, ArrowUp, ArrowUpRight, BookOpen, Bookmark, Brain, Calendar, Check, CheckCircle, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleX, Clock, Code2, Columns3, Copy, CornerDownLeft, Download, Eye, EyeOff, File, FileCode2, FileDiff, FlaskConical, Folder, FolderOpen, Gauge, Info, Layers, Link2, ListChecks, ListTodo, Loader2, MessageSquare, Mic, MoreHorizontal, PanelLeft, PanelRight, PanelRightOpen, Paperclip, Pause, Pencil, Pin, Play, Plus, Redo2, RefreshCw, RotateCcw, Search, Sparkles, Square, SquareTerminal, ThumbsDown, ThumbsUp, Trash2, TriangleAlert, Undo2, Star, GripVertical, Upload, Volume2, Wand2, Wrench, X, XCircle,
 } from 'lucide-react';
 import type { IconComponent, IconLibrary } from './types';
 import type { IconSlot } from './slots';
@@ -15,9 +15,9 @@ import type { IconSlot } from './slots';
  * Es el único archivo de la librería que importa `lucide-react`.
  */
 export const LUCIDE_COMPONENTS: Record<string, IconComponent> = {
-  AlertCircle, AlertTriangle, ArrowDown, ArrowUp, ArrowUpRight, BookOpen, Bookmark, Brain, Calendar, Check, CheckCircle, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleX, Clock, Code2, Columns3, Copy, CornerDownLeft, Download, Eye, EyeOff, File, FileCode2, FileDiff, FlaskConical, Folder, FolderOpen, Gauge, Info, Layers, Link2, ListChecks, ListTodo, Loader2, MessageSquare, Mic, MoreHorizontal, PanelLeft, PanelRight, PanelRightOpen, Paperclip, Pause, Pencil, Pin, Play, Plus, Redo2, RefreshCw, RotateCcw, Search, Sparkles, Square, SquareTerminal, ThumbsDown, ThumbsUp, Trash2, TriangleAlert, Undo2, Upload, Volume2, Wand2, Wrench, X, XCircle,
+  AlertCircle, AlertTriangle, ArrowDown, ArrowUp, ArrowUpRight, BookOpen, Bookmark, Brain, Calendar, Check, CheckCircle, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleX, Clock, Code2, Columns3, Copy, CornerDownLeft, Download, Eye, EyeOff, File, FileCode2, FileDiff, FlaskConical, Folder, FolderOpen, Gauge, Info, Layers, Link2, ListChecks, ListTodo, Loader2, MessageSquare, Mic, MoreHorizontal, PanelLeft, PanelRight, PanelRightOpen, Paperclip, Pause, Pencil, Pin, Play, Plus, Redo2, RefreshCw, RotateCcw, Search, Sparkles, Square, SquareTerminal, ThumbsDown, ThumbsUp, Trash2, TriangleAlert, Undo2, Star, GripVertical, Upload, Volume2, Wand2, Wrench, X, XCircle,
   Bell, Clock3, FileText, Mail, Menu, Minus, PanelLeftClose, PanelLeftOpen, Save,
-  Smile, FileSpreadsheet, FileImage, FileAudio, FileVideo, FileArchive,
+  Smile, SlidersHorizontal, FileSpreadsheet, FileImage, FileAudio, FileVideo, FileArchive,
 };
 
 /** Con qué rellena Lucide cada hueco de la interfaz. */
@@ -93,6 +93,7 @@ export const LUCIDE_SLOTS: Record<IconSlot, string> = {
   'refresh-cw': 'RefreshCw',
   'rotate-ccw': 'RotateCcw',
   'search': 'Search',
+  'sliders-horizontal': 'SlidersHorizontal',
   'sparkles': 'Sparkles',
   'square': 'Square',
   'square-terminal': 'SquareTerminal',
@@ -101,6 +102,8 @@ export const LUCIDE_SLOTS: Record<IconSlot, string> = {
   'trash-2': 'Trash2',
   'triangle-alert': 'TriangleAlert',
   'undo-2': 'Undo2',
+  star: 'Star',
+  'grip-vertical': 'GripVertical',
   'upload': 'Upload',
   'volume-2': 'Volume2',
   'wand-2': 'Wand2',

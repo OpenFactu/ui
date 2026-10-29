@@ -85,9 +85,9 @@
 .k-code-highlight [data-match] { background: var(--ce-selection); color: var(--ce-selection-foreground) !important; }
 .k-code-highlight [data-match='active'] { outline: 1px solid var(--ce-cursor); }
 .k-code-active-line { position: absolute; top: 0; left: 0; right: 0; height: 22px; background: var(--ce-active-line); }
-.k-code-editor[data-motion] .k-code-active-line { transition: transform 100ms cubic-bezier(0.23, 1, 0.32, 1), opacity 100ms cubic-bezier(0.23, 1, 0.32, 1); }
-.k-code-editor[data-motion] textarea { caret-color: transparent; }
-.k-code-editor[data-motion] textarea::selection { background: transparent; color: transparent; -webkit-text-fill-color: transparent; }
+.k-code-editor[data-k-code-motion] .k-code-active-line { transition: transform 100ms cubic-bezier(0.23, 1, 0.32, 1), opacity 100ms cubic-bezier(0.23, 1, 0.32, 1); }
+.k-code-editor[data-k-code-motion] textarea { caret-color: transparent; }
+.k-code-editor[data-k-code-motion] textarea::selection { background: transparent; color: transparent; -webkit-text-fill-color: transparent; }
 .k-code-highlight [data-selection='true'] { color: var(--ce-selection-foreground) !important; }
 .k-code-motion-selection { position: absolute; inset: 0; pointer-events: none; }
 .k-code-motion-selection > div { position: absolute; top: 0; left: 0; width: 1px; height: 1px; transform-origin: 0 0; background: var(--ce-selection); opacity: 0; }
@@ -133,6 +133,6 @@
 }
 @media (forced-colors: active) {
   .k-code-highlight { display: none; }
-  .k-code-editor textarea, .k-code-editor[data-motion] textarea { color: CanvasText; -webkit-text-fill-color: CanvasText; caret-color: CanvasText; }
-  .k-code-editor textarea::selection, .k-code-editor[data-motion] textarea::selection { background: Highlight; color: HighlightText; -webkit-text-fill-color: HighlightText; }
+  .k-code-editor textarea, .k-code-editor[data-k-code-motion] textarea { color: CanvasText; -webkit-text-fill-color: CanvasText; caret-color: CanvasText; }
+  .k-code-editor textarea::selection, .k-code-editor[data-k-code-motion] textarea::selection { background: Highlight; color: HighlightText; -webkit-text-fill-color: HighlightText; }
 }

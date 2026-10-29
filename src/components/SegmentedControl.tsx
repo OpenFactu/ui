@@ -1,5 +1,7 @@
+import { enabledIndices, rovingNext } from '../internal/roving';
 import * as React from 'react';
 import { cn } from '../utils';
+import { attrValue, useIndicator } from '../motion/useIndicator';
 
 export interface SegmentedOption<T extends string = string> {
   value: T;
@@ -55,41 +57,15 @@ export function SegmentedControl<T extends string = string>({
   ...rest
 }: SegmentedControlProps<T>) {
   const containerRef = React.useRef<HTMLDivElement>(null);
-
-  const enabled = options.filter((o) => !o.disabled);
-
-  const move = (delta: 1 | -1) => {
-    if (enabled.length === 0) return;
-    const idx = enabled.findIndex((o) => o.value === value);
-    const next = enabled[(idx + delta + enabled.length) % enabled.length];
-    onChange(next.value);
-    containerRef.current
-      ?.querySelector<HTMLButtonElement>(`[data-segment="${next.value}"]`)
-      ?.focus();
-  };
+  const { ref: indicatorRef } = useIndicator({ containerRef, activeSelector: options.some((o) => o.value === value) ? `[data-segment="${attrValue(value)}"]` : null });
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (disabled) return;
-    switch (event.key) {
-      case 'ArrowRight':
-      case 'ArrowDown':
-        event.preventDefault();
-        move(1);
-        break;
-      case 'ArrowLeft':
-      case 'ArrowUp':
-        event.preventDefault();
-        move(-1);
-        break;
-      case 'Home':
-        event.preventDefault();
-        if (enabled[0]) onChange(enabled[0].value);
-        break;
-      case 'End':
-        event.preventDefault();
-        if (enabled.length) onChange(enabled[enabled.length - 1].value);
-        break;
-    }
+    const index = rovingNext(event.key, enabledIndices(options, disabled), options.findIndex((o) => o.value === value));
+    if (index === null) return;
+    event.preventDefault();
+    const next = options[index];
+    onChange(next.value);
+    containerRef.current?.querySelector<HTMLButtonElement>(`[data-segment="${attrValue(next.value)}"]`)?.focus();
   };
 
   const isRaised = variant === 'raised';
@@ -102,7 +78,7 @@ export function SegmentedControl<T extends string = string>({
       aria-disabled={disabled || undefined}
       onKeyDown={handleKeyDown}
       className={cn(
-        'inline-flex items-stretch',
+        'relative inline-flex items-stretch',
         isRaised
           ? 'gap-1 p-1 rounded-[var(--k-radius-md,8px)] bg-[var(--bg-muted,#fafbfc)] border border-[var(--border-default,#e2e8f0)]'
           : 'rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] overflow-hidden',
@@ -111,6 +87,17 @@ export function SegmentedControl<T extends string = string>({
         className,
       )}
     >
+      <span
+        ref={indicatorRef}
+        aria-hidden="true"
+        data-ready="false"
+        className={cn(
+          'k-indicator',
+          isRaised
+            ? 'rounded-[var(--k-radius-sm,4px)] bg-[var(--bg-card,#ffffff)] shadow-sm'
+            : 'bg-accent',
+        )}
+      />
       {options.map((option, i) => {
         const isActive = option.value === value;
         return (
@@ -127,7 +114,7 @@ export function SegmentedControl<T extends string = string>({
             title={option.title}
             onClick={() => onChange(option.value)}
             className={cn(
-              'inline-flex items-center justify-center whitespace-nowrap font-medium transition-colors',
+              'relative z-[1] inline-flex items-center justify-center whitespace-nowrap font-medium transition-colors',
               'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent',
               'disabled:opacity-40 disabled:pointer-events-none',
               SIZES[size],
@@ -137,14 +124,14 @@ export function SegmentedControl<T extends string = string>({
                 ? cn(
                     'rounded-[var(--k-radius-sm,4px)]',
                     isActive
-                      ? 'bg-[var(--bg-card,#ffffff)] text-[var(--fg-default,#0a1628)] shadow-sm'
+                      ? 'text-[var(--fg-default,#0a1628)]'
                       : 'text-[var(--fg-muted,#52606f)] hover:text-[var(--fg-default,#0a1628)]',
                   )
                 : cn(
                     // Separador entre segmentos; el contenedor recorta los extremos.
                     i > 0 && 'border-l border-[var(--border-default,#e2e8f0)]',
                     isActive
-                      ? 'bg-accent text-[color:var(--color-accent-fg)]'
+                      ? 'text-[color:var(--color-accent-fg)]'
                       : 'text-[var(--fg-muted,#52606f)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--bg-hover,#f1f5f9)]',
                   ),
             )}

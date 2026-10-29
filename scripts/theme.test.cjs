@@ -96,7 +96,7 @@ test('the black and white presets are valid, square and keep AA contrast', () =>
     const theme = resolveTheme(preset.theme);
     assert.equal(theme.mode, mode); assert.equal(theme.radius.md, '0px'); assert.equal(theme.colors.accentFg, accentFg, id);
     for (const bg of [theme.colors.bgApp, theme.colors.bgCard, theme.colors.bgMuted]) assert.ok(contrastRatio(hexToRgb(theme.colors.fgSubtle), hexToRgb(bg)) >= 4.5, `${id} ${bg}`);
-    assert.deepEqual(Object.keys(themeToAttrs(theme)).sort(), ['data-k-focus', 'data-k-selection'], id);
+    assert.deepEqual(Object.keys(themeToAttrs(theme)).sort(), ['data-k-focus', 'data-k-selection', 'data-k-stagger'], id);
   }
 });
 test('color aliases travel with the theme so a themed subtree never inherits the root accent text', () => {

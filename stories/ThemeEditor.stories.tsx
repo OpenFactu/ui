@@ -1,6 +1,7 @@
 import * as React from 'react';
 import type { Story } from '@ladle/react';
 import { THEME_PRESETS, FONT_OPTIONS, resolveTheme, themeFromJson, themeToAttrs, themeToJson, themeToPresetSource, themeToStyle, validateTheme, type ThemeInput } from '../src/theme';
+import { MOTION_CHARACTERS, dampingRatio } from '../src/motion';
 import { Button } from '../src/components/Button';
 import { Badge } from '../src/components/Badge';
 import { Card } from '../src/components/Card';
@@ -89,6 +90,8 @@ export const Editor: Story = () => {
       </div>
       <div style={box}><strong style={{ fontSize: 12 }}>Espacio y movimiento</strong>
         <Slider label="Densidad" value={theme.density} min={0.8} max={1.25} step={0.01} onChange={density => set({ density })} format={value => value.toFixed(2)} />
+        <Field label="Carácter del movimiento"><select aria-label="Carácter del movimiento" value={theme.motion.character} onChange={event => set({ motion: { character: event.target.value as keyof typeof MOTION_CHARACTERS, springs: undefined } })}>{Object.keys(MOTION_CHARACTERS).map(key => <option key={key} value={key}>{key}</option>)}</select></Field>
+        <Slider label="Rebote de entradas y menús" value={Math.max(0, 1 - dampingRatio(theme.motion.springs.enter))} min={0} max={0.7} step={0.02} onChange={bounce => set({ motion: { springs: { enter: { bounce, duration: 0.45 }, pop: { bounce, duration: 0.4 } } } })} format={value => value.toFixed(2)} />
         <Slider label="Velocidad de movimiento" value={theme.motion.speed} min={0} max={2.5} step={0.1} onChange={speed => set({ motion: { speed } })} format={value => value === 0 ? 'sin movimiento' : `×${value.toFixed(1)}`} />
         <Slider label="Escala de texto" value={theme.typography.scale} min={0.85} max={1.25} step={0.01} onChange={scale => set({ typography: { scale } })} format={value => value.toFixed(2)} />
       </div>

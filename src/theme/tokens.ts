@@ -19,6 +19,8 @@ import {
   rgbToSpaceString,
 } from './derive';
 import { fontOptionFor } from './fonts';
+import { MOTION_CHARACTERS, MOTION_ROLES, resolveSpring, type MotionCharacter, type MotionRole } from '../motion/presets';
+import { springToCubic, springToLinear, springToParams, type SpringConfig } from '../motion/spring';
 
 /** Acento de fábrica: si no cambia, se conserva su escala afinada a mano. */
 const DEFAULT_ACCENT = '#0d9488';
@@ -158,7 +160,7 @@ export const DEFAULT_THEME: ResolvedTheme = {
   focus: { width: 2, offset: 2, color: 'var(--k-accent-500)', style: 'solid', enabled: false },
   selection: { background: 'var(--k-accent-100)', color: 'var(--fg-default)', enabled: false },
   density: 1,
-  motion: { speed: 1, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' },
+  motion: { speed: 1, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', ...motionFromCharacter('sober') },
   vars: {},
 };
 
@@ -173,7 +175,20 @@ function resolveDensity(density: Theme['density'], fallback: number): number {
 function resolveMotion(motion: Theme['motion'], fallback: ResolvedTheme['motion']): ResolvedTheme['motion'] {
   const speed = motion?.speed === undefined ? fallback.speed
     : clamp(typeof motion.speed === 'number' ? motion.speed : MOTION_SPEEDS[motion.speed] ?? 1, 0, 4);
-  return { speed, easing: motion?.easing ?? fallback.easing };
+  const character = motion?.character && motion.character in MOTION_CHARACTERS ? motion.character : fallback.character;
+  // Cambiar de carácter reemplaza los muelles; si solo se retoca un papel, se parte de los actuales.
+  const own = motion?.character ? motionFromCharacter(character) : fallback;
+  const springs = { ...own.springs };
+  for (const role of MOTION_ROLES) if (motion?.springs?.[role] !== undefined) springs[role] = resolveSpring(motion.springs[role]!);
+  return {
+    speed,
+    easing: motion?.easing ?? fallback.easing,
+    character,
+    springs,
+    stagger: clamp(motion?.stagger ?? own.stagger, 0, 200),
+    enterScale: clamp(motion?.enterScale ?? own.enterScale, 0.6, 1),
+    enterBlur: clamp(motion?.enterBlur ?? own.enterBlur, 0, 24),
+  };
 }
 function resolveMaterial(material: Theme['material'], fallback: ResolvedTheme['material']): ResolvedTheme['material'] {
   return {
@@ -206,9 +221,43 @@ export function themeToAttrs(theme: ResolvedTheme): Record<string, string> {
     ...(theme.backdrop !== 'none' ? { 'data-k-backdrop': '' } : {}),
     // El fondo solo se mueve si hay fondo, movimiento activo y el tema lo pide; reduced-motion lo corta además en CSS.
     ...(theme.backdrop !== 'none' && theme.backdropMotion === 'drift' && theme.motion.speed > 0 ? { 'data-k-backdrop-motion': 'drift' } : {}),
+    // Hay escalonado de listas (menús que entran opción a opción) solo si el tema lo pide.
+    ...(theme.motion.stagger > 0 && theme.motion.speed > 0 ? { 'data-k-stagger': '' } : {}),
     ...(theme.focus.enabled ? { 'data-k-focus': '' } : {}),
     ...(theme.selection.enabled ? { 'data-k-selection': '' } : {}),
   };
+}
+
+/** Física, duración y curvas de un carácter: lo que `DEFAULT_THEME` y `resolveMotion` parten de él. */
+function motionFromCharacter(id: MotionCharacter) {
+  const character = MOTION_CHARACTERS[id];
+  const springs = Object.fromEntries(MOTION_ROLES.map(role => [role, resolveSpring(character.springs[role])])) as Record<MotionRole, Required<SpringConfig>>;
+  return { character: id, springs, stagger: character.stagger, enterScale: character.enterScale, enterBlur: character.enterBlur };
+}
+
+// Muestrear la curva de un muelle cuesta algo: se calcula una vez por física distinta.
+const springCache = new Map<string, { easing: string; duration: number; cubic: string }>();
+function springCurve(config: Required<SpringConfig>) {
+  const key = springToParams(config);
+  let hit = springCache.get(key);
+  if (!hit) {
+    const css = springToLinear(config);
+    hit = { easing: css.easing, duration: css.duration, cubic: springToCubic(config) };
+    springCache.set(key, hit);
+  }
+  return hit;
+}
+/** Por papel: la curva `linear()`, su duración en ms (sin escalar: el CSS la multiplica por `--k-motion`), el fallback y la física para JS. */
+function springVars(springs: ResolvedTheme['motion']['springs']): ThemeCssVars {
+  const out: ThemeCssVars = {};
+  for (const role of MOTION_ROLES) {
+    const curve = springCurve(springs[role]);
+    out[`--k-spring-${role}`] = curve.easing;
+    out[`--k-spring-${role}-cubic`] = curve.cubic;
+    out[`--k-spring-${role}-duration`] = `${curve.duration}ms`;
+    out[`--k-spring-${role}-params`] = springToParams(springs[role]);
+  }
+  return out;
 }
 
 function resolveRadius(radius: Theme['radius']): Required<ThemeRadius> {
@@ -532,6 +581,10 @@ export function themeToCssVars(theme: ResolvedTheme): ThemeCssVars {
     '--k-density': String(density),
     '--k-motion': String(motion.speed),
     '--k-ease': motion.easing,
+    '--k-stagger': `${motion.stagger}ms`,
+    '--k-enter-scale': String(motion.enterScale),
+    '--k-enter-blur': `${motion.enterBlur}px`,
+    ...springVars(motion.springs),
     '--k-text-scale': String(typography.scale),
 
     '--k-z-sticky': String(zIndex.sticky),

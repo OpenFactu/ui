@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE } from '../internal/intl';
 import { MobileScheduleActions } from './internal/MobileScheduleActions';
 import * as React from 'react';
 import { cn } from '../utils';
@@ -579,7 +580,7 @@ const Barra: React.FC<BarraProps> = ({
   const izquierda = x(inicio);
   const ancho = Math.max(pxDia * 0.6, duracion * pxDia - 2);
   const alto = Math.max(12, rowHeight - 14);
-  const etiqueta = `${task.name}, del ${inicio.toLocaleDateString('es-ES')} al ${fin.toLocaleDateString('es-ES')}`;
+  const etiqueta = `${task.name}, del ${inicio.toLocaleDateString(DEFAULT_LOCALE)} al ${fin.toLocaleDateString(DEFAULT_LOCALE)}`;
 
   if (hito) {
     const lado = Math.min(alto, 14);

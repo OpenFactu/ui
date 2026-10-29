@@ -48,6 +48,7 @@ const EXCEPCIONES = [
   { fichero: 'src/theme/', motivo: 'el motor de temas define los colores; es su trabajo' },
   { fichero: 'src/components/code-editor/themes.ts', motivo: 'paletas independientes del editor, verificadas por contraste AA' },
   { fichero: 'src/charts/palette.ts', motivo: 'paleta de series validada para daltonismo' },
+  { fichero: 'src/qr/matrix.ts', motivo: 'qrToSvg genera un SVG autónomo (descarga, PDF) donde no existen las variables CSS' },
   { fichero: 'src/components/Popup.tsx', patron: /k-ink-900/, motivo: 'velo de la superposición' },
   { fichero: 'src/components/Modal.tsx', patron: /dark:bg-black/, motivo: 'velo de la superposición' },
   { fichero: 'src/components/CommandPalette.tsx', patron: /dark:bg-black/, motivo: 'velo de la superposición' },

@@ -1,3 +1,6 @@
+import { Spinner } from './Spinner';
+import { useRecentSearches } from '../internal/storage';
+import { matchesAllWords } from '../internal/text';
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { UiIcon } from '../icons';
@@ -66,14 +69,8 @@ function flatten(sections: CommandSection[]): CommandItem[] {
 
 function matches(item: CommandItem, term: string): boolean {
   if (!term) return true;
-  const haystack = `${item.label} ${item.description ?? ''} ${item.keywords ?? ''}`.toLowerCase();
-  // Todas las palabras deben aparecer, en cualquier orden: «fac acme» encuentra
-  // «Factura de Acme» sin obligar a teclearlo seguido.
-  return term
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(Boolean)
-    .every((word) => haystack.includes(word));
+  // Todas las palabras deben aparecer, en cualquier orden y sin mirar acentos: «fac acme» encuentra «Factura de Acme».
+  return matchesAllWords(`${item.label} ${item.description ?? ''} ${item.keywords ?? ''}`, term);
 }
 
 /**
@@ -104,43 +101,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   // Las últimas búsquedas se guardan en el navegador, no en el estado: lo que
   // se busca a menudo se busca también mañana.
-  const [recientes, setRecientes] = React.useState<string[]>([]);
-  React.useEffect(() => {
-    if (!recentKey || typeof localStorage === 'undefined') return;
-    try {
-      const raw = localStorage.getItem(recentKey);
-      if (raw) setRecientes(JSON.parse(raw));
-    } catch {
-      // Un almacenamiento lleno o bloqueado no puede tumbar la paleta.
-    }
-  }, [recentKey, open]);
-
-  const recordar = React.useCallback(
-    (texto: string) => {
-      if (!recentKey || !texto.trim()) return;
-      setRecientes((prev) => {
-        const next = [texto, ...prev.filter((x) => x !== texto)].slice(0, maxRecent);
-        try {
-          localStorage.setItem(recentKey, JSON.stringify(next));
-        } catch {
-          // Ver arriba.
-        }
-        return next;
-      });
-    },
-    [recentKey, maxRecent],
-  );
-
-  const olvidar = React.useCallback(() => {
-    setRecientes([]);
-    if (recentKey) {
-      try {
-        localStorage.removeItem(recentKey);
-      } catch {
-        // Ver arriba.
-      }
-    }
-  }, [recentKey]);
+  // Se releen al abrir: otra pestaña pudo cambiarlas.
+  const { recent: recientes, remember: recordar, clear: olvidar } = useRecentSearches(recentKey, maxRecent, open);
 
   useScrollLock(open);
 
@@ -255,7 +217,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             className="flex-1 min-w-0 h-12 bg-transparent text-[14px] outline-none text-[var(--fg-default,#0a1628)] placeholder:text-[var(--fg-subtle,#657486)]"
           />
           {loading && (
-            <span className="h-3.5 w-3.5 shrink-0 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
+            <Spinner size="xs" className="shrink-0" label="Buscando" />
           )}
         </div>
 

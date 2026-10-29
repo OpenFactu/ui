@@ -1,3 +1,4 @@
+import { useMergedRefs } from '../hooks/useMergedRefs';
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { UiIcon } from '../icons';
@@ -5,6 +6,9 @@ import { cn } from '../utils';
 import { useAnimatedPresence } from '../hooks/useAnimatedPresence';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useScrollLock } from '../hooks/useScrollLock';
+import { useIsMobile } from '../hooks/useMediaQuery';
+import { useDragDismiss } from '../motion/useDragDismiss';
+import { BottomSheet } from './BottomSheet';
 import { useEscapeStack } from '../internal/escapeStack';
 import type { MobilePresentation } from './internal/mobilePresentation';
 
@@ -49,53 +53,96 @@ export const Drawer: React.FC<DrawerProps> = ({
   className,
   mobilePresentation = 'auto',
 }) => {
-  const { mounted, visible } = useAnimatedPresence({ open, duration: 300 });
+  const { mounted, state, ref: presenceRef } = useAnimatedPresence({ open });
   const id = React.useId();
   const dialogRef = React.useRef<HTMLDivElement>(null);
-  useFocusTrap(dialogRef, { enabled: open && mounted, initialFocusRef });
-  useScrollLock(mounted);
+  const narrow = useIsMobile();
+  // En móvil con presentación de hoja se usa la `BottomSheet` común (anclajes, inercia); ella atrapa el foco, bloquea
+  // el scroll y atiende a Escape.
+  const asSheet = narrow && mobilePresentation === 'sheet';
+  useFocusTrap(dialogRef, { enabled: open && mounted && !asSheet, initialFocusRef });
+  useScrollLock(mounted && !asSheet);
   const dismiss = React.useCallback(() => {
     if (dismissible) onClose();
   }, [dismissible, onClose]);
-  useEscapeStack(id, open, dismiss);
+  useEscapeStack(id, open && !asSheet, dismiss);
+
+  // Con el dedo se arrastra hacia su borde y se va con la velocidad con que se suelte.
+  const scrimRef = React.useRef<HTMLDivElement>(null);
+  const openRef = React.useRef(open);
+  openRef.current = open;
+  const drag = useDragDismiss({
+    axis: 'x',
+    direction: side === 'right' ? 1 : -1,
+    disabled: !dismissible || asSheet,
+    onProgress: (p) => {
+      const o = scrimRef.current;
+      if (!o) return;
+      o.style.transition = p > 0 ? 'none' : '';
+      o.style.opacity = p > 0 ? String(1 - p) : '';
+    },
+    onDismiss: () => {
+      onClose();
+      setTimeout(() => {
+        if (!openRef.current) return;
+        drag.reset();
+        if (scrimRef.current) { scrimRef.current.style.opacity = ''; scrimRef.current.style.transition = ''; }
+      }, 0);
+    },
+  });
+  const setDialogRef = useMergedRefs<HTMLDivElement>(dialogRef, presenceRef as React.Ref<HTMLElement> as React.Ref<HTMLDivElement>, drag.ref as React.Ref<HTMLElement> as React.Ref<HTMLDivElement>);
+
+  if (asSheet) {
+    return (
+      <BottomSheet
+        open={open}
+        onClose={onClose}
+        dismissible={dismissible}
+        snapPoints={['auto']}
+        title={title}
+        aria-label={ariaLabel ?? (title == null ? 'Panel lateral' : undefined)}
+        initialFocusRef={initialFocusRef}
+        footer={footer}
+        className={className}
+      >
+        {subtitle && <p className="m-0 mb-3 text-[12px] text-[var(--fg-muted)]">{subtitle}</p>}
+        {children}
+      </BottomSheet>
+    );
+  }
 
   if (!mounted) return null;
 
   return createPortal(
     <div className="fixed inset-0 z-40" inert={!open || undefined}>
       <div
-        className={cn(
-          'absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300',
-          visible ? 'opacity-100' : 'opacity-0',
-        )}
+        ref={scrimRef}
+        data-state={state}
+        className="absolute inset-0 bg-black/30 backdrop-blur-sm k-scrim"
         onClick={() => dismissible && onClose()}
       />
       <div
-        ref={dialogRef}
+        ref={setDialogRef}
+        {...drag.bind}
         tabIndex={-1}
         role="dialog"
         data-k-mobile-presentation={mobilePresentation === 'auto' ? 'fullscreen' : mobilePresentation}
-        data-visible={visible || undefined}
+        data-state={state}
+        data-side={side}
         aria-modal="true"
         aria-label={ariaLabel ?? (title == null ? 'Panel lateral' : undefined)}
         aria-labelledby={!ariaLabel && title != null ? `${id}-title` : undefined}
         aria-describedby={subtitle ? `${id}-description` : undefined}
         className={cn(
-          'k-drawer absolute inset-y-0 flex flex-col w-full bg-[var(--bg-card,#ffffff)] text-[var(--fg-default)] shadow-2xl transition-transform duration-300 ease-out focus:outline-none',
+          'k-drawer absolute inset-y-0 flex flex-col w-full bg-[var(--bg-card,#ffffff)] text-[var(--fg-default)] shadow-2xl k-sheet focus:outline-none',
           sizeClasses[size],
           side === 'right'
-            ? cn(
-                'right-0 sm:border-l border-[var(--border-default,#e2e8f0)]',
-                !visible && 'translate-x-full',
-              )
-            : cn(
-                'left-0 sm:border-r border-[var(--border-default,#e2e8f0)]',
-                !visible && '-translate-x-full',
-              ),
-          visible && 'translate-x-0',
+            ? 'right-0 sm:border-l border-[var(--border-default,#e2e8f0)]'
+            : 'left-0 sm:border-r border-[var(--border-default,#e2e8f0)]',
           className,
         )}
         style={{
+          ...drag.style,
           paddingTop: 'env(safe-area-inset-top, 0px)',
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         }}

@@ -2,6 +2,8 @@ import type { ResolvedTheme, ThemeInput } from './types';
 import { THEME_PRESETS, type ThemePreset } from './presets';
 import { isGlassTheme, resolveTheme } from './tokens';
 import { contrastRatio, hexToRgb, isValidHex, normalizeHex } from './derive';
+import { MOTION_CHARACTERS, MOTION_ROLES, SPRING_PRESETS, resolveSpring } from '../motion/presets';
+import { dampingRatio } from '../motion/spring';
 
 /**
  * Registro de temas y tokens.
@@ -251,6 +253,24 @@ export function validateTheme(theme: ThemeInput): ThemeValidation {
   range('material.saturate', theme.material?.saturate, 0.5, 3);
   range('density', theme.density, 0.6, 1.6);
   range('motion.speed', theme.motion?.speed, 0, 4);
+  range('motion.stagger', theme.motion?.stagger, 0, 200);
+  range('motion.enterScale', theme.motion?.enterScale, 0.6, 1);
+  range('motion.enterBlur', theme.motion?.enterBlur, 0, 24);
+  if (theme.motion?.character && !(theme.motion.character in MOTION_CHARACTERS)) {
+    issues.push({ level: 'warning', field: 'motion.character', message: `«${theme.motion.character}» no es un carácter conocido (${Object.keys(MOTION_CHARACTERS).join(', ')}); se usará el actual.` });
+  }
+  for (const role of MOTION_ROLES) {
+    const input = theme.motion?.springs?.[role];
+    if (input === undefined) continue;
+    if (typeof input === 'string' && !(input in SPRING_PRESETS)) { issues.push({ level: 'warning', field: `motion.springs.${role}`, message: `«${input}» no es un preset de muelle (${Object.keys(SPRING_PRESETS).join(', ')}).` }); continue; }
+    const physics = resolveSpring(input);
+    const ratio = dampingRatio(physics);
+    if (physics.stiffness < 1 || physics.stiffness > 2000 || physics.damping < 0 || physics.damping > 200 || physics.mass < 0.1 || physics.mass > 20) {
+      issues.push({ level: 'warning', field: `motion.springs.${role}`, message: 'rigidez, amortiguación o masa fuera de lo razonable (1–2000, 0–200, 0,1–20); el movimiento puede verse roto.' });
+    } else if (ratio < 0.15) {
+      issues.push({ level: 'warning', field: `motion.springs.${role}`, message: `rebota demasiado (razón de amortiguación ${ratio.toFixed(2)}): tardará mucho en quedarse quieto.` });
+    }
+  }
   range('typography.scale', theme.typography?.scale, 0.8, 1.4);
 
   if (isGlassTheme(resolved)) {

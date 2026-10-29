@@ -21,7 +21,7 @@
 }
 
 /* Módulo AI: el espacio de trabajo y el compositor son las superficies; lo de dentro se funde con ellas. */
-[data-k-material] :is(.ai-workspace, .ai-composer) {
+[data-k-material] :is(.ai-workspace, .ai-composer, .k-chat-workspace) {
   background-color: color-mix(in srgb, var(--bg-card, #ffffff) calc(var(--k-surface-alpha, 1) * 100%), transparent);
   -webkit-backdrop-filter: blur(var(--k-surface-blur, 0px)) saturate(var(--k-surface-saturate, 1));
   backdrop-filter: blur(var(--k-surface-blur, 0px)) saturate(var(--k-surface-saturate, 1));
@@ -36,13 +36,13 @@
 [data-k-material] .ai-terminal-output { background: color-mix(in srgb, var(--bg-muted, #fafbfc) 45%, transparent); }
 
 /* Fondo de la aplicación: es lo que el cristal difumina. */
-html[data-k-backdrop] { background: var(--k-app-backdrop); background-attachment: fixed; }
+html[data-k-backdrop] { background: var(--k-app-backdrop, var(--bg-app, #f8fafc)); background-attachment: fixed; }
 html[data-k-backdrop] body { background: transparent; }
-[data-k-backdrop]:not(html) { background: var(--k-app-backdrop); }
+[data-k-backdrop]:not(html) { background: var(--k-app-backdrop, var(--bg-app, #f8fafc)); }
 
 /* Quien pide menos transparencia, o usa colores forzados, recibe superficies opacas y sin desenfoque. */
 @media (prefers-reduced-transparency: reduce), (forced-colors: active) {
-  [data-k-material] :is([data-k-surface], [role='dialog'], [role='alertdialog'], [role='menu'], [role='listbox'], .ai-workspace, .ai-composer) {
+  [data-k-material] :is([data-k-surface], [role='dialog'], [role='alertdialog'], [role='menu'], [role='listbox'], .ai-workspace, .ai-composer, .k-chat-workspace) {
     background-color: var(--bg-card, #ffffff);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
@@ -53,7 +53,7 @@ html[data-k-backdrop] body { background: transparent; }
 html[data-k-backdrop-motion] { background: none; }
 html[data-k-backdrop-motion]::before, [data-k-backdrop-motion]:not(html)::before {
   content: ''; position: fixed; inset: -22%; z-index: -1; pointer-events: none;
-  background: var(--k-app-backdrop);
+  background: var(--k-app-backdrop, var(--bg-app, #f8fafc));
   animation: k-backdrop-drift var(--k-backdrop-duration, 60s) ease-in-out infinite alternate;
   will-change: transform;
 }
@@ -78,7 +78,7 @@ html[data-k-backdrop-motion]::before, [data-k-backdrop-motion]:not(html)::before
   outline: none !important;
   box-shadow: none !important;
 }
-[data-k-selection] ::selection, [data-k-selection]::selection { background: var(--k-selection-bg); color: var(--k-selection-fg); }
+[data-k-selection] ::selection, [data-k-selection]::selection { background: var(--k-selection-bg, Highlight); color: var(--k-selection-fg, HighlightText); }
 
 /* Cambio de tema con fundido: `applyTheme(tema, undefined, { transition: true })` pone la clase unos instantes. */
 .k-theme-transition, .k-theme-transition *, .k-theme-transition *::before, .k-theme-transition *::after {

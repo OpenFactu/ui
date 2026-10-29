@@ -1,3 +1,4 @@
+import { escapeRegExp } from '../../internal/text';
 import type { CodeCompletion } from './types';
 
 export interface EditState { value: string; start: number; end: number }
@@ -53,7 +54,7 @@ export function findMatches(value: string, query: string, caseSensitive = false)
   if (!query) return [];
   // A literal escaped regexp preserves original UTF-16 offsets even when a
   // character's lowercase form has a different length (for example İ).
-  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const escaped = escapeRegExp(query);
   const regexp = new RegExp(escaped, caseSensitive ? 'g' : 'gi');
   return Array.from(value.matchAll(regexp), match => ({ start: match.index!, end: match.index! + match[0].length }));
 }

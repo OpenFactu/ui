@@ -30,10 +30,9 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   onConfirm,
   onCancel,
 }) => {
-  if (!open) return null;
-
   return (
     <PopupFrame
+      open={open}
       title={title}
       tone={tone}
       maxWidth="sm"

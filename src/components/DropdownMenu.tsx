@@ -2,7 +2,7 @@ import * as React from 'react';
 import { mobileMenuKeyboard } from './internal/mobileMenuKeyboard';
 import { adaptivePortal } from './internal/MobileOverlay';
 import { resolveMobilePresentation, type MobilePresentation } from './internal/mobilePresentation';
-import { useIsNarrow } from '../hooks/useMediaQuery';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
 import { MenuItemButton, MenuSeparator, MenuItemShape } from './internal/MenuItemButton';
@@ -29,13 +29,13 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
   menuClassName,
   mobilePresentation = 'auto',
 }) => {
-  const mobile = useIsNarrow(768);
+  const mobile = useIsMobile();
   const presentation = resolveMobilePresentation(mobile, mobilePresentation, 'sheet');
   const [isOpen, setIsOpen] = React.useState(false);
   const [activeIndex, setActiveIndex] = React.useState(-1);
   const menuId = React.useId();
 
-  const { anchorRef, popoverRef, style, ready } = usePopover<HTMLSpanElement>({
+  const { anchorRef, popoverRef, style, ready, mounted, popoverProps } = usePopover<HTMLSpanElement>({
     open: isOpen && !mobile,
     onClose: () => setIsOpen(false),
     align,
@@ -85,15 +85,16 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
   };
 
   const menu =
-    isOpen &&
+    (isOpen || mounted) &&
     adaptivePortal(
       <div
         ref={popoverRef}
         id={menuId}
         role="menu"
+        {...(mobile ? undefined : popoverProps)}
         onKeyDown={mobile ? mobileMenuKeyboard : undefined}
         className={cn(
-          'z-[var(--k-z-popover,999999)] min-w-[180px] rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-1 shadow-lg animate-in fade-in-50 duration-150',
+          'z-[var(--k-z-popover,999999)] min-w-[180px] rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-1 shadow-lg k-appear k-stagger',
           !ready && !mobile && 'invisible',
           menuClassName,
         )}
@@ -105,6 +106,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
             <MenuItemButton
               item={item}
               active={i === activeIndex}
+              index={i}
               onSelect={() => setIsOpen(false)}
             />
           </React.Fragment>

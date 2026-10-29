@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useIsNarrow } from '../hooks/useMediaQuery';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import { DropdownMenu } from './DropdownMenu';
 import { cn } from '../utils';
 
@@ -109,7 +109,7 @@ export const Kanban: React.FC<KanbanProps> = ({
   className,
   'aria-label': ariaLabel = 'Tablero',
 }) => {
-  const mobile = useIsNarrow(768);
+  const mobile = useIsMobile();
   const [arrastre, setArrastre] = React.useState<Arrastre | null>(null);
   const listas = React.useRef(new Map<string, HTMLDivElement | null>());
 

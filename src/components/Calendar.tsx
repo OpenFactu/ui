@@ -1,6 +1,6 @@
 import { MobileScheduleActions } from './internal/MobileScheduleActions';
 import * as React from 'react';
-import { useIsNarrow } from '../hooks/useMediaQuery';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import { Button } from './Button';
 import { Modal } from './Modal';
 import { DatePicker } from './DatePicker';
@@ -175,7 +175,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   'aria-label': ariaLabel = 'Calendario',
   mobileView = 'agenda',
 }) => {
-  const mobile = useIsNarrow(768);
+  const mobile = useIsMobile();
   const hoy = React.useMemo(() => aFecha(todayProp ?? new Date()), [todayProp]);
 
   // Vista y fecha admiten ser controladas o no: la mayoría de pantallas solo

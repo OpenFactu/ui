@@ -1,3 +1,4 @@
+import { formatClock } from '../internal/format';
 import * as React from 'react';
 import { useAudioRecording } from '../hooks/useAudioRecording';
 import { UiIcon } from '../icons';
@@ -9,7 +10,6 @@ import type { AIUIProps } from './types';
 import { AIIconButton, AIStatus, useBlobUrl } from './internal/ui';
 import { safeUrl } from './internal/helpers';
 
-const clock = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 export interface AIAudioPlayerProps extends AIUIProps { src?: string; blob?: Blob; title?: string }
 export function AIAudioPlayer({ src, blob, title, labels, className }: AIAudioPlayerProps) {
   const l = aiLabels(labels);
@@ -33,7 +33,7 @@ export function AIAudioPlayer({ src, blob, title, labels, className }: AIAudioPl
       else try { await audio.current.play(); setError(''); } catch { setError(l.audioUnavailable); }
     }}>{playing ? <UiIcon slot="pause" size={15} /> : <UiIcon slot="play" size={15} />}</AIIconButton>
       <input type="range" aria-label={l.audioPosition} min={0} max={duration || 0} step={0.1} value={Math.min(position, duration)} disabled={!duration} onChange={event => { const value = Number(event.target.value); if (audio.current) audio.current.currentTime = value; setPosition(value); }} />
-      <span className="ai-audio-time">{clock(position)} / {clock(duration)}</span>
+      <span className="ai-audio-time">{formatClock(position)} / {formatClock(duration)}</span>
       <div className="ai-audio-speed"><Select ariaLabel={l.playbackSpeed} value={speed} options={['0.75', '1', '1.25', '1.5', '2'].map(value => ({ value, label: `${value}×` }))} onChange={value => { setSpeed(value); if (audio.current) audio.current.playbackRate = Number(value); }} /></div>
       <input className="ai-audio-volume" type="range" aria-label={l.volume} min={0} max={1} step={0.05} defaultValue={1} onChange={event => { if (audio.current) audio.current.volume = Number(event.target.value); }} />
     </div>{error && <p role="status" className="ai-error">{error}</p>}
@@ -49,7 +49,7 @@ export function AIVoiceRecorder({ onRecorded, disabled, compact, labels, classNa
   return <div className={cn('ai-surface ai-recorder', compact && 'ai-recorder-compact', className)}>
     {state === 'idle' && (compact ? <AIIconButton label={l.record} disabled={disabled || !available} onClick={() => void start()}><UiIcon slot="mic" size={16} /></AIIconButton> : <Button size="sm" variant="secondary" disabled={disabled || !available} onClick={() => void start()}><UiIcon slot="mic" size={14} />{l.record}</Button>)}
     {state === 'requesting' && <AIStatus>{l.loading}</AIStatus>}
-    {active && <div className="ai-inline-actions"><span className="ai-recording-state" role="status"><UiIcon slot="mic" size={14} className="ai-rec-mic" /><span className="ai-wave" aria-hidden="true" data-paused={state === 'paused' || undefined}><i /><i /><i /><i /><i /></span>{state === 'paused' ? l.recordingPaused : l.recording} · {clock(elapsed)}</span>
+    {active && <div className="ai-inline-actions"><span className="ai-recording-state" role="status"><UiIcon slot="mic" size={14} className="ai-rec-mic" /><span className="ai-wave" aria-hidden="true" data-paused={state === 'paused' || undefined}><i /><i /><i /><i /><i /></span>{state === 'paused' ? l.recordingPaused : l.recording} · {formatClock(elapsed)}</span>
       <AIIconButton label={state === 'paused' ? l.resume : l.pause} onClick={recording.togglePause}>{state === 'paused' ? <UiIcon slot="play" size={14} /> : <UiIcon slot="pause" size={14} />}</AIIconButton>
       <AIIconButton label={l.finishRecording} onClick={recording.finish}><UiIcon slot="square" size={13} /></AIIconButton>
     </div>}

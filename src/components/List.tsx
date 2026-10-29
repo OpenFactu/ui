@@ -1,3 +1,4 @@
+import { Spinner } from './Spinner';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { UiIcon } from '../icons';
@@ -473,7 +474,7 @@ const ListRoot: React.FC<ListProps> = ({
       <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
       {infinite.loading && (
         <div className="flex items-center justify-center gap-2 py-3 text-[11px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
-          <span className="h-3 w-3 animate-spin rounded-full border-2 border-accent/20 border-t-accent" />
+          <Spinner size="xs" label="Cargando" />
           Cargando más
         </div>
       )}

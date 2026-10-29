@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE, getNumberFormat } from '../internal/intl';
 import * as React from 'react';
 import { cn } from '../utils';
 
@@ -18,7 +19,7 @@ export const Amount = React.forwardRef<HTMLSpanElement, AmountProps>(
     {
       value,
       currency = 'EUR',
-      locale = 'es-ES',
+      locale = DEFAULT_LOCALE,
       formatOptions,
       emptyValue = '—',
       tone = 'default',
@@ -28,7 +29,7 @@ export const Amount = React.forwardRef<HTMLSpanElement, AmountProps>(
     ref,
   ) => {
     const formatter = React.useMemo(
-      () => new Intl.NumberFormat(locale, { ...formatOptions, style: 'currency', currency }),
+      () => getNumberFormat(locale, { ...formatOptions, style: 'currency', currency }),
       [locale, currency, formatOptions],
     );
     return (

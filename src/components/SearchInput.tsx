@@ -1,3 +1,5 @@
+import { Spinner } from './Spinner';
+import { useRecentSearches } from '../internal/storage';
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
@@ -106,31 +108,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
 
   const [open, setOpen] = React.useState(false);
   const [activeIndex, setActiveIndex] = React.useState(-1);
-  const [recent, setRecent] = React.useState<string[]>(() => {
-    if (!recentKey || typeof localStorage === 'undefined') return [];
-    try {
-      const raw = localStorage.getItem(recentKey);
-      return raw ? (JSON.parse(raw) as string[]) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const pushRecent = React.useCallback(
-    (term: string) => {
-      if (!recentKey || !term.trim()) return;
-      setRecent((prev) => {
-        const next = [term, ...prev.filter((r) => r !== term)].slice(0, maxRecent);
-        try {
-          localStorage.setItem(recentKey, JSON.stringify(next));
-        } catch {
-          /* almacenamiento no disponible: el historial simplemente no persiste */
-        }
-        return next;
-      });
-    },
-    [recentKey, maxRecent],
-  );
+  const { recent, remember: pushRecent } = useRecentSearches(recentKey, maxRecent);
 
   /** Con texto se ofrecen sugerencias; sin él, el historial. */
   const panelItems = React.useMemo<SearchSuggestion[]>(() => {
@@ -145,6 +123,8 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     popoverRef,
     style: panelStyle,
     ready: panelReady,
+    mounted: panelMounted,
+    popoverProps,
   } = usePopover<HTMLDivElement>({
     open: showPanel,
     onClose: () => setOpen(false),
@@ -167,15 +147,16 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   };
 
   const panel =
-    showPanel &&
+    (showPanel || panelMounted) &&
     createPortal(
       <div
         ref={popoverRef}
         role="listbox"
+        {...popoverProps}
         data-k-mobile="SearchSuggestions"
         style={panelStyle}
         className={cn(
-          'z-[var(--k-z-popover,999999)] max-h-[280px] overflow-y-auto rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-1 shadow-lg',
+          'z-[var(--k-z-popover,999999)] max-h-[280px] overflow-y-auto rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-1 shadow-lg k-appear',
           !panelReady && 'invisible',
         )}
       >
@@ -263,9 +244,12 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   );
 
   const suffix = (
-    <span className="flex items-center gap-1 pr-1.5">
+    // Cada pieza ocupa una caja de 28 px centrada, con aire a ambos lados del separador.
+    <span className="flex items-center gap-0.5 px-1">
       {loading ? (
-        <span className="h-3.5 w-3.5 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
+        <span className="grid h-7 w-7 place-items-center" aria-hidden="true">
+          <Spinner size="xs" label="Buscando" />
+        </span>
       ) : (
         clearable &&
         value && (
@@ -273,14 +257,14 @@ export const SearchInput: React.FC<SearchInputProps> = ({
             type="button"
             onClick={clear}
             aria-label="Limpiar búsqueda"
-            className="p-1 text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors"
+            className="grid h-7 w-7 place-items-center rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:bg-[var(--bg-hover,#f1f5f9)] hover:text-[var(--k-danger-fg)] transition-colors"
           >
             <UiIcon slot="x" className="h-3.5 w-3.5" />
           </button>
         )
       )}
-      {hint}
-      {trailing}
+      {hint && <span className="px-1">{hint}</span>}
+      {trailing && <span className="grid min-h-7 min-w-7 place-items-center">{trailing}</span>}
     </span>
   );
 

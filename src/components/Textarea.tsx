@@ -1,3 +1,4 @@
+import { ControlField, describedBy } from './internal/ControlField';
 import * as React from 'react';
 import { cn } from '../utils';
 
@@ -23,20 +24,7 @@ export const Textarea: React.FC<TextareaProps> = ({
   const textareaId = id || generatedId;
 
   return (
-    <div className={cn('flex flex-col gap-1.5 w-full', containerClassName)}>
-      {label && (
-        <label
-          htmlFor={textareaId}
-          className="text-[12px] font-medium text-[var(--fg-body,#2d3a4a)]"
-        >
-          {label}
-          {props.required && (
-            <span className="text-[var(--k-danger-fg)] ml-0.5" aria-hidden="true">
-              *
-            </span>
-          )}
-        </label>
-      )}
+    <ControlField id={textareaId} label={label} helperText={helperText} error={error} required={props.required} className={containerClassName}>
       <textarea
         ref={inputRef}
         data-k-control="textarea"
@@ -49,15 +37,9 @@ export const Textarea: React.FC<TextareaProps> = ({
           className,
         )}
         {...props}
+        aria-invalid={error ? true : props['aria-invalid']}
+        aria-describedby={describedBy(textareaId, error, helperText, props['aria-describedby'])}
       />
-      {error && (
-        <p className="text-[11px] font-medium text-[var(--k-danger-fg)] mt-0.5">{error}</p>
-      )}
-      {helperText && !error && (
-        <p className="text-[11px] text-[var(--fg-subtle,#657486)] mt-0.5">
-          {helperText}
-        </p>
-      )}
-    </div>
+    </ControlField>
   );
 };

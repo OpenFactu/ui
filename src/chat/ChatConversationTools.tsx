@@ -1,3 +1,4 @@
+import { copyText } from '../hooks/useCopyToClipboard';
 import * as React from 'react';
 import { Modal } from '../components/Modal';
 import { Button } from '../components/Button';
@@ -41,7 +42,7 @@ export function ChatConversationTools() {
         <section><h3>Seleccionar mensajes</h3><p>Selecciona uno o varios mensajes cargados para copiar, reenviar o eliminar.</p>
           <div className="k-chat-selection-list">{available.map(item => <Checkbox key={item.id} disabled={busy} checked={selected.includes(item.id)} onChange={checked => { setConfirm(false); setSelected(ids => checked ? [...ids, item.id] : ids.filter(id => id !== item.id)); }} label={item.text || 'Mensaje con archivos'} />)}</div>
           <p role="status">{chosen.length} seleccionados</p>
-          <Button disabled={!chosen.length || busy} variant="secondary" onClick={async () => { try { await navigator.clipboard.writeText(chosen.map(item => item.text).join('\n\n')); setNotice('Mensajes copiados.'); } catch { setNotice('No se han podido copiar los mensajes.'); } }}>Copiar seleccionados</Button>
+          <Button disabled={!chosen.length || busy} variant="secondary" onClick={async () => setNotice(await copyText(chosen.map(item => item.text).join('\n\n')) ? 'Mensajes copiados.' : 'No se han podido copiar los mensajes.')}>Copiar seleccionados</Button>
           <Select label="Reenviar a" value={target} onChange={setTarget} disabled={busy} options={state.conversations.filter(item => item.id !== conversation.id && !item.readOnly).map(item => ({ value: item.id, label: item.title }))} />
           <Button disabled={!chosen.length || !target || busy} onClick={() => void run(false)}>Reenviar seleccionados</Button>
           {!conversation.readOnly && chosen.length > 0 && chosen.every(canDelete) && <Button disabled={busy} variant="secondary" onClick={() => confirm ? void run(true) : setConfirm(true)}>{confirm ? 'Confirmar eliminación' : 'Eliminar seleccionados'}</Button>}

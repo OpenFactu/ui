@@ -18,6 +18,8 @@ interface MenuItemButtonProps {
   trailing?: React.ReactNode;
   id?: string;
   active?: boolean;
+  /** Posición en la lista: el tema puede escalonar la entrada de las opciones (`--i`). */
+  index?: number;
 }
 
 /** Renderizado compartido de ítems de menú. Interno — no se exporta del paquete. */
@@ -27,12 +29,14 @@ export const MenuItemButton: React.FC<MenuItemButtonProps> = ({
   trailing,
   id,
   active = false,
+  index,
 }) => (
   <button
     id={id}
     type="button"
     role="menuitem"
     disabled={item.disabled}
+    style={index === undefined ? undefined : ({ '--i': index } as React.CSSProperties)}
     onClick={() => {
       if (item.disabled) return;
       onSelect();

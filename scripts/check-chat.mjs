@@ -42,11 +42,11 @@ try {
     assert.equal(await field().inputValue(), 'Dos\nx');
     await field().evaluate(element => element.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true })));
     await field().press('Enter');
-    assert.equal(await page.getByLabel('Enviando', { exact: true }).count(), 0);
+    assert.equal(await page.getByLabel('Estado del mensaje: Enviando', { exact: true }).count(), 0);
     await field().evaluate(element => element.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true })));
     await field().fill('Enviado con teclado');
     await field().press('Enter');
-    await bubble('Enviado con teclado').getByLabel('Entregado', { exact: true }).waitFor();
+    await bubble('Enviado con teclado').getByLabel('Estado del mensaje: Entregado', { exact: true }).waitFor();
     assert.equal(await field().inputValue(), '');
   });
   await check('El texto se muestra escapado y los espacios vacíos no se envían', async () => {
@@ -65,7 +65,7 @@ try {
     await page.getByText('Sin conexión. Puedes reintentar el envío.', { exact: true }).waitFor();
     assert.equal(await field().inputValue(), 'Sigo escribiendo');
     await page.getByRole('button', { name: 'Reintentar envío', exact: true }).click();
-    await bubble('Envío que falla').getByLabel('Entregado', { exact: true }).waitFor();
+    await bubble('Envío que falla').getByLabel('Estado del mensaje: Entregado', { exact: true }).waitFor();
     assert.equal(await bubble('Envío que falla').count(), 1);
     assert.equal(await field().inputValue(), 'Sigo escribiendo');
   });
@@ -77,13 +77,13 @@ try {
     await submit('Pendiente equipo');
     await field().fill('Nuevo equipo');
     await page.getByRole('button', { name: 'Recibir confirmación por evento', exact: true }).click();
-    await bubble('Pendiente equipo').getByLabel('Leído', { exact: true }).waitFor();
+    await bubble('Pendiente equipo').getByLabel('Estado del mensaje: Leído', { exact: true }).waitFor();
     await page.getByRole('button', { name: 'Confirmar envíos', exact: true }).click();
     await page.getByText('Envíos en curso: 0', { exact: true }).waitFor();
     assert.equal(await field().inputValue(), 'Nuevo equipo');
     assert.equal(await bubble('Pendiente equipo').count(), 1);
     await conversation(/Ana López/).click();
-    await bubble('Pendiente Ana').getByLabel('Leído', { exact: true }).waitFor();
+    await bubble('Pendiente Ana').getByLabel('Estado del mensaje: Leído', { exact: true }).waitFor();
     assert.equal(await bubble('Pendiente Ana').count(), 1);
     assert.equal(await field().inputValue(), 'Nuevo Ana');
   });
@@ -96,9 +96,9 @@ try {
     await page.getByText('Envíos en curso: 2', { exact: true }).waitFor();
     await page.getByRole('button', { name: 'Confirmar envíos', exact: true }).click();
     await page.getByText('Envíos en curso: 0', { exact: true }).waitFor();
-    await bubble('Error pendiente team').getByLabel('Entregado', { exact: true }).waitFor();
+    await bubble('Error pendiente team').getByLabel('Estado del mensaje: Entregado', { exact: true }).waitFor();
     await conversation(/Ana López/).click();
-    await bubble('Error pendiente ana').getByLabel('Entregado', { exact: true }).waitFor();
+    await bubble('Error pendiente ana').getByLabel('Estado del mensaje: Entregado', { exact: true }).waitFor();
   });
   await check('Responder mantiene el texto pendiente y cancelar solo retira la referencia', async () => {
     await page.getByRole('button', { name: /Responder a Ana López: ¡Buenos días/ }).click();
@@ -108,7 +108,7 @@ try {
     assert.equal(await field().inputValue(), 'Nuevo Ana');
     await page.getByRole('button', { name: /Responder a Ana López: ¡Buenos días/ }).click();
     await submit('Respuesta con referencia');
-    await bubble('Respuesta con referencia').getByLabel('Entregado', { exact: true }).waitFor();
+    await bubble('Respuesta con referencia').getByLabel('Estado del mensaje: Entregado', { exact: true }).waitFor();
     assert.ok((await bubble('Respuesta con referencia').locator('blockquote').innerText()).includes('los cambios del pedido'));
   });
   await check('Los eventos actualizan escritura y no leídos; abrir la conversación los limpia', async () => {
@@ -174,7 +174,7 @@ try {
     await page.getByRole('button', { name: 'Respuesta rápida', exact: true }).click();
     assert.equal(await field().inputValue(), '¡Gracias! Lo reviso ahora.');
     await page.getByRole('button', { name: 'Enviar mensaje', exact: true }).click();
-    await bubble('¡Gracias! Lo reviso ahora.').getByLabel('Enviado', { exact: true }).waitFor();
+    await bubble('¡Gracias! Lo reviso ahora.').getByLabel('Estado del mensaje: Enviado', { exact: true }).waitFor();
     assert.equal(await page.getByRole('button', { name: 'Cargar mensajes anteriores', exact: true }).count(), 0);
   });
   await check('Solo lectura y estados vacíos no ofrecen acciones que no se pueden ejecutar', async () => {

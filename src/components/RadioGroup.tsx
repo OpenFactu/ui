@@ -1,3 +1,4 @@
+import { ControlField, describedBy } from './internal/ControlField';
 import * as React from 'react';
 import { cn } from '../utils';
 
@@ -16,6 +17,10 @@ export interface RadioGroupProps {
   name?: string;
   label?: string;
   error?: string;
+  helperText?: string;
+  required?: boolean;
+  /** id del grupo (para enlazarlo desde fuera). */
+  id?: string;
   orientation?: 'vertical' | 'horizontal';
   disabled?: boolean;
   className?: string;
@@ -28,21 +33,29 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
   name,
   label,
   error,
+  helperText,
+  required,
+  id,
   orientation = 'vertical',
   disabled = false,
   className,
 }) => {
   const generatedName = React.useId();
   const groupName = name || generatedName;
+  const groupId = id ?? `${generatedName}-group`;
 
   return (
-    <div role="radiogroup" data-k-control="radio-group" aria-label={label} className={cn('flex flex-col gap-2', className)}>
-      {label && (
-        <span className="text-[12px] font-medium text-[var(--fg-body,#2d3a4a)]">
-          {label}
-        </span>
-      )}
-      <div className={cn('flex gap-1', orientation === 'vertical' ? 'flex-col' : 'flex-row flex-wrap gap-x-5')}>
+    <ControlField id={groupId} label={label} helperText={helperText} error={error} required={required} labelMode="group" className={className}>
+      <div
+        id={groupId}
+        role="radiogroup"
+        data-k-control="radio-group"
+        aria-labelledby={label ? `${groupId}-label` : undefined}
+        aria-describedby={describedBy(groupId, error, helperText)}
+        aria-invalid={error ? true : undefined}
+        aria-required={required || undefined}
+        className={cn('flex gap-1', orientation === 'vertical' ? 'flex-col' : 'flex-row flex-wrap gap-x-5')}
+      >
         {options.map((opt) => {
           const isDisabled = disabled || opt.disabled;
           const isChecked = value === opt.value;
@@ -95,7 +108,6 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
           );
         })}
       </div>
-      {error && <p className="text-[11px] font-medium text-[var(--k-danger-fg)]">{error}</p>}
-    </div>
+    </ControlField>
   );
 };

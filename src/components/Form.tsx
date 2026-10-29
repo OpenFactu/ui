@@ -88,17 +88,17 @@ export const Field: React.FC<FieldProps> = ({
       style={orientation === 'horizontal' ? { width: labelWidth } : undefined}
     >
       {label}
-      {required && <span className="text-[var(--k-danger-fg)] ml-0.5">*</span>}
+      {required && <span className="text-[var(--k-danger-fg)] ml-0.5" aria-hidden="true">*</span>}
     </label>
   );
 
   const messages = (
     <>
       {error && (
-        <p className="text-[11px] font-medium text-[var(--k-danger-fg)] mt-1">{error}</p>
+        <p className="text-[11px] font-medium text-[var(--k-danger-fg)] mt-0.5">{error}</p>
       )}
       {hint && !error && (
-        <p className="text-[11px] text-[var(--fg-muted,#52606f)] mt-1">{hint}</p>
+        <p className="text-[11px] text-[var(--fg-subtle,#657486)] mt-0.5">{hint}</p>
       )}
     </>
   );

@@ -1,3 +1,4 @@
+import { ControlField, describedBy } from './internal/ControlField';
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
@@ -56,15 +57,7 @@ export const ColorInput: React.FC<ColorInputProps> = ({
   };
 
   return (
-    <div data-k-mobile="ColorInput" className={cn('flex flex-col gap-1.5', containerClassName)}>
-      {label && (
-        <label
-          htmlFor={inputId}
-          className="text-[12px] font-medium text-[var(--fg-body,#2d3a4a)]"
-        >
-          {label}
-        </label>
-      )}
+    <ControlField id={inputId} label={label} helperText={helperText} error={error} mobileName="ColorInput" className={cn('w-auto', containerClassName)}>
 
       <div className={cn('flex items-center gap-2', className)}>
         {/* El <input type="color"> nativo va oculto: el cuadro visible es la
@@ -88,6 +81,8 @@ export const ColorInput: React.FC<ColorInputProps> = ({
             id={inputId}
             name={name}
             type="color"
+            aria-invalid={error ? true : undefined}
+            aria-describedby={describedBy(inputId, error, helperText)}
             value={hex}
             disabled={disabled}
             onChange={(e) => onChange(e.target.value.toLowerCase())}
@@ -162,10 +157,6 @@ export const ColorInput: React.FC<ColorInputProps> = ({
         </div>
       )}
 
-      {error && <p className="text-[11px] font-medium text-[var(--k-danger-fg)]">{error}</p>}
-      {helperText && !error && (
-        <p className="text-[11px] text-[var(--fg-subtle,#657486)]">{helperText}</p>
-      )}
-    </div>
+    </ControlField>
   );
 };

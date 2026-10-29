@@ -1,0 +1,131 @@
+/* Layout y paneles: paneles redimensionables, zona de scroll, lista virtual, árbol y hoja inferior con anclajes. */
+
+/* ── SplitPane ──────────────────────────────────────────────────────────── */
+.k-split { display: flex; width: 100%; height: 100%; min-height: 0; min-width: 0; overflow: hidden; }
+.k-split[data-direction='vertical'] { flex-direction: column; }
+.k-split-pane { flex: 0 0 auto; min-width: 0; min-height: 0; overflow: auto; }
+.k-split-pane-rest { flex: 1 1 0; }
+.k-split[data-collapsed] > .k-split-pane:first-child { overflow: hidden; }
+/* Plegar y desplegar con el muelle `move`; al arrastrar, sin transición. */
+.k-split > .k-split-pane:first-child { transition: flex-basis calc(var(--k-spring-move-duration, 380ms) * var(--k-motion, 1)) var(--k-spring-move, cubic-bezier(0.22, 1, 0.36, 1)); }
+.k-split[data-dragging] > .k-split-pane:first-child { transition: none; }
+.k-split[data-dragging] { user-select: none; -webkit-user-select: none; cursor: col-resize; }
+.k-split[data-dragging][data-direction='vertical'] { cursor: row-resize; }
+.k-split-handle { position: relative; flex: 0 0 1px; z-index: 1; background: var(--border-default, #e2e8f0); cursor: col-resize; touch-action: none; outline: none; transition: background-color 150ms; }
+.k-split[data-direction='vertical'] > .k-split-handle { cursor: row-resize; }
+/* Hit area de 12 px sin ensanchar la línea. */
+.k-split-handle::before { content: ''; position: absolute; inset: 0 -6px; }
+.k-split[data-direction='vertical'] > .k-split-handle::before { inset: -6px 0; }
+.k-split-handle:hover, .k-split[data-dragging] > .k-split-handle, .k-split-handle:focus-visible { background: var(--color-accent, #0d9488); }
+.k-split-grip { position: absolute; top: 50%; left: 50%; width: 4px; height: 28px; transform: translate(-50%, -50%); border-radius: 999px; background: var(--border-strong, #cbd5e1); opacity: 0; transition: opacity 150ms; }
+.k-split[data-direction='vertical'] .k-split-grip { width: 28px; height: 4px; }
+.k-split-handle:hover .k-split-grip, .k-split-handle:focus-visible .k-split-grip { opacity: 1; background: var(--color-accent, #0d9488); }
+
+/* ── ScrollArea ─────────────────────────────────────────────────────────── */
+.k-scroll-area { position: relative; min-height: 0; display: flex; flex-direction: column; }
+/* Barras finas con el color de los bordes y sin arrastrar el scroll de la página al llegar al final. `.k-scrollbar` para
+   cualquier zona propia; las de la librería están en la lista. */
+:is(.k-scrollbar, .k-scroll-viewport, .k-virtual, .ai-history-list, .ai-conversation-scroll, .ai-artifact-body, .ai-composer-suggestions, .ai-code-preview, .ai-artifact-tabs, .k-chat-scroll, .k-chat-conversations, .k-map-search-results, .k-floating-actions-panel) {
+  scrollbar-width: thin;
+  scrollbar-color: var(--k-scrollbar-thumb, var(--border-strong, #cbd5e1)) transparent;
+  overscroll-behavior: contain;
+}
+.k-scroll-viewport { flex: 1; min-height: 0; overflow: hidden; outline: none; }
+.k-scroll-viewport[data-axis='y'] { overflow-y: auto; }
+.k-scroll-viewport[data-axis='x'] { overflow-x: auto; }
+.k-scroll-viewport[data-axis='both'] { overflow: auto; }
+.k-scroll-viewport:focus-visible { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-accent, #0d9488) 40%, transparent); }
+.k-scroll-viewport[data-autohide] { scrollbar-color: transparent transparent; transition: scrollbar-color 200ms; }
+.k-scroll-viewport[data-autohide]:hover, .k-scroll-viewport[data-autohide]:focus-within { scrollbar-color: var(--border-strong, #cbd5e1) transparent; }
+@supports not (scrollbar-width: thin) {
+  .k-scroll-viewport::-webkit-scrollbar { width: 8px; height: 8px; }
+  .k-scroll-viewport::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 999px; background: var(--border-strong, #cbd5e1) padding-box; }
+  .k-scroll-viewport::-webkit-scrollbar-track { background: transparent; }
+}
+/* Sombras de borde: indican que hay más contenido en ese lado. */
+.k-scroll-area::before, .k-scroll-area::after { content: ''; position: absolute; left: 0; right: 0; z-index: 1; height: 14px; pointer-events: none; opacity: 0; transition: opacity 180ms; }
+.k-scroll-area::before { top: 0; background: linear-gradient(to bottom, color-mix(in srgb, var(--fg-default, #0a1628) 12%, transparent), transparent); }
+.k-scroll-area::after { bottom: 0; background: linear-gradient(to top, color-mix(in srgb, var(--fg-default, #0a1628) 12%, transparent), transparent); }
+.k-scroll-area[data-overflow-top]::before, .k-scroll-area[data-overflow-bottom]::after { opacity: 1; }
+.k-scroll-content { min-width: 0; }
+.k-scroll-area[data-overflow-left] .k-scroll-viewport { -webkit-mask-image: linear-gradient(to right, transparent, #000 18px); mask-image: linear-gradient(to right, transparent, #000 18px); }
+.k-scroll-area[data-overflow-right] .k-scroll-viewport { -webkit-mask-image: linear-gradient(to left, transparent, #000 18px); mask-image: linear-gradient(to left, transparent, #000 18px); }
+.k-scroll-area[data-overflow-left][data-overflow-right] .k-scroll-viewport { -webkit-mask-image: linear-gradient(to right, transparent, #000 18px, #000 calc(100% - 18px), transparent); mask-image: linear-gradient(to right, transparent, #000 18px, #000 calc(100% - 18px), transparent); }
+
+/* ── VirtualList ────────────────────────────────────────────────────────── */
+.k-virtual { position: relative; overflow-y: auto; outline: none; contain: strict; }
+.k-virtual:focus-visible { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-accent, #0d9488) 40%, transparent); }
+.k-virtual-space { position: relative; width: 100%; }
+.k-virtual-row { position: absolute; top: 0; left: 0; right: 0; }
+.k-virtual-footer { padding: 12px; display: flex; justify-content: center; }
+
+/* ── TreeView ───────────────────────────────────────────────────────────── */
+.k-tree, .k-tree-group { margin: 0; padding: 0; list-style: none; }
+.k-tree { font-size: 13px; color: var(--fg-body, #2d3a4a); }
+.k-tree-item { outline: none; }
+.k-tree-row { display: flex; align-items: center; gap: 6px; min-height: 30px; padding-right: 8px; border-radius: var(--k-radius-xs, 2px); cursor: pointer; transition: background-color 100ms; }
+.k-tree-row:hover { background: var(--bg-hover, #f1f5f9); }
+.k-tree-row[data-selected] { background: color-mix(in srgb, var(--color-accent, #0d9488) 12%, transparent); color: var(--fg-default, #0a1628); font-weight: 500; }
+.k-tree-row[data-disabled] { opacity: 0.5; cursor: not-allowed; }
+.k-tree-item:focus-visible > .k-tree-row { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-accent, #0d9488) 50%, transparent); }
+.k-tree-twisty { display: grid; place-items: center; flex-shrink: 0; width: 18px; height: 18px; color: var(--fg-subtle, #657486); border-radius: var(--k-radius-xs, 2px); transition: transform calc(var(--k-spring-pop-duration, 280ms) * var(--k-motion, 1)) var(--k-spring-pop, cubic-bezier(0.22, 1, 0.36, 1)); }
+.k-tree-twisty[data-open] { transform: rotate(90deg); }
+.k-tree-icon { display: inline-flex; flex-shrink: 0; color: var(--fg-muted, #52606f); }
+.k-tree-row[data-selected] .k-tree-icon { color: var(--color-accent, #0d9488); }
+.k-tree-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.k-tree-check { display: grid; place-items: center; width: 15px; height: 15px; flex-shrink: 0; border: 1.5px solid var(--border-strong, #cbd5e1); border-radius: var(--k-radius-xs, 2px); background: var(--bg-card, #ffffff); color: var(--color-accent-fg, #ffffff); transition: background-color 120ms, border-color 120ms; }
+.k-tree-check[data-state='checked'], .k-tree-check[data-state='indeterminate'] { background: var(--color-accent, #0d9488); border-color: var(--color-accent, #0d9488); }
+.k-tree-empty { padding: 16px; color: var(--fg-muted, #52606f); font-size: 13px; text-align: center; }
+
+/* ── BottomSheet ────────────────────────────────────────────────────────── */
+.k-bottom-sheet-root { position: fixed; inset: 0; z-index: var(--k-z-modal, 99999); pointer-events: none; }
+.k-bottom-sheet-scrim { position: absolute; inset: 0; background: color-mix(in srgb, var(--k-ink-900, #0a1628) 40%, transparent); opacity: 0; pointer-events: auto; }
+.k-bottom-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0 auto;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  translate: 0 100%;
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-bottom: 0;
+  border-radius: var(--k-radius-lg, 12px) var(--k-radius-lg, 12px) 0 0;
+  background: var(--bg-card, #ffffff);
+  color: var(--fg-body, #2d3a4a);
+  box-shadow: 0 -10px 40px rgb(0 0 0 / 0.18);
+  pointer-events: auto;
+  will-change: translate;
+}
+.k-bottom-sheet-head { flex-shrink: 0; padding: 8px 16px 6px; touch-action: none; cursor: grab; }
+.k-bottom-sheet[data-dragging] .k-bottom-sheet-head { cursor: grabbing; }
+.k-bottom-sheet-grip { display: block; width: 40px; height: 5px; margin: 0 auto 6px; border-radius: 999px; background: var(--border-strong, #cbd5e1); }
+.k-bottom-sheet-title { display: flex; align-items: center; gap: 4px; min-height: 32px; }
+.k-bottom-sheet-title h2 { flex: 1; margin: 0; color: var(--fg-default, #0a1628); font-size: 16px; font-weight: 600; }
+.k-bottom-sheet-btn { display: grid; place-items: center; width: 32px; height: 32px; border-radius: var(--k-radius-sm, 4px); color: var(--fg-subtle, #657486); transition: background-color 120ms; }
+.k-bottom-sheet-btn:hover { background: var(--bg-hover, #f1f5f9); color: var(--fg-default, #0a1628); }
+.k-bottom-sheet-body { flex: 1; min-height: 0; padding: 4px 16px 16px; overflow: hidden; overscroll-behavior: contain; touch-action: none; }
+/* Solo en el anclaje más alto el contenido hace scroll; abajo, arrastrar mueve la hoja. */
+.k-bottom-sheet[data-top] .k-bottom-sheet-body { overflow-y: auto; touch-action: pan-y; }
+.k-bottom-sheet-footer { flex-shrink: 0; display: flex; justify-content: flex-end; gap: 8px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--border-default, #e2e8f0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .k-split > .k-split-pane:first-child, .k-tree-twisty { transition: none !important; }
+}
+.k-bottom-sheet { outline: none; }
+.k-bottom-sheet-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent, #0d9488) 45%, transparent); }
+
+/* Cabecera propia (la de un diálogo): solo el asa encima, sin el relleno de la cabecera por defecto. */
+.k-bottom-sheet-head[data-custom] { padding: 8px 0 0; }
+.k-bottom-sheet-head[data-custom] > .k-bottom-sheet-grip { margin-bottom: 2px; }
+/* Un `Modal` como hoja trae su propio relleno y su pie: la hoja no añade los suyos. */
+.k-modal-sheet .k-bottom-sheet-body { padding: 0; }
+.k-modal-sheet .k-bottom-sheet-footer { display: block; padding: 0 0 env(safe-area-inset-bottom, 0px); border-top: 0; }
+/* La cabecera del diálogo en la hoja: título y X alineados, sin el aire extra del diálogo de escritorio. */
+.k-modal-sheet .k-bottom-sheet-head[data-custom] > [data-sheet-handle] { align-items: center; padding-top: 6px; padding-bottom: 12px; }
+/* Dentro de la hoja solo hace scroll su cuerpo. Un contenedor interior con `overflow` propio (el cuerpo de un diálogo, la
+   lista de un select adaptado) se quedaría con la rueda y el gesto aunque no tenga nada que desplazar, y la hoja no se
+   movería. */
+.k-bottom-sheet-body [data-modal-body], .k-bottom-sheet-body .k-adaptive-content [role='listbox'] { overflow: visible !important; overscroll-behavior: auto; max-height: none; }

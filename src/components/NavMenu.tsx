@@ -1,6 +1,7 @@
+import { useMergedRefs } from '../hooks/useMergedRefs';
 import * as React from 'react';
 import { adaptivePortal } from './internal/MobileOverlay';
-import { useIsNarrow } from '../hooks/useMediaQuery';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
@@ -144,8 +145,8 @@ const GrupoDesplegable: React.FC<GrupoDesplegableProps> = ({
   registrar,
 }) => {
   const [activo, setActivo] = React.useState(-1);
-  const mobile = useIsNarrow(768);
-  const { anchorRef, popoverRef, style, ready } = usePopover<HTMLButtonElement>({
+  const mobile = useIsMobile();
+  const { anchorRef, popoverRef, style, ready, mounted, popoverProps } = usePopover<HTMLButtonElement>({
     open: abierto && !mobile,
     onClose: onCerrar,
     preferredPlacement: 'bottom',
@@ -227,14 +228,13 @@ const GrupoDesplegable: React.FC<GrupoDesplegableProps> = ({
   };
 
   const panelId = `navmenu-${group.name.replace(/\s+/g, '-').toLowerCase()}`;
+  // Una sola ref estable: una función en línea se volvería a registrar en cada render.
+  const buttonRef = useMergedRefs<HTMLButtonElement>(anchorRef, registrar);
 
   return (
     <>
       <button
-        ref={(el) => {
-          anchorRef.current = el;
-          registrar(el);
-        }}
+        ref={buttonRef}
         type="button"
         role="menuitem"
         aria-haspopup="true"
@@ -260,16 +260,17 @@ const GrupoDesplegable: React.FC<GrupoDesplegableProps> = ({
         />
       </button>
 
-      {abierto &&
+      {(abierto || mounted) &&
         typeof document !== 'undefined' &&
         adaptivePortal(
           <div
             ref={popoverRef}
             id={panelId}
             role="menu"
+            {...(mobile ? undefined : popoverProps)}
             aria-label={group.name}
             style={{ ...style, visibility: ready ? 'visible' : 'hidden' }}
-            className="z-[var(--k-z-dropdown,99998)] min-w-[200px] overflow-hidden rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-1 shadow-lg"
+            className="z-[var(--k-z-dropdown,99998)] min-w-[200px] overflow-hidden rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-1 shadow-lg k-appear"
           >
             {group.items.map((item) => {
               const idx = habilitados.indexOf(item);

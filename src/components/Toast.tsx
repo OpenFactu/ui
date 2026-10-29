@@ -1,3 +1,5 @@
+import { afterNextPaint } from '../motion/dom';
+import { useDragDismiss } from '../motion/useDragDismiss';
 import * as React from 'react';
 import { UiIcon, type IconSlot } from '../icons';
 import { cn } from '../utils';
@@ -164,9 +166,20 @@ export const Toast: React.FC<ToastProps> = ({
 
   // Arrastre táctil. Mientras el dedo está encima el temporizador se detiene:
   // si no, el aviso se cerraría solo justo cuando se está manipulando.
-  const [drag, setDrag] = React.useState<number | null>(null);
-  const dragStart = React.useRef(0);
-  const dragging = drag !== null;
+  // El gesto lo lleva `useDragDismiss` (sin pasar por React en cada movimiento); aquí solo se sabe si hay un dedo encima.
+  const [touching, setTouching] = React.useState(false);
+  const dragging = touching;
+  const drag = useDragDismiss({
+    axis: 'x',
+    direction: 0,
+    threshold: SWIPE_THRESHOLD,
+    disabled: !swipeToDismiss || !dismissible || peek,
+    onProgress: (p) => {
+      const el = drag.ref.current;
+      if (el) el.style.opacity = p > 0 ? String(Math.max(0.25, 1 - p * 1.4)) : '';
+    },
+    onDismiss: () => onClose(id),
+  });
 
   // El temporizador se detiene mientras el ratón está encima: si no, el aviso
   // se cierra justo cuando lo estás leyendo o vas a pulsar su acción.
@@ -204,18 +217,7 @@ export const Toast: React.FC<ToastProps> = ({
   // animación con `fill` seguiría imponiendo su fotograma final y la salida no
   // llegaría a verse.
   const [entered, setEntered] = React.useState(false);
-  React.useEffect(() => {
-    // Dos fotogramas: con uno solo el navegador puede aplicar el cambio en el
-    // mismo en que pinta el estado inicial, y entonces no hay transición.
-    let inner = 0;
-    const outer = requestAnimationFrame(() => {
-      inner = requestAnimationFrame(() => setEntered(true));
-    });
-    return () => {
-      cancelAnimationFrame(outer);
-      cancelAnimationFrame(inner);
-    };
-  }, []);
+  React.useEffect(() => afterNextPaint(() => setEntered(true)), []);
 
   const offscreen =
     animation === 'fade'
@@ -230,22 +232,15 @@ export const Toast: React.FC<ToastProps> = ({
               ? 'opacity-0 -translate-x-6'
               : 'opacity-0 translate-x-6';
 
+  // Con ratón no se arrastra (estorbaría a la selección de texto y ya hay X): `useDragDismiss` solo atiende al tacto.
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    // Con ratón no se arrastra: estorbaría a la selección de texto y ya hay X.
-    if (!swipeToDismiss || !dismissible || peek || e.pointerType === 'mouse') return;
-    dragStart.current = e.clientX;
-    setDrag(0);
-    e.currentTarget.setPointerCapture(e.pointerId);
+    if (swipeToDismiss && dismissible && !peek && e.pointerType !== 'mouse') setTouching(true);
+    drag.bind.onPointerDown(e);
   };
-
-  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!dragging) return;
-    setDrag(e.clientX - dragStart.current);
-  };
-
-  const endDrag = () => {
-    if (drag !== null && Math.abs(drag) >= SWIPE_THRESHOLD) onClose(id);
-    setDrag(null);
+  const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    setTouching(false);
+    if (e.type === 'pointercancel') drag.bind.onPointerCancel(e);
+    else drag.bind.onPointerUp(e);
   };
 
   const textOn = filled ? 'text-[var(--k-tone-on)]' : undefined;
@@ -382,8 +377,9 @@ export const Toast: React.FC<ToastProps> = ({
       data-type={type}
       data-variant={variant}
       data-peek={peek || undefined}
+      ref={drag.ref as React.RefObject<HTMLDivElement>}
       onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
+      onPointerMove={drag.bind.onPointerMove}
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
       style={{
@@ -398,19 +394,14 @@ export const Toast: React.FC<ToastProps> = ({
           ? { backgroundImage: 'linear-gradient(var(--k-tone-bg), var(--k-tone-bg))' }
           : null),
         ...(peek && peekHeight ? { height: peekHeight } : null),
-        ...(dragging
-          ? {
-              transform: `translateX(${drag}px)`,
-              opacity: Math.max(0.25, 1 - Math.abs(drag) / (SWIPE_THRESHOLD * 2)),
-              transition: 'none',
-            }
-          : null),
       }}
       className={cn(
         'k-toast group pointer-events-auto relative flex w-full max-w-sm items-start gap-3 shadow-lg',
         minimal ? 'p-3.5' : 'p-3.5',
         minimal ? 'rounded-[var(--k-radius-lg,12px)]' : 'rounded-[var(--k-radius-md,8px)]',
-        'transition-[opacity,transform,height] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]',
+        // Entra con el muelle `enter` del tema y sale con `exit` (más seco, sin rebote).
+        'transition-[opacity,transform,height]',
+        leaving ? 'duration-spring-exit ease-spring-exit' : 'duration-spring-enter ease-spring-enter',
         VARIANTS[variant],
         peek && 'overflow-hidden',
         leaving || !entered ? offscreen : 'opacity-100 translate-x-0 translate-y-0 scale-100',

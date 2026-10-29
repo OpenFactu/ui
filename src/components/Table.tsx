@@ -1,3 +1,5 @@
+import { Spinner } from './Spinner';
+import { isPrimaryPointer, startPointerDrag } from '../internal/pointerDrag';
 import * as React from 'react';
 import { adaptivePortal } from './internal/MobileOverlay';
 import { UiIcon } from '../icons';
@@ -10,7 +12,7 @@ import { useContextMenu } from './ContextMenu';
 import { Skeleton } from './Skeleton';
 import { densityClasses, skeletonWidth, type Density } from './internal/density';
 import { usePopover } from '../hooks/usePopover';
-import { useIsNarrow } from '../hooks/useMediaQuery';
+import { useIsNarrow, useIsMobile } from '../hooks/useMediaQuery';
 import { Alert } from './Alert';
 import { Button } from './Button';
 
@@ -211,8 +213,8 @@ function ColumnToggle({
   onToggle: (key: string) => void;
 }) {
   const [isOpen, setIsOpen] = React.useState(false);
-  const mobile = useIsNarrow(768);
-  const { anchorRef, popoverRef, style, ready } = usePopover<HTMLButtonElement>({
+  const mobile = useIsMobile();
+  const { anchorRef, popoverRef, style, ready, mounted, popoverProps } = usePopover<HTMLButtonElement>({
     open: isOpen && !mobile,
     onClose: () => setIsOpen(false),
     align: 'end',
@@ -233,12 +235,13 @@ function ColumnToggle({
       >
         <UiIcon slot="columns-3" className="h-3.5 w-3.5" />
       </button>
-      {isOpen &&
+      {(isOpen || mounted) &&
         adaptivePortal(
           <div
             ref={popoverRef}
+            {...(mobile ? undefined : popoverProps)}
             className={cn(
-              'z-[var(--k-z-popover,999999)] min-w-[180px] rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-1 shadow-lg',
+              'z-[var(--k-z-popover,999999)] min-w-[180px] rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-1 shadow-lg k-appear',
               !ready && !mobile && 'invisible',
             )}
             style={style}
@@ -463,7 +466,7 @@ export function Table<T>({
       <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
       {infinite.loading && (
         <div className="flex items-center justify-center gap-2 py-3 text-[11px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
-          <span className="h-3 w-3 animate-spin rounded-full border-2 border-accent/20 border-t-accent" />
+          <Spinner size="xs" label="Cargando" />
           Cargando más
         </div>
       )}
@@ -566,8 +569,11 @@ export function Table<T>({
   // ── Resize de columnas ─────────────────────────────────────────────────
   const [colWidths, setColWidths] = React.useState<Record<string, number>>({});
   const resizingRef = React.useRef(false);
+  const stopResize = React.useRef<() => void>(() => undefined);
+  React.useEffect(() => () => stopResize.current(), []);
 
   const startResize = (event: React.PointerEvent, colKey: string) => {
+    if (!isPrimaryPointer(event)) return;
     event.preventDefault();
     event.stopPropagation();
     const th = (event.target as HTMLElement).closest('th');
@@ -575,21 +581,14 @@ export function Table<T>({
     const startX = event.clientX;
     const startWidth = th.offsetWidth;
     resizingRef.current = true;
-
-    const onMove = (e: PointerEvent) => {
-      const width = Math.max(60, startWidth + (e.clientX - startX));
-      setColWidths((prev) => ({ ...prev, [colKey]: width }));
-    };
-    const onUp = () => {
-      document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup', onUp);
+    stopResize.current = startPointerDrag(event, {
+      onMove: (e) => {
+        const width = Math.max(60, startWidth + (e.clientX - startX));
+        setColWidths((prev) => ({ ...prev, [colKey]: width }));
+      },
       // Evitar que el click posterior dispare la ordenación.
-      setTimeout(() => {
-        resizingRef.current = false;
-      }, 0);
-    };
-    document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup', onUp);
+      onEnd: () => { setTimeout(() => { resizingRef.current = false; }, 0); },
+    });
   };
 
   // ── Sticky: offsets de las columnas fijas medidos sobre la cabecera ───
@@ -1086,7 +1085,7 @@ export function Table<T>({
                   className={cn(cellPad, 'py-10 text-center text-[var(--fg-subtle,#657486)]')}
                 >
                   <div className="flex flex-col items-center gap-3">
-                    <div className="w-5 h-5 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
+                    <Spinner size="sm" label="Cargando" />
                     <span className="animate-pulse font-mono text-[11px] tracking-wider uppercase">
                       {loadingLabel}
                     </span>

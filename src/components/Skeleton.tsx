@@ -364,7 +364,7 @@ export const SkeletonPage: React.FC<SkeletonPageProps> = ({
 /**
  * @deprecated Andamiaje específico de un panel concreto. Usa `SkeletonPage`
  * (`<SkeletonPage header kpis={4} columns={12} blocks={4} />`). Se eliminará en
- * la v0.5.
+ * la próxima versión menor (estaba previsto para la v0.5 y se ha alargado un ciclo para no romper a nadie).
  */
 export const DashboardSkeleton: React.FC = () => (
   <div className="p-8 max-w-7xl mx-auto w-full">

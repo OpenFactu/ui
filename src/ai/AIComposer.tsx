@@ -1,3 +1,5 @@
+import { autosize } from '../hooks/useAutosize';
+import { matchesAccept } from '../internal/files';
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { DropdownMenu } from '../components/DropdownMenu';
@@ -91,7 +93,7 @@ function ComposerInput() {
   React.useLayoutEffect(() => {
     const input = document.getElementById(c.inputId) as HTMLTextAreaElement | null;
     c.inputRef.current = input;
-    if (input) { input.style.height = '0px'; input.style.height = `${Math.min(200, Math.max(48, input.scrollHeight))}px`; }
+    autosize(input, { min: 48, max: 200 });
   }, [c.draft.text, c.inputId, c.inputRef]);
   return <Textarea data-k-focus-input="" id={c.inputId} aria-label={c.l.message} value={c.draft.text} placeholder={c.l.writeMessage}
     containerClassName="ai-composer-input-wrap" className="ai-composer-input" rows={1} disabled={c.disabled}
@@ -216,8 +218,7 @@ function ComposerRoot(props: AIComposerProps) {
     let candidates = files.filter(file => {
       if (model?.capabilities?.images === false && file.type.startsWith('image/')) return false;
       if (props.maxSizeMb !== undefined && file.size > props.maxSizeMb * 1024 * 1024) return false;
-      if (!props.accept) return true;
-      return props.accept.toLowerCase().split(',').map(pattern => pattern.trim()).some(pattern => pattern.startsWith('.') ? file.name.toLowerCase().endsWith(pattern) : pattern.endsWith('/*') ? file.type.toLowerCase().startsWith(pattern.slice(0, -1)) : file.type.toLowerCase() === pattern);
+      return matchesAccept(file, props.accept);
     });
     const max = remainingFileCount(props.maxFiles, draft.attachments.length);
     if (max !== undefined) candidates = candidates.slice(0, max);

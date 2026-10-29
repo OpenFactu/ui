@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
-import { PopupFrame, type PopupTone } from '../components/Popup';
+import { PopupFrame, PopupOpenContext, type PopupTone } from '../components/Popup';
+import { exitDelay } from '../motion/dom';
 import { Button } from '../components/Button';
 
 /**
@@ -54,6 +55,8 @@ export interface PopupContextType {
 interface OpenPopup {
   id: string;
   render: (close: () => void) => ReactNode;
+  /** Cerrándose: sigue montado mientras dura la salida. */
+  leaving?: boolean;
 }
 
 const PopupContext = createContext<PopupContextType | undefined>(undefined);
@@ -66,7 +69,9 @@ export const PopupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [stack, setStack] = useState<OpenPopup[]>([]);
 
   const close = useCallback((id: string) => {
-    setStack((prev) => prev.filter((p) => p.id !== id));
+    // Primero se marca como saliendo (el marco anima su salida) y después se quita.
+    setStack((prev) => prev.map((p) => (p.id === id ? { ...p, leaving: true } : p)));
+    setTimeout(() => setStack((prev) => prev.filter((p) => p.id !== id)), exitDelay(typeof document === 'undefined' ? null : document.documentElement));
   }, []);
 
   const push = useCallback((render: OpenPopup['render']) => {
@@ -181,7 +186,7 @@ export const PopupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     <PopupContext.Provider value={api}>
       {children}
       {stack.map((p) => (
-        <React.Fragment key={p.id}>{p.render(() => close(p.id))}</React.Fragment>
+        <PopupOpenContext.Provider key={p.id} value={!p.leaving}>{p.render(() => close(p.id))}</PopupOpenContext.Provider>
       ))}
     </PopupContext.Provider>
   );

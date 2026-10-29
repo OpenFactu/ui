@@ -1,7 +1,8 @@
+import { ControlField, describedBy } from './internal/ControlField';
 import * as React from 'react';
 import { adaptivePortal } from './internal/MobileOverlay';
 import { resolveMobilePresentation, type MobilePresentation } from './internal/mobilePresentation';
-import { useIsNarrow } from '../hooks/useMediaQuery';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
@@ -60,7 +61,7 @@ export const Select: React.FC<SelectProps> = ({
   ariaLabel,
   mobilePresentation = 'auto',
 }) => {
-  const mobile = useIsNarrow(768);
+  const mobile = useIsMobile();
   const presentation = resolveMobilePresentation(mobile, mobilePresentation, 'sheet');
   const [isOpen, setIsOpen] = React.useState(false);
   const [highlightedIndex, setHighlightedIndex] = React.useState(-1);
@@ -69,7 +70,7 @@ export const Select: React.FC<SelectProps> = ({
   const listboxId = `${selectId}-listbox`;
   const listRef = React.useRef<HTMLDivElement>(null);
 
-  const { anchorRef, popoverRef, style, ready } = usePopover<HTMLButtonElement>({
+  const { anchorRef, popoverRef, style, ready, mounted, popoverProps } = usePopover<HTMLButtonElement>({
     open: isOpen && !mobile,
     onClose: () => setIsOpen(false),
     matchAnchorWidth: true,
@@ -160,12 +161,13 @@ export const Select: React.FC<SelectProps> = ({
   };
 
   const dropdown =
-    isOpen &&
+    (isOpen || mounted) &&
     adaptivePortal(
       <div
         ref={popoverRef}
+          {...(mobile ? undefined : popoverProps)}
         className={cn(
-          'z-[var(--k-z-popover,999999)] rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-1 shadow-lg animate-in fade-in-50 duration-150 flex flex-col',
+          'z-[var(--k-z-popover,999999)] rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-1 shadow-lg k-appear flex flex-col',
           !ready && !mobile && 'invisible',
           dropdownClassName,
         )}
@@ -221,20 +223,7 @@ export const Select: React.FC<SelectProps> = ({
     );
 
   return (
-    <div className={cn('flex flex-col gap-1.5 w-full', containerClassName)}>
-      {label && (
-        <label
-          htmlFor={selectId}
-          className="text-[12px] font-medium text-[var(--fg-body,#2d3a4a)]"
-        >
-          {label}
-          {required && (
-            <span className="text-[var(--k-danger-fg)] ml-0.5" aria-hidden="true">
-              *
-            </span>
-          )}
-        </label>
-      )}
+    <ControlField id={selectId} label={label} helperText={helperText} error={error} required={required} className={containerClassName}>
       <button
         ref={anchorRef}
         id={selectId}
@@ -242,6 +231,8 @@ export const Select: React.FC<SelectProps> = ({
         role="combobox"
         data-k-control="select"
         aria-required={required || undefined}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy(selectId, error, helperText)}
         aria-label={ariaLabel}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
@@ -280,15 +271,7 @@ export const Select: React.FC<SelectProps> = ({
           )}
         />
       </button>
-      {error && (
-        <p className="text-[11px] font-medium text-[var(--k-danger-fg)] mt-0.5">{error}</p>
-      )}
-      {helperText && !error && (
-        <p className="text-[11px] text-[var(--fg-subtle,#657486)] mt-0.5">
-          {helperText}
-        </p>
-      )}
       {dropdown}
-    </div>
+    </ControlField>
   );
 };

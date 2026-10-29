@@ -1,7 +1,10 @@
+import { Spinner } from './Spinner';
+import { ControlField, describedBy } from './internal/ControlField';
+import { fold, foldedRange } from '../internal/text';
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { adaptivePortal } from './internal/MobileOverlay';
 import { resolveMobilePresentation, type MobilePresentation } from './internal/mobilePresentation';
-import { useIsNarrow } from '../hooks/useMediaQuery';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
@@ -84,10 +87,9 @@ export type SearchableSelectProps = SearchableSelectSingleProps | SearchableSele
 
 /** Parte en tres el texto para poder marcar en negrita lo que coincide. */
 function splitMatch(text: string, term: string): [string, string, string] | null {
-  if (!term) return null;
-  const i = text.toLowerCase().indexOf(term.toLowerCase());
-  if (i === -1) return null;
-  return [text.slice(0, i), text.slice(i, i + term.length), text.slice(i + term.length)];
+  const range = foldedRange(text, term);
+  if (!range) return null;
+  return [text.slice(0, range[0]), text.slice(range[0], range[1]), text.slice(range[1])];
 }
 
 export function SearchableSelect(props: SearchableSelectProps) {
@@ -110,7 +112,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
     grouped,
     mobilePresentation = 'auto',
   } = props;
-  const mobile = useIsNarrow(768);
+  const mobile = useIsMobile();
   const presentation = resolveMobilePresentation(mobile, mobilePresentation, 'fullscreen');
 
   const [isOpen, setIsOpen] = useState(false);
@@ -127,6 +129,8 @@ export function SearchableSelect(props: SearchableSelectProps) {
     popoverRef: dropdownRef,
     style: popoverStyle,
     ready: coordsReady,
+    mounted: popoverMounted,
+    popoverProps,
   } = usePopover<HTMLDivElement>({
     open: isOpen && !mobile,
     onClose: () => setIsOpen(false),
@@ -160,17 +164,15 @@ export function SearchableSelect(props: SearchableSelectProps) {
   // Con onSearchChange el filtrado/ordenación es responsabilidad del servidor.
   const filteredOptions = useMemo(() => {
     if (onSearchChange) return options;
-    const s = searchTerm.toLowerCase();
+    // Sin acentos ni mayúsculas: «facturacion» encuentra «Facturación».
+    const s = fold(searchTerm);
+    const has = (text?: string) => !!text && fold(text).includes(s);
+    const starts = (text?: string) => !!text && fold(text).startsWith(s);
     return options
-      .filter(
-        (opt) =>
-          opt.label.toLowerCase().includes(s) || opt.secondaryLabel?.toLowerCase().includes(s),
-      )
+      .filter((opt) => has(opt.label) || has(opt.secondaryLabel))
       .sort((a, b) => {
-        const aStarts =
-          a.label.toLowerCase().startsWith(s) || a.secondaryLabel?.toLowerCase().startsWith(s);
-        const bStarts =
-          b.label.toLowerCase().startsWith(s) || b.secondaryLabel?.toLowerCase().startsWith(s);
+        const aStarts = starts(a.label) || starts(a.secondaryLabel);
+        const bStarts = starts(b.label) || starts(b.secondaryLabel);
         if (aStarts && !bStarts) return -1;
         if (!aStarts && bStarts) return 1;
         return 0;
@@ -351,13 +353,14 @@ export function SearchableSelect(props: SearchableSelectProps) {
       : undefined;
 
   const dropdownContent =
-    isOpen &&
+    (isOpen || popoverMounted) &&
     (coordsReady || mobile) &&
     adaptivePortal(
       <div
         ref={dropdownRef}
+          {...(mobile ? undefined : popoverProps)}
         className={cn(
-          'z-[var(--k-z-popover,999999)] rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-1 shadow-lg animate-in fade-in-50 duration-200 flex flex-col',
+          'z-[var(--k-z-popover,999999)] rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-1 shadow-lg k-appear flex flex-col',
         )}
         style={popoverStyle}
       >
@@ -381,7 +384,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
             onKeyDown={handleInputKeyDown}
           />
           {loading && (
-            <span className="h-3.5 w-3.5 shrink-0 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
+            <Spinner size="xs" className="shrink-0" label="Buscando" />
           )}
         </div>
         <div
@@ -517,6 +520,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
         aria-required={props.required || undefined}
         aria-label={props.ariaLabel}
         aria-invalid={props.error ? true : undefined}
+        aria-describedby={describedBy(controlId, props.error, props.helperText)}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-controls={isOpen ? listboxId : undefined}
@@ -590,37 +594,11 @@ export function SearchableSelect(props: SearchableSelectProps) {
     </div>
   );
 
-  const mensaje = props.error ?? props.helperText;
   if (!envuelto) return control;
 
   return (
-    <div className={cn('flex w-full flex-col gap-1.5', className)}>
-      {props.label && (
-        <label
-          htmlFor={controlId}
-          className="text-[12px] font-medium text-[var(--fg-body,#2d3a4a)]"
-        >
-          {props.label}
-          {props.required && (
-            <span className="ml-0.5 text-[var(--k-danger-fg)]" aria-hidden="true">
-              *
-            </span>
-          )}
-        </label>
-      )}
+    <ControlField id={controlId} label={props.label} helperText={props.helperText} error={props.error} required={props.required} className={className}>
       {control}
-      {mensaje && (
-        <p
-          className={cn(
-            'text-[11px]',
-            props.error
-              ? 'font-medium text-[var(--k-danger-fg)]'
-              : 'text-[var(--fg-subtle,#657486)]',
-          )}
-        >
-          {mensaje}
-        </p>
-      )}
-    </div>
+    </ControlField>
   );
 }

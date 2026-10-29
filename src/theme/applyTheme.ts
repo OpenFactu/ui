@@ -22,7 +22,7 @@ export interface ApplyThemeOptions {
 }
 
 const FONT_LINK_ATTR = 'data-openfactu-font';
-const THEME_ATTRS = ['data-k-material', 'data-k-backdrop', 'data-k-backdrop-motion', 'data-k-focus', 'data-k-selection'];
+const THEME_ATTRS = ['data-k-material', 'data-k-backdrop', 'data-k-backdrop-motion', 'data-k-stagger', 'data-k-focus', 'data-k-selection'];
 
 function syncFontLink(fontFamily: string): void {
   if (typeof document === 'undefined') return;

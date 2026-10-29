@@ -47,7 +47,7 @@ export const SplitButton: React.FC<SplitButtonProps> = ({
   const available = actions.some((action) => !action.disabled);
   const visible = open && !locked && available;
   const close = React.useCallback(() => setOpen(false), []);
-  const { anchorRef, popoverRef, style, ready } = usePopover<HTMLButtonElement>({
+  const { anchorRef, popoverRef, style, ready, mounted, popoverProps } = usePopover<HTMLButtonElement>({
     open: visible,
     onClose: close,
     align: 'end',
@@ -133,17 +133,18 @@ export const SplitButton: React.FC<SplitButtonProps> = ({
           <UiIcon slot="chevron-down" size={16} aria-hidden="true" />
         </Button>
       )}
-      {visible &&
+      {(visible || mounted) &&
         createPortal(
           <div
             ref={popoverRef}
             id={id}
             role="menu"
+            {...popoverProps}
             aria-label={menuLabel}
             onKeyDown={handleKeys}
             style={style}
             className={cn(
-              'z-[var(--k-z-popover,999999)] max-w-[calc(100vw-16px)] overflow-y-auto rounded-[var(--k-radius-sm)] border border-[var(--border-default)] bg-[var(--bg-card)] p-1 shadow-lg',
+              'z-[var(--k-z-popover,999999)] max-w-[calc(100vw-16px)] overflow-y-auto rounded-[var(--k-radius-sm)] border border-[var(--border-default)] bg-[var(--bg-card)] p-1 shadow-lg k-appear',
               !ready && 'invisible',
             )}
           >

@@ -14,8 +14,7 @@
 .k-floating-action:disabled { opacity: .5; cursor: not-allowed; }
 .k-floating-actions-trigger:focus-visible, .k-floating-action:focus-visible { outline: 2px solid var(--fg-default, #0a1628); outline-offset: 2px; }
 .k-floating-actions-error { max-width: min(300px, calc(100vw - 48px)); margin: 0; padding: 10px 12px; border-radius: var(--k-radius-sm, 4px); background: var(--bg-card, #ffffff); color: var(--k-danger-fg, #b91c1c); box-shadow: var(--k-shadow-sm, 0 1px 3px rgb(0 0 0 / .08)); font-size: 12px; overflow-wrap: anywhere; }
-.k-floating-action-spinner { animation: k-floating-spin 800ms linear infinite; }
-@keyframes k-floating-spin { to { transform: rotate(360deg); } }
+.k-floating-action-spinner { animation: k-spin calc(var(--k-motion, 1) * 800ms) linear infinite; }
 @media (hover: hover) and (pointer: fine) { .k-floating-actions-trigger:hover:not(:disabled) { background: var(--k-accent-600, #0a6e63); } .k-floating-action:hover:not(:disabled) { background: var(--bg-hover, #f1f5f9); } }
 .k-floating-actions[data-keyboard] .k-floating-actions-panel, .k-floating-actions[data-keyboard] .k-floating-actions-plus { transition: none; }
 @media (prefers-reduced-motion: reduce) { .k-floating-actions-panel, .k-floating-actions-plus, .k-floating-actions-trigger { transition: none; transform: none; } .k-floating-actions[data-open] .k-floating-actions-plus { transform: none; } .k-floating-action-spinner { animation: none; } }

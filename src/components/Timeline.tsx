@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE } from '../internal/intl';
 import * as React from 'react';
 import { cn } from '../utils';
 import { MESES_LARGOS, aInstante, hhmm, mismoDia } from '../internal/fechas';
@@ -227,7 +228,7 @@ export const Timeline: React.FC<TimelineProps> = ({
                 )}
                 <time
                   dateTime={e._fecha.toISOString()}
-                  title={e._fecha.toLocaleString('es-ES')}
+                  title={e._fecha.toLocaleString(DEFAULT_LOCALE)}
                   className="ml-auto shrink-0 font-mono text-[10px] text-[var(--fg-subtle,#657486)]"
                 >
                   {cuando}

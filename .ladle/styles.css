@@ -15,3 +15,12 @@ html {
 body {
   font-family: var(--font-sans);
 }
+
+/* Galería de temas del chat (solo historias). */
+.k-chat-theme-preview { padding: 16px; border-radius: var(--k-radius-lg); background: var(--bg-app); color: var(--fg-default); font-family: var(--font-sans); }
+.k-chat-theme-controls { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; font-size: 13px; }
+.k-chat-theme-controls select { padding: 8px 12px; border: 1px solid var(--border-default); border-radius: var(--k-radius-sm); color: var(--fg-default); background: var(--bg-card); font: inherit; }
+.k-chat-theme-gallery { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; max-width: 1400px; margin: 0 auto; }
+.k-chat-theme-card .k-chat-conversations { display: none; }
+.k-chat-theme-card .k-chat-workspace { grid-template-columns: minmax(0,1fr); }
+@media (max-width: 850px) { .k-chat-theme-gallery { grid-template-columns: minmax(0,1fr); } }

@@ -3,7 +3,7 @@ import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { Button } from './Button';
 import { EmptyState } from './EmptyState';
-import { formatFileSize } from './FileDropzone';
+import { formatBytes } from '../internal/format';
 
 export interface AttachmentItem {
   id: string;
@@ -81,7 +81,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
               )}
               <div className="mt-1 text-[11px] text-[var(--fg-muted)]">
                 {item.size != null && Number.isFinite(item.size) && item.size >= 0 && (
-                  <span>{formatFileSize(item.size)}</span>
+                  <span>{formatBytes(item.size)}</span>
                 )}
                 {item.description && <div>{item.description}</div>}
               </div>

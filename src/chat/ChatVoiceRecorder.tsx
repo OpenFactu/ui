@@ -1,3 +1,4 @@
+import { formatClock } from '../internal/format';
 import * as React from 'react';
 import { useAudioRecording } from '../hooks/useAudioRecording';
 import { UiIcon } from '../icons';
@@ -36,7 +37,7 @@ export function ChatVoiceRecorder({ disabled, onBusyChange }: { disabled?: boole
   return <div className="k-chat-voice-controls" data-recording-state={recording.state}>
     {recording.state !== 'recorded' && <><span className="k-chat-record-dot" aria-hidden="true" />
     <span role="status" className="k-chat-record-label">{recording.state === 'requesting' ? 'Permiso…' : recording.state === 'paused' ? 'En pausa' : 'Grabando'}</span>
-    <span className="k-chat-record-time">{Math.floor(recording.elapsed / 60)}:{String(Math.floor(recording.elapsed % 60)).padStart(2,'0')}</span></>}
+    <span className="k-chat-record-time">{formatClock(recording.elapsed)}</span></>}
     {['recording', 'paused'].includes(recording.state) && <><button type="button" className="k-chat-icon-button" aria-label={recording.state === 'paused' ? 'Continuar grabación' : 'Pausar grabación'} title={recording.state === 'paused' ? 'Continuar' : 'Pausar'} onClick={recording.togglePause}><UiIcon slot={recording.state === 'paused' ? 'play' : 'pause'} size={16} /></button><button type="button" className="k-chat-icon-button" aria-label="Terminar grabación" title="Terminar y escuchar" onClick={recording.finish}><UiIcon slot="square" size={14} /></button></>}
     {recording.blob && <ChatAudioPlayer blob={recording.blob} duration={recording.elapsed} title="Escuchar nota de voz" />}
     <button type="button" className="k-chat-icon-button k-chat-voice-discard" aria-label="Cancelar grabación" title="Eliminar nota de voz" onClick={() => { uploadAbort.current?.abort(); recording.cancel(); }}><UiIcon slot="trash-2" size={17} /></button>

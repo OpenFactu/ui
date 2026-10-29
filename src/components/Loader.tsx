@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { UiIcon } from '../icons';
+import { Spinner } from './Spinner';
 import { cn } from '../utils';
 
 export interface LoaderProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -10,38 +10,25 @@ export interface LoaderProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * Componente Loader profesional y flexible.
- * Envuelve el spinner básico con opciones de tamaño, color y overlay.
+ * Indicador de carga con etiqueta y velo opcional.
+ *
+ * @deprecated Usa `Spinner` (más formas, tamaños y tonos del tema). Este se mantiene por compatibilidad, ya pinta un
+ * `Spinner` por dentro, y se quitará en la próxima versión menor.
  */
 export const Loader = React.forwardRef<HTMLDivElement, LoaderProps>(
   ({ className, size = 'md', variant = 'primary', label, overlay, ...props }, ref) => {
-    const sizeClasses = {
-      sm: 'w-4 h-4',
-      md: 'w-6 h-6',
-      lg: 'w-10 h-10',
-      xl: 'w-16 h-16',
-    };
-
-    const variantClasses = {
-      primary: 'text-accent',
-      white: 'text-white',
-      neutral: 'text-[var(--fg-subtle,#657486)]',
-    };
-
     const loaderContent = (
       <div
         ref={ref}
         className={cn('flex flex-col items-center justify-center gap-3', className)}
         {...props}
       >
-        <div className="relative">
-          <UiIcon slot="loader-2" className={cn('animate-spin', sizeClasses[size], variantClasses[variant])} />
-          {size === 'xl' && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-2 h-2 bg-accent rounded-full animate-ping" />
-            </div>
-          )}
-        </div>
+        <Spinner
+          size={size}
+          tone={variant === 'primary' ? 'accent' : variant === 'neutral' ? 'muted' : 'inherit'}
+          label={label ?? 'Cargando'}
+          className={variant === 'white' ? 'text-white' : undefined}
+        />
         {label && (
           <span
             className={cn(

@@ -4,7 +4,7 @@ import { cn } from '../utils';
 import { useAnimatedPresence } from '../hooks/useAnimatedPresence';
 import { useEscapeStack } from '../internal/escapeStack';
 import { useMobileViewport } from '../hooks/useMobileViewport';
-import { useIsNarrow } from '../hooks/useMediaQuery';
+import { useIsMobile } from '../hooks/useMediaQuery';
 
 export interface FloatingAction {
   id: string;
@@ -30,7 +30,7 @@ export interface FloatingActionButtonProps {
 /** Menú de acciones del consumidor, con anclaje fijo y controles táctiles de al menos 48 px. */
 export function FloatingActionButton({ actions, label = 'Acciones rápidas', closeLabel = 'Cerrar acciones', icon, position = 'bottom-right', open, onOpenChange, disabled, className, style }: FloatingActionButtonProps) {
   const [localOpen, setLocalOpen] = React.useState(false);
-  const viewport = useMobileViewport(); const mobile = useIsNarrow(768);
+  const viewport = useMobileViewport(); const mobile = useIsMobile();
   const [pending, setPending] = React.useState<string>();
   const [error, setError] = React.useState('');
   const busy = React.useRef(false);

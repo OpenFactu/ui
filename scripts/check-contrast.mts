@@ -13,7 +13,7 @@ import { chromium } from 'playwright-core';
 import { resolveTheme, themeToCssVars } from '../src/theme/tokens';
 import { THEME_PRESETS } from '../src/theme/presets';
 
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+const CHROME = process.env.CHROME_PATH ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const BASE_URL = process.env.LADLE_URL ?? 'http://localhost:61000';
 
 /** Stories representativas: superficies, formularios, listas y superposiciones. */

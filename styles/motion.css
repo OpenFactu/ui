@@ -1,0 +1,157 @@
+/* Movimiento físico: lo que se abre y se cierra sigue el muelle que el tema asigna a cada papel.
+ *
+ * Cada papel (`enter`, `exit`, `pop`, `move`, `gesture`) es una curva `linear()` calculada con la solución exacta del
+ * oscilador amortiguado, más su duración: variables `--k-spring-<papel>` y `--k-spring-<papel>-duration` que emite el
+ * tema. Todas llevan un respaldo (el carácter sobrio), así que sin tema también funciona.
+ *
+ * Estados: el componente pone `data-state="open|closed"`. Entrar usa la regla de `open` y salir la de `closed`, porque
+ * una transición toma la curva del estado al que va: por eso entrar y salir pueden tener muelles distintos (salir no
+ * rebota). Todo con transform y opacity.
+ */
+
+/* «Sin movimiento», en un solo sitio: con la preferencia del sistema o con `data-motion="off"` en un ancestro, la
+   velocidad del tema pasa a 0. Toda duración de la librería va multiplicada por `--k-motion`, así que transiciones y
+   animaciones terminan al instante; el JS (`motionDisabled`, `readMotionMs`) también lo lee. `!important` gana a la
+   velocidad que `applyTheme` escribe en línea, y repetirlo en los descendientes gana a los temas de un subárbol. */
+@media (prefers-reduced-motion: reduce) {
+  :root, :root * { --k-motion: 0 !important; }
+}
+[data-motion='off'], [data-motion='off'] * { --k-motion: 0 !important; }
+
+/* Algo que aparece y desaparece: diálogos, menús, popovers, paneles. */
+.k-appear {
+  transition-property: opacity, transform, filter;
+  transform-origin: var(--k-origin, center);
+}
+.k-appear[data-state='closed'] {
+  opacity: 0;
+  transform: translate(var(--k-appear-x, 0px), var(--k-appear-y, 6px)) scale(var(--k-enter-scale, 0.96));
+  filter: blur(var(--k-enter-blur, 0px));
+  transition-duration: calc(var(--k-spring-exit-duration, 220ms) * var(--k-motion, 1));
+  transition-timing-function: var(--k-spring-exit, cubic-bezier(0.22, 1, 0.36, 1));
+}
+.k-appear[data-state='open'] {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  transition-duration: calc(var(--k-spring-enter-duration, 360ms) * var(--k-motion, 1));
+  transition-timing-function: var(--k-spring-enter, cubic-bezier(0.22, 1, 0.36, 1));
+}
+/* Menús y popovers que salen de su disparador: papel `pop`, y se acercan desde el lado del que vienen. */
+.k-appear[data-role='pop'][data-state='open'] {
+  transition-duration: calc(var(--k-spring-pop-duration, 280ms) * var(--k-motion, 1));
+  transition-timing-function: var(--k-spring-pop, cubic-bezier(0.22, 1, 0.36, 1));
+}
+.k-appear[data-side='bottom'] { --k-appear-y: -6px; }
+.k-appear[data-side='top'] { --k-appear-y: 6px; }
+.k-appear[data-side='right'] { --k-appear-x: -6px; --k-appear-y: 0px; }
+.k-appear[data-side='left'] { --k-appear-x: 6px; --k-appear-y: 0px; }
+
+/* Hojas y paneles que entran por un borde: sin escala ni desenfoque, solo desplazamiento. */
+.k-sheet {
+  transition-property: transform;
+}
+.k-sheet[data-state='closed'] {
+  transform: translate3d(var(--k-sheet-x, 0), var(--k-sheet-y, 100%), 0);
+  transition-duration: calc(var(--k-spring-exit-duration, 220ms) * var(--k-motion, 1));
+  transition-timing-function: var(--k-spring-exit, cubic-bezier(0.22, 1, 0.36, 1));
+}
+.k-sheet[data-state='open'] {
+  transform: none;
+  transition-duration: calc(var(--k-spring-enter-duration, 360ms) * var(--k-motion, 1));
+  transition-timing-function: var(--k-spring-enter, cubic-bezier(0.22, 1, 0.36, 1));
+}
+.k-sheet[data-side='left'] { --k-sheet-x: -100%; --k-sheet-y: 0; }
+.k-sheet[data-side='right'] { --k-sheet-x: 100%; --k-sheet-y: 0; }
+.k-sheet[data-side='top'] { --k-sheet-x: 0; --k-sheet-y: -100%; }
+.k-sheet[data-side='bottom'] { --k-sheet-x: 0; --k-sheet-y: 100%; }
+/* Mientras se arrastra, el dedo manda: ni transición ni sobreescritura del desplazamiento. */
+.k-sheet[data-dragging] { transition: none !important; }
+
+/* Diálogo a pantalla completa en móvil: sube desde abajo en vez de aparecer escalando. (La presentación en hoja la
+   hace `BottomSheet`.) */
+@media (max-width: 767px) {
+  .k-modal.k-appear[data-k-mobile-presentation='fullscreen'] { filter: none; transform-origin: center bottom; }
+  .k-modal.k-appear[data-k-mobile-presentation='fullscreen'][data-state='closed'] { opacity: 1; transform: translate3d(0, 100%, 0); }
+  .k-modal.k-appear[data-k-mobile-presentation='fullscreen'][data-state='open'] { transform: none; }
+}
+
+/* Fondo atenuado detrás de un diálogo u hoja. */
+.k-scrim {
+  transition-property: opacity;
+  transition-timing-function: var(--k-ease, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.k-scrim[data-state='closed'] { opacity: 0; transition-duration: calc(var(--k-spring-exit-duration, 220ms) * var(--k-motion, 1) * 0.8); }
+.k-scrim[data-state='open'] { opacity: 1; transition-duration: calc(var(--k-spring-enter-duration, 360ms) * var(--k-motion, 1) * 0.6); }
+
+/* Lista que entra elemento a elemento. Solo si el tema pide escalonado (`data-k-stagger` en la raíz): con 0 ms los
+   elementos entran con su contenedor y no hace falta ningún estado propio. Cada hijo lleva su `--i`. */
+[data-k-stagger] .k-stagger > * {
+  transition-property: opacity, transform;
+  transition-delay: calc(var(--i, 0) * var(--k-stagger, 0ms) * var(--k-motion, 1));
+  transition-duration: calc(var(--k-spring-pop-duration, 280ms) * var(--k-motion, 1));
+  transition-timing-function: var(--k-spring-pop, cubic-bezier(0.22, 1, 0.36, 1));
+}
+[data-k-stagger] .k-stagger[data-state='closed'] > * { opacity: 0; transform: translateY(4px); transition-delay: 0ms; transition-duration: calc(var(--k-spring-exit-duration, 220ms) * var(--k-motion, 1)); }
+[data-k-stagger] .k-stagger[data-state='open'] > * { opacity: 1; transform: none; }
+
+/* Un indicador que viaja entre opciones (pestañas, segmentos, navegación). Lo coloca `useIndicator` con transform y
+   anchura; aquí solo se anima con el muelle `move`. Sin medir aún, aparece en su sitio sin viajar. */
+.k-indicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  transition-property: transform, width, height, opacity;
+  transition-duration: calc(var(--k-spring-move-duration, 380ms) * var(--k-motion, 1));
+  transition-timing-function: var(--k-spring-move, cubic-bezier(0.22, 1, 0.36, 1));
+}
+.k-indicator[data-ready='false'] { opacity: 0; transition: none; }
+
+/* Navegadores sin `linear()`: el respaldo `cubic-bezier` de cada papel. Se declara en todos los elementos para que
+   un subárbol con otro tema herede el suyo. */
+@supports not (transition-timing-function: linear(0, 1)) {
+  * {
+    --k-spring-enter: var(--k-spring-enter-cubic, cubic-bezier(0.22, 1, 0.36, 1));
+    --k-spring-exit: var(--k-spring-exit-cubic, cubic-bezier(0.22, 1, 0.36, 1));
+    --k-spring-pop: var(--k-spring-pop-cubic, cubic-bezier(0.22, 1, 0.36, 1));
+    --k-spring-move: var(--k-spring-move-cubic, cubic-bezier(0.22, 1, 0.36, 1));
+    --k-spring-gesture: var(--k-spring-gesture-cubic, cubic-bezier(0.22, 1, 0.36, 1));
+  }
+}
+
+/* Sin movimiento (preferencia del sistema o `data-motion="off"`): el estado final se aplica de golpe. */
+@media (prefers-reduced-motion: reduce) {
+  .k-appear, .k-sheet, .k-scrim, .k-indicator, [data-k-stagger] .k-stagger > * { transition: none !important; }
+}
+
+/* Altura que se abre y se cierra (acordeones, secciones plegables): `grid-template-rows` 0fr → 1fr, sin medir nada. */
+.k-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition-property: grid-template-rows, opacity;
+  transition-duration: calc(var(--k-spring-exit-duration, 220ms) * var(--k-motion, 1));
+  transition-timing-function: var(--k-spring-exit, cubic-bezier(0.22, 1, 0.36, 1));
+  opacity: 0;
+}
+.k-collapse[data-state='open'] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transition-duration: calc(var(--k-spring-move-duration, 380ms) * var(--k-motion, 1));
+  transition-timing-function: var(--k-spring-move, cubic-bezier(0.22, 1, 0.36, 1));
+}
+.k-collapse > .k-collapse-inner { min-height: 0; overflow: hidden; }
+@media (prefers-reduced-motion: reduce) { .k-collapse { transition: none !important; } }
+
+/* Cambio de página: el contenido sale y el nuevo entra desplazándose. */
+.k-page { transition-property: opacity, transform, filter; }
+.k-page[data-state='closed'] { opacity: 0; transform: translate3d(var(--k-page-x, 0), var(--k-page-y, 12px), 0); filter: blur(var(--k-enter-blur, 0px)); transition-duration: calc(var(--k-spring-exit-duration, 220ms) * var(--k-motion, 1)); transition-timing-function: var(--k-spring-exit, cubic-bezier(0.22, 1, 0.36, 1)); }
+.k-page[data-state='open'] { opacity: 1; transform: none; filter: none; transition-duration: calc(var(--k-spring-enter-duration, 360ms) * var(--k-motion, 1)); transition-timing-function: var(--k-spring-enter, cubic-bezier(0.22, 1, 0.36, 1)); }
+.k-page[data-mode='slide'] { --k-page-x: 28px; --k-page-y: 0px; }
+.k-page[data-mode='fade'] { --k-page-x: 0px; --k-page-y: 0px; }
+@media (prefers-reduced-motion: reduce) { .k-page { transition: none !important; } }
+
+/* Lista que se reordena arrastrando: el elemento agarrado sigue al dedo y se eleva; el resto se aparta con el muelle `move`. */
+.k-sortable-item { position: relative; transition: transform calc(var(--k-spring-move-duration, 380ms) * var(--k-motion, 1)) var(--k-spring-move, cubic-bezier(0.22, 1, 0.36, 1)); touch-action: manipulation; }
+.k-sortable-item[data-dragging] { z-index: 2; transition: none; cursor: grabbing; box-shadow: 0 12px 28px rgb(0 0 0 / 0.18); scale: 1.02; }
+.k-sortable-handle { cursor: grab; touch-action: none; }

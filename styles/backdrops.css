@@ -1,0 +1,72 @@
+/* Fondos y decoración: capas que se colocan dentro de un contenedor `relative` (hero, estado vacío, tarjeta destacada).
+ * Todas con los colores del tema (`--color-accent`, `--k-info`…), `pointer-events: none` y sin tocar el contenido. */
+
+.k-backdrop { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; border-radius: inherit; }
+
+/* Aurora: manchas de color desenfocadas que derivan despacio. */
+.k-aurora { --a: var(--color-accent, #0d9488); --b: var(--k-info, #2563eb); --c: color-mix(in srgb, var(--color-accent, #0d9488) 50%, var(--k-warning, #d97706)); }
+.k-aurora > i {
+  position: absolute;
+  width: 55%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: blur(var(--k-aurora-blur, 70px));
+  opacity: var(--k-aurora-opacity, 0.45);
+  mix-blend-mode: normal;
+  animation: k-aurora-drift calc(var(--k-motion, 1) * var(--d, 18s)) ease-in-out infinite alternate;
+}
+.k-aurora > i:nth-child(1) { background: var(--a); top: -20%; left: -10%; --d: 19s; }
+.k-aurora > i:nth-child(2) { background: var(--b); top: 10%; right: -15%; --d: 23s; animation-delay: -6s; }
+.k-aurora > i:nth-child(3) { background: var(--c); bottom: -30%; left: 25%; --d: 27s; animation-delay: -11s; }
+@keyframes k-aurora-drift { 0% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(8%, 6%, 0) scale(1.15); } 100% { transform: translate3d(-6%, 10%, 0) scale(0.95); } }
+
+/* Malla: degradados superpuestos, fijos o con una deriva lentísima. */
+.k-mesh {
+  background:
+    radial-gradient(60% 55% at 12% 18%, color-mix(in srgb, var(--color-accent, #0d9488) 38%, transparent), transparent 70%),
+    radial-gradient(55% 60% at 88% 12%, color-mix(in srgb, var(--k-info, #2563eb) 30%, transparent), transparent 70%),
+    radial-gradient(60% 55% at 70% 92%, color-mix(in srgb, var(--k-warning, #d97706) 22%, transparent), transparent 70%),
+    radial-gradient(50% 50% at 15% 88%, color-mix(in srgb, var(--k-danger, #dc2626) 16%, transparent), transparent 70%);
+  background-size: 140% 140%;
+}
+.k-mesh[data-animated] { animation: k-mesh-shift calc(var(--k-motion, 1) * 22s) ease-in-out infinite alternate; }
+@keyframes k-mesh-shift { to { background-position: 100% 100%; } }
+
+/* Tramas: puntos, cuadrícula o líneas, difuminadas hacia los bordes. */
+.k-pattern { color: var(--border-strong, #cbd5e1); -webkit-mask-image: radial-gradient(ellipse 75% 70% at 50% 40%, #000 25%, transparent 100%); mask-image: radial-gradient(ellipse 75% 70% at 50% 40%, #000 25%, transparent 100%); }
+.k-pattern[data-variant='dots'] { background-image: radial-gradient(currentColor 1.2px, transparent 1.2px); background-size: var(--k-pattern-size, 22px) var(--k-pattern-size, 22px); }
+.k-pattern[data-variant='grid'] { background-image: linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px); background-size: var(--k-pattern-size, 32px) var(--k-pattern-size, 32px); opacity: 0.5; }
+.k-pattern[data-variant='lines'] { background-image: repeating-linear-gradient(135deg, currentColor 0 1px, transparent 1px var(--k-pattern-size, 14px)); opacity: 0.5; }
+.k-pattern[data-flat] { -webkit-mask-image: none; mask-image: none; }
+
+/* Grano: un velo de ruido que quita lo «plástico» a los degradados. */
+.k-noise {
+  opacity: var(--k-noise-opacity, 0.08);
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+:is(.dark, [data-theme-mode='dark']) .k-noise { mix-blend-mode: screen; --k-noise-opacity: 0.1; }
+
+/* Foco: un halo que sigue al puntero dentro del contenedor (`--mx` y `--my` los pone el componente). */
+.k-spotlight { background: radial-gradient(var(--k-spotlight-size, 420px) circle at var(--mx, 50%) var(--my, 30%), color-mix(in srgb, var(--color-accent, #0d9488) 22%, transparent), transparent 70%); opacity: 0; transition: opacity calc(var(--k-motion, 1) * 400ms); }
+.k-spotlight[data-active] { opacity: 1; }
+
+/* Borde con brillo que gira. */
+.k-glow-border { position: relative; border-radius: var(--k-radius-md, 8px); isolation: isolate; }
+.k-glow-border::before {
+  content: '';
+  position: absolute;
+  inset: calc(var(--k-glow-width, 1.5px) * -1);
+  z-index: -1;
+  border-radius: inherit;
+  background: conic-gradient(from var(--k-glow-angle, 0deg), transparent 0 55%, var(--color-accent, #0d9488) 80%, color-mix(in srgb, var(--color-accent, #0d9488) 50%, var(--k-info, #2563eb)) 90%, transparent 100%);
+  animation: k-glow-turn calc(var(--k-motion, 1) * 5s) linear infinite;
+}
+.k-glow-border > * { border-radius: inherit; background: var(--bg-card, #ffffff); }
+@property --k-glow-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+@keyframes k-glow-turn { to { --k-glow-angle: 360deg; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .k-aurora > i, .k-mesh[data-animated], .k-glow-border::before { animation: none !important; }
+  .k-spotlight { transition: none; }
+}

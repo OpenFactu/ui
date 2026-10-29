@@ -38,8 +38,24 @@ module.exports = {
     extend: {
       spacing: scaled(defaults.spacing, '--k-density', value => value === '1px' || value === 'auto'),
       borderWidth: { DEFAULT: 'var(--k-border-width, 1px)' },
-      transitionDuration: scaled(defaults.transitionDuration, '--k-motion'),
-      transitionTimingFunction: { DEFAULT: 'var(--k-ease, cubic-bezier(0.4, 0, 0.2, 1))' },
+      transitionDuration: {
+        ...scaled(defaults.transitionDuration, '--k-motion'),
+        'spring-enter': 'calc(var(--k-spring-enter-duration, 360ms) * var(--k-motion, 1))',
+        'spring-exit': 'calc(var(--k-spring-exit-duration, 220ms) * var(--k-motion, 1))',
+        'spring-pop': 'calc(var(--k-spring-pop-duration, 280ms) * var(--k-motion, 1))',
+        'spring-move': 'calc(var(--k-spring-move-duration, 380ms) * var(--k-motion, 1))',
+        'spring-gesture': 'calc(var(--k-spring-gesture-duration, 400ms) * var(--k-motion, 1))',
+      },
+      // Muelles del tema: `ease-spring-pop duration-spring-pop`. Cada uno es la curva `linear()` del muelle del papel y
+      // su duración (que sigue la velocidad del tema). Sin hoja de estilos, un respaldo razonable.
+      transitionTimingFunction: {
+        DEFAULT: 'var(--k-ease, cubic-bezier(0.4, 0, 0.2, 1))',
+        'spring-enter': 'var(--k-spring-enter, cubic-bezier(0.22, 1, 0.36, 1))',
+        'spring-exit': 'var(--k-spring-exit, cubic-bezier(0.22, 1, 0.36, 1))',
+        'spring-pop': 'var(--k-spring-pop, cubic-bezier(0.22, 1, 0.36, 1))',
+        'spring-move': 'var(--k-spring-move, cubic-bezier(0.22, 1, 0.36, 1))',
+        'spring-gesture': 'var(--k-spring-gesture, cubic-bezier(0.22, 1, 0.36, 1))',
+      },
       colors: {
         primary: 'rgb(var(--color-primary-rgb, 10 22 40) / <alpha-value>)',
         'primary-fg': 'rgb(var(--color-primary-fg-rgb, 255 255 255) / <alpha-value>)',
@@ -70,7 +86,7 @@ module.exports = {
         'bg-app': 'var(--bg-app, #fafbfc)',
         'bg-card': 'var(--bg-card, #ffffff)',
         'bg-sidebar': 'var(--bg-sidebar, #0a1628)',
-        'bg-muted': 'var(--bg-muted, #f8fafc)',
+        'bg-muted': 'var(--bg-muted, #fafbfc)',
         'bg-hover': 'var(--bg-hover, #f1f5f9)',
         'fg-default': 'var(--fg-default, #0a1628)',
         'fg-body': 'var(--fg-body, #2d3a4a)',
@@ -103,10 +119,10 @@ module.exports = {
       },
 
       fontFamily: {
-        app: 'var(--font-sans)',
-        sans: 'var(--font-sans)',
-        display: 'var(--font-display)',
-        mono: 'var(--font-mono)',
+        app: "var(--font-sans, 'DM Sans', system-ui, sans-serif)",
+        sans: "var(--font-sans, 'DM Sans', system-ui, sans-serif)",
+        display: "var(--font-display, 'Space Grotesk', system-ui, sans-serif)",
+        mono: "var(--font-mono, 'JetBrains Mono', ui-monospace, monospace)",
       },
 
       borderRadius: {
@@ -124,10 +140,10 @@ module.exports = {
         lg: 'var(--k-shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1))',
         xl: 'var(--k-shadow-xl, 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1))',
         '2xl': 'var(--k-shadow-overlay, 0 25px 50px -12px rgb(0 0 0 / 0.25))',
-        'k-sm': 'var(--k-shadow-sm)',
-        'k-md': 'var(--k-shadow-md)',
-        'k-lg': 'var(--k-shadow-lg)',
-        'k-overlay': 'var(--k-shadow-overlay)',
+        'k-sm': 'var(--k-shadow-sm, 0 1px 2px 0 rgb(0 0 0 / 0.05))',
+        'k-md': 'var(--k-shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1))',
+        'k-lg': 'var(--k-shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1))',
+        'k-overlay': 'var(--k-shadow-overlay, 0 25px 50px -12px rgb(0 0 0 / 0.25))',
       },
 
       zIndex: {

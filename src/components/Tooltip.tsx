@@ -24,7 +24,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const [isOpen, setIsOpen] = React.useState(false);
   const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { anchorRef, popoverRef, style, ready } = usePopover<HTMLSpanElement>({
+  const { anchorRef, popoverRef, style, ready, mounted, popoverProps } = usePopover<HTMLSpanElement>({
     open: isOpen,
     onClose: () => setIsOpen(false),
     preferredPlacement: side,
@@ -61,14 +61,15 @@ export const Tooltip: React.FC<TooltipProps> = ({
       >
         {children}
       </span>
-      {isOpen &&
+      {(isOpen || mounted) &&
         !disabled &&
         createPortal(
           <div
             ref={popoverRef}
             role="tooltip"
+            {...popoverProps}
             className={cn(
-              'z-[var(--k-z-popover,999999)] max-w-[280px] rounded-[var(--k-radius-sm,4px)] bg-[var(--fg-default)] px-2 py-1 text-[11px] font-medium text-[var(--bg-card)] shadow-lg pointer-events-none animate-in fade-in-50 duration-150',
+              'z-[var(--k-z-popover,999999)] max-w-[280px] rounded-[var(--k-radius-sm,4px)] bg-[var(--fg-default)] px-2 py-1 text-[11px] font-medium text-[var(--bg-card)] shadow-lg pointer-events-none k-appear duration-150',
               !ready && 'invisible',
             )}
             style={style}

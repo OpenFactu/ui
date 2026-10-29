@@ -1,3 +1,4 @@
+import { copyText } from '../hooks/useCopyToClipboard';
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { useChatActions, useChatConversation, useChatPeople, useChatState } from './ChatProvider';
@@ -27,7 +28,7 @@ export function ChatMessageActions({ message, onEdit }: { message: ChatMessageDa
         <button type="button" disabled={operation?.pending} onClick={() => setConfirm(false)}>Cancelar</button>{operation?.error && <p role="alert">{operation.error}</p>}</div>
         : <div className="k-chat-menu">
           <div className="k-chat-quick-reactions">{['👍', '❤️', '😂', '😮', '😢', '🙌'].map(emoji => <button key={emoji} type="button" aria-label={`Reaccionar ${emoji}`} disabled={!confirmed} onClick={() => { void toggleReaction(message.id, emoji, message.conversationId); close(); }}>{emoji}</button>)}</div>
-          <button type="button" onClick={async () => { try { await navigator.clipboard.writeText(message.text); setCopied('Copiado'); } catch { setCopied('No se ha podido copiar.'); } }}>Copiar mensaje</button>
+          <button type="button" onClick={async () => setCopied(await copyText(message.text) ? 'Copiado' : 'No se ha podido copiar.')}>Copiar mensaje</button>
           {confirmed && canEdit(message) && <button type="button" onClick={() => { close(false); onEdit(); }}>Editar mensaje</button>}
           {confirmed && canManageConversations && <button type="button" onClick={async () => { if (await pinMessage(message.id, !pinned, message.conversationId)) close(); }}>{pinned ? 'Desfijar mensaje' : 'Fijar mensaje'}</button>}
           {confirmed && canDelete(message) && <button type="button" onClick={() => setConfirm(true)}>Eliminar mensaje</button>}

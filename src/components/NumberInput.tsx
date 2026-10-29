@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useIsNarrow } from '../hooks/useMediaQuery';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { Input, type InputProps } from './Input';
@@ -163,7 +163,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
     }
   };
 
-  const mobile = useIsNarrow(768);
+  const mobile = useIsMobile();
   const mobileStep = (direction: number) => <button type="button" disabled={disabled || readOnly || (value != null && (direction > 0 ? max != null && value >= max : minimum != null && value <= minimum))} onMouseDown={event => event.preventDefault()} onClick={() => nudge(direction * step)} aria-label={direction > 0 ? 'Aumentar' : 'Disminuir'} className="k-number-step"><UiIcon slot={direction > 0 ? 'plus' : 'minus'} size={18} /></button>;
   const steppers = showSteppers ? (
     <span className="flex flex-col">

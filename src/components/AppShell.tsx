@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
-import { useIsNarrow } from '../hooks/useMediaQuery';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useEscapeStack } from '../internal/escapeStack';
@@ -53,7 +53,7 @@ export function AppShell({
   contentClassName,
   mobileNavigation,
 }: AppShellProps) {
-  const mobile = useIsNarrow(768);
+  const mobile = useIsMobile();
   const viewport = useMobileViewport();
   const [internalCollapsed, setInternalCollapsed] = React.useState(defaultCollapsed);
   const [menuOpen, setMenuOpen] = React.useState(false);

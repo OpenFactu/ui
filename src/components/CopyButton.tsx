@@ -1,3 +1,4 @@
+import { copyText } from '../hooks/useCopyToClipboard';
 import * as React from 'react';
 import { UiIcon, type IconSlot } from '../icons';
 import { Button, type ButtonProps } from './Button';
@@ -50,20 +51,12 @@ export const CopyButton: React.FC<CopyButtonProps> = ({
     busy.current = true;
     const id = ++request.current;
     setState('copying');
-    let failure: unknown;
-    let failed = false;
-    try {
-      if (!navigator.clipboard?.writeText) throw new Error('Portapapeles no disponible');
-      await navigator.clipboard.writeText(value);
-    } catch (error) {
-      failed = true;
-      failure = error;
-    }
+    const ok = await copyText(value);
     if (id !== request.current) return;
     busy.current = false;
-    setState(failed ? 'error' : 'copied');
-    if (failed) onCopyError?.(failure);
-    else onCopy?.(value);
+    setState(ok ? 'copied' : 'error');
+    if (ok) onCopy?.(value);
+    else onCopyError?.(new Error('No se pudo copiar al portapapeles'));
   };
   const text = state === 'copied' ? copiedLabel : state === 'error' ? errorLabel : label;
   const iconSlot: IconSlot = state === 'copied' ? 'check' : state === 'error' ? 'alert-circle' : 'copy';

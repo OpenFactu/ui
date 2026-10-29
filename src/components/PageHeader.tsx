@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { cn } from '../utils';
-import { useIsNarrow } from '../hooks/useMediaQuery';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import { MobileOverlay } from './internal/MobileOverlay';
 import { Button } from './Button';
 
@@ -59,7 +59,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   sticky = false,
   className,
 }) => {
-  const mobile = useIsNarrow(768); const [moreOpen, setMoreOpen] = React.useState(false); const moreAnchor = React.useRef<HTMLButtonElement>(null);
+  const mobile = useIsMobile(); const [moreOpen, setMoreOpen] = React.useState(false); const moreAnchor = React.useRef<HTMLButtonElement>(null);
   const flatten = (nodes: React.ReactNode): React.ReactNode[] => React.Children.toArray(nodes).flatMap(node => React.isValidElement<{ children?: React.ReactNode }>(node) && node.type === React.Fragment ? flatten(node.props.children) : [node]);
   const actionItems = flatten(actions);
   const showDivider = divider ?? !!tabs;

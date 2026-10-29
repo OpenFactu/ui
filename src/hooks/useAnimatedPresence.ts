@@ -1,10 +1,18 @@
 import * as React from 'react';
+import { EXIT_SLACK_MS, afterNextPaint, motionDisabled, readMotionMs, readMotionSpeed } from '../motion/dom';
+import type { MotionRole } from '../motion/presets';
 
 export interface UseAnimatedPresenceOptions {
   /** Estado lógico: true = mostrar. */
   open: boolean;
-  /** Duración de la animación de entrada/salida en ms. Default 300. */
+  /**
+   * Duración de la salida en ms, para quien anima con sus propias clases. Si se omite, se usa la del muelle del
+   * tema para `role` (`exit` por defecto): el desmontaje coincide con lo que de verdad dura la transición.
+   * En ambos casos se escala con la velocidad del tema y vale 0 con movimiento reducido.
+   */
   duration?: number;
+  /** Papel del movimiento que fija la duración de salida cuando no se indica `duration`. Default `exit`. */
+  role?: MotionRole;
 }
 
 export interface UseAnimatedPresenceReturn {
@@ -16,43 +24,52 @@ export interface UseAnimatedPresenceReturn {
    * de "visible" vs "oculto" con una transition CSS.
    */
   visible: boolean;
-  /** La duración efectiva, para sincronizar `transition-duration` inline. */
+  /** `open` o `closed`, listo para `data-state` (ver `styles/motion.css`: `k-appear`, `k-sheet`, `k-scrim`). */
+  state: 'open' | 'closed';
+  /** La duración efectiva de la salida, para sincronizar `transition-duration` inline. */
   duration: number;
+  /** Se pone en el elemento que se anima: de él se lee el tema (un subárbol puede tener otro) y la velocidad. */
+  ref: React.RefObject<HTMLElement | null>;
 }
 
 /**
  * Presencia animada para montar/desmontar con transiciones CSS: mantiene el
  * elemento montado durante la animación de salida y retrasa el estado
  * "visible" un frame tras el montaje para que la transición de entrada se
- * dispare. Es el patrón que usan Drawer y Transition.
+ * dispare. Es el patrón que usan Drawer, Modal y Transition.
  *
  * ```tsx
- * const { mounted, visible, duration } = useAnimatedPresence({ open });
+ * const { mounted, state, ref } = useAnimatedPresence({ open });
  * if (!mounted) return null;
- * return <div style={{ transitionDuration: `${duration}ms` }}
- *             className={visible ? 'opacity-100' : 'opacity-0'} …
+ * return <div ref={ref} data-state={state} className="k-appear" …
  * ```
  */
 export function useAnimatedPresence({
   open,
-  duration = 300,
+  duration,
+  role = 'exit',
 }: UseAnimatedPresenceOptions): UseAnimatedPresenceReturn {
+  const ref = React.useRef<HTMLElement | null>(null);
   const [mounted, setMounted] = React.useState(open);
   const [visible, setVisible] = React.useState(false);
+  const [measured, setMeasured] = React.useState(duration ?? 0);
 
   React.useEffect(() => {
     if (open) {
       setMounted(true);
-      // Doble rAF: garantiza que el navegador pinta el estado inicial
-      // (oculto) antes de activar la transición de entrada.
-      const raf = requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
-      return () => cancelAnimationFrame(raf);
+      // Tras pintar el estado inicial (oculto), para que la transición de entrada arranque.
+      return afterNextPaint(() => setVisible(true));
     } else {
       setVisible(false);
-      const t = setTimeout(() => setMounted(false), duration);
+      const el = ref.current;
+      const ms = duration === undefined
+        ? readMotionMs(role, el)
+        : motionDisabled(el) ? 0 : duration * readMotionSpeed(el);
+      setMeasured(Math.round(ms));
+      const t = setTimeout(() => setMounted(false), ms > 0 ? ms + EXIT_SLACK_MS : 0);
       return () => clearTimeout(t);
     }
-  }, [open, duration]);
+  }, [open, duration, role]);
 
-  return { mounted, visible, duration };
+  return { mounted, visible, state: visible ? 'open' : 'closed', duration: duration ?? measured, ref };
 }

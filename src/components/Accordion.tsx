@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
+import { Collapse } from './Collapse';
 
 export interface AccordionItem {
   key: string;
@@ -73,11 +74,9 @@ export const Accordion: React.FC<AccordionProps> = ({
                 )}
               />
             </button>
-            {isOpen && (
-              <div className="px-4 pb-4 pt-1 text-[13px] text-[var(--fg-body,#2d3a4a)] animate-in fade-in-50 duration-150">
-                {item.content}
-              </div>
-            )}
+            <Collapse open={isOpen}>
+              <div className="px-4 pb-4 pt-1 text-[13px] text-[var(--fg-body,#2d3a4a)]">{item.content}</div>
+            </Collapse>
           </div>
         );
       })}

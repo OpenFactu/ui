@@ -1,3 +1,4 @@
+import { formatTimeOfDay } from '../internal/format';
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { Avatar } from '../components/Avatar';
@@ -79,7 +80,7 @@ export const AIMessage = React.memo(function AIMessage({ message, actions, onOpe
   const created = message.createdAt ? new Date(message.createdAt) : undefined;
   return <article className={cn('ai-surface ai-message', className)} data-role={message.role} data-message-id={message.id} data-fresh={fresh || undefined} data-streaming={message.status === 'streaming' || undefined} aria-label={name}>
     <div className="ai-message-avatar"><Avatar name={name} src={safeUrl(message.avatar, 'media')} size="sm" /></div>
-    <div className="ai-message-main"><header className="ai-message-header"><strong>{name}</strong>{created && !Number.isNaN(created.getTime()) && <time dateTime={message.createdAt}>{created.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</time>}
+    <div className="ai-message-main"><header className="ai-message-header"><strong>{name}</strong>{created && !Number.isNaN(created.getTime()) && <time dateTime={message.createdAt}>{formatTimeOfDay(created)}</time>}
       {message.status === 'streaming' && <AIStatus>{l.streaming}</AIStatus>}</header>
       {editing ? <form className="ai-message-edit" onSubmit={event => { event.preventDefault(); actions?.onEditMessage?.(message.id, text); setEditing(false); }}><Textarea aria-label={l.edit} autoFocus value={text} onChange={event => setText(event.target.value)} /><div className="ai-inline-actions"><Button type="submit" size="sm" disabled={!text.trim()}>{l.save}</Button><Button size="sm" variant="secondary" onClick={() => setEditing(false)}>{l.cancel}</Button></div></form>
         : <AIMessageContent parts={parts} role={message.role} actions={actions} onOpenCode={onOpenCode} labels={labels} />}

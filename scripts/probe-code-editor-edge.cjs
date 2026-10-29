@@ -74,6 +74,8 @@ const base = process.env.LADLE_URL || 'http://localhost:61000';
       await page.goto(`${base}/?story=code-editor--basico&mode=preview&theme=dark`);
       const theme = page.getByRole('combobox', { name: 'Tema del editor' });
       await theme.click(); await page.getByRole('option', { name: 'Claro', exact: true }).click(); await theme.click();
+      // Se mide cuando el menú ya ha entrado: durante la entrada los colores aún están en transición.
+      await page.locator('.k-code-theme-popup[data-state="open"]').waitFor(); await page.waitForTimeout(700);
       const colors = await page.locator('.k-code-theme-popup').evaluate(el => {
         const rgb = color => color.match(/[\d.]+/g).slice(0, 3).map(Number);
         return { bg: rgb(getComputedStyle(el).backgroundColor), rows: [...el.querySelectorAll('[role=option]')].map(row => ({ fg: rgb(getComputedStyle(row).color), bg: rgb(getComputedStyle(row).backgroundColor) })) };

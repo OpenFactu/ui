@@ -1,3 +1,4 @@
+import { Spinner } from './Spinner';
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
@@ -63,7 +64,7 @@ const STATUS_ICON: Record<InputStatus, React.ReactNode> = {
   warning: <UiIcon slot="alert-triangle" className="h-3.5 w-3.5 text-[var(--k-warning-fg)]" />,
   error: <UiIcon slot="x" className="h-3.5 w-3.5 text-[var(--k-danger-fg)]" />,
   loading: (
-    <span className="h-3.5 w-3.5 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
+    <Spinner size="xs" label="Comprobando" />
   ),
 };
 

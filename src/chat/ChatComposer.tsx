@@ -1,3 +1,4 @@
+import { useAutosize } from '../hooks/useAutosize';
 import * as React from 'react';
 import { Textarea } from '../components/Textarea';
 import { Button } from '../components/Button';
@@ -31,7 +32,7 @@ export function ChatComposer({ className, placeholder = 'Escribe un mensaje…',
   const mentionQuery = chatMentionQuery(draft.text, caret);
   const suggestions = mentionQuery ? users.filter(user => user.id !== currentUser.id && conversation?.participantIds.includes(user.id) && user.name.toLocaleLowerCase().includes(mentionQuery.query.toLocaleLowerCase())).slice(0, 6) : [];
   const canSend = !locked && !voiceBusy && Boolean(draft.text.trim() || draft.attachments?.length) && !draft.attachments?.some(item => item.status !== 'ready');
-  React.useLayoutEffect(() => { const element = input.current; if (element) { element.style.height = 'auto'; element.style.height = `${Math.min(144, Math.max(42, element.scrollHeight))}px`; } }, [draft.text]);
+  useAutosize(input, draft.text, { min: 42, max: 144 });
   const original = draft.replyToId ? messages.find(item => item.id === draft.replyToId || item.clientId === draft.replyToId) : undefined;
   React.useEffect(() => {
     if (draft.replyToId && !locked) input.current?.focus();

@@ -151,6 +151,9 @@
   --k-motion: 1;
   --k-ease: cubic-bezier(0.4, 0, 0.2, 1);
   --k-text-scale: 1;
+  --k-stagger: 0ms;
+  --k-enter-scale: 0.96;
+  --k-enter-blur: 0px;
   --k-backdrop-duration: 60s;
   --k-border-width: 1px;
   --k-focus-width: 2px;

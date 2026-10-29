@@ -17,7 +17,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
 
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+const CHROME = process.env.CHROME_PATH ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const BASE_URL = process.env.LADLE_URL ?? 'http://localhost:61000';
 
 function compareDirs(dirA, dirB) {

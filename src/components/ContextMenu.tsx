@@ -2,6 +2,7 @@ import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { UiIcon } from '../icons';
 import { MenuItemButton, MenuSeparator, MenuItemShape } from './internal/MenuItemButton';
+import { useEscapeStack } from '../internal/escapeStack';
 
 export interface ContextMenuItem extends MenuItemShape {
   /** Submenú (un nivel). Si está presente se ignora `onClick`. */
@@ -37,23 +38,21 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose }
     setPos({ top: Math.max(8, top), left: Math.max(8, left) });
   }, [x, y]);
 
+  // Escape por la pila común: si el menú se abre dentro de un diálogo, solo se cierra el menú.
+  useEscapeStack(React.useId(), true, onClose);
+
   React.useEffect(() => {
     const onDown = (e: MouseEvent | TouchEvent) => {
       if (menuRef.current?.contains(e.target as Node)) return;
       onClose();
     };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
     document.addEventListener('mousedown', onDown);
     document.addEventListener('touchstart', onDown, { passive: true });
-    document.addEventListener('keydown', onKey);
     window.addEventListener('scroll', onClose, true);
     window.addEventListener('resize', onClose);
     return () => {
       document.removeEventListener('mousedown', onDown);
       document.removeEventListener('touchstart', onDown);
-      document.removeEventListener('keydown', onKey);
       window.removeEventListener('scroll', onClose, true);
       window.removeEventListener('resize', onClose);
     };

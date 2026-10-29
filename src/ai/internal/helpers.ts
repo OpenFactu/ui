@@ -1,15 +1,6 @@
 import type { AIDraft, AIModel, AIMessageData, AIMessagePart, AIArtifact } from '../types';
 
-export function safeUrl(value?: string, kind: 'link' | 'media' = 'link'): string | undefined {
-  if (!value || /[\u0000-\u001f\u007f]/.test(value)) return undefined;
-  const trimmed = value.trim();
-  try {
-    const url = new URL(trimmed, 'https://local.invalid');
-    if (['https:', 'http:'].includes(url.protocol) || (kind === 'link' && url.protocol === 'mailto:')) return trimmed;
-    if (kind === 'media' && (url.protocol === 'blob:' || /^data:(image\/(png|jpeg|gif|webp|avif)|audio\/[\w.+-]+);/i.test(trimmed))) return trimmed;
-  } catch { /* Invalid host content is rendered without a navigable URL. */ }
-  return undefined;
-}
+export { safeUrl } from '../../internal/url';
 
 export function currentMessageParts(message: AIMessageData): AIMessagePart[] {
   return (message.versionId ? message.versions?.find(version => version.id === message.versionId) : message.versions?.[0])?.parts ?? message.parts;

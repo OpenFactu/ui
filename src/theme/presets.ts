@@ -142,6 +142,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       },
       focus: { width: 2, offset: 0, color: '#000000' },
       selection: { background: '#000000', color: '#ffffff' },
+      motion: { character: 'smooth' },
     },
   },
   {
@@ -180,6 +181,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       },
       focus: { width: 2, offset: 0, color: '#ffffff' },
       selection: { background: '#ffffff', color: '#000000' },
+      motion: { character: 'smooth' },
     },
   },
   {
@@ -243,7 +245,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       backdropMotion: 'drift',
       focus: { width: 2, offset: 2, color: '#b7aeff' },
       selection: { background: '#5b4bd6', color: '#ffffff' },
-      motion: { speed: 'normal', easing: 'cubic-bezier(0.23, 1, 0.32, 1)' },
+      motion: { speed: 'normal', easing: 'cubic-bezier(0.23, 1, 0.32, 1)', character: 'expressive' },
     },
   },
   {
@@ -258,7 +260,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       backdrop: 'radial-gradient(55% 50% at 10% 0%, #c7dcff 0%, transparent 70%), radial-gradient(50% 50% at 95% 10%, #d9ccff 0%, transparent 70%), radial-gradient(60% 55% at 60% 100%, #bfeee5 0%, transparent 70%), #eef3fb',
       focus: { width: 2, offset: 2 },
       selection: { background: '#cfe0ff', color: '#10223f' },
-      motion: { speed: 'normal', easing: 'cubic-bezier(0.23, 1, 0.32, 1)' },
+      motion: { speed: 'normal', easing: 'cubic-bezier(0.23, 1, 0.32, 1)', character: 'expressive' },
     },
   },
   ...ERP_THEME_PRESETS,

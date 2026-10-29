@@ -1,3 +1,4 @@
+import { useResizeObserver } from '../hooks/useResizeObserver';
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { Select } from './Select';
@@ -174,14 +175,9 @@ export const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>
     syncLayers(windowChanged || textChanged || pointerSelectingRef.current);
   }, [value, revision, visible, cursor, motionActive]);
 
-  React.useLayoutEffect(() => {
-    const input = inputRef.current;
-    if (!input) return;
-    const observer = new ResizeObserver(() => syncLayers(true));
-    observer.observe(input);
-    syncLayers();
-    return () => observer.disconnect();
-  }, []);
+  // Al montar se sincroniza sin más; al cambiar de tamaño, recalculando las capas.
+  const resized = React.useRef(false);
+  useResizeObserver(() => [inputRef.current], () => { syncLayers(resized.current); resized.current = true; });
 
   React.useEffect(() => {
     if (!motion || !document.fonts) return;
@@ -397,7 +393,7 @@ export const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>
   return (
     <div className={cn('w-full min-w-0 flex flex-col gap-1.5', containerClassName)}>
       {label && <label htmlFor={editorId} className="text-[12px] font-medium text-[var(--fg-body,#2d3a4a)]">{label}{textareaProps.required && <span aria-hidden="true" className="ml-0.5 text-[var(--k-danger-fg)]">*</span>}</label>}
-      <div data-k-focus-surface="" className={cn('k-code-editor', className)} style={{ ...editorThemeStyle(editorTheme), tabSize: indentSize, ...style }} data-theme={themeId} data-motion={motionActive || undefined} data-disabled={disabled || undefined} data-error={!!error || undefined}>
+      <div data-k-focus-surface="" className={cn('k-code-editor', className)} style={{ ...editorThemeStyle(editorTheme), tabSize: indentSize, ...style }} data-theme={themeId} data-k-code-motion={motionActive || undefined} data-disabled={disabled || undefined} data-error={!!error || undefined}>
         {!minimal && <div className="k-code-toolbar" role="toolbar" aria-label="Herramientas de código" aria-controls={editorId}>
           <span className="k-code-language">{definition.label}</span>
           <div className="k-code-tools">

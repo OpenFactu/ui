@@ -1,3 +1,5 @@
+import { Spinner } from './Spinner';
+import { useMergedRefs } from '../hooks/useMergedRefs';
 import * as React from 'react';
 import { OverlayDepthContext as ModalDepthContext } from './internal/overlayDepth';
 import { usePortalTheme } from '../hooks/usePortalTheme';
@@ -10,6 +12,8 @@ import { Button, type ButtonProps } from './Button';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useAnimatedPresence } from '../hooks/useAnimatedPresence';
+import { useIsMobile } from '../hooks/useMediaQuery';
+import { BottomSheet } from './BottomSheet';
 
 export type ModalSize =
   | 'xs' | 'sm' | 'md' | 'lg' | 'xl'
@@ -106,6 +110,8 @@ export interface ModalProps {
   /** Cerrar al pulsar fuera. Default **false**: la mayoría son formularios. */
   closeOnOverlayClick?: boolean;
   closeOnEscape?: boolean;
+  /** `alertdialog` para avisos y confirmaciones que interrumpen y esperan una respuesta. Default `dialog`. */
+  role?: 'dialog' | 'alertdialog';
   initialFocusRef?: React.RefObject<HTMLElement | null>;
   container?: HTMLElement | null;
   lockScroll?: boolean;
@@ -185,6 +191,7 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
   const chipIcon = icon ?? (tone !== 'default' ? TONE_ICON[tone] : null);
   return (
     <div
+      data-sheet-handle
       className={cn(
         'shrink-0 px-6 py-4 border-b border-[var(--border-default,#e2e8f0)] flex items-start justify-between gap-4 bg-[var(--bg-card,#ffffff)]',
         className,
@@ -333,6 +340,7 @@ const ModalRoot: React.FC<ModalProps> = ({
   dismissible = true,
   closeOnOverlayClick = false,
   closeOnEscape = true,
+  role = 'dialog',
   initialFocusRef,
   container,
   lockScroll = true,
@@ -347,12 +355,18 @@ const ModalRoot: React.FC<ModalProps> = ({
   const origin = React.useRef<HTMLSpanElement>(null);
   const panelRef = React.useRef<HTMLDivElement>(null);
   const titleId = React.useId();
-  const { mounted, visible } = useAnimatedPresence({ open: isOpen, duration: 200 });
+  const { mounted, state, ref: presenceRef } = useAnimatedPresence({ open: isOpen });
+  const narrow = useIsMobile();
+  const presentation = mobilePresentation === 'auto' ? (fullHeight ? 'fullscreen' : 'sheet') : mobilePresentation;
+  // En móvil, la presentación «hoja» es la `BottomSheet` común: arrastre con anclajes, inercia y la misma física en
+  // diálogos, menús, selects y calendarios. La pantalla completa sigue siendo este diálogo.
+  const asSheet = narrow && presentation === 'sheet';
   const inheritedTheme = usePortalTheme(origin, mounted);
 
-  useScrollLock(lockScroll && mounted);
+  // Con la hoja, ella misma bloquea el scroll, atrapa el foco y atiende a Escape.
+  useScrollLock(lockScroll && mounted && !asSheet);
   useFocusTrap(panelRef, {
-    enabled: mounted,
+    enabled: mounted && !asSheet,
     priority: depth,
     initialFocusRef,
     // Sin esto el foco iría al botón de cerrar, que en el DOM va antes.
@@ -360,9 +374,12 @@ const ModalRoot: React.FC<ModalProps> = ({
   });
 
   const canDismiss = dismissible && !isBusy;
-  useEscapeStack(titleId, mounted && closeOnEscape && canDismiss, onClose);
+  useEscapeStack(titleId, mounted && closeOnEscape && canDismiss && !asSheet, onClose);
 
-  if (!mounted) return <span hidden ref={origin} />;
+  const setPanelRef = useMergedRefs<HTMLDivElement>(panelRef, presenceRef as React.Ref<HTMLElement> as React.Ref<HTMLDivElement>);
+
+  // La hoja gestiona su propia entrada y salida: no depende de la presencia de este diálogo.
+  if (!mounted && !asSheet) return <span hidden ref={origin} />;
 
   const widthClass = SIZE_CLASSES[maxWidth ?? size] ?? SIZE_CLASSES.md;
   const resolvedZ = zIndex ?? `calc(var(--k-z-modal, 99999) + ${depth * 10})`;
@@ -391,7 +408,7 @@ const ModalRoot: React.FC<ModalProps> = ({
     ) : null
   );
 
-  const bodyContent = (
+  const mainContent = (
     <>
       {steps && steps.length > 0 && (
         <ol className="shrink-0 flex items-center gap-2 px-6 py-3 border-b border-[var(--border-default,#e2e8f0)]">
@@ -448,7 +465,7 @@ const ModalRoot: React.FC<ModalProps> = ({
       >
         {isLoading ? (
           <div className="flex flex-col items-center justify-center gap-3 py-12 text-[var(--fg-subtle,#657486)]">
-            <span className="h-6 w-6 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
+            <Spinner size="md" label={loadingLabel} />
             <span className="font-mono text-[11px] tracking-wider uppercase">{loadingLabel}</span>
           </div>
         ) : (
@@ -462,39 +479,70 @@ const ModalRoot: React.FC<ModalProps> = ({
           {error}
         </div>
       )}
-      {footerNode}
     </>
   );
+  const bodyContent = <>{mainContent}{footerNode}</>;
+  const hasHeader = !!(title || subtitle || eyebrow || icon || tone !== 'default');
+  const header = hasHeader && (
+    <ModalHeader
+      id={titleId}
+      title={title}
+      subtitle={subtitle}
+      eyebrow={eyebrow}
+      icon={icon}
+      tone={tone}
+      onClose={onClose}
+      dismissible={canDismiss}
+      actions={headerActions}
+      className={headerClassName}
+    />
+  );
+
+  if (asSheet) {
+    return (
+      <>
+        <span hidden ref={origin} />
+        <ModalDepthContext.Provider value={depth + 1}>
+          <BottomSheet
+            open={isOpen}
+            onClose={onClose}
+            dismissible={canDismiss}
+            snapPoints={['auto']}
+            header={header || undefined}
+            aria-label={ariaLabel ?? (typeof title === 'string' ? title : undefined)}
+            initialFocusRef={initialFocusRef}
+            // Con `onSubmit`, el pie va dentro del formulario (su botón envía): se desplaza con el contenido.
+            footer={onSubmit ? undefined : footerNode}
+            className={cn('k-modal-sheet', className)}
+            zIndex={zIndex ?? (depth ? `calc(var(--k-z-modal, 99999) + ${depth * 10})` : undefined)}
+          >
+            {onSubmit ? <form onSubmit={onSubmit} className="flex flex-col">{bodyContent}</form> : mainContent}
+          </BottomSheet>
+        </ModalDepthContext.Provider>
+      </>
+    );
+  }
 
   const panel = (
     <div
-      ref={panelRef}
-      role="dialog"
+      ref={setPanelRef}
+      role={role}
       aria-modal="true"
       aria-label={ariaLabel}
       aria-labelledby={!ariaLabel && title ? titleId : undefined}
-      data-k-mobile-presentation={mobilePresentation === 'auto' ? fullHeight ? 'fullscreen' : 'sheet' : mobilePresentation}
+      data-k-mobile-presentation={presentation}
+      data-state={state}
       style={{ ...inheritedTheme, ...style }}
       onClick={(e) => e.stopPropagation()}
       className={cn(
-        'k-modal w-full flex flex-col rounded-[var(--k-radius-md,8px)] shadow-xl bg-[var(--bg-card,#ffffff)] border border-[var(--border-default,#e2e8f0)] transition-all duration-200',
+        'k-modal k-appear w-full flex flex-col rounded-[var(--k-radius-md,8px)] shadow-xl bg-[var(--bg-card,#ffffff)] border border-[var(--border-default,#e2e8f0)]',
         widthClass,
         fullHeight ? 'h-[min(92vh,760px)]' : 'max-h-[90vh]',
         scrollBehavior === 'container' ? 'overflow-y-auto' : 'overflow-hidden',
-        visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95',
-        // En pantallas estrechas es una hoja que sube desde abajo: ancho completo,
-        // esquinas superiores redondeadas y respeto del área segura del iPhone.
-        'max-sm:max-w-none max-sm:rounded-b-none max-sm:rounded-t-[var(--k-radius-lg,12px)] max-sm:border-b-0 max-sm:max-h-[92dvh] max-sm:pb-[env(safe-area-inset-bottom,0px)] max-sm:!scale-100',
-        fullHeight && 'max-sm:h-[92dvh]',
-        !visible && 'max-sm:translate-y-full',
         className,
       )}
     >
-      <div
-        className="sm:hidden mx-auto mt-2 mb-0.5 h-1 w-10 shrink-0 rounded-full bg-[var(--border-strong,#cbd5e1)]"
-        aria-hidden="true"
-      />
-      {(title || subtitle || eyebrow || icon || tone !== 'default' || dismissible) && (
+      {(hasHeader || dismissible) && (
         <ModalHeader
           id={titleId}
           title={title}
@@ -521,14 +569,14 @@ const ModalRoot: React.FC<ModalProps> = ({
   return <><span hidden ref={origin} />{createPortal(
     <ModalDepthContext.Provider value={depth + 1}>
       <div
+        data-state={state}
         style={{ zIndex: resolvedZ }}
         data-k-material={origin.current?.closest('[data-k-material]')?.getAttribute('data-k-material') ?? undefined}
         data-k-focus={origin.current?.closest('[data-k-focus]') ? '' : undefined}
         data-k-selection={origin.current?.closest('[data-k-selection]') ? '' : undefined}
         onClick={() => closeOnOverlayClick && canDismiss && onClose()}
         className={cn(
-          'k-modal-overlay fixed inset-0 flex items-center justify-center p-4 max-sm:items-end max-sm:p-0 bg-[color-mix(in_srgb,var(--k-ink-900)_45%,transparent)] backdrop-blur-sm transition-opacity duration-200',
-          visible ? 'opacity-100' : 'opacity-0',
+          'k-modal-overlay fixed inset-0 flex items-center justify-center p-4 max-sm:items-end max-sm:p-0 bg-[color-mix(in_srgb,var(--k-ink-900)_45%,transparent)] backdrop-blur-sm k-scrim',
           overlayClassName,
         )}
       >

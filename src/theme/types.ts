@@ -6,6 +6,9 @@
  * variables CSS que la librería aún no conoce, de modo que el contrato es
  * expandible sin romper a nadie.
  */
+import type { MotionCharacter, MotionRole, SpringInput } from '../motion/presets';
+import type { SpringConfig } from '../motion/spring';
+
 
 export type ThemeMode = 'light' | 'dark';
 
@@ -172,8 +175,24 @@ export type ThemeDensity = 'compact' | 'normal' | 'comfortable' | number;
 export interface ThemeMotion {
   /** `none` desactiva las transiciones; un número multiplica todas las duraciones (1 = normal). */
   speed?: 'none' | 'fast' | 'normal' | 'slow' | number;
-  /** Curva por defecto de las transiciones. */
+  /** Curva de las transiciones que no son de muelle. */
   easing?: string;
+  /**
+   * Carácter del movimiento: asigna un muelle a cada papel (entrar, salir, menús, desplazamientos,
+   * gestos). `sober` no rebota; `expressive` y `playful` sí. Por defecto, `sober`.
+   */
+  character?: MotionCharacter;
+  /**
+   * Retoca el muelle de un papel concreto: un preset (`'bouncy'`), física (`{ stiffness, damping, mass }`) o
+   * la forma perceptiva (`{ duration, bounce }`).
+   */
+  springs?: Partial<Record<MotionRole, SpringInput>>;
+  /** Retraso entre los elementos de una lista que entra, en ms. Por defecto, el del carácter. */
+  stagger?: number;
+  /** Escala desde la que entra lo que aparece (0.8–1). Por defecto, la del carácter. */
+  enterScale?: number;
+  /** Desenfoque inicial al entrar, en px. Por defecto, el del carácter. */
+  enterBlur?: number;
 }
 
 /** Tema tal y como lo escribe quien consume la librería. */
@@ -226,7 +245,16 @@ export interface ResolvedTheme {
   selection: Required<ThemeSelection> & { enabled: boolean };
   /** Factor numérico (1 = normal). */
   density: number;
-  motion: { speed: number; easing: string };
+  motion: {
+    speed: number;
+    easing: string;
+    character: MotionCharacter;
+    /** Física completa de cada papel. */
+    springs: Record<MotionRole, Required<SpringConfig>>;
+    stagger: number;
+    enterScale: number;
+    enterBlur: number;
+  };
   vars: Record<string, string>;
 }
 

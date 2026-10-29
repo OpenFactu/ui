@@ -7,7 +7,7 @@ import { Input } from './Input';
 import { SearchInput } from './SearchInput';
 import { Select } from './Select';
 import { SearchableSelect } from './SearchableSelect';
-import { useIsNarrow } from '../hooks/useMediaQuery';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import { MobileOverlay } from './internal/MobileOverlay';
 
 export interface FilterBarConfig {
@@ -67,7 +67,7 @@ export function FilterBar({
   resultCount,
   ariaLabel = 'Filtros de registros',
 }: FilterBarProps) {
-  const mobile = useIsNarrow(768);
+  const mobile = useIsMobile();
   const filterButton = React.useRef<HTMLButtonElement>(null);
   const hayFiltros =
     Boolean(searchTerm) ||
@@ -176,6 +176,7 @@ export function FilterBar({
             aria-expanded={abiertos}
             onClick={() => setAbiertos((v) => !v)}
           >
+            <UiIcon slot="sliders-horizontal" size={14} />
             Filtros{activos > 0 ? ` (${activos})` : ''}
             <UiIcon
               slot="chevron-down"

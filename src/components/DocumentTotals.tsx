@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE } from '../internal/intl';
 import * as React from 'react';
 import { cn } from '../utils';
 import { Amount, type AmountProps } from './Amount';
@@ -30,7 +31,7 @@ export const DocumentTotals: React.FC<DocumentTotalsProps> = ({
   total,
   totalLabel = 'Total',
   currency = 'EUR',
-  locale = 'es-ES',
+  locale = DEFAULT_LOCALE,
   note,
   footer,
   variant = 'default',

@@ -1,7 +1,9 @@
+import { ControlField, describedBy } from './internal/ControlField';
+import { MESES, MESES_LARGOS, capitalizar, isoDate } from '../internal/fechas';
 import * as React from 'react';
 import { adaptivePortal } from './internal/MobileOverlay';
 import { resolveMobilePresentation, type MobilePresentation } from './internal/mobilePresentation';
-import { useIsNarrow } from '../hooks/useMediaQuery';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
@@ -51,14 +53,13 @@ export interface DatePickerProps {
   /** Se dispara al cambiar el mes/año visible (no la selección). */
   onViewChange?: (year: number, month: number) => void;
   className?: string;
+  /** id del control (para enlazarlo desde una etiqueta propia o `Field`). */
+  id?: string;
 }
 
 const DEFAULT_LOCALE: DatePickerLocale = {
-  months: [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-  ],
-  monthsShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+  months: MESES_LARGOS.map(capitalizar),
+  monthsShort: MESES.map(capitalizar),
   weekdays: ['L', 'M', 'X', 'J', 'V', 'S', 'D'],
   today: 'Hoy',
   clear: 'Limpiar',
@@ -76,9 +77,7 @@ function parseISO(iso: string | null | undefined): { y: number; m: number; d: nu
   return { y: Number(match[1]), m: Number(match[2]), d: Number(match[3]) };
 }
 
-function toISO(y: number, m: number, d: number): string {
-  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-}
+const toISO = isoDate;
 
 function formatDisplay(iso: string | null): string {
   const parsed = parseISO(iso);
@@ -127,8 +126,9 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   onViewChange,
   className,
   mobilePresentation = 'auto',
+  id,
 }) => {
-  const mobile = useIsNarrow(768);
+  const mobile = useIsMobile();
   const presentation = resolveMobilePresentation(mobile, mobilePresentation, 'sheet');
   const t = React.useMemo(() => ({ ...DEFAULT_LOCALE, ...locale }), [locale]);
 
@@ -144,10 +144,11 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   /** Día con el foco de teclado dentro de la rejilla. */
   const [focusedDay, setFocusedDay] = React.useState<number | null>(null);
 
-  const generatedId = React.useId();
+  const autoId = React.useId();
+  const generatedId = id ?? autoId;
   const gridRef = React.useRef<HTMLDivElement>(null);
 
-  const { anchorRef, popoverRef, style, ready } = usePopover<HTMLDivElement>({
+  const { anchorRef, popoverRef, style, ready, mounted, popoverProps } = usePopover<HTMLDivElement>({
     open: isOpen && !mobile,
     onClose: () => setIsOpen(false),
     minWidth: 280,
@@ -456,14 +457,15 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   );
 
   const calendar =
-    isOpen &&
+    (isOpen || mounted) &&
     adaptivePortal(
       <div
         ref={popoverRef}
+          {...(mobile ? undefined : popoverProps)}
         role="dialog"
         aria-label="Calendario"
         className={cn(
-          'z-[var(--k-z-popover,999999)] w-[280px] rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-3 shadow-lg animate-in fade-in-50 duration-150',
+          'z-[var(--k-z-popover,999999)] w-[280px] rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-3 shadow-lg k-appear',
           !ready && !mobile && 'invisible',
         )}
         style={style}
@@ -528,26 +530,15 @@ export const DatePicker: React.FC<DatePickerProps> = ({
     );
 
   return (
-    <div className={cn('flex flex-col gap-1.5 w-full', className)}>
-      {label && (
-        <label
-          htmlFor={generatedId}
-          className="text-[12px] font-medium text-[var(--fg-body,#2d3a4a)]"
-        >
-          {label}
-          {required && (
-            <span className="text-[var(--k-danger-fg)] ml-0.5" aria-hidden="true">
-              *
-            </span>
-          )}
-        </label>
-      )}
+    <ControlField id={generatedId} label={label} helperText={helperText} error={error} required={required} className={className}>
       <div ref={anchorRef} className="relative">
         <button
           id={generatedId}
           data-k-control="select"
           type="button"
           aria-required={required || undefined}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy(generatedId, error, helperText)}
           aria-label={ariaLabel}
           disabled={disabled}
           onClick={() => (isOpen ? close() : openCalendar())}
@@ -588,13 +579,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           </span>
         </button>
       </div>
-      {error && <p className="text-[11px] font-medium text-[var(--k-danger-fg)] mt-0.5">{error}</p>}
-      {helperText && !error && (
-        <p className="text-[11px] text-[var(--fg-subtle,#657486)] mt-0.5">
-          {helperText}
-        </p>
-      )}
       {calendar}
-    </div>
+    </ControlField>
   );
 };
