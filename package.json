@@ -50,7 +50,9 @@
     "test:documents": "node scripts/check-document-pages.mjs",
     "test:workspace": "node scripts/check-workspace-kit.mjs",
     "test:data-entry": "node scripts/check-data-entry.mjs",
-    "test:chat": "node scripts/test-browser.cjs chat"
+    "test:chat": "node scripts/test-browser.cjs chat",
+    "i18n:template": "node scripts/i18n-template.cjs",
+    "check:i18n": "node scripts/check-i18n.mjs"
   },
   "publishConfig": {
     "access": "public"

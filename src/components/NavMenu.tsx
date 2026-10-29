@@ -5,6 +5,7 @@ import { useIsMobile } from '../hooks/useMediaQuery';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
+import { useMessages } from '../i18n/I18nProvider';
 
 /** Estado de madurez de una sección. Se pinta como distintivo junto al nombre. */
 export type NavStatus = 'beta' | 'alpha' | 'nuevo' | 'pronto';
@@ -346,8 +347,10 @@ export const NavMenu: React.FC<NavMenuProps> = ({
   renderItem,
   size = 'md',
   className,
-  'aria-label': ariaLabel = 'Navegación',
+  'aria-label': ariaLabelProp,
 }) => {
+  const ariaLabelDefault = useMessages('navigation').main;
+  const ariaLabel = ariaLabelProp ?? ariaLabelDefault;
   const entradas = React.useMemo(() => agrupar(items), [items]);
   const [abierto, setAbierto] = React.useState<string | null>(null);
   const botones = React.useRef<(HTMLButtonElement | null)[]>([]);

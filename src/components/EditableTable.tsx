@@ -8,6 +8,7 @@ import { NumberInput, CurrencyInput, PercentInput } from './NumberInput';
 import { DatePicker } from './DatePicker';
 import { Checkbox } from './Checkbox';
 import { SearchableSelect, type SearchableSelectOption } from './SearchableSelect';
+import { useI18n } from '../i18n/I18nProvider';
 
 /** Tipos de editor listos para usar; `custom` deja el control en tus manos. */
 export type CellEditorType =
@@ -101,7 +102,7 @@ export function EditableTable<T extends Record<string, any>>({
   onSave,
   onDelete,
   onAddRow,
-  addLabel = 'Añadir línea',
+  addLabel: addLabelProp,
   isRowEditable,
   mode = 'row',
   onChange,
@@ -111,6 +112,8 @@ export function EditableTable<T extends Record<string, any>>({
   summaryRow,
   ...tableProps
 }: EditableTableProps<T>) {
+  const { messages: m } = useI18n();
+  const addLabel = addLabelProp ?? m.editableTable.addRow;
   const getKey = React.useCallback(
     (item: T, idx: number): string | number => rowKey?.(item, idx) ?? item?.id ?? idx,
     [rowKey],
@@ -234,8 +237,8 @@ export function EditableTable<T extends Record<string, any>>({
                     type="button"
                     onClick={commitEdit}
                     disabled={saving}
-                    aria-label="Guardar"
-                    title="Guardar"
+                    aria-label={m.common.save}
+                    title={m.common.save}
                     className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--k-success-fg)] hover:bg-[var(--k-success-bg)] transition-colors disabled:opacity-40"
                   >
                     <UiIcon slot="check" className="h-3.5 w-3.5" />
@@ -244,8 +247,8 @@ export function EditableTable<T extends Record<string, any>>({
                     type="button"
                     onClick={cancelEdit}
                     disabled={saving}
-                    aria-label="Cancelar"
-                    title="Cancelar"
+                    aria-label={m.common.cancel}
+                    title={m.common.cancel}
                     className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-[var(--fg-default,#0a1628)] transition-colors"
                   >
                     <UiIcon slot="x" className="h-3.5 w-3.5" />
@@ -257,8 +260,8 @@ export function EditableTable<T extends Record<string, any>>({
                     <button
                       type="button"
                       onClick={() => startEdit(item, key)}
-                      aria-label="Editar"
-                      title="Editar"
+                      aria-label={m.common.edit}
+                      title={m.common.edit}
                       className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                     >
                       <UiIcon slot="pencil" className="h-3.5 w-3.5" />
@@ -268,8 +271,8 @@ export function EditableTable<T extends Record<string, any>>({
                     <button
                       type="button"
                       onClick={() => onDelete(item)}
-                      aria-label="Eliminar"
-                      title="Eliminar"
+                      aria-label={m.common.delete}
+                      title={m.common.delete}
                       className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                     >
                       <UiIcon slot="trash-2" className="h-3.5 w-3.5" />
@@ -298,8 +301,8 @@ export function EditableTable<T extends Record<string, any>>({
               e.stopPropagation();
               onDelete(item);
             }}
-            aria-label="Quitar línea"
-            title="Quitar línea"
+            aria-label={m.editableTable.removeRow}
+            title={m.editableTable.removeRow}
             className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
           >
             <UiIcon slot="trash-2" className="h-3.5 w-3.5" />

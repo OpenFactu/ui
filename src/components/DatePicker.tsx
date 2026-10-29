@@ -1,5 +1,5 @@
 import { ControlField, describedBy } from './internal/ControlField';
-import { MESES, MESES_LARGOS, capitalizar, isoDate } from '../internal/fechas';
+import { capitalizar, isoDate } from '../internal/fechas';
 import * as React from 'react';
 import { adaptivePortal } from './internal/MobileOverlay';
 import { resolveMobilePresentation, type MobilePresentation } from './internal/mobilePresentation';
@@ -7,6 +7,7 @@ import { useIsMobile } from '../hooks/useMediaQuery';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
+import { useI18n } from '../i18n/I18nProvider';
 
 export type DatePickerView = 'days' | 'months' | 'years';
 
@@ -57,13 +58,6 @@ export interface DatePickerProps {
   id?: string;
 }
 
-const DEFAULT_LOCALE: DatePickerLocale = {
-  months: MESES_LARGOS.map(capitalizar),
-  monthsShort: MESES.map(capitalizar),
-  weekdays: ['L', 'M', 'X', 'J', 'V', 'S', 'D'],
-  today: 'Hoy',
-  clear: 'Limpiar',
-};
 
 /** Años por página en la vista de años (3 columnas × 4 filas). */
 const YEARS_PER_PAGE = 12;
@@ -113,7 +107,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   required,
   error,
   helperText,
-  placeholder = 'dd/mm/aaaa',
+  placeholder: placeholderProp,
   min,
   max,
   disabled = false,
@@ -128,9 +122,20 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   mobilePresentation = 'auto',
   id,
 }) => {
+  const { messages: m, format } = useI18n();
+  const dp = m.datePicker;
+  const placeholder = placeholderProp ?? dp.placeholder;
   const mobile = useIsMobile();
   const presentation = resolveMobilePresentation(mobile, mobilePresentation, 'sheet');
-  const t = React.useMemo(() => ({ ...DEFAULT_LOCALE, ...locale }), [locale]);
+  // Los textos salen del catálogo (`dates`, `common`); la prop `locale` (objeto de textos) sigue ganando.
+  const t = React.useMemo<DatePickerLocale>(() => ({
+    months: m.dates.months.map(capitalizar),
+    monthsShort: m.dates.monthsShort.map(capitalizar),
+    weekdays: [...m.dates.weekdaysMin.slice(1), m.dates.weekdaysMin[0]],
+    today: m.dates.today,
+    clear: m.common.clear,
+    ...locale,
+  }), [locale, m]);
 
   const [isOpen, setIsOpen] = React.useState(false);
   const [view, setView] = React.useState<DatePickerView>(initialView);
@@ -307,7 +312,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           type="button"
           onClick={() => setView('months')}
           className="rounded-[var(--k-radius-xs,2px)] px-1 py-0.5 text-[12px] font-semibold text-[var(--fg-default,#0a1628)] hover:bg-[var(--bg-hover)] hover:text-accent transition-colors"
-          aria-label={`Cambiar de mes. Mes actual: ${t.months[viewMonth - 1]}`}
+          aria-label={format(dp.changeMonth, { month: t.months[viewMonth - 1] })}
         >
           {t.months[viewMonth - 1]}
         </button>
@@ -317,7 +322,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           type="button"
           onClick={() => setView('years')}
           className="rounded-[var(--k-radius-xs,2px)] px-1 py-0.5 font-mono text-[12px] font-semibold text-[var(--fg-muted,#52606f)] hover:bg-[var(--bg-hover)] hover:text-accent transition-colors"
-          aria-label={`Cambiar de año. Año actual: ${viewYear}`}
+          aria-label={format(dp.changeYear, { year: viewYear })}
         >
           {viewYear}
         </button>
@@ -463,7 +468,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         ref={popoverRef}
           {...(mobile ? undefined : popoverProps)}
         role="dialog"
-        aria-label="Calendario"
+        aria-label={dp.calendar}
         className={cn(
           'z-[var(--k-z-popover,999999)] w-[280px] rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-3 shadow-lg k-appear',
           !ready && !mobile && 'invisible',
@@ -475,7 +480,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             type="button"
             onClick={stepBack}
             disabled={stepBackDisabled}
-            aria-label={view === 'days' ? 'Mes anterior' : view === 'months' ? 'Año anterior' : 'Década anterior'}
+            aria-label={view === 'days' ? m.dates.previousMonth : view === 'months' ? dp.previousYear : dp.previousDecade}
             className={navButton}
           >
             <UiIcon slot="chevron-left" className="h-4 w-4" />
@@ -485,7 +490,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             type="button"
             onClick={stepForward}
             disabled={stepForwardDisabled}
-            aria-label={view === 'days' ? 'Mes siguiente' : view === 'months' ? 'Año siguiente' : 'Década siguiente'}
+            aria-label={view === 'days' ? m.dates.nextMonth : view === 'months' ? dp.nextYear : dp.nextDecade}
             className={navButton}
           >
             <UiIcon slot="chevron-right" className="h-4 w-4" />
@@ -566,7 +571,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             {clearable && value && !disabled && (
               <UiIcon slot="x"
                 role="button"
-                aria-label="Limpiar fecha"
+                aria-label={dp.clearDate}
                 tabIndex={0}
                 className="h-3.5 w-3.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors"
                 onClick={(e) => {

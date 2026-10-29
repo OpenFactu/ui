@@ -1,5 +1,8 @@
 import * as React from 'react';
 import { UiIcon } from '../icons';
+import { formatMessage } from '../i18n/format';
+import { esMessages } from '../i18n/messages';
+import { useAILabels, type AILabels } from './labels';
 
 /**
  * Acciones de IA sobre código: un registro abierto, como el de herramientas del
@@ -30,10 +33,14 @@ export interface AICodeActionContext extends AICodeContext {
   ask?: (prompt: string) => void | Promise<void>;
   /** Sustituye el código (en un artefacto, el contenido; con selección, solo el fragmento). */
   apply?: (code: string) => void;
+  /** Textos de IA del idioma activo, para que una acción escriba su petición en el idioma de la interfaz. */
+  labels?: AILabels;
 }
 export interface AICodeAction {
   id: string;
   label: string;
+  /** Clave del catálogo `ai` para el nombre: sigue al idioma activo y gana a `label`. */
+  labelKey?: keyof AILabels;
   icon?: React.ReactNode;
   description?: string;
   /** Dónde aparece. Por defecto `both`. */
@@ -47,10 +54,12 @@ export interface RegisteredCodeAction extends AICodeAction { source: string }
 
 const fence = ({ code, selection, language }: AICodeActionContext) => `\`\`\`${language ?? ''}\n${selection?.text || code}\n\`\`\``;
 /** Semilla: tres acciones generales. Se sustituyen por id o se retiran con `unregisterCodeActionSource('ui')`. */
+const ask = (key: 'codeExplainPrompt' | 'codeRefactorPrompt' | 'codeTestsPrompt') => (context: AICodeActionContext) =>
+  context.ask!(formatMessage((context.labels ?? esMessages.ai)[key], { code: fence(context) }));
 const BUILT_IN: AICodeAction[] = [
-  { id: 'explain', label: 'Explicar', icon: <UiIcon slot="book-open" size={14} />, order: 10, when: context => !!context.ask, run: context => context.ask!(`Explica qué hace este código:\n\n${fence(context)}`) },
-  { id: 'refactor', label: 'Mejorar', icon: <UiIcon slot="wand-2" size={14} />, order: 20, when: context => !!context.ask, run: context => context.ask!(`Propón una versión más clara de este código y explica los cambios:\n\n${fence(context)}`) },
-  { id: 'tests', label: 'Añadir pruebas', icon: <UiIcon slot="flask-conical" size={14} />, order: 30, when: context => !!context.ask, run: context => context.ask!(`Escribe pruebas para este código:\n\n${fence(context)}`) },
+  { id: 'explain', label: esMessages.ai.codeExplain, labelKey: 'codeExplain', icon: <UiIcon slot="book-open" size={14} />, order: 10, when: context => !!context.ask, run: ask('codeExplainPrompt') },
+  { id: 'refactor', label: esMessages.ai.codeRefactor, labelKey: 'codeRefactor', icon: <UiIcon slot="wand-2" size={14} />, order: 20, when: context => !!context.ask, run: ask('codeRefactorPrompt') },
+  { id: 'tests', label: esMessages.ai.codeTests, labelKey: 'codeTests', icon: <UiIcon slot="flask-conical" size={14} />, order: 30, when: context => !!context.ask, run: ask('codeTestsPrompt') },
 ];
 
 const store = new Map<string, RegisteredCodeAction>(BUILT_IN.map(action => [action.id, { ...action, source: 'ui' }]));
@@ -107,9 +116,15 @@ export const useAICode = () => React.useContext(CodeContext);
 /** Acciones que aplican a un contexto concreto, ya filtradas por ámbito y `when`. */
 export function useCodeActions(scope: 'block' | 'selection', context: AICodeActionContext, extra?: AICodeAction[]): AICodeAction[] {
   const registered = useRegisteredCodeActions();
+  const labels = useAILabels();
   const own = [...(useAICode().codeActions ?? []), ...(extra ?? [])];
   return [...registered.filter(action => !own.some(item => item.id === action.id)), ...own]
     .filter(action => (action.scope ?? 'both') === 'both' || action.scope === scope)
     .filter(action => { try { return action.when?.(context) ?? true; } catch { return false; } })
-    .sort((a, b) => (a.order ?? 100) - (b.order ?? 100));
+    .sort((a, b) => (a.order ?? 100) - (b.order ?? 100))
+    .map(action => ({
+      ...action,
+      label: action.labelKey ? String(labels[action.labelKey]) : action.label,
+      run: (ctx: AICodeActionContext) => action.run({ ...ctx, labels: ctx.labels ?? labels }),
+    }));
 }

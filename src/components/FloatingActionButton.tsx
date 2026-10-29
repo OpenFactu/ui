@@ -5,6 +5,7 @@ import { useAnimatedPresence } from '../hooks/useAnimatedPresence';
 import { useEscapeStack } from '../internal/escapeStack';
 import { useMobileViewport } from '../hooks/useMobileViewport';
 import { useIsMobile } from '../hooks/useMediaQuery';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface FloatingAction {
   id: string;
@@ -28,7 +29,10 @@ export interface FloatingActionButtonProps {
 }
 
 /** Menú de acciones del consumidor, con anclaje fijo y controles táctiles de al menos 48 px. */
-export function FloatingActionButton({ actions, label = 'Acciones rápidas', closeLabel = 'Cerrar acciones', icon, position = 'bottom-right', open, onOpenChange, disabled, className, style }: FloatingActionButtonProps) {
+export function FloatingActionButton({ actions, label: labelProp, closeLabel: closeLabelProp, icon, position = 'bottom-right', open, onOpenChange, disabled, className, style }: FloatingActionButtonProps) {
+  const fabTexts = useMessages('floatingActions');
+  const label = labelProp ?? fabTexts.label;
+  const closeLabel = closeLabelProp ?? fabTexts.close;
   const [localOpen, setLocalOpen] = React.useState(false);
   const viewport = useMobileViewport(); const mobile = useIsMobile();
   const [pending, setPending] = React.useState<string>();
@@ -69,7 +73,7 @@ export function FloatingActionButton({ actions, label = 'Acciones rápidas', clo
       await action.onClick();
       if (started === interaction.current && currentOpen.current) close(document.activeElement === document.body || !!root.current?.contains(document.activeElement));
     }
-    catch (cause) { if (started === interaction.current && currentOpen.current) setError(cause instanceof Error ? cause.message : 'No se ha podido completar la acción. Inténtalo de nuevo.'); }
+    catch (cause) { if (started === interaction.current && currentOpen.current) setError(cause instanceof Error ? cause.message : fabTexts.error); }
     finally { busy.current = false; setPending(undefined); }
   }
   function navigate(event: React.KeyboardEvent) {

@@ -1,3 +1,4 @@
+import { esMessages } from '../i18n/messages';
 import type { ChatConversationData, ChatDraft, ChatHistoryState, ChatMessageData, ChatMessageStatus, ChatState, ChatPendingReaction, ChatReactionSnapshot, ChatConversationPatch, ChatOperation } from './types';
 import { applyReactionSnapshot, normalizeReactions, setReactionMembership } from './reactions';
 
@@ -140,7 +141,7 @@ export function chatReducer(state: ChatState, action: ExtendedChatAction): ChatS
       if (!pending || pending.operationId !== action.operationId) return state;
       const rest = { ...state.pendingReactions }; delete rest[action.key];
       const success = action.success || pending.confirmed;
-      return { ...state, pendingReactions: rest, reactionErrors: { ...state.reactionErrors, [action.key]: success ? '' : action.error ?? 'No se pudo guardar la reacción.' },
+      return { ...state, pendingReactions: rest, reactionErrors: { ...state.reactionErrors, [action.key]: success ? '' : action.error ?? esMessages.chat.reactionError },
         messages: success ? state.messages.map(message => message.conversationId === pending.conversationId && (message.id === pending.messageId || message.clientId === pending.messageId) && !message.deletedAt
           ? { ...message, reactions: setReactionMembership(normalizeReactions(message.reactions), pending.emoji, pending.userId, pending.active) } : message) : state.messages };
     }

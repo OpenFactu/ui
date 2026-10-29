@@ -2,6 +2,7 @@ import { isPrimaryPointer, startPointerDrag } from '../internal/pointerDrag';
 import * as React from 'react';
 import { cn } from '../utils';
 import { motionDisabled, readMotionMs } from '../motion/dom';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface SortableHandleProps {
   onPointerDown: (event: React.PointerEvent<HTMLElement>) => void;
@@ -39,7 +40,9 @@ function move<T>(list: readonly T[], from: number, to: number): T[] {
  * Lista que se reordena arrastrando con física: el elemento agarrado sigue al puntero y se eleva, los demás se apartan
  * con el muelle `move` del tema y al soltar se asienta en su hueco. Con teclado, `Alt` + ↑/↓ sobre el asa.
  */
-export function SortableList<T>({ items, getKey, onReorder, renderItem, dragFrom = 'handle', disabled, className, itemClassName, handleLabel = 'Reordenar' }: SortableListProps<T>) {
+export function SortableList<T>({ items, getKey, onReorder, renderItem, dragFrom = 'handle', disabled, className, itemClassName, handleLabel: handleLabelProp }: SortableListProps<T>) {
+  const handleLabelDefault = useMessages('layout').reorder;
+  const handleLabel = handleLabelProp ?? handleLabelDefault;
   const refs = React.useRef(new Map<number, HTMLElement>());
   const drag = React.useRef<{ from: number; to: number; startY: number; rects: DOMRect[]; gap: number } | null>(null);
 

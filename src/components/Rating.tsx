@@ -3,6 +3,7 @@ import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { ControlField, describedBy } from './internal/ControlField';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface RatingProps {
   value: number;
@@ -36,8 +37,10 @@ const ICON_SIZE = { sm: 16, md: 22, lg: 30 };
  */
 export const Rating: React.FC<RatingProps> = ({
   value, onChange, max = 5, allowHalf = false, readOnly = false, clearable = true, icon, size = 'md',
-  formatValue = (v, m) => `${formatNumber(v)} de ${m}`, label, helperText, error, disabled, id, className,
+  formatValue: formatValueProp, label, helperText, error, disabled, id, className,
 }) => {
+  const { messages: { rating: ratingTexts }, format } = useI18n();
+  const formatValue = formatValueProp ?? ((v: number, max: number) => format(ratingTexts.value, { value: formatNumber(v), max }));
   const generated = React.useId();
   const ratingId = id ?? generated;
   const [hover, setHover] = React.useState<number | null>(null);

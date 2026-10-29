@@ -1,6 +1,7 @@
 import { useResizeObserver } from '../hooks/useResizeObserver';
 import * as React from 'react';
 import { cn } from '../utils';
+import { useMessages } from '../i18n/I18nProvider';
 
 type HeadingLevel = 1 | 2 | 3 | 4;
 
@@ -66,8 +67,11 @@ export interface ParagraphProps extends Omit<React.HTMLAttributes<HTMLParagraphE
  * aparece cuando el texto de verdad no cabe.
  */
 export const Paragraph: React.FC<ParagraphProps> = ({
-  children, variant = 'body', measure, balance, justify, columns, dropCap, clamp, moreLabel = 'Ver más', lessLabel = 'Ver menos', className, style, ...rest
+  children, variant = 'body', measure, balance, justify, columns, dropCap, clamp, moreLabel: moreLabelProp, lessLabel: lessLabelProp, className, style, ...rest
 }) => {
+  const common = useMessages('common');
+  const moreLabel = moreLabelProp ?? common.more;
+  const lessLabel = lessLabelProp ?? common.less;
   const [expanded, setExpanded] = React.useState(false);
   const [overflowing, setOverflowing] = React.useState(false);
   const ref = React.useRef<HTMLParagraphElement>(null);

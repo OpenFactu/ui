@@ -1,5 +1,6 @@
 /** Cálculos de calendario compartidos por el selector de rango, el mapa de calor y la cuenta atrás. Puros. */
 import { isoDate } from '../../internal/fechas';
+import { esMessages, type Messages } from '../../i18n/messages';
 
 export interface DayCell {
   iso: string;
@@ -75,26 +76,32 @@ export interface RangePreset {
   range: (today: string) => DateRange;
 }
 
-/** Atajos habituales de un ERP. Se pueden sustituir o ampliar con la prop `presets`. */
-export const DEFAULT_RANGE_PRESETS: RangePreset[] = [
-  { id: 'today', label: 'Hoy', range: (t) => ({ start: t, end: t }) },
-  { id: 'yesterday', label: 'Ayer', range: (t) => ({ start: addDays(t, -1), end: addDays(t, -1) }) },
-  { id: 'last7', label: 'Últimos 7 días', range: (t) => ({ start: addDays(t, -6), end: t }) },
-  { id: 'last30', label: 'Últimos 30 días', range: (t) => ({ start: addDays(t, -29), end: t }) },
+/**
+ * Atajos habituales de un ERP con los nombres de `labels` (los del idioma activo; por defecto, español). Se pueden
+ * sustituir o ampliar con la prop `presets`.
+ */
+export const rangePresets = (labels: Messages['dates']['presets'] = esMessages.dates.presets): RangePreset[] => [
+  { id: 'today', label: labels.today, range: (t) => ({ start: t, end: t }) },
+  { id: 'yesterday', label: labels.yesterday, range: (t) => ({ start: addDays(t, -1), end: addDays(t, -1) }) },
+  { id: 'last7', label: labels.last7, range: (t) => ({ start: addDays(t, -6), end: t }) },
+  { id: 'last30', label: labels.last30, range: (t) => ({ start: addDays(t, -29), end: t }) },
   {
-    id: 'thisMonth', label: 'Este mes',
+    id: 'thisMonth', label: labels.thisMonth,
     range: (t) => { const p = parseIso(t)!; return { start: isoDate(p.y, p.m, 1), end: isoDate(p.y, p.m, new Date(p.y, p.m, 0).getDate()) }; },
   },
   {
-    id: 'lastMonth', label: 'Mes pasado',
+    id: 'lastMonth', label: labels.lastMonth,
     range: (t) => { const p = parseIso(t)!; const prev = shiftMonth(p.y, p.m, -1); return { start: isoDate(prev.y, prev.m, 1), end: isoDate(prev.y, prev.m, new Date(prev.y, prev.m, 0).getDate()) }; },
   },
   {
-    id: 'thisQuarter', label: 'Este trimestre',
+    id: 'thisQuarter', label: labels.thisQuarter,
     range: (t) => { const p = parseIso(t)!; const q = Math.floor((p.m - 1) / 3) * 3 + 1; return { start: isoDate(p.y, q, 1), end: isoDate(p.y, q + 2, new Date(p.y, q + 2, 0).getDate()) }; },
   },
-  { id: 'thisYear', label: 'Este año', range: (t) => { const p = parseIso(t)!; return { start: isoDate(p.y, 1, 1), end: isoDate(p.y, 12, 31) }; } },
+  { id: 'thisYear', label: labels.thisYear, range: (t) => { const p = parseIso(t)!; return { start: isoDate(p.y, 1, 1), end: isoDate(p.y, 12, 31) }; } },
 ];
+
+/** Los atajos en español. */
+export const DEFAULT_RANGE_PRESETS: RangePreset[] = rangePresets();
 
 /** Partes de una cuenta atrás. `done` cuando ya ha llegado (todo a 0, nunca negativo). */
 export function countdownParts(ms: number): { days: number; hours: number; minutes: number; seconds: number; done: boolean } {

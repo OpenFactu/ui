@@ -3,14 +3,14 @@ import { UiIcon } from '../icons';
 import { Button } from '../components/Button';
 import { cn } from '../utils';
 import type { AIMessageData, AIRun, AIUIProps } from './types';
-import { aiLabels } from './labels';
+import { useAILabels } from './labels';
 import { AIStatus, AIThinking } from './internal/ui';
 import { AIMessage, type AIMessageCallbacks } from './AIMessage';
 
 export interface AIPromptSuggestion { id: string; label: string; prompt?: string; description?: string }
 export interface AIPromptSuggestionsProps extends AIUIProps { suggestions: AIPromptSuggestion[]; onSelect: (prompt: string) => void }
 export function AIPromptSuggestions({ suggestions, onSelect, labels, className }: AIPromptSuggestionsProps) {
-  const l = aiLabels(labels);
+  const l = useAILabels(labels);
   return <div className={cn('ai-prompt-suggestions', className)} aria-label={l.suggestions}>{suggestions.map((suggestion, index) => <button type="button" key={suggestion.id} style={{ '--i': index } as React.CSSProperties} onClick={() => onSelect(suggestion.prompt ?? suggestion.label)}><span><strong>{suggestion.label}</strong>{suggestion.description && <small>{suggestion.description}</small>}</span><UiIcon slot="arrow-up-right" size={14} /></button>)}</div>;
 }
 export interface AIConversationProps extends AIUIProps {
@@ -20,7 +20,7 @@ export interface AIConversationProps extends AIUIProps {
   onOpenCode?: (code: string, language?: string) => void; children?: React.ReactNode;
 }
 export function AIConversation({ messages, conversationId, run, actions, hasOlder, loadingOlder, onLoadOlder, loading, suggestions, onSelectPrompt, onOpenCode, labels, className, children }: AIConversationProps) {
-  const l = aiLabels(labels);
+  const l = useAILabels(labels);
   const scroller = React.useRef<HTMLDivElement>(null); const content = React.useRef<HTMLDivElement>(null);
   const nearBottom = React.useRef(true); const [unread, setUnread] = React.useState(false);
   const previous = React.useRef<{ conversation?: string; first?: string; last?: string; count: number; height: number; top: number }>({ count: 0, height: 0, top: 0 });

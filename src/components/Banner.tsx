@@ -3,6 +3,7 @@ import { UiIcon, type IconSlot } from '../icons';
 import { cn } from '../utils';
 import { Collapse } from './Collapse';
 import { safeStorage } from '../internal/storage';
+import { useMessages } from '../i18n/I18nProvider';
 
 export type BannerTone = 'accent' | 'info' | 'success' | 'warning' | 'danger' | 'neutral';
 
@@ -30,6 +31,7 @@ const ICONS: Record<BannerTone, IconSlot> = { accent: 'sparkles', info: 'info', 
  * `storageKey`, no vuelve a salir en ese navegador.
  */
 export const Banner: React.FC<BannerProps> = ({ tone = 'accent', variant = 'bar', title, children, actions, icon, dismissible, storageKey, onDismiss, className }) => {
+  const common = useMessages('common');
   const key = storageKey ? `k-banner:${storageKey}` : null;
   const [open, setOpen] = React.useState(() => !(key && safeStorage.get(key, false)));
   const dismiss = () => { setOpen(false); if (key) safeStorage.set(key, true); onDismiss?.(); };
@@ -42,7 +44,7 @@ export const Banner: React.FC<BannerProps> = ({ tone = 'accent', variant = 'bar'
           {children && <span>{children}</span>}
         </div>
         {actions && <div className="k-banner-actions">{actions}</div>}
-        {dismissible && <button type="button" className="k-banner-close" aria-label="Cerrar aviso" onClick={dismiss}><UiIcon slot="x" size={14} /></button>}
+        {dismissible && <button type="button" className="k-banner-close" aria-label={common.dismiss} onClick={dismiss}><UiIcon slot="x" size={14} /></button>}
       </div>
     </Collapse>
   );

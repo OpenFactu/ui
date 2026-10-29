@@ -10,6 +10,8 @@
  * saltarse uno, y las barras se desplazan una columna sin motivo aparente.
  */
 
+import { esMessages } from '../i18n/messages';
+
 export const DIA_MS = 86400000;
 export const HORA_MS = 3600000;
 
@@ -38,38 +40,14 @@ export function dias(a: Date, b: Date): number {
   return Math.round((b.getTime() - a.getTime()) / DIA_MS);
 }
 
-export const MESES = [
-  'ene',
-  'feb',
-  'mar',
-  'abr',
-  'may',
-  'jun',
-  'jul',
-  'ago',
-  'sep',
-  'oct',
-  'nov',
-  'dic',
-];
+/** Meses abreviados en español (los componentes leen los del idioma activo: `dates.monthsShort`). */
+export const MESES: string[] = [...esMessages.dates.monthsShort];
 
-export const MESES_LARGOS = [
-  'enero',
-  'febrero',
-  'marzo',
-  'abril',
-  'mayo',
-  'junio',
-  'julio',
-  'agosto',
-  'septiembre',
-  'octubre',
-  'noviembre',
-  'diciembre',
-];
+/** Meses en español (los componentes leen los del idioma activo: `dates.months`). */
+export const MESES_LARGOS: string[] = [...esMessages.dates.months];
 
 /** Empieza en domingo porque `Date.getDay()` devuelve 0 para domingo. */
-export const DIAS_SEMANA = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+export const DIAS_SEMANA: string[] = [...esMessages.dates.weekdaysShort];
 
 export function esFinde(d: Date): boolean {
   return d.getDay() === 0 || d.getDay() === 6;

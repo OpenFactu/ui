@@ -7,7 +7,7 @@ import { Textarea } from '../components/Textarea';
 import { Select } from '../components/Select';
 import { cn } from '../utils';
 import type { AIMessageData, AIMessagePart, AIUIProps, AIWorkspaceActions } from './types';
-import { aiLabels } from './labels';
+import { useAILabels } from './labels';
 import { AICopyButton, AIIconButton, AIThinking } from './internal/ui';
 import { currentMessageParts, messageText, safeUrl } from './internal/helpers';
 import { AIMarkdown } from './AIMarkdown';
@@ -27,7 +27,7 @@ import { AIToolCall, AIAgentActivity } from './AIToolCall';
 export type AIMessageCallbacks = Pick<AIWorkspaceActions, 'onRetry' | 'onEditMessage' | 'onFeedback' | 'onReadAloud' | 'onVersionChange' | 'onOpenArtifact' | 'onApproveTool' | 'onRejectTool' | 'onOpenFile' | 'onRestoreCheckpoint'>;
 export interface AIMessageActionsProps extends AIUIProps { message: AIMessageData; actions?: AIMessageCallbacks; onEdit?: () => void }
 export function AIMessageActions({ message, actions, onEdit, labels, className }: AIMessageActionsProps) {
-  const l = aiLabels(labels); const text = messageText(message);
+  const l = useAILabels(labels); const text = messageText(message);
   return <div className={cn('ai-message-actions', className)} aria-label={`${l.message}: ${message.name ?? (message.role === 'user' ? l.user : l.assistant)}`}>
     {text && <AICopyButton text={text} labels={labels} />}
     {onEdit && <AIIconButton label={l.edit} onClick={onEdit}><UiIcon slot="pencil" size={13} /></AIIconButton>}
@@ -40,12 +40,12 @@ export function AIMessageActions({ message, actions, onEdit, labels, className }
   </div>;
 }
 function MessageImage({ url, alt, labels }: AIUIProps & { url: string; alt: string }) {
-  const [failed, setFailed] = React.useState(false); const l = aiLabels(labels);
+  const [failed, setFailed] = React.useState(false); const l = useAILabels(labels);
   return failed || !safeUrl(url, 'media') ? <p className="ai-muted">{alt || l.imageUnavailable}</p> : <img className="ai-message-image" src={safeUrl(url, 'media')} alt={alt} loading="lazy" onError={() => setFailed(true)} />;
 }
 export interface AIMessageContentProps extends AIUIProps { parts: AIMessagePart[]; role?: AIMessageData['role']; actions?: AIMessageCallbacks; onOpenCode?: (code: string, language?: string) => void }
 export const AIMessageContent = React.memo(function AIMessageContent({ parts, role = 'assistant', actions, onOpenCode, labels, className }: AIMessageContentProps) {
-  const l = aiLabels(labels);
+  const l = useAILabels(labels);
   return <div className={cn('ai-message-content', className)}>{parts.map((part, index) => {
     switch (part.type) {
       case 'text': return part.format === 'plain' || (!part.format && role !== 'assistant') ? <p key={index} className="ai-plain-text">{part.text}</p> : <AIMarkdown key={index} onOpenCode={onOpenCode} labels={labels}>{part.text}</AIMarkdown>;
@@ -89,7 +89,7 @@ export interface AIMessageProps extends AIUIProps {
   showError?: boolean;
 }
 export const AIMessage = React.memo(function AIMessage({ message, actions, onOpenCode, fresh, showError = true, labels, className }: AIMessageProps) {
-  const l = aiLabels(labels);
+  const l = useAILabels(labels);
   const [editing, setEditing] = React.useState(false); const [text, setText] = React.useState('');
   const name = message.name ?? ({ user: l.user, assistant: l.assistant, system: l.system })[message.role];
   const parts = currentMessageParts(message);

@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { cn } from '../utils';
-import { MESES, capitalizar } from '../internal/fechas';
+import { capitalizar } from '../internal/fechas';
 import { formatNumber } from '../internal/intl';
 import { addDays, buildHeatmap, isoOf, parseIso } from './internal/calendar';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface HeatmapCalendarProps {
   /** Valor de cada día: `{ '2026-10-29': 4 }` o una lista de `{ date, value }`. Lo que falta cuenta como 0. */
@@ -28,8 +29,10 @@ const WEEKDAY_LABELS = ['L', '', 'X', '', 'V', '', ''];
  * acento del tema según el valor de cada día frente al máximo del periodo.
  */
 export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
-  data, start, end, formatDay, onDayClick, label = 'Actividad por días', legend = true, className,
+  data, start, end, formatDay, onDayClick, label: labelProp, legend = true, className,
 }) => {
+  const { messages: m, format } = useI18n();
+  const label = labelProp ?? m.heatmapCalendar.label;
   const today = isoOf(new Date());
   const last = end ?? today;
   const first = start ?? addDays(last, -364);
@@ -41,7 +44,7 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
   }, [data]);
   const { columns, months, max } = React.useMemo(() => buildHeatmap(first, last, values), [first, last, values]);
   const total = React.useMemo(() => { let n = 0; values.forEach((v, iso) => { if (iso >= first && iso <= last) n += v; }); return n; }, [values, first, last]);
-  const describe = formatDay ?? ((iso: string, v: number) => { const p = parseIso(iso)!; return `${p.d} ${MESES[p.m - 1]} ${p.y}: ${formatNumber(v)}`; });
+  const describe = formatDay ?? ((iso: string, v: number) => { const p = parseIso(iso)!; return `${format(m.dates.dayMonthYearShort, { day: p.d, month: m.dates.monthsShort[p.m - 1], year: p.y })}: ${formatNumber(v)}`; });
 
   // Con días pulsables: un único día enfocable a la vez y flechas (↑↓ un día, ←→ una semana, Inicio/Fin). Con 365
   // botones como paradas de tabulador, cruzar el componente con el teclado era imposible.
@@ -72,11 +75,11 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
       <div className="k-heatmap-scroll k-scrollbar">
         <div className="k-heatmap-body" style={{ '--k-weeks': columns.length } as React.CSSProperties}>
           <div className="k-heatmap-months" aria-hidden="true">
-            {months.map((mo) => <span key={`${mo.y}-${mo.m}`} style={{ gridColumn: mo.column + 1 }}>{capitalizar(MESES[mo.m - 1])}</span>)}
+            {months.map((mo) => <span key={`${mo.y}-${mo.m}`} style={{ gridColumn: mo.column + 1 }}>{capitalizar(m.dates.monthsShort[mo.m - 1])}</span>)}
           </div>
           <div className="k-heatmap-weekdays" aria-hidden="true">{WEEKDAY_LABELS.map((d, i) => <span key={i}>{d}</span>)}</div>
           {/* `img` solo si no hay nada que pulsar: dentro de un `img` los botones dejan de existir para el lector. */}
-          <div ref={grid} className="k-heatmap-grid" role={onDayClick ? 'group' : 'img'} aria-label={`${label}: ${formatNumber(total)} en total, máximo ${formatNumber(max)} en un día`} onKeyDown={onDayClick ? mover : undefined}>
+          <div ref={grid} className="k-heatmap-grid" role={onDayClick ? 'group' : 'img'} aria-label={format(m.heatmapCalendar.summary, { label, total: formatNumber(total), max: formatNumber(max) })} onKeyDown={onDayClick ? mover : undefined}>
             {columns.map((week, w) => (
               <div key={w} className="k-heatmap-week">
                 {week.map((cell) => {
@@ -93,9 +96,9 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
       </div>
       {legend && (
         <figcaption className="k-heatmap-legend">
-          <span>Menos</span>
+          <span>{m.heatmapCalendar.less}</span>
           {[0, 1, 2, 3, 4].map((l) => <span key={l} className="k-heatmap-day" data-level={l} aria-hidden="true" />)}
-          <span>Más</span>
+          <span>{m.heatmapCalendar.more}</span>
         </figcaption>
       )}
     </figure>

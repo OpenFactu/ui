@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
-import { aiLabels } from './labels';
+import { useAILabels } from './labels';
 import type { AIUIProps } from './types';
 import { buildFileTree, type AIChangedFile, type AIFileNode } from './internal/elements';
 
@@ -19,7 +19,7 @@ const STATUS_LABEL = { added: 'fileAdded', modified: 'fileModified', deleted: 'f
 
 /** Los archivos que tocó el agente, en carpetas plegables. Para un solo archivo, una línea de herramienta basta. */
 export const AIFileTree = React.memo(function AIFileTree({ files, selected, onSelect, defaultExpanded = 'all', renderActions, labels, className }: AIFileTreeProps) {
-  const l = aiLabels(labels);
+  const l = useAILabels(labels);
   const tree = React.useMemo(() => buildFileTree(files), [files]);
   const [closed, setClosed] = React.useState<ReadonlySet<string>>(() => new Set());
   const [opened, setOpened] = React.useState<ReadonlySet<string>>(() => new Set());

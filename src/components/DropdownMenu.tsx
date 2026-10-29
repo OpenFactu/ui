@@ -6,6 +6,7 @@ import { useIsMobile } from '../hooks/useMediaQuery';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
 import { MenuItemButton, MenuSeparator, MenuItemShape } from './internal/MenuItemButton';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface DropdownMenuItem extends MenuItemShape {}
 
@@ -35,6 +36,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
   mobilePresentation = 'auto',
   'aria-label': ariaLabel,
 }) => {
+  const common = useMessages('common');
   const mobile = useIsMobile();
   const presentation = resolveMobilePresentation(mobile, mobilePresentation, 'sheet');
   const [isOpen, setIsOpen] = React.useState(false);
@@ -119,7 +121,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
         ))}
       </div>,
       document.body,
-      { open: isOpen, onClose: () => setIsOpen(false), title: 'Acciones', presentation, anchorRef },
+      { open: isOpen, onClose: () => setIsOpen(false), title: common.actions, presentation, anchorRef },
     );
 
   return (

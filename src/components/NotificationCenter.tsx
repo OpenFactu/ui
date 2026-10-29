@@ -7,6 +7,7 @@ import { usePopover } from '../hooks/usePopover';
 import { useEscapeStack } from '../internal/escapeStack';
 import { Modal } from './Modal';
 import { NotificationList, type NotificationListProps } from './NotificationList';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface NotificationCenterProps extends Omit<NotificationListProps, 'maxHeight' | 'headerActions'> {
   /** Apertura controlada opcional. Sin esta propiedad, la campana la gestiona localmente. */
@@ -18,7 +19,9 @@ export interface NotificationCenterProps extends Omit<NotificationListProps, 'ma
 }
 
 /** Campana y bandeja controlada: desplegable en escritorio y pantalla completa en móvil. */
-export function NotificationCenter({ items, title = 'Notificaciones', open, onOpenChange, trigger, triggerClassName, className, onActivate, ...listProps }: NotificationCenterProps) {
+export function NotificationCenter({ items, title: titleProp, open, onOpenChange, trigger, triggerClassName, className, onActivate, ...listProps }: NotificationCenterProps) {
+  const { messages: m, format } = useI18n();
+  const title = titleProp ?? m.notifications.title;
   const [localOpen, setLocalOpen] = React.useState(false);
   const isOpen = open ?? localOpen;
   const narrow = useIsMobile();
@@ -36,10 +39,10 @@ export function NotificationCenter({ items, title = 'Notificaciones', open, onOp
   }, [isOpen, narrow, ready, popoverRef]);
   const list = <NotificationList {...listProps} title={title} items={items} className="notification-center-list"
     onActivate={onActivate ? item => { changeOpen(false); onActivate(item); } : undefined}
-    headerActions={<button type="button" className="notification-center-close" aria-label="Cerrar notificaciones" onClick={closeAndFocus}><UiIcon slot="x" size={18} /></button>} />;
+    headerActions={<button type="button" className="notification-center-close" aria-label={m.notifications.close} onClick={closeAndFocus}><UiIcon slot="x" size={18} /></button>} />;
   return <span className={cn('notification-center', className)}>
     <button ref={anchorRef} type="button" className={cn('notification-center-trigger', triggerClassName)} disabled={listProps.disabled}
-      aria-label={`${title}: ${unread} sin leer`} aria-haspopup="dialog" aria-expanded={isOpen} aria-controls={isOpen && !narrow ? id : undefined} onClick={() => changeOpen(!isOpen)}>
+      aria-label={format(m.notifications.trigger, { title, count: unread })} aria-haspopup="dialog" aria-expanded={isOpen} aria-controls={isOpen && !narrow ? id : undefined} onClick={() => changeOpen(!isOpen)}>
       {trigger ?? <UiIcon slot="bell" size={19} />}{unread > 0 && <span className="notification-center-count" aria-hidden="true">{unread > 99 ? '99+' : unread}</span>}
     </button>
     {(isOpen || mounted) && !narrow && typeof document !== 'undefined' && createPortal(<div ref={popoverRef} id={id} role="dialog" aria-label={title} {...popoverProps} className={cn('notification-center-panel k-appear', !ready && 'invisible')} style={style}>{list}</div>, document.body)}

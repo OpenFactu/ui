@@ -3,6 +3,7 @@ import * as React from 'react';
 import { cn } from '../utils';
 import { ControlField, describedBy } from './internal/ControlField';
 import { clampRange, nearestThumb, percent, snapToStep, valueFromPosition } from './internal/slider';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface SliderMark {
   value: number;
@@ -48,6 +49,7 @@ export function Slider<V extends number | [number, number]>({
   value, onChange, onChangeEnd, min = 0, max = 100, step = 1, minGap = 0, marks, formatValue, showValue = 'active',
   label, helperText, error, required, disabled, size = 'md', name, id, className, thumbLabels = ['Mínimo', 'Máximo'],
 }: SliderProps<V>) {
+  const status = useMessages('status');
   const generated = React.useId();
   const sliderId = id ?? generated;
   const isRange = Array.isArray(value);
@@ -134,7 +136,7 @@ export function Slider<V extends number | [number, number]>({
               tabIndex={disabled ? -1 : 0}
               id={index === 0 ? sliderId : `${sliderId}-${index}`}
               aria-labelledby={label && !isRange ? `${sliderId}-label` : undefined}
-              aria-label={isRange ? thumbLabels[index] : label ? undefined : 'Valor'}
+              aria-label={isRange ? thumbLabels[index] : label ? undefined : status.value}
               aria-valuemin={isRange && index === 1 ? values[0] : min}
               aria-valuemax={isRange && index === 0 ? values[1] : max}
               aria-valuenow={v}

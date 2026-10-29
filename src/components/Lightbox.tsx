@@ -6,6 +6,7 @@ import { useAnimatedPresence } from '../hooks/useAnimatedPresence';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useEscapeStack } from '../internal/escapeStack';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface LightboxImage {
   src: string;
@@ -31,6 +32,7 @@ const FIT: View = { scale: 1, x: 0, y: 0 };
  * para mover la imagen ampliada, deslizar para pasar de imagen, flechas y Escape. El fondo oscurece toda la página.
  */
 export const Lightbox: React.FC<LightboxProps> = ({ images, open, onClose, index, onIndexChange, maxZoom = 4 }) => {
+  const { messages: m, format } = useI18n();
   const { mounted, state, ref } = useAnimatedPresence({ open });
   const root = React.useRef<HTMLDivElement>(null);
   const stage = React.useRef<HTMLDivElement>(null);
@@ -118,7 +120,7 @@ export const Lightbox: React.FC<LightboxProps> = ({ images, open, onClose, index
       ref={(el) => { root.current = el; (ref as React.MutableRefObject<HTMLElement | null>).current = el; }}
       role="dialog"
       aria-modal="true"
-      aria-label={`Imagen ${index + 1} de ${count}: ${image.alt}`}
+      aria-label={format(m.lightbox.image, { index: index + 1, total: count, alt: image.alt })}
       data-state={state}
       className="k-lightbox k-scrim"
       onKeyDown={onKeyDown}
@@ -127,9 +129,9 @@ export const Lightbox: React.FC<LightboxProps> = ({ images, open, onClose, index
       <div className="k-lightbox-bar">
         <span className="k-lightbox-count">{index + 1} / {count}</span>
         <span className="k-lightbox-tools">
-          <button type="button" aria-label="Alejar" disabled={view.scale <= 1} onClick={() => setView((v) => clampView({ ...v, scale: v.scale / 1.5 }))}><UiIcon slot="minus" size={18} /></button>
-          <button type="button" aria-label="Acercar" disabled={view.scale >= maxZoom} onClick={() => setView((v) => clampView({ ...v, scale: v.scale * 1.5 }))}><UiIcon slot="plus" size={18} /></button>
-          <button type="button" aria-label="Cerrar" onClick={onClose}><UiIcon slot="x" size={18} /></button>
+          <button type="button" aria-label={m.lightbox.zoomOut} disabled={view.scale <= 1} onClick={() => setView((v) => clampView({ ...v, scale: v.scale / 1.5 }))}><UiIcon slot="minus" size={18} /></button>
+          <button type="button" aria-label={m.lightbox.zoomIn} disabled={view.scale >= maxZoom} onClick={() => setView((v) => clampView({ ...v, scale: v.scale * 1.5 }))}><UiIcon slot="plus" size={18} /></button>
+          <button type="button" aria-label={m.common.close} onClick={onClose}><UiIcon slot="x" size={18} /></button>
         </span>
       </div>
       <div
@@ -155,8 +157,8 @@ export const Lightbox: React.FC<LightboxProps> = ({ images, open, onClose, index
       </div>
       {count > 1 && (
         <>
-          <button type="button" className="k-lightbox-nav" data-side="prev" aria-label="Imagen anterior" onClick={() => go(index - 1)}><UiIcon slot="chevron-left" size={22} /></button>
-          <button type="button" className="k-lightbox-nav" data-side="next" aria-label="Imagen siguiente" onClick={() => go(index + 1)}><UiIcon slot="chevron-right" size={22} /></button>
+          <button type="button" className="k-lightbox-nav" data-side="prev" aria-label={m.lightbox.previous} onClick={() => go(index - 1)}><UiIcon slot="chevron-left" size={22} /></button>
+          <button type="button" className="k-lightbox-nav" data-side="next" aria-label={m.lightbox.next} onClick={() => go(index + 1)}><UiIcon slot="chevron-right" size={22} /></button>
         </>
       )}
       {image.caption && <p className="k-lightbox-caption">{image.caption}</p>}

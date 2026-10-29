@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
+import { useMessages } from '../i18n/I18nProvider';
 
 export type StepStatus = 'hecha' | 'actual' | 'pendiente' | 'error';
 
@@ -72,8 +73,10 @@ export const Stepper: React.FC<StepperProps> = ({
   onStepClick,
   allowForward = false,
   className,
-  'aria-label': ariaLabel = 'Progreso',
+  'aria-label': ariaLabelProp,
 }) => {
+  const ariaLabelDefault = useMessages('navigation').progress;
+  const ariaLabel = ariaLabelProp ?? ariaLabelDefault;
   const spec = TAMANOS[size];
   const vertical = orientation === 'vertical';
 

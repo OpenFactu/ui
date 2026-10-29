@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { esMessages } from '../i18n/messages';
 
 /** Un estilo de mapa: de dónde salen las teselas y cómo se tiñen. */
 export interface MapStyleDefinition {
@@ -28,12 +29,13 @@ const DARK_FROM_LIGHT = 'invert(1) hue-rotate(180deg) brightness(0.92) contrast(
  * Estilos incluidos. Todos salen de las teselas de OpenStreetMap con un filtro distinto: no piden clave ni otro
  * proveedor. Para estilos de un proveedor (Mapbox, MapTiler, CARTO con clave…), regístralos con `registerMapStyle`.
  */
+const STYLE_NAMES = esMessages.map.styles;
 const BUILT_IN: MapStyleDefinition[] = [
-  { id: 'standard', label: 'Estándar', tileUrl: OSM, attribution: OSM_ATTRIBUTION, darkFilter: DARK_FROM_LIGHT, tone: 'light' },
-  { id: 'light', label: 'Claro', tileUrl: OSM, attribution: OSM_ATTRIBUTION, filter: 'saturate(0.3) brightness(1.1) contrast(0.88)', tone: 'light' },
-  { id: 'dark', label: 'Oscuro', tileUrl: OSM, attribution: OSM_ATTRIBUTION, filter: DARK_FROM_LIGHT, tone: 'dark' },
-  { id: 'mono', label: 'Blanco y negro', tileUrl: OSM, attribution: OSM_ATTRIBUTION, filter: 'grayscale(1) contrast(1.08) brightness(1.06)', tone: 'light' },
-  { id: 'mono-dark', label: 'Negro', tileUrl: OSM, attribution: OSM_ATTRIBUTION, filter: 'grayscale(1) invert(1) contrast(1.15) brightness(0.78)', tone: 'dark' },
+  { id: 'standard', label: STYLE_NAMES.standard, tileUrl: OSM, attribution: OSM_ATTRIBUTION, darkFilter: DARK_FROM_LIGHT, tone: 'light' },
+  { id: 'light', label: STYLE_NAMES.light, tileUrl: OSM, attribution: OSM_ATTRIBUTION, filter: 'saturate(0.3) brightness(1.1) contrast(0.88)', tone: 'light' },
+  { id: 'dark', label: STYLE_NAMES.dark, tileUrl: OSM, attribution: OSM_ATTRIBUTION, filter: DARK_FROM_LIGHT, tone: 'dark' },
+  { id: 'mono', label: STYLE_NAMES.mono, tileUrl: OSM, attribution: OSM_ATTRIBUTION, filter: 'grayscale(1) contrast(1.08) brightness(1.06)', tone: 'light' },
+  { id: 'mono-dark', label: STYLE_NAMES['mono-dark'], tileUrl: OSM, attribution: OSM_ATTRIBUTION, filter: 'grayscale(1) invert(1) contrast(1.15) brightness(0.78)', tone: 'dark' },
 ];
 
 const registry = new Map<string, MapStyleDefinition>(BUILT_IN.map((style) => [style.id, style]));

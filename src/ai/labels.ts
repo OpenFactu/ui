@@ -1,46 +1,14 @@
-const definition = {
-  assistant: 'Asistente', user: 'Tú', system: 'Sistema',
-  newConversation: 'Nueva conversación', searchConversations: 'Buscar conversaciones', conversations: 'Conversaciones',
-  rename: 'Renombrar', delete: 'Eliminar', pin: 'Fijar', unpin: 'Desfijar', cancel: 'Cancelar', save: 'Guardar', close: 'Cerrar',
-  deleteConversation: 'Eliminar conversación', deleteConversationHint: 'Esta acción eliminará la conversación seleccionada.',
-  noConversations: 'No hay conversaciones', noSearchResults: 'No se encontraron resultados', pinned: 'Fijadas',
-  projects: 'Proyectos', newProject: 'Nuevo proyecto', projectName: 'Nombre del proyecto', renameProject: 'Renombrar proyecto',
-  deleteProject: 'Eliminar proyecto', deleteProjectHint: 'Las conversaciones se conservarán en «Sin proyecto».',
-  noProject: 'Sin proyecto', emptyProject: 'Todavía no hay conversaciones', moveToProject: 'Mover a proyecto', project: 'Proyecto',
-  copy: 'Copiar', copied: 'Copiado', copyError: 'No se pudo copiar el contenido.', download: 'Descargar', edit: 'Editar',
-  regenerate: 'Regenerar', positive: 'Respuesta útil', negative: 'Respuesta no útil', readAloud: 'Leer en voz alta', version: 'Versión',
-  message: 'Mensaje', writeMessage: 'Escribe un mensaje…', send: 'Enviar mensaje', stop: 'Detener respuesta', retry: 'Reintentar',
-  attach: 'Adjuntar archivos', tools: 'Herramientas', moreTools: 'Más herramientas', removeFile: 'Quitar archivo', model: 'Modelo', suggestions: 'Sugerencias',
-  uploading: 'Subiendo', attachmentError: 'No se pudo adjuntar el archivo', rejectedFiles: 'Algunos archivos no cumplen los límites permitidos.', incompatibleAttachments: 'El modelo seleccionado no admite estos adjuntos.',
-  emptyTitle: '¿En qué trabajamos?', emptyHint: 'Escribe una pregunta o empieza con una sugerencia.',
-  newMessages: 'Ir a los mensajes nuevos', loadOlder: 'Cargar mensajes anteriores', loading: 'Cargando…',
-  submitting: 'Enviando…', streaming: 'Escribiendo…', waiting: 'Esperando una acción', cancelled: 'Respuesta detenida',
-  error: 'Ha ocurrido un error', sources: 'Fuentes', activity: 'Actividad del agente', toolInput: 'Entrada', toolOutput: 'Resultado',
-  pending: 'Pendiente', running: 'En ejecución', approval: 'Requiere aprobación', completed: 'Completado', denied: 'Rechazado',
-  approvalPrompt: 'El asistente quiere usar esta herramienta. ¿Le das permiso?', messageFailed: 'No se ha podido completar la respuesta.',
-  approve: 'Aprobar', reject: 'Rechazar', openResult: 'Abrir resultado', results: 'Resultados', code: 'Código', preview: 'Vista previa',
-  expandCode: 'Ver código completo', collapseCode: 'Contraer código',
-  apply: 'Aplicar', applied: 'Aplicado', run: 'Ejecutar', runAgain: 'Volver a ejecutar', runningCode: 'Ejecutando…', output: 'Salida', clearOutput: 'Borrar salida', runError: 'No se pudo ejecutar el código.',
-  thinking: 'Pensando', thought: 'Pensó', thoughtFor: 'Pensó durante', reasoning: 'Razonamiento',
-  plan: 'Plan', planProgress: 'hechos', todo: 'Por hacer', completed2: 'Completadas', steps: 'pasos', researched: 'Investigó en', worked: 'Trabajó en',
-  ran: 'Ejecutó', running2: 'Ejecutando', failed: 'Falló', exitCode: 'Código de salida', clearOutput2: 'Limpiar', noOutput: 'Sin salida',
-  stackFrames: 'Trazas', frameworkFrames: 'trazas internas', openFile: 'Abrir', copyStack: 'Copiar traza',
-  tests: 'pruebas', testsFailed: 'fallan', testsPassed: 'superadas', testsSkipped: 'omitidas', testResults: 'Resultados de pruebas',
-  changedFiles: 'Archivos modificados', fileAdded: 'nuevo', fileModified: 'modificado', fileDeleted: 'eliminado',
-  checkpoint: 'Punto de control', restore: 'Restaurar', restored: 'Restaurado', restoreHint: 'Vuelve a este punto y descarta lo posterior',
-  contextUsed: 'Contexto usado', tokens: 'tokens', source2: 'Fuente', opensNewTab: '(se abre en una pestaña nueva)',
-  contextOf: 'de', contextLeft: 'quedan', contextFilling: 'El contexto se está llenando.', contextFull: 'Contexto casi lleno: las respuestas pueden perder detalle.', compactChat: 'Compactar conversación', previous: 'Anterior', next: 'Siguiente',
-  codeActions: 'Acciones de código', moreCodeActions: 'Más acciones', selectionActions: 'Acciones sobre la selección',
-  proposedChanges: 'Cambios propuestos', acceptChanges: 'Aceptar cambios', discardChanges: 'Descartar', changesAccepted: 'Cambios aceptados', changesDiscarded: 'Cambios descartados',
-  unchangedLines: 'líneas sin cambios', showUnchanged: 'Mostrar', addedLines: 'añadidas', removedLines: 'eliminadas', noResults: 'Los resultados aparecerán aquí',
-  unsupportedFile: 'Archivo disponible para descargar', imageUnavailable: 'No se pudo cargar la imagen',
-  record: 'Grabar audio', pause: 'Pausar', resume: 'Continuar', finishRecording: 'Terminar grabación', useRecording: 'Usar grabación',
-  recording: 'Grabando', recordingPaused: 'Grabación pausada', microphoneDenied: 'Permite el micrófono para grabar audio.',
-  microphoneUnavailable: 'No se pudo acceder al micrófono.', recordingUnsupported: 'La grabación de audio no está disponible en este navegador.',
-  play: 'Reproducir', volume: 'Volumen', playbackSpeed: 'Velocidad', audioPosition: 'Posición del audio', audioUnavailable: 'No se pudo reproducir el audio.',
-  conversation: 'Conversación', openHistory: 'Abrir historial', resizeResults: 'Cambiar ancho de resultados',
-  resizeHistory: 'Cambiar ancho de conversaciones',
-};
-export type AILabels = typeof definition;
-export const DEFAULT_AI_LABELS: Readonly<AILabels> = Object.freeze(definition);
+import { esMessages, type Messages } from '../i18n/messages';
+import { useMessages } from '../i18n/I18nProvider';
+
+/** Textos de los componentes de IA: el espacio `ai` del catálogo de traducciones. */
+export type AILabels = Messages['ai'];
+/** Los textos de IA en español. Para traducirlos, `registerTranslations(locale, { ai: {...} })` o `I18nProvider`. */
+export const DEFAULT_AI_LABELS: Readonly<AILabels> = Object.freeze(esMessages.ai);
+/** Los textos en español con `overrides` encima. Fuera de React; dentro, `useAILabels`, que también sigue al idioma. */
 export function aiLabels(overrides?: Partial<AILabels>): AILabels { return { ...DEFAULT_AI_LABELS, ...overrides }; }
+/** Textos de IA del idioma activo (catálogo y `I18nProvider`) con los de la prop `labels` encima. */
+export function useAILabels(overrides?: Partial<AILabels>): AILabels {
+  const fromCatalog = useMessages('ai');
+  return overrides ? { ...fromCatalog, ...overrides } : fromCatalog;
+}

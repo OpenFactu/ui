@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { cn } from '../utils';
+import { useMessages } from '../i18n/I18nProvider';
 
 export type SpinnerVariant = 'ring' | 'dual' | 'pulse' | 'orbit' | 'dots' | 'bars' | 'grid' | 'blades' | 'ripple';
 
@@ -24,7 +25,10 @@ const PARTS: Partial<Record<SpinnerVariant, number>> = { orbit: 5, dots: 3, bars
  * ```
  */
 export const Spinner = React.forwardRef<HTMLSpanElement, SpinnerProps>(
-  ({ variant = 'ring', size = 'md', tone = 'accent', label = 'Cargando', className, ...rest }, ref) => (
+  ({ variant = 'ring', size = 'md', tone = 'accent', label: labelProp, className, ...rest }, ref) => {
+    const loading = useMessages('common').loadingShort;
+    const label = labelProp ?? loading;
+    return (
     <span
       ref={ref}
       role="status"
@@ -39,7 +43,8 @@ export const Spinner = React.forwardRef<HTMLSpanElement, SpinnerProps>(
         <i key={n} style={{ '--n': n } as React.CSSProperties} />
       ))}
     </span>
-  ),
+    );
+  },
 );
 Spinner.displayName = 'Spinner';
 
@@ -50,9 +55,13 @@ export interface ThinkingProps extends React.HTMLAttributes<HTMLSpanElement> {
 }
 
 /** «Pensando…» de un asistente: un spinner pequeño y un texto con brillo. */
-export const Thinking: React.FC<ThinkingProps> = ({ children = 'Pensando', variant = 'dots', className, ...rest }) => (
+export const Thinking: React.FC<ThinkingProps> = ({ children: childrenProp, variant = 'dots', className, ...rest }) => {
+  const thinking = useMessages('status').thinking;
+  const children = childrenProp ?? thinking;
+  return (
   <span className={cn('k-thinking', className)} {...rest}>
-    <Spinner variant={variant} size="xs" tone="muted" label={typeof children === 'string' ? children : 'Pensando'} />
+    <Spinner variant={variant} size="xs" tone="muted" label={typeof children === 'string' ? children : thinking} />
     <span className="k-shimmer-text">{children}</span>
   </span>
-);
+  );
+};

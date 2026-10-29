@@ -3,7 +3,11 @@ import type { ChatController } from './controller';
 import { chatError, chatOperationKey } from './controller';
 import type { ChatActions, ChatConversationPatch, ChatMessageData } from './types';
 import { updateChatMentions } from './mentions';
+import { useMessages } from '../i18n/I18nProvider';
 export function useChatMutations({ snapshot, mounted, commit, props }: ChatController): Pick<ChatActions, 'editMessage' | 'deleteMessage' | 'changeConversation' | 'pinMessage' | 'focusMessage'> {
+  const chatTexts = useMessages('chat');
+  const texts = React.useRef(chatTexts);
+  texts.current = chatTexts;
   const locks = React.useRef(new Set<string>());
   return React.useMemo(() => {
     const find = (id: string, conversationId?: string) => snapshot.current.messages.find(item => item.conversationId === (conversationId ?? snapshot.current.activeConversationId) && (item.id === id || item.clientId === id));
@@ -28,7 +32,7 @@ export function useChatMutations({ snapshot, mounted, commit, props }: ChatContr
           commit({ type: 'patch-message', conversationId: message.conversationId, messageId: message.id, patch });
         }
         commit({ type: 'operation', key, value: { pending: false } }); return true;
-      } catch (error) { commit({ type: 'operation', key, value: { pending: false, error: chatError(error, 'No se ha podido guardar el cambio.') } }); return false; }
+      } catch (error) { commit({ type: 'operation', key, value: { pending: false, error: chatError(error, texts.current.saveError) } }); return false; }
       finally { locks.current.delete(key); }
     };
     const changeConversation = async (conversationId: string, patch: ChatConversationPatch) => {
@@ -43,7 +47,7 @@ export function useChatMutations({ snapshot, mounted, commit, props }: ChatContr
         if (Array.isArray(applicable.pinnedMessageIds)) applicable.pinnedMessageIds = applicable.pinnedMessageIds.filter(id => snapshot.current.messages.some(message => message.conversationId === conversationId && message.id === id && !message.deletedAt));
         commit({ type: 'patch-conversation', conversationId, patch: applicable });
         commit({ type: 'operation', key, value: { pending: false } }); return true;
-      } catch (error) { commit({ type: 'operation', key, value: { pending: false, error: chatError(error, 'No se ha podido actualizar la conversación.') } }); return false; }
+      } catch (error) { commit({ type: 'operation', key, value: { pending: false, error: chatError(error, texts.current.conversationError) } }); return false; }
       finally { locks.current.delete(key); }
     };
     return {

@@ -3,6 +3,7 @@ import { cn } from '../utils';
 import { UiIcon } from '../icons';
 import { RollingNumber } from './TextMotion';
 import { countdownParts } from './internal/calendar';
+import { useI18n } from '../i18n/I18nProvider';
 
 type Unit = 'days' | 'hours' | 'minutes' | 'seconds';
 
@@ -38,8 +39,6 @@ export interface CountdownProps {
   className?: string;
 }
 
-const NAMES: Record<Unit, readonly [string, string]> = { days: ['día', 'días'], hours: ['hora', 'horas'], minutes: ['minuto', 'minutos'], seconds: ['segundo', 'segundos'] };
-const SHORT: Record<Unit, string> = { days: 'd', hours: 'h', minutes: 'min', seconds: 's' };
 const SPAN: Record<Unit, number> = { days: 0, hours: 24, minutes: 60, seconds: 60 };
 const TWO_DIGITS = { minimumIntegerDigits: 2, useGrouping: false } as const;
 const COMPACT = new Set<CountdownVariant>(['inline', 'pill']);
@@ -48,6 +47,8 @@ const COMPACT = new Set<CountdownVariant>(['inline', 'pill']);
 export const Countdown: React.FC<CountdownProps> = ({
   target, onComplete, units, variant = 'blocks', size = 'md', tone = 'neutral', separator, urgentBelow, label, completed, className,
 }) => {
+  const { messages: m, format } = useI18n();
+  const unitName = (unit: Unit, n: number) => format(m.dates.units[unit], { count: n });
   const end = React.useMemo(() => new Date(target).getTime(), [target]);
   const [now, setNow] = React.useState(() => Date.now());
   const fired = React.useRef(false);
@@ -70,7 +71,7 @@ export const Countdown: React.FC<CountdownProps> = ({
   }, [parts.done, end, onComplete]);
 
   const shown = units ?? (parts.days > 0 ? ['days', 'hours', 'minutes', 'seconds'] : ['hours', 'minutes', 'seconds']);
-  const spoken = shown.filter((u) => u !== 'seconds').map((u) => `${parts[u]} ${NAMES[u][parts[u] === 1 ? 0 : 1]}`).join(', ');
+  const spoken = shown.filter((u) => u !== 'seconds').map((u) => `${parts[u]} ${unitName(u, parts[u])}`).join(', ');
   const left = Math.max(0, Math.ceil((end - now) / 1000));
   const urgent = urgentBelow !== undefined && !parts.done && left <= urgentBelow;
   const compact = COMPACT.has(variant);
@@ -86,7 +87,7 @@ export const Countdown: React.FC<CountdownProps> = ({
       data-separator={colons || undefined}
       data-urgent={urgent || undefined}
       role="timer"
-      aria-label={parts.done ? 'Tiempo cumplido' : `Quedan ${spoken}`}
+      aria-label={parts.done ? m.countdown.done : format(m.countdown.remaining, { time: spoken })}
     >
       {variant === 'pill' && <UiIcon slot="clock" size={14} className="k-countdown-icon" aria-hidden="true" />}
       {variant === 'pill' && label && <span className="k-countdown-label">{label}</span>}
@@ -112,7 +113,7 @@ export const Countdown: React.FC<CountdownProps> = ({
                 <RollingNumber value={value} options={unit === 'days' ? undefined : TWO_DIGITS} />
                 {compact && unit === 'days' && <span className="k-countdown-d">d</span>}
               </span>
-              {!compact && <small>{variant === 'ring' && size === 'sm' ? SHORT[unit] : NAMES[unit][value === 1 ? 0 : 1]}</small>}
+              {!compact && <small>{variant === 'ring' && size === 'sm' ? m.dates.units[`${unit}Short`] : unitName(unit, value)}</small>}
             </span>
           </React.Fragment>
         );

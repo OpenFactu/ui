@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { cn } from '../utils';
 import { isPrimaryPointer, startPointerDrag } from '../internal/pointerDrag';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface CompareSliderProps {
   /** Lo de antes (izquierda): una imagen u otro contenido del mismo tamaño que `after`. */
@@ -22,8 +23,11 @@ export interface CompareSliderProps {
  * Útil para retoques, cambios de diseño o versiones de un documento escaneado.
  */
 export const CompareSlider: React.FC<CompareSliderProps> = ({
-  before, after, beforeLabel = 'Antes', afterLabel = 'Después', defaultPosition = 50, aspectRatio = '16 / 9', className,
+  before, after, beforeLabel: beforeLabelProp, afterLabel: afterLabelProp, defaultPosition = 50, aspectRatio = '16 / 9', className,
 }) => {
+  const { messages: m, format } = useI18n();
+  const beforeLabel = beforeLabelProp ?? m.compareSlider.before;
+  const afterLabel = afterLabelProp ?? m.compareSlider.after;
   const [position, setPosition] = React.useState(defaultPosition);
   const box = React.useRef<HTMLDivElement>(null);
   const at = (clientX: number) => { const r = box.current!.getBoundingClientRect(); return Math.max(0, Math.min(100, ((clientX - r.left) / r.width) * 100)); };
@@ -49,7 +53,7 @@ export const CompareSlider: React.FC<CompareSliderProps> = ({
       <div
         role="slider"
         tabIndex={0}
-        aria-label={`Comparar ${beforeLabel.toLowerCase()} y ${afterLabel.toLowerCase()}`}
+        aria-label={format(m.compareSlider.label, { before: beforeLabel.toLowerCase(), after: afterLabel.toLowerCase() })}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(position)}

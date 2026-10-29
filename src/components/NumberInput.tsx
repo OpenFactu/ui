@@ -11,6 +11,7 @@ import {
   parseDecimal,
   roundTo,
 } from './internal/numberFormat';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface NumberInputProps
   extends Omit<InputProps, 'value' | 'defaultValue' | 'onChange' | 'type'> {
@@ -71,6 +72,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
   onPaste,
   ...rest
 }) => {
+  const numberTexts = useMessages('numberInput');
   const [editing, setEditing] = React.useState(false);
   const [buffer, setBuffer] = React.useState('');
 
@@ -164,7 +166,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
   };
 
   const mobile = useIsMobile();
-  const mobileStep = (direction: number) => <button type="button" disabled={disabled || readOnly || (value != null && (direction > 0 ? max != null && value >= max : minimum != null && value <= minimum))} onMouseDown={event => event.preventDefault()} onClick={() => nudge(direction * step)} aria-label={direction > 0 ? 'Aumentar' : 'Disminuir'} className="k-number-step"><UiIcon slot={direction > 0 ? 'plus' : 'minus'} size={18} /></button>;
+  const mobileStep = (direction: number) => <button type="button" disabled={disabled || readOnly || (value != null && (direction > 0 ? max != null && value >= max : minimum != null && value <= minimum))} onMouseDown={event => event.preventDefault()} onClick={() => nudge(direction * step)} aria-label={direction > 0 ? numberTexts.increase : numberTexts.decrease} className="k-number-step"><UiIcon slot={direction > 0 ? 'plus' : 'minus'} size={18} /></button>;
   const steppers = showSteppers ? (
     <span className="flex flex-col">
       <button
@@ -173,7 +175,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
         disabled={disabled || readOnly}
         onMouseDown={(event) => event.preventDefault()}
         onClick={() => nudge(step)}
-        aria-label="Aumentar"
+        aria-label={numberTexts.increase}
         className="flex items-center justify-center px-1.5 h-1/2 text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors disabled:opacity-40"
       >
         <UiIcon slot="chevron-up" className="h-3 w-3" />
@@ -184,7 +186,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
         disabled={disabled || readOnly}
         onMouseDown={(event) => event.preventDefault()}
         onClick={() => nudge(-step)}
-        aria-label="Disminuir"
+        aria-label={numberTexts.decrease}
         className="flex items-center justify-center px-1.5 h-1/2 text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors disabled:opacity-40"
       >
         <UiIcon slot="chevron-down" className="h-3 w-3" />

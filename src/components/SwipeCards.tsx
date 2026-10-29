@@ -4,6 +4,7 @@ import { cn } from '../utils';
 import { createVelocityTracker } from '../motion/velocity';
 import { exitDelay, motionDisabled } from '../motion/dom';
 import { isPrimaryPointer, startPointerDrag } from '../internal/pointerDrag';
+import { useI18n } from '../i18n/I18nProvider';
 
 export type SwipeDirection = 'left' | 'right';
 
@@ -31,7 +32,9 @@ const FLICK = 0.5;
  * al dedo girando un poco, enseña qué decisión se tomará y, al soltarla, sale volando si se pasó del umbral o se lanzó;
  * si no, vuelve con el muelle del tema. También con botones y con las flechas del teclado.
  */
-export function SwipeCards<T>({ items, getKey, renderCard, onSwipe, labels = {}, stack = 2, empty = 'No hay más', className }: SwipeCardsProps<T>) {
+export function SwipeCards<T>({ items, getKey, renderCard, onSwipe, labels = {}, stack = 2, empty: emptyProp, className }: SwipeCardsProps<T>) {
+  const { messages: m, format } = useI18n();
+  const empty = emptyProp ?? m.swipeCards.empty;
   const top = React.useRef<HTMLDivElement>(null);
   const [leaving, setLeaving] = React.useState<{ key: React.Key; dir: SwipeDirection } | null>(null);
   const tracker = React.useMemo(() => createVelocityTracker(100), []);
@@ -76,8 +79,8 @@ export function SwipeCards<T>({ items, getKey, renderCard, onSwipe, labels = {},
       <div
         className="k-swipe-stack"
         role="group"
-        aria-roledescription="pila de tarjetas"
-        aria-label={`${items.length} por revisar`}
+        aria-roledescription={m.swipeCards.roleDescription}
+        aria-label={format(m.swipeCards.pending, { count: items.length })}
         tabIndex={0}
         onKeyDown={(e) => { if (e.key === 'ArrowLeft') { e.preventDefault(); fling('left'); } else if (e.key === 'ArrowRight') { e.preventDefault(); fling('right'); } }}
       >

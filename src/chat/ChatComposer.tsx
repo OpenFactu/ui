@@ -14,9 +14,12 @@ import { ChatAttachments } from './ChatAttachments';
 import { ChatVoiceRecorder } from './ChatVoiceRecorder';
 import { chatOperationKey } from './controller';
 import type { ChatUser } from './types';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface ChatComposerProps { className?: string; placeholder?: string; disabled?: boolean }
-export function ChatComposer({ className, placeholder = 'Escribe un mensaje…', disabled = false }: ChatComposerProps) {
+export function ChatComposer({ className, placeholder: placeholderProp, disabled = false }: ChatComposerProps) {
+  const { messages: { chat: ct }, format } = useI18n();
+  const placeholder = placeholderProp ?? ct.placeholder;
   const { conversation, draft, messages, users, currentUser } = useChatConversation();
   const { setDraft, sendMessage, addAttachments } = useChatActions();
   const { canUpload } = useChatPeople();
@@ -48,15 +51,15 @@ export function ChatComposer({ className, placeholder = 'Escribe un mensaje…',
     requestAnimationFrame(() => { input.current?.focus(); input.current?.setSelectionRange(position, position); });
   };
   const uploadError = conversation && state.operations[chatOperationKey('upload', conversation.id)]?.error;
-  return <form className={cn('k-chat-composer', className)} data-voice-active={voiceBusy} aria-label="Redactar mensaje" onSubmit={event => { event.preventDefault(); submit(); }}
+  return <form className={cn('k-chat-composer', className)} data-voice-active={voiceBusy} aria-label={ct.compose} onSubmit={event => { event.preventDefault(); submit(); }}
     onDragOver={event => { if (canUpload && !locked && event.dataTransfer.types.includes('Files')) event.preventDefault(); }}
     onDrop={event => { if (canUpload && !locked && event.dataTransfer.files.length) { event.preventDefault(); void addAttachments(Array.from(event.dataTransfer.files)); } }}>
-    {draft.replyToId && <div className="k-chat-reply-preview"><div><strong>Respondiendo a {users.find(user => user.id === original?.senderId)?.name ?? 'un mensaje anterior'}</strong><p>{original?.text ?? 'Mensaje fuera del historial cargado'}</p></div>
-      <button type="button" className="k-chat-icon-button" aria-label="Cancelar respuesta" onClick={() => setDraft({ ...draft, replyToId: undefined })}><UiIcon slot="x" size={16} /></button></div>}
+    {draft.replyToId && <div className="k-chat-reply-preview"><div><strong>{format(ct.replyingTo, { name: users.find(user => user.id === original?.senderId)?.name ?? ct.previousMessage })}</strong><p>{original?.text ?? ct.outOfHistory}</p></div>
+      <button type="button" className="k-chat-icon-button" aria-label={ct.cancelReply} onClick={() => setDraft({ ...draft, replyToId: undefined })}><UiIcon slot="x" size={16} /></button></div>}
     {Boolean(draft.attachments?.length) && conversation && <ChatAttachments attachments={draft.attachments!} draft conversationId={conversation.id} />}
     {uploadError && <p className="k-chat-message-error" role="alert">{uploadError}</p>}
-    <div data-k-focus-surface="" className="k-chat-composer-input"><Textarea data-k-focus-input="" inputRef={input} aria-label="Mensaje" aria-describedby={hintId} value={draft.text} rows={1}
-      disabled={Boolean(locked)} placeholder={conversation?.readOnly ? 'Esta conversación es de solo lectura' : placeholder}
+    <div data-k-focus-surface="" className="k-chat-composer-input"><Textarea data-k-focus-input="" inputRef={input} aria-label={ct.message} aria-describedby={hintId} value={draft.text} rows={1}
+      disabled={Boolean(locked)} placeholder={conversation?.readOnly ? ct.readOnlyPlaceholder : placeholder}
       onSelect={event => { const element = event.currentTarget; selection.current = { start: element.selectionStart, end: element.selectionEnd }; setCaret(element.selectionStart); }}
       onChange={event => { const text = event.target.value; setDraft({ ...draft, text, mentions: updateChatMentions(draft.text, text, draft.mentions) }); setCaret(event.target.selectionStart); setMentionIndex(0); }}
       onCompositionStart={() => { composing.current = true; }} onCompositionEnd={() => { composing.current = false; }}
@@ -74,11 +77,11 @@ export function ChatComposer({ className, placeholder = 'Escribe un mensaje…',
         setDraft({ ...draft, text: next.text, mentions: updateChatMentions(draft.text, next.text, draft.mentions) }); setCaret(next.caret);
         requestAnimationFrame(() => { input.current?.focus(); input.current?.setSelectionRange(next.caret, next.caret); });
       }} />
-      {canUpload && <><FileDropzone className="k-chat-attach-trigger" variant="button" icon={<UiIcon slot="paperclip" size={18} />} label={<span className="k-chat-visually-hidden">Adjuntar archivos</span>} hint="" multiple disabled={Boolean(locked)} onFiles={async files => { await addAttachments(files); }} />
+      {canUpload && <><FileDropzone className="k-chat-attach-trigger" variant="button" icon={<UiIcon slot="paperclip" size={18} />} label={<span className="k-chat-visually-hidden">{ct.attach}</span>} hint="" multiple disabled={Boolean(locked)} onFiles={async files => { await addAttachments(files); }} />
         <ChatVoiceRecorder key={`voice-${conversation?.id}`} disabled={Boolean(locked)} onBusyChange={setVoiceBusy} /></>}
       <span className="k-chat-composer-spacer" />
-      <p id={hintId} className="k-chat-composer-hint">{conversation?.readOnly ? 'Solo lectura' : <><kbd>Intro</kbd> para enviar</>}</p>
-      <Button className="k-chat-send" type="submit" variant="accent" size="sm" disabled={!canSend} aria-label="Enviar mensaje" title="Enviar mensaje"><UiIcon slot="arrow-up" size={18} /></Button>
+      <p id={hintId} className="k-chat-composer-hint">{conversation?.readOnly ? ct.readOnly : <><kbd>{ct.enterKey}</kbd>{ct.enterToSend}</>}</p>
+      <Button className="k-chat-send" type="submit" variant="accent" size="sm" disabled={!canSend} aria-label={ct.send} title={ct.send}><UiIcon slot="arrow-up" size={18} /></Button>
     </div>
     </div>
   </form>;

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { UiIcon, type IconSlot } from '../icons';
 import { cn } from '../utils';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface AlertProps {
   title?: React.ReactNode;
@@ -44,10 +45,12 @@ export function Alert({
   icon,
   action,
   onDismiss,
-  dismissLabel = 'Cerrar aviso',
+  dismissLabel: dismissLabelProp,
   role = 'note',
   className,
 }: AlertProps) {
+  const common = useMessages('common');
+  const dismissLabel = dismissLabelProp ?? common.dismiss;
   const iconSlot = ICONS[tone];
   return (
     <div data-k-mobile="Alert"

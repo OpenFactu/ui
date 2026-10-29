@@ -4,6 +4,7 @@ import { cn } from '../utils';
 import { Button } from './Button';
 import { Badge } from './Badge';
 import { EmptyState } from './EmptyState';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface NotificationItem {
   id: string;
@@ -32,7 +33,7 @@ export interface NotificationListProps {
 /** Bandeja controlada. Abrir una notificación no cambia su lectura automáticamente. */
 export const NotificationList: React.FC<NotificationListProps> = ({
   items,
-  title = 'Notificaciones',
+  title: titleProp,
   headerActions,
   onActivate,
   onReadChange,
@@ -42,6 +43,9 @@ export const NotificationList: React.FC<NotificationListProps> = ({
   maxHeight,
   className,
 }) => {
+  const { messages: m, format } = useI18n();
+  const nl = m.notificationList;
+  const title = titleProp ?? m.notifications.title;
   const id = React.useId();
   const unread = items.filter((item) => !item.read);
   return (
@@ -57,7 +61,7 @@ export const NotificationList: React.FC<NotificationListProps> = ({
           <h2 id={id} className="text-sm font-semibold text-[var(--fg-default)]">
             {title}
           </h2>
-          <Badge variant={unread.length ? 'info' : 'neutral'}>{unread.length} sin leer</Badge>
+          <Badge variant={unread.length ? 'info' : 'neutral'}>{format(nl.unread, { count: unread.length })}</Badge>
         </div>
         <div className="flex items-center gap-2">{onMarkAllRead && (
           <Button
@@ -67,12 +71,12 @@ export const NotificationList: React.FC<NotificationListProps> = ({
             disabled={disabled || !unread.length}
             onClick={() => onMarkAllRead(unread.map((item) => item.id))}
           >
-            Marcar todas como leídas
+            {nl.markAllRead}
           </Button>
         )}{headerActions}</div>
       </div>
       {!items.length ? (
-        <EmptyState variant="compact" icon={<UiIcon slot="bell" size={24} />} title="No hay notificaciones" />
+        <EmptyState variant="compact" icon={<UiIcon slot="bell" size={24} />} title={nl.empty} />
       ) : (
         <ul
           aria-label={title}
@@ -90,7 +94,7 @@ export const NotificationList: React.FC<NotificationListProps> = ({
               <div className="min-w-0 flex-1">
                 <div className="flex items-start gap-2">
                   <div className="min-w-0 flex-1">
-                    <span className="sr-only">{item.read ? 'Leída. ' : 'Sin leer. '}</span>
+                    <span className="sr-only">{item.read ? nl.readState : nl.unreadState}</span>
                     {onActivate ? (
                       <button
                         type="button"
@@ -127,11 +131,11 @@ export const NotificationList: React.FC<NotificationListProps> = ({
                         size="sm"
                         variant="soft"
                         disabled={disabled}
-                        aria-label={`${item.read ? 'Marcar sin leer' : 'Marcar como leída'}: ${item.title}`}
+                        aria-label={format(item.read ? nl.markUnreadLabel : nl.markReadLabel, { title: String(item.title) })}
                         onClick={() => onReadChange(item, !item.read)}
                       >
                         {item.read ? <UiIcon slot="mail" size={13} /> : <UiIcon slot="check" size={13} />}
-                        {item.read ? 'Sin leer' : 'Marcar leída'}
+                        {item.read ? nl.markUnread : nl.markRead}
                       </Button>
                     )}
                     {onDismiss && (
@@ -140,11 +144,11 @@ export const NotificationList: React.FC<NotificationListProps> = ({
                         size="sm"
                         variant="link"
                         disabled={disabled}
-                        aria-label={`Descartar: ${item.title}`}
+                        aria-label={format(nl.dismissLabel, { title: String(item.title) })}
                         onClick={() => onDismiss(item)}
                       >
                         <UiIcon slot="x" size={13} />
-                        Descartar
+                        {nl.dismiss}
                       </Button>
                     )}
                     {item.action}

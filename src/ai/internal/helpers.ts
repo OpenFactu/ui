@@ -20,9 +20,9 @@ export function suggestionQuery(text: string, caret: number): { kind: 'mention' 
   if (!match) return null;
   return { kind: match[1] === '@' ? 'mention' : 'command', query: match[2], start: caret - match[2].length - 1, end: caret };
 }
-export function displayJson(value: unknown): string {
+export function displayJson(value: unknown, unserializable = '[Contenido no serializable]'): string {
   if (typeof value === 'string') return value;
-  try { return JSON.stringify(value, null, 2) ?? ''; } catch { return '[Contenido no serializable]'; }
+  try { return JSON.stringify(value, null, 2) ?? ''; } catch { return unserializable; }
 }
 export function htmlPreviewDocument(html: string): string {
   const policy = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'";

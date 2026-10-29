@@ -1,4 +1,6 @@
 /** Matemática del tablero, sin React. Probada en `scripts/schedule.test.cjs`. */
+import { formatMessage } from '../../i18n/format';
+import { esMessages, type Messages } from '../../i18n/messages';
 
 /**
  * Posición `pos` entre las tarjetas de un carril → índice en la columna entera. `lanes` es el carril de cada tarjeta
@@ -34,15 +36,13 @@ export function dueState(due: Date, today: Date, soonDays = 2): DueState {
   return days <= soonDays ? 'soon' : 'later';
 }
 
-const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-
-/** «Hoy», «Mañana», «Ayer» o «12 ago». */
-export function dueLabel(due: Date, today: Date): string {
+/** «Hoy», «Mañana», «Ayer» o «12 ago», con las palabras de `dates` (las del idioma activo; por defecto, español). */
+export function dueLabel(due: Date, today: Date, dates: Messages['dates'] = esMessages.dates): string {
   const days = Math.round((dayStart(due) - dayStart(today)) / 86400000);
-  if (days === 0) return 'Hoy';
-  if (days === 1) return 'Mañana';
-  if (days === -1) return 'Ayer';
-  return `${due.getDate()} ${MONTHS[due.getMonth()]}`;
+  if (days === 0) return dates.today;
+  if (days === 1) return dates.tomorrow;
+  if (days === -1) return dates.yesterday;
+  return formatMessage(dates.dayMonthShort, { day: due.getDate(), month: dates.monthsShort[due.getMonth()] });
 }
 
 /**

@@ -3,6 +3,7 @@ import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
 import { ControlField, describedBy } from './internal/ControlField';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface TimePickerProps {
   /** `HH:mm` (24 h) o `null`. */
@@ -51,8 +52,10 @@ export function parseTime(text: string): string | null {
  * (flechas, Intro, Escape). La lista se abre con la hora actual a la vista.
  */
 export const TimePicker: React.FC<TimePickerProps> = ({
-  value, onChange, step = 15, min = '00:00', max = '23:59', label, helperText, error, required, placeholder = 'hh:mm', disabled, id, className,
+  value, onChange, step = 15, min = '00:00', max = '23:59', label, helperText, error, required, placeholder: placeholderProp, disabled, id, className,
 }) => {
+  const timeTexts = useMessages('timePicker');
+  const placeholder = placeholderProp ?? timeTexts.placeholder;
   const autoId = React.useId();
   const fieldId = id ?? autoId;
   const listId = `${fieldId}-list`;
@@ -134,7 +137,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
           ref={(el) => { listRef.current = el; (popoverRef as React.MutableRefObject<HTMLElement | null>).current = el; }}
           id={listId}
           role="listbox"
-          aria-label="Horas"
+          aria-label={timeTexts.hours}
           {...popoverProps}
           className={cn('k-time-list k-appear', !ready && 'invisible')}
           style={style}

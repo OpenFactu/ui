@@ -1,16 +1,14 @@
+import { esMessages } from '../i18n/messages';
 export interface ChatEmoji { emoji: string; label: string; aliases?: string[] }
-export const CHAT_EMOJIS: ChatEmoji[] = [
-  { emoji: '👍', label: 'Me gusta', aliases: ['bien', 'pulgar', 'ok'] }, { emoji: '❤️', label: 'Corazón', aliases: ['amor', 'gracias'] },
-  { emoji: '😂', label: 'Risa', aliases: ['jaja', 'alegría'] }, { emoji: '😮', label: 'Sorpresa' }, { emoji: '😢', label: 'Tristeza' }, { emoji: '🙌', label: 'Celebración' },
-  { emoji: '😊', label: 'Sonrisa' }, { emoji: '😍', label: 'Enamorado' }, { emoji: '🤔', label: 'Pensando' }, { emoji: '😎', label: 'Genial' },
-  { emoji: '😭', label: 'Llorando' }, { emoji: '😅', label: 'Alivio' }, { emoji: '🥰', label: 'Cariño' }, { emoji: '😉', label: 'Guiño' },
-  { emoji: '🥳', label: 'Fiesta' }, { emoji: '🤩', label: 'Entusiasmo' }, { emoji: '😴', label: 'Sueño' }, { emoji: '🫡', label: 'Entendido' },
-  { emoji: '👏', label: 'Aplauso' }, { emoji: '🙏', label: 'Gracias' }, { emoji: '💪', label: 'Fuerza' }, { emoji: '🤝', label: 'Acuerdo' },
-  { emoji: '🔥', label: 'Fuego' }, { emoji: '✨', label: 'Brillos' }, { emoji: '🎉', label: 'Confeti' }, { emoji: '💯', label: 'Cien' },
-  { emoji: '✅', label: 'Hecho' }, { emoji: '👀', label: 'Mirando' }, { emoji: '☕', label: 'Café' }, { emoji: '🚀', label: 'Cohete' },
-  { emoji: '🌻', label: 'Girasol' }, { emoji: '🌈', label: 'Arcoíris' }, { emoji: '🐱', label: 'Gato' }, { emoji: '🐶', label: 'Perro' },
-  { emoji: '👨‍👩‍👧‍👦', label: 'Familia' }, { emoji: '👍🏽', label: 'Me gusta tono medio', aliases: ['pulgar'] },
-];
+const NAMES = esMessages.chat.emojiNames as Record<string, string>;
+const KEYWORDS = esMessages.chat.emojiKeywords as Record<string, string>;
+const aliasesOf = (keywords: Record<string, string>, emoji: string) => keywords[emoji]?.split(/\s+/).filter(Boolean);
+/** Emojis del selector, con nombre y palabras clave del catálogo de traducciones (`chat.emojiNames`, `chat.emojiKeywords`). */
+export const CHAT_EMOJIS: ChatEmoji[] = Object.keys(NAMES).map(emoji => ({ emoji, label: NAMES[emoji], ...(KEYWORDS[emoji] ? { aliases: aliasesOf(KEYWORDS, emoji) } : {}) }));
+/** El mismo catálogo con los nombres y palabras de otro idioma (lo que no esté traducido se queda como estaba). */
+export function localizeChatEmojis(catalog: ChatEmoji[], names: Record<string, string>, keywords: Record<string, string>): ChatEmoji[] {
+  return catalog.map(item => ({ ...item, label: names[item.emoji] ?? item.label, aliases: aliasesOf(keywords, item.emoji) ?? item.aliases }));
+}
 const simplify = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase().trim();
 export function searchChatEmojis(query: string, catalog = CHAT_EMOJIS): ChatEmoji[] {
   const search = simplify(query);

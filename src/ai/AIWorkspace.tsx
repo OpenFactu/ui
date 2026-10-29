@@ -4,7 +4,7 @@ import { Modal } from '../components/Modal';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import { cn } from '../utils';
 import type { AIWorkspaceState, AIWorkspaceActions, AIArtifactRenderer, AIArtifact, AIUIProps } from './types';
-import { aiLabels } from './labels';
+import { useAILabels } from './labels';
 import { AIIconButton, useStableCallbacks } from './internal/ui';
 import { AIConversationHistory } from './AIConversationHistory';
 import { AIConversation, type AIPromptSuggestion } from './AIConversation';
@@ -31,7 +31,7 @@ export interface AIWorkspaceProps extends AIUIProps {
   codeActions?: AICodeAction[];
 }
 export function AIWorkspace({ state, actions: suppliedActions, title, header, children, composer, sidebarWidth, onSidebarWidthChange, suggestions, mentions, commands, attachmentLimits, artifactRenderers, codeActions, labels, className, style }: AIWorkspaceProps) {
-  const l = aiLabels(labels); const actions = useStableCallbacks(suppliedActions);
+  const l = useAILabels(labels); const actions = useStableCallbacks(suppliedActions);
   const narrowViewport = useMediaQuery('(max-width: 1023px)');
   const [historyOpen, setHistoryOpen] = React.useState(false);
   const [desktopHistory, setDesktopHistory] = React.useState(true);

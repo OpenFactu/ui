@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { qrMatrix, qrPaths, type QrEyeShape, type QrLevel, type QrModuleShape } from './matrix';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface QRCodeProps extends Omit<React.SVGProps<SVGSVGElement>, 'children' | 'values' | 'ref'> {
   /** Texto o URL que se codifica (UTF-8). */
@@ -38,6 +39,7 @@ export const QRCode = React.forwardRef<SVGSVGElement, QRCodeProps>(function QRCo
   },
   ref,
 ) {
+  const { messages: { qr: qrTexts }, format } = useI18n();
   const hole = logo ? logoSize : undefined;
   const result = React.useMemo(() => {
     try {
@@ -51,7 +53,7 @@ export const QRCode = React.forwardRef<SVGSVGElement, QRCodeProps>(function QRCo
   if (!result) {
     return (
       <span role="alert" className={['k-qr k-qr-fallback', className].filter(Boolean).join(' ')} style={{ width: size, height: size, ...style }}>
-        {fallback ?? 'El texto es demasiado largo para un código QR.'}
+        {fallback ?? format(qrTexts.tooLong)}
       </span>
     );
   }
@@ -64,7 +66,7 @@ export const QRCode = React.forwardRef<SVGSVGElement, QRCodeProps>(function QRCo
       <svg
         ref={ref}
         role="img"
-        aria-label={label ?? `Código QR: ${value}`}
+        aria-label={label ?? format(qrTexts.label, { value })}
         viewBox={`${-margin} ${-margin} ${side} ${side}`}
         data-k-qr=""
         data-version={matrix.version}

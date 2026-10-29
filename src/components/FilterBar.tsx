@@ -9,6 +9,7 @@ import { Select } from './Select';
 import { SearchableSelect } from './SearchableSelect';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import { MobileOverlay } from './internal/MobileOverlay';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface FilterBarConfig {
   key: string;
@@ -60,13 +61,16 @@ export function FilterBar({
   onClear,
   config,
   className,
-  searchPlaceholder = 'Buscar registros...',
+  searchPlaceholder: searchPlaceholderProp,
   shortcut = 'mod+k',
   showActiveFilters = false,
   actions,
   resultCount,
-  ariaLabel = 'Filtros de registros',
+  ariaLabel: ariaLabelProp,
 }: FilterBarProps) {
+  const { messages: m, format } = useI18n();
+  const searchPlaceholder = searchPlaceholderProp ?? m.filterBar.searchPlaceholder;
+  const ariaLabel = ariaLabelProp ?? m.filterBar.label;
   const mobile = useIsMobile();
   const filterButton = React.useRef<HTMLButtonElement>(null);
   const hayFiltros =
@@ -177,7 +181,7 @@ export function FilterBar({
             onClick={() => setAbiertos((v) => !v)}
           >
             <UiIcon slot="sliders-horizontal" size={14} />
-            Filtros{activos > 0 ? ` (${activos})` : ''}
+            {activos > 0 ? format(m.filterBar.filtersCount, { count: activos }) : m.filterBar.filters}
             <UiIcon
               slot="chevron-down"
               size={14}
@@ -202,12 +206,12 @@ export function FilterBar({
             className="inline-flex items-center gap-1.5 px-3 h-9 text-[11px] font-mono font-medium text-[var(--k-danger-fg)] hover:bg-[var(--k-danger-bg)] rounded-[var(--k-radius-xs,2px)] transition-colors uppercase tracking-[1px]"
           >
             <UiIcon slot="x" size={12} />
-            Limpiar
+            {m.filterBar.clear}
           </button>
         )}
       </div>
-      {mobile && <MobileOverlay open={abiertos} onClose={() => setAbiertos(false)} title="Filtros" presentation="sheet" anchorRef={filterButton}><div className="k-mobile-filters">
-        {filterControls}<div className="k-mobile-filter-actions"><Button variant="secondary" onClick={onClear}>Limpiar filtros</Button><Button onClick={() => setAbiertos(false)}>Ver resultados</Button></div>
+      {mobile && <MobileOverlay open={abiertos} onClose={() => setAbiertos(false)} title={m.filterBar.filters} presentation="sheet" anchorRef={filterButton}><div className="k-mobile-filters">
+        {filterControls}<div className="k-mobile-filter-actions"><Button variant="secondary" onClick={onClear}>{m.filterBar.clearFilters}</Button><Button onClick={() => setAbiertos(false)}>{m.filterBar.showResults}</Button></div>
       </div></MobileOverlay>}
       {actions && <div className="ml-auto flex flex-wrap items-center gap-2">{actions}</div>}
       {(resultCount !== undefined || (showActiveFilters && hayFiltros)) && (
@@ -233,7 +237,7 @@ export function FilterBar({
                     key={filter.key}
                     type="button"
                     onClick={() => onFilterChange(filter.key, '')}
-                    aria-label={`Quitar filtro ${filter.label}: ${label}`}
+                    aria-label={format(m.filterBar.removeFilter, { filter: filter.label, value: label })}
                     className="inline-flex max-w-full items-center gap-1.5 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-muted,#f1f5f9)] px-2 py-1 hover:border-[var(--border-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     <span className="truncate">

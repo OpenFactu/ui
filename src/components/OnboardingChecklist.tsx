@@ -5,6 +5,7 @@ import { Collapse } from './Collapse';
 import { Progress } from './Progress';
 import { StatusMark } from './Feedback';
 import { Button } from './Button';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface ChecklistItem {
   id: string;
@@ -32,8 +33,11 @@ export interface OnboardingChecklistProps {
  * al completarla. Se pliega para no estorbar y, al terminar, felicita y se puede quitar.
  */
 export const OnboardingChecklist: React.FC<OnboardingChecklistProps> = ({
-  items, title = 'Primeros pasos', completedMessage = '¡Todo listo! Ya puedes sacarle partido.', defaultCollapsed = false, onDismiss, className,
+  items, title: titleProp, completedMessage: completedMessageProp, defaultCollapsed = false, onDismiss, className,
 }) => {
+  const { messages: m, format } = useI18n();
+  const title = titleProp ?? m.onboarding.title;
+  const completedMessage = completedMessageProp ?? m.onboarding.done;
   const [collapsed, setCollapsed] = React.useState(defaultCollapsed);
   const done = items.filter((i) => i.done).length;
   const complete = done === items.length && items.length > 0;
@@ -44,7 +48,7 @@ export const OnboardingChecklist: React.FC<OnboardingChecklistProps> = ({
       <header className="k-checklist-head">
         <button type="button" className="k-checklist-toggle" aria-expanded={!collapsed} aria-controls={bodyId} onClick={() => setCollapsed((v) => !v)}>
           <span className="k-checklist-title">{title}</span>
-          <span className="k-checklist-count">{done} de {items.length}</span>
+          <span className="k-checklist-count">{format(m.common.ofTotal, { current: done, total: items.length })}</span>
           <UiIcon slot="chevron-down" size={14} className="k-checklist-chevron" data-open={!collapsed || undefined} />
         </button>
         <Progress value={items.length ? (done / items.length) * 100 : 0} size="sm" variant={complete ? 'success' : 'accent'} />
@@ -54,7 +58,7 @@ export const OnboardingChecklist: React.FC<OnboardingChecklistProps> = ({
           <div className="k-checklist-done">
             <StatusMark size={1.6} />
             <span>{completedMessage}</span>
-            {onDismiss && <Button size="sm" variant="ghost" onClick={onDismiss}>Quitar</Button>}
+            {onDismiss && <Button size="sm" variant="ghost" onClick={onDismiss}>{m.common.remove}</Button>}
           </div>
         ) : (
           <ol className="k-checklist-items">

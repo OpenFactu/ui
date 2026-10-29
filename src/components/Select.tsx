@@ -6,6 +6,7 @@ import { useIsMobile } from '../hooks/useMediaQuery';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface SelectOption {
   value: string;
@@ -47,7 +48,7 @@ export const Select: React.FC<SelectProps> = ({
   options,
   value,
   onChange,
-  placeholder = 'Seleccionar...',
+  placeholder: placeholderProp,
   label,
   required,
   error,
@@ -61,6 +62,9 @@ export const Select: React.FC<SelectProps> = ({
   ariaLabel,
   mobilePresentation = 'auto',
 }) => {
+  const status = useMessages('status');
+  const placeholderDefault = useMessages('common').select;
+  const placeholder = placeholderProp ?? placeholderDefault;
   const mobile = useIsMobile();
   const presentation = resolveMobilePresentation(mobile, mobilePresentation, 'sheet');
   const [isOpen, setIsOpen] = React.useState(false);
@@ -212,7 +216,7 @@ export const Select: React.FC<SelectProps> = ({
           {options.length === 0 && (
             <div className="py-4 text-center">
               <p className="text-[10px] font-bold text-[var(--fg-subtle)] uppercase tracking-widest">
-                Sin opciones
+                {status.noOptions}
               </p>
             </div>
           )}

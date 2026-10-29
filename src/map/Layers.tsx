@@ -4,6 +4,7 @@ import { useAnimatedPresence } from '../hooks/useAnimatedPresence';
 import { useEscapeStack } from '../internal/escapeStack';
 import { boundsOf, clusterPoints, metersPerPixel, type Cluster, type ClusterPoint, type LatLng } from './geo';
 import { useMap } from './Map';
+import { useMessages } from '../i18n/I18nProvider';
 
 /** La silueta de chincheta, con el color del acento (o el que se indique). */
 const Pin: React.FC<{ color?: string }> = ({ color }) => (
@@ -24,6 +25,7 @@ export interface MapPopupProps extends React.HTMLAttributes<HTMLDivElement> {
 
 /** Tarjeta anclada a unas coordenadas, con la entrada y la salida del tema. Escape la cierra. */
 export const MapPopup: React.FC<MapPopupProps> = ({ lat, lng, open, onClose, offset = 0, className, children, style, ...rest }) => {
+  const closeText = useMessages('common').close;
   const { toScreen } = useMap();
   const { mounted, state, ref } = useAnimatedPresence({ open });
   const id = React.useId();
@@ -42,7 +44,7 @@ export const MapPopup: React.FC<MapPopupProps> = ({ lat, lng, open, onClose, off
       {...rest}
     >
       <div className="k-map-popup-card">
-        {onClose && <button type="button" className="k-map-popup-close" aria-label="Cerrar" onClick={onClose}>×</button>}
+        {onClose && <button type="button" className="k-map-popup-close" aria-label={closeText} onClick={onClose}>×</button>}
         {children}
       </div>
     </div>

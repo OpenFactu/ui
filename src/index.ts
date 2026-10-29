@@ -130,6 +130,7 @@ export * from './theme';
 export * from './context/ThemeContext';
 export * from './utils';
 export * from './icons';
+export * from './i18n';
 export * from './chat';
 export * from './motion';
 export * from './map';

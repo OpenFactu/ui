@@ -14,6 +14,7 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useAnimatedPresence } from '../hooks/useAnimatedPresence';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import { BottomSheet } from './BottomSheet';
+import { useMessages } from '../i18n/I18nProvider';
 
 export type ModalSize =
   | 'xs' | 'sm' | 'md' | 'lg' | 'xl'
@@ -188,6 +189,7 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
   children,
   id,
 }) => {
+  const modalTexts = useMessages('modal');
   const chipIcon = icon ?? (tone !== 'default' ? TONE_ICON[tone] : null);
   return (
     <div
@@ -237,7 +239,7 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Cerrar"
+            aria-label={modalTexts.close}
             className="p-1.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--bg-hover)] rounded-[var(--k-radius-xs,2px)] transition-colors"
           >
             <UiIcon slot="x" size={18} />
@@ -327,10 +329,10 @@ const ModalRoot: React.FC<ModalProps> = ({
   secondaryAction,
   tertiaryAction,
   hideCancel = false,
-  cancelLabel = 'Cancelar',
+  cancelLabel: cancelLabelProp,
   onSubmit,
   isLoading = false,
-  loadingLabel = 'Cargando…',
+  loadingLabel: loadingLabelProp,
   isBusy = false,
   error,
   steps,
@@ -351,6 +353,9 @@ const ModalRoot: React.FC<ModalProps> = ({
   footerClassName,
   children,
 }) => {
+  const common = useMessages('common');
+  const cancelLabel = cancelLabelProp ?? common.cancel;
+  const loadingLabel = loadingLabelProp ?? common.loading;
   const depth = React.useContext(ModalDepthContext);
   const origin = React.useRef<HTMLSpanElement>(null);
   const panelRef = React.useRef<HTMLDivElement>(null);

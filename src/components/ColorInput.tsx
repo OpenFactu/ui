@@ -3,6 +3,7 @@ import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { isValidHex, normalizeHex } from '../theme/derive';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface ColorInputProps {
   /** Color en `#rrggbb`, o cadena vacía. */
@@ -43,6 +44,7 @@ export const ColorInput: React.FC<ColorInputProps> = ({
   className,
   containerClassName,
 }) => {
+  const colorTexts = useMessages('colorInput');
   const generatedId = React.useId();
   const inputId = id || generatedId;
   // Buffer para poder teclear un hex incompleto sin que se normalice a medias.
@@ -70,7 +72,7 @@ export const ColorInput: React.FC<ColorInputProps> = ({
             error && 'border-[var(--k-danger)]',
           )}
           style={{ background: value ? hex : undefined }}
-          title={value || 'Sin color'}
+          title={value || colorTexts.none}
         >
           {!value && (
             <span className="absolute inset-0 flex items-center justify-center bg-[var(--bg-muted)]">
@@ -106,7 +108,7 @@ export const ColorInput: React.FC<ColorInputProps> = ({
               maxLength={6}
               disabled={disabled}
               value={shown}
-              aria-label="Código hexadecimal"
+              aria-label={colorTexts.hex}
               onChange={(e) => setDraft(e.target.value.replace(/[^0-9a-fA-F]/g, '').toLowerCase())}
               onBlur={(e) => commit(e.target.value)}
               onKeyDown={(e) => {
@@ -122,7 +124,7 @@ export const ColorInput: React.FC<ColorInputProps> = ({
               <button
                 type="button"
                 onClick={() => onChange('')}
-                aria-label="Quitar color"
+                aria-label={colorTexts.remove}
                 className="px-1.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors"
               >
                 <UiIcon slot="x" className="h-3 w-3" />

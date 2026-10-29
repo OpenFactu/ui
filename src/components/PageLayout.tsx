@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { cn } from '../utils';
 import { PageHeader, type PageHeaderProps } from './PageHeader';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface PageLayoutProps extends Omit<PageHeaderProps, 'className' | 'sticky'> {
   children: React.ReactNode;
@@ -21,7 +22,7 @@ export interface PageLayoutProps extends Omit<PageHeaderProps, 'className' | 'st
 export const PageLayout: React.FC<PageLayoutProps> = ({
   children,
   aside,
-  asideLabel = 'Información complementaria',
+  asideLabel: asideLabelProp,
   stickyAside = true,
   asideTop = 24,
   footer,
@@ -30,7 +31,10 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   className,
   contentClassName,
   ...header
-}) => (
+}) => {
+  const asideLabelDefault = useMessages('navigation').aside;
+  const asideLabel = asideLabelProp ?? asideLabelDefault;
+  return (
   <div data-k-mobile="PageLayout"
     className={cn(
       'mx-auto flex w-full min-w-0 flex-col gap-6 text-[var(--fg-default)]',
@@ -72,4 +76,5 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       </footer>
     )}
   </div>
-);
+  );
+};

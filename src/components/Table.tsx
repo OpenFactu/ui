@@ -33,6 +33,7 @@ import {
   type TableFilterValue,
   type TableFilters,
 } from './internal/tableFilters';
+import { useI18n, useMessages } from '../i18n/I18nProvider';
 
 export type { TableAggregate, TableColumnFilter, TableFilterOption, TableFilterValue, TableFilters } from './internal/tableFilters';
 
@@ -266,6 +267,7 @@ function ColumnToggle({
   entries: { key: string; header: string; visible: boolean }[];
   onToggle: (key: string) => void;
 }) {
+  const tt = useMessages('table');
   const [isOpen, setIsOpen] = React.useState(false);
   const mobile = useIsMobile();
   const { anchorRef, popoverRef, style, ready, mounted, popoverProps } = usePopover<HTMLButtonElement>({
@@ -281,9 +283,9 @@ function ColumnToggle({
       <button
         ref={anchorRef}
         type="button"
-        aria-label="Mostrar u ocultar columnas"
+        aria-label={tt.toggleColumns}
         aria-expanded={isOpen}
-        title="Columnas"
+        title={tt.columns}
         onClick={() => setIsOpen(!isOpen)}
         className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent hover:bg-[var(--bg-hover)] transition-colors"
       >
@@ -301,7 +303,7 @@ function ColumnToggle({
             style={style}
           >
             <p className="px-2.5 pt-1.5 pb-1 text-[9px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
-              Columnas
+              {tt.columns}
             </p>
             {entries.map((entry) => (
               <label
@@ -319,7 +321,7 @@ function ColumnToggle({
             ))}
           </div>,
           document.body,
-          { open: isOpen, onClose: () => setIsOpen(false), title: 'Columnas', presentation: mobile ? 'sheet' : 'anchored', anchorRef },
+          { open: isOpen, onClose: () => setIsOpen(false), title: tt.columns, presentation: mobile ? 'sheet' : 'anchored', anchorRef },
         )}
     </>
   );
@@ -336,6 +338,7 @@ const RowActionsCell: React.FC<{ actions: RowAction[] | null; alwaysVisible?: bo
   actions,
   alwaysVisible,
 }) => {
+  const tt = useMessages('table');
   if (!actions || actions.length === 0) return null;
 
   const revealClass = alwaysVisible
@@ -350,7 +353,7 @@ const RowActionsCell: React.FC<{ actions: RowAction[] | null; alwaysVisible?: bo
 
   if (actions.length === 1 && actions[0].icon && !actions[0].destructive) {
     const only = actions[0];
-    const label = typeof only.label === 'string' ? only.label : 'Acción de la fila';
+    const label = typeof only.label === 'string' ? only.label : tt.rowAction;
     return (
       <button
         type="button"
@@ -367,7 +370,7 @@ const RowActionsCell: React.FC<{ actions: RowAction[] | null; alwaysVisible?: bo
 
   return (
     <DropdownMenu items={actions} align="end" className={cn(btnClass, 'cursor-pointer')}>
-      <span className="sr-only">Acciones de la fila</span>
+      <span className="sr-only">{tt.rowActions}</span>
       <UiIcon slot="more-horizontal" className="h-3.5 w-3.5" />
     </DropdownMenu>
   );
@@ -379,13 +382,13 @@ export function Table<T>({
   onRowClick,
   rowClassName,
   className,
-  emptyMessage = 'No se encontraron registros.',
+  emptyMessage: emptyMessageProp,
   isLoading: initialLoading,
   isRefreshing = false,
-  refreshingLabel = 'Actualizando registros…',
+  refreshingLabel: refreshingLabelProp,
   errorMessage,
   onRetry,
-  retryLabel = 'Reintentar',
+  retryLabel: retryLabelProp,
   density = 'normal',
   variant = 'default',
   headerVariant = 'default',
@@ -414,12 +417,12 @@ export function Table<T>({
   loadingVariant = 'skeleton',
   skeletonRows,
   skeletonRowHeight,
-  loadingLabel = 'Sincronizando…',
+  loadingLabel: loadingLabelProp,
   responsive = 'auto',
   cardsBreakpoint = responsive === 'auto' ? 768 : 640,
   summaryRow,
   summaryByColumn,
-  summaryLabel = 'Total',
+  summaryLabel: summaryLabelProp,
   appendRow,
   searchable,
   search: searchProp,
@@ -433,6 +436,13 @@ export function Table<T>({
   toolbar,
   bulkActions,
 }: TableProps<T>) {
+  const { messages: m, format } = useI18n();
+  const t = m.table;
+  const emptyMessage = emptyMessageProp ?? t.empty;
+  const refreshingLabel = refreshingLabelProp ?? t.refreshing;
+  const retryLabel = retryLabelProp ?? m.common.retry;
+  const loadingLabel = loadingLabelProp ?? t.syncing;
+  const summaryLabel = summaryLabelProp ?? m.status.total;
   // ── Densidad — con selector, se recuerda la elegida ───────────────────
   const [densityChoice, setDensityChoice] = React.useState<TableDensity>(density);
   React.useEffect(() => setDensityChoice(density), [density]);
@@ -465,7 +475,7 @@ export function Table<T>({
           tone="danger"
           role="alert"
           className="m-3"
-          title={blockingError ? 'No se han podido cargar los registros' : 'No se han podido actualizar los registros'}
+          title={blockingError ? t.loadError : t.refreshError}
           action={onRetry && (
             <Button type="button" size="sm" variant="secondary" onClick={onRetry}>
               {retryLabel}
@@ -473,7 +483,7 @@ export function Table<T>({
           )}
         >
           {errorMessage}
-          {!blockingError && <p className="mt-1">Se muestran los últimos datos disponibles.</p>}
+          {!blockingError && <p className="mt-1">{t.staleData}</p>}
         </Alert>
       )}
     </>
@@ -581,13 +591,13 @@ export function Table<T>({
       <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
       {infinite.loading && (
         <div className="flex items-center justify-center gap-2 py-3 text-[11px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
-          <Spinner size="xs" label="Cargando" />
-          Cargando más
+          <Spinner size="xs" />
+          {t.loadingMore}
         </div>
       )}
       {!infinite.hasMore && !infinite.loading && infinite.endMessage !== false && (
         <div className="py-3 text-center text-[10px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
-          {infinite.endMessage ?? 'No hay más registros'}
+          {infinite.endMessage ?? t.end}
         </div>
       )}
     </>
@@ -793,7 +803,7 @@ export function Table<T>({
   const searchConfig = typeof searchable === 'object' ? searchable : {};
   const showToolbar = Boolean(searchable || toolbar || (densityToggle && !asCards) || activeFilterColumns.length > 0);
   const filteredInfo = filterMode === 'client' && (search.trim() || activeFilterColumns.length > 0)
-    ? `${filteredData.length} de ${data.length}`
+    ? format(m.common.ofTotal, { current: filteredData.length, total: data.length })
     : null;
   const toolbarEl = (cards: boolean) => showToolbar && (
     <div className="k-table-toolbar" data-cards={cards || undefined}>
@@ -803,8 +813,8 @@ export function Table<T>({
             <SearchInput
               value={search}
               onChange={setSearch}
-              placeholder={searchConfig.placeholder ?? 'Buscar…'}
-              aria-label="Buscar en la tabla"
+              placeholder={searchConfig.placeholder ?? m.common.searchPlaceholder}
+              aria-label={t.search}
               clearable
               shortcut={false}
               trailing={cards && filteredInfo ? <span className="k-table-results" aria-live="polite">{filteredInfo}</span> : undefined}
@@ -819,30 +829,30 @@ export function Table<T>({
               align="end"
               className="k-table-tool"
               items={(['compact', 'normal', 'comfy'] as const).map((d) => ({
-                label: DENSITY_LABELS[d],
+                label: t.density[d],
                 icon: densidad === d ? <UiIcon slot="check" size={14} /> : <span className="inline-block w-[14px]" />,
                 onClick: () => changeDensity(d),
               }))}
             >
               <UiIcon slot="sliders-horizontal" size={14} />
-              <span>{DENSITY_LABELS[densidad]}</span>
+              <span>{t.density[densidad]}</span>
             </DropdownMenu>
           )}
           {toolbar}
         </div>
       </div>
       {(activeFilterColumns.length > 0 || (cards && filteredInfo && !searchable)) && (
-        <div className="k-table-chips" role="list" aria-label="Filtros activos">
+        <div className="k-table-chips" role="list" aria-label={t.activeFilters}>
           {activeFilterColumns.map((col) => (
             <span key={colKeyOf(col)} role="listitem" className="k-table-chip">
               <span className="k-table-chip-key">{col.header}:</span>
-              <span className="k-table-chip-value">{describeFilter(col.filter!, filters[colKeyOf(col)])}</span>
-              <button type="button" aria-label={`Quitar el filtro de ${col.header}`} onClick={() => setFilter(colKeyOf(col), undefined)}>
+              <span className="k-table-chip-value">{describeFilter(col.filter!, filters[colKeyOf(col)], t)}</span>
+              <button type="button" aria-label={format(t.removeFilter, { column: String(col.header) })} onClick={() => setFilter(colKeyOf(col), undefined)}>
                 <UiIcon slot="x" size={12} />
               </button>
             </span>
           ))}
-          {activeFilterColumns.length > 0 && <button type="button" className="k-table-clear" onClick={() => setFilters({})}>Quitar filtros</button>}
+          {activeFilterColumns.length > 0 && <button type="button" className="k-table-clear" onClick={() => setFilters({})}>{t.clearFilters}</button>}
           {/* En tarjetas el recuento va aquí y no en una fila suelta. */}
           {cards && filteredInfo && !searchable && <span className="k-table-results k-table-results-end" aria-live="polite">{filteredInfo}</span>}
         </div>
@@ -863,10 +873,10 @@ export function Table<T>({
   const bulkBar = selectable && bulkActions && (
     <SelectionBar
       count={selected.size}
-      countLabel={(n) => (n === 1 ? '1 seleccionada' : `${n} seleccionadas`)}
+      countLabel={(n) => format(t.selected, { count: n })}
       actions={selected.size ? bulkActions(selectedRows) : []}
       onClear={() => setSelected(new Set())}
-      selectAll={canSelectAll ? { total: allFilteredKeys.length, label: `Seleccionar las ${allFilteredKeys.length}`, onSelect: () => setSelected(new Set([...selected, ...allFilteredKeys])) } : undefined}
+      selectAll={canSelectAll ? { total: allFilteredKeys.length, label: format(t.selectAll, { total: allFilteredKeys.length }), onSelect: () => setSelected(new Set([...selected, ...allFilteredKeys])) } : undefined}
     />
   );
 
@@ -916,7 +926,7 @@ export function Table<T>({
         {feedback}
         {toolbarEl(true)}
         {/* Una sola tira que se desliza en horizontal: en un móvil, cada control en su propia fila se comía la pantalla. */}
-        <div className="k-table-strip" role="toolbar" aria-label="Opciones del listado">
+        <div className="k-table-strip" role="toolbar" aria-label={t.options}>
           {selectable && (
             <span className="k-table-strip-check">
               <Checkbox
@@ -924,23 +934,23 @@ export function Table<T>({
                 state={headerState}
                 disabled={isLoading || pageKeys.length === 0}
                 onChange={toggleAll}
-                label="Seleccionar página"
+                label={t.selectPage}
                 size="sm"
               />
             </span>
           )}
           {columns.some((column) => column.sortable) && (
               <DropdownMenu className="k-table-filter-pill" items={[
-                { label: 'Orden original', onClick: () => changeSort(null) },
+                { label: t.sortOriginal, onClick: () => changeSort(null) },
                 ...columns.filter((column) => column.sortable).flatMap((column) =>
                   (['asc', 'desc'] as const).map((dir) => ({
-                    label: `${column.header}: ${dir === 'asc' ? 'ascendente' : 'descendente'}`,
+                    label: format(dir === 'asc' ? t.sortAsc : t.sortDesc, { column: String(column.header) }),
                     onClick: () => changeSort({ colKey: colKeyOf(column), dir }),
                   })),
                 ),
               ]}>
                 <UiIcon slot="chevrons-up-down" size={14} />
-                {sort ? `${columns.find((column) => colKeyOf(column) === sort.colKey)?.header ?? 'Orden'} ${sort.dir === 'asc' ? '↑' : '↓'}` : <>Ordenar<span className="sr-only"> registros</span></>}
+                {sort ? `${columns.find((column) => colKeyOf(column) === sort.colKey)?.header ?? t.sortBy} ${sort.dir === 'asc' ? '↑' : '↓'}` : <>{t.sort}<span className="sr-only">{t.sortRecords}</span></>}
               </DropdownMenu>
           )}
           {filterableColumns.map((col) => (
@@ -998,7 +1008,7 @@ export function Table<T>({
                             disabled={isRowSelectable ? !isRowSelectable(item) : false}
                             onChange={() => toggleRow(key)}
                             size="sm"
-                            aria-label={`Seleccionar fila ${rowIdx + 1}`}
+                            aria-label={format(t.selectRow, { row: rowIdx + 1 })}
                           />
                         </label>
                       )}
@@ -1069,7 +1079,7 @@ export function Table<T>({
                       onClick={(event) => { event.stopPropagation(); toggleExpanded(key); }}
                       className="self-start text-[12px] text-accent focus-visible:ring-1 focus-visible:ring-accent"
                     >
-                      {expanded.has(key) ? 'Ocultar detalle' : 'Ver detalle'}
+                      {expanded.has(key) ? t.hideDetail : t.showDetail}
                     </button>
                   )}
                   {renderExpanded && expanded.has(key) && (
@@ -1086,7 +1096,7 @@ export function Table<T>({
         {infiniteFooter}
 
         {hasSummary && (
-          <section aria-label="Resumen de la tabla" className="rounded-[var(--k-radius-sm)] border border-[var(--border-default)] bg-[var(--bg-muted)] p-4">
+          <section aria-label={t.summary} className="rounded-[var(--k-radius-sm)] border border-[var(--border-default)] bg-[var(--bg-muted)] p-4">
             <p className="mb-3 text-[12px] font-semibold text-[var(--fg-default)]">{summaryLabel}</p>
             <dl className="space-y-2 text-[12px]">
               {visibleColumns.map((col, index) => summaryCells[index] != null && (
@@ -1153,7 +1163,7 @@ export function Table<T>({
                     disabled={isLoading || pageKeys.length === 0}
                     onChange={toggleAll}
                     size="sm"
-                    aria-label="Seleccionar página"
+                    aria-label={t.selectPage}
                   />
                 </th>
               )}
@@ -1323,7 +1333,7 @@ export function Table<T>({
                   className={cn(cellPad, 'py-10 text-center text-[var(--fg-subtle,#657486)]')}
                 >
                   <div className="flex flex-col items-center gap-3">
-                    <Spinner size="sm" label="Cargando" />
+                    <Spinner size="sm" />
                     <span className="animate-pulse font-mono text-[11px] tracking-wider uppercase">
                       {loadingLabel}
                     </span>
@@ -1401,7 +1411,7 @@ export function Table<T>({
                             disabled={isRowSelectable ? !isRowSelectable(item) : false}
                             onChange={() => toggleRow(key)}
                             size="sm"
-                            aria-label={`Seleccionar fila ${rowIdx + 1}`}
+                            aria-label={format(t.selectRow, { row: rowIdx + 1 })}
                           />
                         </td>
                       )}
@@ -1417,7 +1427,7 @@ export function Table<T>({
                         >
                           <button
                             type="button"
-                            aria-label={isExpanded ? 'Contraer fila' : 'Expandir fila'}
+                            aria-label={isExpanded ? t.collapseRow : t.expandRow}
                             aria-expanded={isExpanded}
                             onClick={() => toggleExpanded(key)}
                             className="p-0.5 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors"
@@ -1566,7 +1576,6 @@ export function Table<T>({
   );
 }
 
-const DENSITY_LABELS: Record<TableDensity, string> = { compact: 'Compacta', normal: 'Normal', comfy: 'Cómoda' };
 
 /** Botón de filtro de una columna y su panel (texto, opciones, rango numérico o de fechas). */
 function ColumnFilter<T>({
@@ -1581,6 +1590,7 @@ function ColumnFilter<T>({
   /** Con el nombre de la columna (barra de la vista de tarjetas). */
   labelled?: boolean;
 }) {
+  const { messages: { table: tt, common }, format: fmt } = useI18n();
   const [isOpen, setIsOpen] = React.useState(false);
   const mobile = useIsMobile();
   const filter = column.filter!;
@@ -1601,8 +1611,8 @@ function ColumnFilter<T>({
           <Input
             autoFocus
             value={typeof value === 'string' ? value : ''}
-            placeholder={filter.placeholder ?? 'Contiene…'}
-            aria-label={`Filtrar ${column.header}`}
+            placeholder={filter.placeholder ?? tt.filterContains}
+            aria-label={fmt(tt.filterColumn, { column: String(column.header) })}
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') close(); }}
           />
@@ -1610,7 +1620,7 @@ function ColumnFilter<T>({
       case 'select': {
         const marked = Array.isArray(value) ? value : [];
         return (
-          <div className="k-table-filter-options" role="group" aria-label={`Filtrar ${column.header}`}>
+          <div className="k-table-filter-options" role="group" aria-label={fmt(tt.filterColumn, { column: String(column.header) })}>
             {filter.options.map((option) => (
               <Checkbox
                 key={option.value}
@@ -1627,8 +1637,8 @@ function ColumnFilter<T>({
         const r = (value && typeof value === 'object' && !Array.isArray(value) ? value : {}) as { min?: number | null; max?: number | null };
         return (
           <div className="k-table-filter-range">
-            <NumberInput label="Desde" value={r.min ?? null} min={filter.min} max={filter.max} step={filter.step} onChange={(min) => onChange({ ...r, min })} />
-            <NumberInput label="Hasta" value={r.max ?? null} min={filter.min} max={filter.max} step={filter.step} onChange={(max) => onChange({ ...r, max })} />
+            <NumberInput label={tt.rangeFrom} value={r.min ?? null} min={filter.min} max={filter.max} step={filter.step} onChange={(min) => onChange({ ...r, min })} />
+            <NumberInput label={tt.rangeTo} value={r.max ?? null} min={filter.min} max={filter.max} step={filter.step} onChange={(max) => onChange({ ...r, max })} />
           </div>
         );
       }
@@ -1644,7 +1654,7 @@ function ColumnFilter<T>({
       <button
         ref={anchorRef}
         type="button"
-        aria-label={`Filtrar por ${column.header}${active ? ' (activo)' : ''}`}
+        aria-label={fmt(active ? tt.filterByActive : tt.filterBy, { column: String(column.header) })}
         aria-expanded={isOpen}
         data-active={active || undefined}
         className={labelled ? 'k-table-filter-pill' : 'k-table-filter-btn'}
@@ -1663,12 +1673,12 @@ function ColumnFilter<T>({
           >
             <div className="k-table-filter-head">
               <span>{column.header}</span>
-              {active && <button type="button" onClick={() => onChange(undefined)}>Limpiar</button>}
+              {active && <button type="button" onClick={() => onChange(undefined)}>{common.clear}</button>}
             </div>
             {body}
           </div>,
           document.body,
-          { open: isOpen, onClose: close, title: `Filtrar ${column.header}`, presentation: mobile ? 'sheet' : 'anchored', anchorRef },
+          { open: isOpen, onClose: close, title: fmt(tt.filterColumn, { column: String(column.header) }), presentation: mobile ? 'sheet' : 'anchored', anchorRef },
         )}
     </>
   );

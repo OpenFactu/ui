@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { cn } from '../utils';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface BulkActionsBarProps {
   /** Cantidad de filas seleccionadas. Si es 0, el componente no renderiza nada. */
@@ -32,6 +33,7 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
   label = 'seleccionados',
   className,
 }) => {
+  const status = useMessages('status');
   if (count === 0) return null;
 
   return (
@@ -53,7 +55,7 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
           onClick={onClear}
           className="text-xs underline text-[var(--fg-muted,#52606f)] hover:text-[var(--fg-default,#0a1628)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
-          Deseleccionar
+          {status.deselect}
         </button>
       )}
       <div className="ml-auto flex flex-wrap items-center gap-2">{children}</div>

@@ -2,12 +2,12 @@ import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import type { AISource, AIUIProps } from './types';
-import { aiLabels } from './labels';
+import { useAILabels } from './labels';
 import { safeUrl } from './internal/helpers';
 
 export interface AISourcesProps extends AIUIProps { sources: AISource[] }
 export const AISources = React.memo(function AISources({ sources, labels, className }: AISourcesProps) {
-  const l = aiLabels(labels);
+  const l = useAILabels(labels);
   if (!sources.length) return null;
   return <section className={cn('ai-surface ai-sources', className)} aria-label={l.sources}><h4><UiIcon slot="link-2" size={13} />{l.sources}</h4>
     <ol>{sources.map((source, index) => {

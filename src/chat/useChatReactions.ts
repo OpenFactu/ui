@@ -3,7 +3,11 @@ import type { ChatController } from './controller';
 import { chatError } from './controller';
 import { effectiveReactions, reactionKey } from './reactions';
 import type { ChatActions } from './types';
+import { useMessages } from '../i18n/I18nProvider';
 export function useChatReactions({ snapshot, mounted, commit, props }: ChatController): Pick<ChatActions, 'toggleReaction' | 'receiveReactions'> {
+  const chatTexts = useMessages('chat');
+  const texts = React.useRef(chatTexts);
+  texts.current = chatTexts;
   const { currentUser, onReactionChange } = props;
   return React.useMemo(() => ({
     receiveReactions: value => commit({ type: 'reactions', value }),
@@ -25,7 +29,7 @@ export function useChatReactions({ snapshot, mounted, commit, props }: ChatContr
         return true;
       } catch (error) {
         const confirmed = snapshot.current.pendingReactions[key]?.confirmed;
-        commit({ type: 'reaction-settle', key, operationId, success: false, error: chatError(error, 'No se ha podido guardar la reacción.') });
+        commit({ type: 'reaction-settle', key, operationId, success: false, error: chatError(error, texts.current.reactionError) });
         return Boolean(confirmed);
       }
     },

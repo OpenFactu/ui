@@ -8,7 +8,7 @@ import { Textarea } from '../components/Textarea';
 import { FileDropzone } from '../components/FileDropzone';
 import { cn } from '../utils';
 import type { AIUIProps, AIDraft, AIModel, AIRun, AIMention, AICommand } from './types';
-import { aiLabels, type AILabels } from './labels';
+import { useAILabels, type AILabels } from './labels';
 import { canSubmit, isBusy, remainingFileCount, suggestionQuery } from './internal/helpers';
 import { AIIconButton } from './internal/ui';
 import { AIAttachments } from './AIAttachments';
@@ -17,7 +17,7 @@ import { useComposerTools, type AIComposerTool, type AIComposerToolContext } fro
 
 export interface AIModelSelectorProps extends AIUIProps { models: AIModel[]; value?: string; onChange?: (id: string) => void; disabled?: boolean }
 export function AIModelSelector({ models, value, onChange, disabled, labels, className }: AIModelSelectorProps) {
-  const l = aiLabels(labels);
+  const l = useAILabels(labels);
   if (!models.length) return null;
   if (!onChange) return <span className={cn('ai-model-fixed', className)}>{models.find(model => model.id === value)?.label ?? models[0].label}</span>;
   return <div className={cn('ai-model-selector', className)}><Select ariaLabel={l.model} options={models.map(model => ({ value: model.id, label: model.label, disabled: model.disabled }))} value={value ?? ''} onChange={onChange} disabled={disabled} /></div>;
@@ -161,7 +161,7 @@ function ComposerTools({ children, voice = true }: { children?: React.ReactNode;
 function ComposerVoice({ compact }: { compact?: boolean }) { const c = useComposer(); return c.onRecordAudio && c.audioAllowed ? <AIVoiceRecorder compact={compact} onRecorded={c.onRecordAudio} disabled={c.disabled || c.busy || c.pending} labels={c.labels} /> : null; }
 function ComposerRoot(props: AIComposerProps) {
   const { draft, onDraftChange, onSubmit, labels, className, disabled, run, models, modelId, children } = props;
-  const l = aiLabels(labels);
+  const l = useAILabels(labels);
   const id = React.useId(); const inputId = `${id}-input`; const listId = `${id}-suggestions`;
   const inputRef = React.useRef<HTMLTextAreaElement>(null);
   const [cursor, setCursor] = React.useState(draft.text.length);

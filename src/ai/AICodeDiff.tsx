@@ -5,7 +5,8 @@ import { tokenizeCode } from '../components/code-editor/languages';
 import { CodeHighlight } from '../components/code-editor/CodeHighlight';
 import { editorThemeStyle } from '../components/code-editor/themes';
 import { cn } from '../utils';
-import { aiLabels } from './labels';
+import { useAILabels } from './labels';
+import { formatMessage } from '../i18n/format';
 import type { AIUIProps } from './types';
 import { AICopyButton } from './internal/ui';
 import { codeLanguageDefinition } from './internal/code';
@@ -37,7 +38,7 @@ const DiffCode = React.memo(function DiffCode({ text, language }: { text: string
 
 /** Cambios propuestos sobre un código, en vista unificada, con aceptar y descartar. */
 export const AICodeDiff = React.memo(function AICodeDiff({ id, original, modified, language, title, status = 'pending', onAccept, onReject, context = 3, labels, className }: AICodeDiffProps) {
-  const l = aiLabels(labels); const handlers = useAICode();
+  const l = useAILabels(labels); const handlers = useAICode();
   const accept = onAccept ?? (id && handlers.onAcceptDiff ? () => handlers.onAcceptDiff!(id) : undefined);
   const reject = onReject ?? (id && handlers.onRejectDiff ? () => handlers.onRejectDiff!(id) : undefined);
   const lines = React.useMemo(() => lineDiff(original, modified), [original, modified]);
@@ -59,7 +60,7 @@ export const AICodeDiff = React.memo(function AICodeDiff({ id, original, modifie
     </header>
     <div className="ai-diff-body"><div className="ai-diff-lines">
       {rows.map(row => row.type === 'skip'
-        ? <button type="button" key={`skip-${row.from}`} className="ai-diff-skip" onClick={() => setExpanded(current => new Set(current).add(row.from))}><UiIcon slot="chevrons-up-down" size={13} aria-hidden="true" />{l.showUnchanged} {row.count} {l.unchangedLines}</button>
+        ? <button type="button" key={`skip-${row.from}`} className="ai-diff-skip" onClick={() => setExpanded(current => new Set(current).add(row.from))}><UiIcon slot="chevrons-up-down" size={13} aria-hidden="true" />{formatMessage(l.showUnchangedLines, { count: row.count })}</button>
         : <div key={`${row.type}-${row.oldLine ?? ''}-${row.newLine ?? ''}`} className="ai-diff-line" data-type={row.type}>
           <span className="ai-diff-num" aria-hidden="true">{row.oldLine ?? ''}</span><span className="ai-diff-num" aria-hidden="true">{row.newLine ?? ''}</span>
           <span className="ai-diff-sign" aria-hidden="true">{row.type === 'add' ? '+' : row.type === 'remove' ? '−' : ''}</span>

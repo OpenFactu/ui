@@ -9,9 +9,11 @@ import { ChatAttachments } from './ChatAttachments';
 import { ChatMessageReceipt } from './ChatMessageReceipt';
 import { chatTime } from './format';
 import type { ChatMessageData } from './types';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface ChatMessageProps { message: ChatMessageData; className?: string; grouped?: boolean; searchQuery?: string; fresh?: boolean }
 export function ChatMessage({ message, className, grouped = false, searchQuery = '', fresh = false }: ChatMessageProps) {
+  const ct = useMessages('chat');
   const { currentUser, users, messages, conversation } = useChatConversation(message.conversationId);
   const { retryMessage, focusMessage } = useChatActions();
   const [editing, setEditing] = React.useState(false);
@@ -32,22 +34,22 @@ export function ChatMessage({ message, className, grouped = false, searchQuery =
     parts.push(highlight(message.text.slice(cursor), cursor)); return parts;
   };
   return <article className={cn('k-chat-message', own && 'k-chat-message-own', grouped && 'k-chat-message-grouped', className)} data-fresh={fresh || undefined} data-message-id={message.clientId ?? message.id}>
-    {!own && <span className="k-chat-avatar-space">{!grouped && <Avatar name={sender?.name ?? 'Participante'} src={sender?.avatar} size="sm" />}</span>}
+    {!own && <span className="k-chat-avatar-space">{!grouped && <Avatar name={sender?.name ?? ct.participant} src={sender?.avatar} size="sm" />}</span>}
     <div className="k-chat-message-content">
-      {!own && !grouped && <span className="k-chat-sender">{sender?.name ?? 'Participante'}</span>}
+      {!own && !grouped && <span className="k-chat-sender">{sender?.name ?? ct.participant}</span>}
       <div className="k-chat-bubble">
-        {message.replyToId && !message.deletedAt && <blockquote className="k-chat-quoted"><button type="button" disabled={!original} onClick={() => original && focusMessage(original.id, message.conversationId)}><span>{original ? users.find(user => user.id === original.senderId)?.name ?? 'Participante' : 'Mensaje anterior'}</span><p>{original?.deletedAt ? 'Mensaje eliminado' : original?.text ?? 'Este mensaje no está en el historial cargado.'}</p></button></blockquote>}
-        {message.deletedAt ? <p className="k-chat-deleted">Mensaje eliminado</p> : editing ? <ChatMessageEditor message={message} onClose={() => setEditing(false)} /> : <>
+        {message.replyToId && !message.deletedAt && <blockquote className="k-chat-quoted"><button type="button" disabled={!original} onClick={() => original && focusMessage(original.id, message.conversationId)}><span>{original ? users.find(user => user.id === original.senderId)?.name ?? ct.participant : ct.earlierMessage}</span><p>{original?.deletedAt ? ct.deletedMessage : original?.text ?? ct.notInHistory}</p></button></blockquote>}
+        {message.deletedAt ? <p className="k-chat-deleted">{ct.deletedMessage}</p> : editing ? <ChatMessageEditor message={message} onClose={() => setEditing(false)} /> : <>
           {Boolean(message.attachments?.length) && <ChatAttachments attachments={message.attachments!} conversationId={message.conversationId} />}
           <p className="k-chat-message-text" dir="auto">{renderText()}</p>
         </>}
         <div className="k-chat-message-meta"><time dateTime={message.createdAt} title={message.createdAt}>{chatTime(message.createdAt)}</time>
-          {message.editedAt && !message.deletedAt && <span>Editado</span>}
+          {message.editedAt && !message.deletedAt && <span>{ct.edited}</span>}
           {own && !message.deletedAt && <ChatMessageReceipt message={message} />}
         </div>
       </div>
       {!message.deletedAt && !editing && <ChatMessageActions message={message} onEdit={() => setEditing(true)} />}
-      {status === 'error' && own && <div className="k-chat-message-actions"><span className="k-chat-message-error" role="alert">{message.error ?? 'No se ha podido enviar.'}</span>{!conversation?.readOnly && <button type="button" onClick={() => void retryMessage(message.id, message.conversationId)}>Reintentar envío</button>}</div>}
+      {status === 'error' && own && <div className="k-chat-message-actions"><span className="k-chat-message-error" role="alert">{message.error ?? ct.sendFailed}</span>{!conversation?.readOnly && <button type="button" onClick={() => void retryMessage(message.id, message.conversationId)}>{ct.retrySend}</button>}</div>}
       {!message.deletedAt && <ChatMessageReactions message={message} />}
     </div>
   </article>;

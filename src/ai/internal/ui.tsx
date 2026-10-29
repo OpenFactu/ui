@@ -2,7 +2,7 @@ import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
 import { useObjectUrl } from '../../hooks/useObjectUrl';
 import * as React from 'react';
 import { UiIcon } from '../../icons';
-import { aiLabels } from '../labels';
+import { useAILabels } from '../labels';
 import type { AIUIProps } from '../types';
 import { cn } from '../../utils';
 
@@ -10,7 +10,7 @@ export function AIIconButton({ label, children, className, ...props }: React.But
   return <button type="button" {...props} aria-label={label} title={label} className={cn('ai-icon-button', className)}>{children}</button>;
 }
 export function AICopyButton({ text, labels }: AIUIProps & { text: string }) {
-  const l = aiLabels(labels);
+  const l = useAILabels(labels);
   const { status, copy } = useCopyToClipboard();
   return <span className="ai-copy-control"><AIIconButton label={status === 'copied' ? l.copied : l.copy} onClick={() => { void copy(text); }}>{status === 'copied' ? <UiIcon slot="check" size={14} className="ai-pop" /> : <UiIcon slot="copy" size={14} />}</AIIconButton>{status === 'error' && <span role="status" className="ai-error">{l.copyError}</span>}</span>;
 }

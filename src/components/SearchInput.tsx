@@ -7,6 +7,7 @@ import { Input, type InputProps } from './Input';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { usePopover } from '../hooks/usePopover';
 import { createPortal } from 'react-dom';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface SearchInputProps
   extends Omit<InputProps, 'type' | 'leftIcon' | 'value' | 'onChange' | 'prefix' | 'onSubmit'> {
@@ -96,12 +97,14 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   maxRecent = 5,
   tokens,
   onTokensChange,
-  placeholder = 'Buscar…',
+  placeholder: placeholderProp,
   className,
   containerClassName,
   onKeyDown,
   ...rest
 }) => {
+  const { messages: m, format } = useI18n();
+  const placeholder = placeholderProp ?? m.common.searchPlaceholder;
   const inputRef = React.useRef<HTMLInputElement>(null);
   const debounced = useDebouncedValue(value, debounceMs);
   const lastEmitted = React.useRef(value);
@@ -248,7 +251,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     <span className="flex items-center gap-0.5 px-1">
       {loading ? (
         <span className="grid h-7 w-7 place-items-center" aria-hidden="true">
-          <Spinner size="xs" label="Buscando" />
+          <Spinner size="xs" label={m.searchInput.searching} />
         </span>
       ) : (
         clearable &&
@@ -256,7 +259,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
           <button
             type="button"
             onClick={clear}
-            aria-label="Limpiar búsqueda"
+            aria-label={m.searchInput.clear}
             className="grid h-7 w-7 place-items-center rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:bg-[var(--bg-hover,#f1f5f9)] hover:text-[var(--k-danger-fg)] transition-colors"
           >
             <UiIcon slot="x" className="h-3.5 w-3.5" />
@@ -281,7 +284,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
           {onTokensChange && (
             <UiIcon slot="x"
               role="button"
-              aria-label={`Quitar filtro ${token.field}`}
+              aria-label={format(m.searchInput.removeFilter, { field: token.field })}
               className="h-2.5 w-2.5 cursor-pointer hover:text-[var(--k-danger-fg)]"
               onClick={() => removeToken(i)}
             />

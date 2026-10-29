@@ -2,6 +2,7 @@ import * as React from 'react';
 import { UiIcon, type IconSlot } from '../icons';
 import { cn } from '../utils';
 import { Badge, type BadgeVariant } from './Badge';
+import { useMessages } from '../i18n/I18nProvider';
 
 export type ApprovalStatus = 'waiting' | 'current' | 'approved' | 'rejected' | 'skipped';
 export interface ApprovalStep {
@@ -20,21 +21,24 @@ export interface ApprovalFlowProps {
   emptyMessage?: string;
   'aria-label'?: string;
 }
-const states: Record<ApprovalStatus, { label: string; tone: BadgeVariant; icon: IconSlot }> = {
-  waiting: { label: 'En espera', tone: 'neutral', icon: 'clock-3' },
-  current: { label: 'En revisión', tone: 'warning', icon: 'clock-3' },
-  approved: { label: 'Aprobado', tone: 'success', icon: 'check' },
-  rejected: { label: 'Rechazado', tone: 'danger', icon: 'x' },
-  skipped: { label: 'Omitido', tone: 'neutral', icon: 'minus' },
+const states: Record<ApprovalStatus, { tone: BadgeVariant; icon: IconSlot }> = {
+  waiting: { tone: 'neutral', icon: 'clock-3' },
+  current: { tone: 'warning', icon: 'clock-3' },
+  approved: { tone: 'success', icon: 'check' },
+  rejected: { tone: 'danger', icon: 'x' },
+  skipped: { tone: 'neutral', icon: 'minus' },
 };
 
 /** Etapas ordenadas de autorización; admite circuitos paralelos o secuenciales. */
 export const ApprovalFlow: React.FC<ApprovalFlowProps> = ({
   steps,
   className,
-  emptyMessage = 'No hay etapas de aprobación.',
-  'aria-label': ariaLabel = 'Flujo de aprobación',
+  emptyMessage: emptyMessageProp,
+  'aria-label': ariaLabelProp,
 }) => {
+  const flow = useMessages('approvalFlow');
+  const emptyMessage = emptyMessageProp ?? flow.empty;
+  const ariaLabel = ariaLabelProp ?? flow.label;
   if (!steps.length)
     return <p className={cn('py-4 text-sm text-[var(--fg-muted)]', className)}>{emptyMessage}</p>;
   return (
@@ -63,7 +67,7 @@ export const ApprovalFlow: React.FC<ApprovalFlowProps> = ({
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-[13px] font-semibold text-[var(--fg-default)]">{step.title}</p>
-                  <Badge variant={state.tone}>{state.label}</Badge>
+                  <Badge variant={state.tone}>{flow[step.status]}</Badge>
                 </div>
                 {step.assignee && (
                   <div className="mt-1 text-[12px] text-[var(--fg-muted)]">{step.assignee}</div>

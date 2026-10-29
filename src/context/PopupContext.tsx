@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, type ReactNode
 import { PopupFrame, PopupOpenContext, type PopupTone } from '../components/Popup';
 import { exitDelay } from '../motion/dom';
 import { Button } from '../components/Button';
+import { useI18n } from '../i18n/I18nProvider';
 
 /**
  * API imperativa para popups modales. Análogo a `useToast`, pero para
@@ -66,6 +67,7 @@ function genId() {
 }
 
 export const PopupProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const texts = useI18n().messages;
   const [stack, setStack] = useState<OpenPopup[]>([]);
 
   const close = useCallback((id: string) => {
@@ -85,7 +87,7 @@ export const PopupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       new Promise((resolve) => {
         const id = push((onClose) => (
           <PopupFrame
-            title={opts.title || 'Aviso'}
+            title={opts.title || texts.popup.notice}
             tone={opts.tone || 'info'}
             maxWidth="md"
             onClose={() => {
@@ -99,7 +101,7 @@ export const PopupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                   resolve();
                 }}
               >
-                {opts.confirmLabel || 'Aceptar'}
+                {opts.confirmLabel || texts.popup.accept}
               </Button>
             }
           >
@@ -110,7 +112,7 @@ export const PopupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         ));
         return id;
       }),
-    [push],
+    [push, texts],
   );
 
   const confirm = useCallback<PopupContextType['confirm']>(
@@ -123,20 +125,20 @@ export const PopupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           };
           return (
             <PopupFrame
-              title={opts.title || 'Confirmar'}
+              title={opts.title || texts.common.confirm}
               tone={opts.tone || 'warning'}
               maxWidth="md"
               onClose={() => handle(false)}
               footer={
                 <>
                   <Button variant="secondary" onClick={() => handle(false)}>
-                    {opts.cancelLabel || 'Cancelar'}
+                    {opts.cancelLabel || texts.common.cancel}
                   </Button>
                   <Button
                     variant={opts.tone === 'danger' ? 'danger' : 'primary'}
                     onClick={() => handle(true)}
                   >
-                    {opts.confirmLabel || 'Confirmar'}
+                    {opts.confirmLabel || texts.common.confirm}
                   </Button>
                 </>
               }
@@ -149,7 +151,7 @@ export const PopupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         });
         return id;
       }),
-    [push],
+    [push, texts],
   );
 
   const show = useCallback<PopupContextType['show']>(
@@ -175,7 +177,7 @@ export const PopupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         });
         return id;
       }),
-    [push],
+    [push, texts],
   );
 
   const closeAll = useCallback(() => setStack([]), []);

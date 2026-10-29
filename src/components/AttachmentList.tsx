@@ -4,6 +4,7 @@ import { cn } from '../utils';
 import { Button } from './Button';
 import { EmptyState } from './EmptyState';
 import { formatBytes } from '../internal/format';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface AttachmentItem {
   id: string;
@@ -35,10 +36,13 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
   onRemove,
   onRetry,
   disabled = false,
-  emptyMessage = 'Todavía no hay adjuntos',
+  emptyMessage: emptyMessageProp,
   className,
-  'aria-label': ariaLabel = 'Archivos adjuntos',
+  'aria-label': ariaLabelProp,
 }) => {
+  const { messages: m, format } = useI18n();
+  const emptyMessage = emptyMessageProp ?? m.attachmentList.empty;
+  const ariaLabel = ariaLabelProp ?? m.attachmentList.label;
   if (!items.length)
     return (
       <EmptyState
@@ -87,16 +91,16 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
               </div>
               {status === 'error' && (
                 <p className="mt-1 text-[12px] text-[var(--k-danger-fg)]">
-                  {item.error ?? 'No se ha podido subir el archivo.'}
+                  {item.error ?? m.attachmentList.uploadError}
                 </p>
               )}
               {status === 'uploading' && (
                 <div className="mt-2">
                   <p className="mb-1 text-[11px] text-[var(--fg-muted)]">
-                    {progress === undefined ? 'Subiendo…' : `Subiendo · ${Math.round(progress)} %`}
+                    {progress === undefined ? m.attachmentList.uploading : format(m.attachmentList.uploadingProgress, { percent: Math.round(progress) })}
                   </p>
                   <progress
-                    aria-label={`Subida de ${item.name}`}
+                    aria-label={format(m.attachmentList.progress, { name: item.name })}
                     max={100}
                     value={progress}
                     className="h-1.5 w-full accent-[var(--color-accent)]"
@@ -111,11 +115,11 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
                   size="sm"
                   variant="soft"
                   disabled={disabled}
-                  aria-label={`Reintentar ${item.name}`}
+                  aria-label={format(m.attachmentList.retry, { name: item.name })}
                   onClick={() => onRetry(item)}
                 >
                   <UiIcon slot="rotate-ccw" size={14} />
-                  Reintentar
+                  {m.common.retry}
                 </Button>
               )}
               {onDownload && status === 'ready' && (
@@ -124,7 +128,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
                   size="sm"
                   variant="soft"
                   disabled={disabled}
-                  aria-label={`Descargar ${item.name}`}
+                  aria-label={format(m.attachmentList.download, { name: item.name })}
                   onClick={() => onDownload(item)}
                 >
                   <UiIcon slot="download" size={14} />
@@ -136,7 +140,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
                   size="sm"
                   variant="link"
                   disabled={disabled || status === 'uploading'}
-                  aria-label={`Eliminar ${item.name}`}
+                  aria-label={format(m.attachmentList.delete, { name: item.name })}
                   onClick={() => onRemove(item)}
                 >
                   <UiIcon slot="trash-2" size={14} />

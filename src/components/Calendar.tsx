@@ -7,9 +7,7 @@ import { DatePicker } from './DatePicker';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import {
-  DIAS_SEMANA,
   DIA_MS,
-  MESES_LARGOS,
   aFecha,
   aInstante,
   capitalizar,
@@ -24,6 +22,7 @@ import {
   sumarMinutos,
 } from '../internal/fechas';
 import { layoutLanes, layoutOverlaps, nudgeEvent, rangeFromDrag } from './internal/schedule';
+import { useI18n } from '../i18n/I18nProvider';
 
 export type CalendarView = 'day' | 'week' | 'month';
 
@@ -154,7 +153,6 @@ type Arrastre = {
 type Seleccion = { dia: number; a: number; b: number; top: number; movida: boolean };
 
 const soloDia = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
-const NOMBRES_VISTA: Record<CalendarView, string> = { day: 'Día', week: 'Semana', month: 'Mes' };
 
 /**
  * Calendario de día, semana y mes.
@@ -194,13 +192,25 @@ export const Calendar: React.FC<CalendarProps> = ({
   onSlotSelect,
   unscheduled,
   onSchedule,
-  unscheduledLabel = 'Sin programar',
+  unscheduledLabel: unscheduledLabelProp,
   maxPorDia = 3,
-  emptyMessage = 'No hay nada en estas fechas.',
+  emptyMessage: emptyMessageProp,
   className,
-  'aria-label': ariaLabel = 'Calendario',
+  'aria-label': ariaLabelProp,
   mobileView = 'calendar',
 }) => {
+  const { messages: m, format } = useI18n();
+  const c = m.calendar;
+  const dn = m.dates;
+  const unscheduledLabel = unscheduledLabelProp ?? c.unscheduled;
+  const emptyMessage = emptyMessageProp ?? c.empty;
+  const ariaLabel = ariaLabelProp ?? c.label;
+  /** «jueves 23». */
+  const diaSemana = (d: Date) => format(c.weekdayDay, { weekday: dn.weekdays[d.getDay()], day: d.getDate() });
+  /** «jueves, 23 de julio». */
+  const fechaLarga = (d: Date) => format(dn.weekdayDayMonth, { weekday: dn.weekdays[d.getDay()], day: d.getDate(), month: dn.months[d.getMonth()] });
+  /** «23 de julio». */
+  const diaMes = (d: Date) => format(dn.dayMonth, { day: d.getDate(), month: dn.months[d.getMonth()] });
   const mobile = useIsMobile();
   /** Móvil con rejilla: la semana se ve día a día y el mes con puntos. */
   const compacto = mobile && mobileView !== 'agenda';
@@ -440,8 +450,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     evt.preventDefault();
     focoPendiente.current = e.id;
     onEventChange(e, siguiente);
-    const dia = siguiente.start.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric' });
-    setAnuncio(`${e.title}: ${dia}, de ${hhmm(siguiente.start)} a ${hhmm(siguiente.end)}`);
+    setAnuncio(format(c.moved, { title: e.title, date: diaSemana(siguiente.start), start: hhmm(siguiente.start), end: hhmm(siguiente.end) }));
   };
 
   // ── Navegación ────────────────────────────────────────────────────────
@@ -462,11 +471,10 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   const titulo =
     view === 'day' || (compacto && view === 'week')
-      ? capitalizar(fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }))
+      ? capitalizar(fechaLarga(fecha))
       : view === 'week'
-        ? `Semana del ${diasSemana[0].getDate()} de ${MESES_LARGOS[diasSemana[0].getMonth()]} al ${diasSemana[6].getDate()} de ${MESES_LARGOS[diasSemana[6].getMonth()]}`
-        : `${MESES_LARGOS[fecha.getMonth()]} de ${fecha.getFullYear()}`;
-  const unidad = view === 'day' ? 'Día' : view === 'week' ? 'Semana' : 'Mes';
+        ? format(c.weekTitle, { startDay: diasSemana[0].getDate(), startMonth: dn.months[diasSemana[0].getMonth()], endDay: diasSemana[6].getDate(), endMonth: dn.months[diasSemana[6].getMonth()] })
+        : format(dn.monthYear, { month: dn.months[fecha.getMonth()], year: fecha.getFullYear() });
 
   /**
    * Un evento de todo el día ocupa TODOS los días de su rango, no solo el de
@@ -519,7 +527,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   };
 
   const rangoAgenda = view === 'month' ? diasMes.filter((day) => day.getMonth() === fecha.getMonth()) : dias;
-  const textoHora = (e: Normalizado) => (e.allDay ? 'Todo el día' : `${hhmm(e._inicio)} – ${hhmm(e._fin)}`);
+  const textoHora = (e: Normalizado) => (e.allDay ? c.allDay : `${hhmm(e._inicio)} – ${hhmm(e._fin)}`);
 
   return (
     <div data-k-mobile="Calendar"
@@ -541,11 +549,11 @@ export const Calendar: React.FC<CalendarProps> = ({
       {toolbar && (
         <div className="k-cal-toolbar">
           <div className="flex min-w-0 items-center gap-1">
-            <button type="button" className="k-cal-nav" aria-label={`${unidad} anterior`} onClick={() => paso(-1)}>
+            <button type="button" className="k-cal-nav" aria-label={c.previous[view]} onClick={() => paso(-1)}>
               <UiIcon slot="chevron-left" size={16} />
             </button>
-            <button type="button" className="k-cal-today" onClick={() => irA(hoy)}>Hoy</button>
-            <button type="button" className="k-cal-nav" aria-label={`${unidad} siguiente`} onClick={() => paso(1)}>
+            <button type="button" className="k-cal-today" onClick={() => irA(hoy)}>{dn.today}</button>
+            <button type="button" className="k-cal-nav" aria-label={c.next[view]} onClick={() => paso(1)}>
               <UiIcon slot="chevron-right" size={16} />
             </button>
             <span className="k-cal-title">{titulo}</span>
@@ -555,14 +563,14 @@ export const Calendar: React.FC<CalendarProps> = ({
             {(onSlotSelect || onSlotClick) && (
               <button type="button" className="k-cal-new" onClick={crearAhora}>
                 <UiIcon slot="plus" size={14} />
-                Nuevo evento
+                {c.newEvent}
               </button>
             )}
             {views.length > 1 && (
-              <div role="radiogroup" aria-label="Vista" className="k-cal-views">
+              <div role="radiogroup" aria-label={c.viewsLabel} className="k-cal-views">
                 {views.map((v) => (
                   <button key={v} type="button" role="radio" aria-checked={view === v} onClick={() => cambiarView(v)}>
-                    {NOMBRES_VISTA[v]}
+                    {c.views[v]}
                   </button>
                 ))}
               </div>
@@ -571,10 +579,10 @@ export const Calendar: React.FC<CalendarProps> = ({
         </div>
       )}
 
-      {mobile && mobileView === 'agenda' ? <div className="k-mobile-agenda" role="list" aria-label="Agenda">{rangoAgenda.filter(day => deDia(day).length > 0).map(day => <section key={day.toISOString()} role="listitem"><h3>{day.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</h3>{deDia(day).map(event => <div key={event.id} className="k-mobile-agenda-event">{onEventClick ? <button type="button" onClick={() => onEventClick(event)}><strong>{event.title}</strong><span>{textoHora(event)}</span></button> : <><strong>{event.title}</strong><span>{textoHora(event)}</span></>}</div>)}</section>)}{onSlotClick && <Button variant="secondary" onClick={() => onSlotClick(fecha)}>Añadir evento</Button>}</div> : (view !== 'month' ? (
+      {mobile && mobileView === 'agenda' ? <div className="k-mobile-agenda" role="list" aria-label={c.agenda}>{rangoAgenda.filter(day => deDia(day).length > 0).map(day => <section key={day.toISOString()} role="listitem"><h3>{fechaLarga(day)}</h3>{deDia(day).map(event => <div key={event.id} className="k-mobile-agenda-event">{onEventClick ? <button type="button" onClick={() => onEventClick(event)}><strong>{event.title}</strong><span>{textoHora(event)}</span></button> : <><strong>{event.title}</strong><span>{textoHora(event)}</span></>}</div>)}</section>)}{onSlotClick && <Button variant="secondary" onClick={() => onSlotClick(fecha)}>{c.addEvent}</Button>}</div> : (view !== 'month' ? (
         <div className="k-cal-time" data-view={view}>
           {compacto && view === 'week' && (
-            <div className="k-cal-weekstrip" role="tablist" aria-label="Días de la semana">
+            <div className="k-cal-weekstrip" role="tablist" aria-label={c.weekDays}>
               {diasSemana.map((d) => {
                 const elegido = mismoDia(d, fecha);
                 return (
@@ -583,12 +591,12 @@ export const Calendar: React.FC<CalendarProps> = ({
                     type="button"
                     role="tab"
                     aria-selected={elegido}
-                    aria-label={d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric' })}
+                    aria-label={diaSemana(d)}
                     data-today={mismoDia(d, hoy) || undefined}
                     data-weekend={esFinde(d) || undefined}
                     onClick={() => irA(d)}
                   >
-                    <span>{DIAS_SEMANA[d.getDay()].charAt(0).toUpperCase()}</span>
+                    <span>{dn.weekdaysMin[d.getDay()]}</span>
                     <strong>{d.getDate()}</strong>
                     <i aria-hidden="true" data-on={deDia(d).length > 0 || undefined} />
                   </button>
@@ -604,9 +612,9 @@ export const Calendar: React.FC<CalendarProps> = ({
                 const esHoy = mismoDia(d, hoy);
                 return (
                   <div key={d.toISOString()} className="k-cal-dayhead" data-weekend={esFinde(d) || undefined} data-today={esHoy || undefined}>
-                    <span className="k-cal-weekday">{DIAS_SEMANA[d.getDay()]}</span>
+                    <span className="k-cal-weekday">{dn.weekdaysShort[d.getDay()]}</span>
                     {view === 'week' && views.includes('day') ? (
-                      <button type="button" className="k-cal-daynum" aria-label={`Ver el ${d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric' })}`} onClick={() => verDia(d)}>
+                      <button type="button" className="k-cal-daynum" aria-label={format(c.viewDay, { date: diaSemana(d) })} onClick={() => verDia(d)}>
                         {d.getDate()}
                       </button>
                     ) : (
@@ -619,7 +627,7 @@ export const Calendar: React.FC<CalendarProps> = ({
           </div>
           {barras.length > 0 && (
             <div className="k-cal-allday-row" style={{ '--k-cal-cols': dias.length } as React.CSSProperties}>
-              <div className="k-cal-gutter"><span>Todo el día</span></div>
+              <div className="k-cal-gutter"><span>{c.allDay}</span></div>
               <div className="k-cal-allday">
                 {barras.map(({ e, desde, hasta, carril }) => (
                   <button
@@ -702,7 +710,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                           <div
                             role="button"
                             tabIndex={0}
-                            aria-label={`${e.title}, ${hhmm(inicio)} a ${hhmm(fin)}${editable ? '. Flechas para mover, Mayús y flechas para cambiar la duración' : ''}`}
+                            aria-label={format(editable ? c.eventEditable : c.event, { title: e.title, start: hhmm(inicio), end: hhmm(fin) })}
                             title={`${hhmm(inicio)}–${hhmm(fin)} · ${e.title}`}
                             data-evento={e.id}
                             data-status={e.status ?? 'pendiente'}
@@ -744,7 +752,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                       const base = inicioDeRejilla(d);
                       return (
                         <div className="k-cal-ghost" aria-hidden="true" style={{ top: (from / 60) * hourHeight + 1, height: ((to - from) / 60) * hourHeight - 2 }}>
-                          <strong>Nuevo evento</strong>
+                          <strong>{c.newEvent}</strong>
                           <span>{hhmm(sumarMinutos(base, from))} – {hhmm(sumarMinutos(base, to))}</span>
                         </div>
                       );
@@ -764,7 +772,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         <div className="k-cal-month">
           <div className="k-cal-month-head">
             {diasSemana.map((d) => (
-              <div key={d.toISOString()} data-weekend={esFinde(d) || undefined}>{DIAS_SEMANA[d.getDay()]}</div>
+              <div key={d.toISOString()} data-weekend={esFinde(d) || undefined}>{dn.weekdaysShort[d.getDay()]}</div>
             ))}
           </div>
           <div ref={rejillaRef} className="k-cal-month-grid grid grid-cols-7 grid-rows-6">
@@ -795,7 +803,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                     focoDia.current = true;
                     irA(sumarDias(d, salto[evt.key]));
                   } : undefined}
-                  aria-label={compacto ? `${d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}${suyos.length ? `, ${suyos.length} eventos` : ''}` : undefined}
+                  aria-label={compacto ? (suyos.length ? format(c.dayWithEvents, { date: fechaLarga(d), count: suyos.length }) : fechaLarga(d)) : undefined}
                 >
                   <span className="k-cal-cell-num">{d.getDate()}</span>
                   {compacto ? (
@@ -829,7 +837,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                       onClick={(evt) => { evt.stopPropagation(); verDia(d); }}
                       disabled={!views.includes('day')}
                     >
-                      +{suyos.length - visibles.length} más
+                      {format(c.more, { count: suyos.length - visibles.length })}
                     </button>
                   )}
                 </div>
@@ -837,15 +845,15 @@ export const Calendar: React.FC<CalendarProps> = ({
             })}
           </div>
           {compacto && (
-            <section className="k-cal-dayagenda" aria-label={`Eventos del ${fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}`}>
-              <h3>{capitalizar(fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }))}</h3>
-              {deDia(fecha).length === 0 ? <p className="k-cal-dayagenda-empty">Nada este día.</p> : deDia(fecha).map((e) => (
+            <section className="k-cal-dayagenda" aria-label={format(c.dayEvents, { date: diaMes(fecha) })}>
+              <h3>{capitalizar(fechaLarga(fecha))}</h3>
+              {deDia(fecha).length === 0 ? <p className="k-cal-dayagenda-empty">{c.nothingThisDay}</p> : deDia(fecha).map((e) => (
                 <button key={e.id} type="button" className="k-cal-agenda-item" data-evento={e.id} style={tonoDe(e)} onClick={() => onEventClick?.(e)}>
-                  <span className="k-cal-agenda-time">{e.allDay ? 'Todo el día' : hhmm(e._inicio)}</span>
+                  <span className="k-cal-agenda-time">{e.allDay ? c.allDay : hhmm(e._inicio)}</span>
                   <span className="k-cal-agenda-title">{e.title}</span>
                 </button>
               ))}
-              {onSlotClick && <Button size="sm" variant="secondary" onClick={() => onSlotClick(fecha)}>Añadir evento</Button>}
+              {onSlotClick && <Button size="sm" variant="secondary" onClick={() => onSlotClick(fecha)}>{c.addEvent}</Button>}
             </section>
           )}
         </div>
@@ -862,7 +870,7 @@ export const Calendar: React.FC<CalendarProps> = ({
             <span className="k-cal-tray-count">{unscheduled.length}</span>
           </div>
           {unscheduled.length === 0 ? (
-            <p className="k-cal-tray-empty">No queda nada sin programar.</p>
+            <p className="k-cal-tray-empty">{c.trayEmpty}</p>
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {unscheduled.map((e) => (
@@ -873,7 +881,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                   data-sin-programar={e.id}
                   data-status={e.status ?? 'pendiente'}
                   data-dragging={arrastre?.id === e.id || undefined}
-                  aria-label={`${e.title}, sin programar`}
+                  aria-label={format(c.unscheduledItem, { title: e.title })}
                   onPointerDown={(evt) => { if (!mobile) empezar(evt, e.id, 'mover', true); }}
                   onClick={() => { if (mobile && onSchedule) { setScheduling(e); setScheduleDate(null); } }}
                   onKeyDown={(evt) => { if (onSchedule && (evt.key === 'Enter' || evt.key === ' ')) { evt.preventDefault(); setScheduling(e); setScheduleDate(null); } }}
@@ -892,10 +900,10 @@ export const Calendar: React.FC<CalendarProps> = ({
           )}
         </div>
       )}
-      <Modal isOpen={!!scheduling} onClose={() => setScheduling(null)} title="Programar evento" hideCancel>
+      <Modal isOpen={!!scheduling} onClose={() => setScheduling(null)} title={c.scheduleTitle} hideCancel>
         <form onSubmit={event => { event.preventDefault(); if (scheduling && scheduleDate) { onSchedule?.(scheduling, aFecha(scheduleDate)); setScheduling(null); } }}>
-          <DatePicker label="Fecha" value={scheduleDate} onChange={setScheduleDate} />
-          <Button type="submit" disabled={!scheduleDate}>Programar</Button>
+          <DatePicker label={c.date} value={scheduleDate} onChange={setScheduleDate} />
+          <Button type="submit" disabled={!scheduleDate}>{c.schedule}</Button>
         </form>
       </Modal>
     </div>

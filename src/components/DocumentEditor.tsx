@@ -5,6 +5,7 @@ import { Alert } from './Alert';
 import { Badge } from './Badge';
 import { Button } from './Button';
 import { Modal } from './Modal';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface DocumentEditorProps extends Omit<PageLayoutProps, 'footer' | 'children'> {
   /** Campos/secciones del formulario. No anidar otro <form>. */
@@ -38,15 +39,20 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   readOnly = false,
   saveDisabled = false,
   error,
-  saveErrorMessage = 'No se pudo guardar. Revisa los datos y vuelve a intentarlo.',
+  saveErrorMessage: saveErrorMessageProp,
   onSaveError,
-  saveLabel = 'Guardar documento',
-  cancelLabel = 'Cancelar',
+  saveLabel: saveLabelProp,
+  cancelLabel: cancelLabelProp,
   confirmDiscard = true,
   footerInfo,
   formId,
   ...layout
 }) => {
+  const { messages: m } = useI18n();
+  const doc = m.documentEditor;
+  const saveErrorMessage = saveErrorMessageProp ?? doc.saveError;
+  const saveLabel = saveLabelProp ?? doc.save;
+  const cancelLabel = cancelLabelProp ?? m.common.cancel;
   const generatedId = React.useId();
   const id = formId ?? generatedId;
   const [pending, setPending] = React.useState(false);
@@ -92,12 +98,12 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--fg-muted)]">
               <span role="status">
                 {busy ? (
-                  'Guardando…'
+                  doc.saving
                 ) : readOnly ? (
-                  'Solo lectura'
+                  doc.readOnly
                 ) : dirty === undefined ? null : (
                   <Badge variant={dirty ? 'warning' : 'success'}>
-                    {dirty ? 'Cambios sin guardar' : 'Sin cambios pendientes'}
+                    {dirty ? doc.dirty : doc.clean}
                   </Badge>
                 )}
               </span>
@@ -132,14 +138,14 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             tabIndex={-1}
             className="rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
-            <Alert tone="danger" title="No se ha guardado el documento">
+            <Alert tone="danger" title={doc.saveErrorTitle}>
               {displayedError}
             </Alert>
           </div>
         )}
-        <form id={id} onSubmit={submit} aria-label="Editor de documento" aria-busy={busy}>
+        <form id={id} onSubmit={submit} aria-label={doc.label} aria-busy={busy}>
           <fieldset disabled={busy || readOnly} className="min-w-0 space-y-5 border-0 p-0 m-0">
-            <legend className="sr-only">Datos del documento</legend>
+            <legend className="sr-only">{doc.fields}</legend>
             {children}
           </fieldset>
         </form>
@@ -147,11 +153,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       <Modal
         isOpen={confirming}
         onClose={() => setConfirming(false)}
-        title="¿Descartar los cambios?"
+        title={doc.discardTitle}
         size="sm"
-        cancelLabel="Seguir editando"
+        cancelLabel={doc.keepEditing}
         primaryAction={{
-          label: 'Descartar cambios',
+          label: doc.discard,
           variant: 'danger',
           onClick: () => {
             setConfirming(false);
@@ -161,7 +167,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         }}
       >
         <p className="text-sm text-[var(--fg-body)]">
-          Los cambios sin guardar de este documento se perderán.
+          {doc.discardMessage}
         </p>
       </Modal>
     </>

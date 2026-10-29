@@ -2,6 +2,7 @@ import * as React from 'react';
 import { shake } from './Feedback';
 import { ControlField, describedBy } from './internal/ControlField';
 import { applyBackspace, applyInput, applyPaste, toCells, type OtpMode } from './internal/otp';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface OtpInputProps {
   value: string;
@@ -36,6 +37,7 @@ export interface OtpInputProps {
 export const OtpInput: React.FC<OtpInputProps> = ({
   value, onChange, onComplete, length = 6, mode = 'numeric', mask, groupSize, autoFocus, label, helperText, error, disabled, size = 'md', id, name, className,
 }) => {
+  const { messages: { otpInput: otp }, format } = useI18n();
   const generated = React.useId();
   const otpId = id ?? generated;
   const inputs = React.useRef<Array<HTMLInputElement | null>>([]);
@@ -88,7 +90,7 @@ export const OtpInput: React.FC<OtpInputProps> = ({
         ref={group}
         role="group"
         aria-labelledby={label ? `${otpId}-label` : undefined}
-        aria-label={label ? undefined : 'Código de verificación'}
+        aria-label={label ? undefined : otp.label}
         aria-describedby={describedBy(otpId, error, helperText)}
         data-k-mobile="OtpInput"
         data-size={size}
@@ -111,7 +113,7 @@ export const OtpInput: React.FC<OtpInputProps> = ({
               spellCheck={false}
               autoFocus={autoFocus && index === 0}
               disabled={disabled}
-              aria-label={`Carácter ${index + 1} de ${length}`}
+              aria-label={format(otp.character, { index: index + 1, total: length })}
               aria-invalid={error ? true : undefined}
               data-filled={cell ? '' : undefined}
               // Solo se puede escribir en la primera casilla libre o en una ya escrita: no quedan huecos.

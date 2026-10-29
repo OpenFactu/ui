@@ -6,6 +6,7 @@ import { createVelocityTracker, projectRelease, rubberband } from '../motion/vel
 import { motionDisabled } from '../motion/dom';
 import { useElementSize } from '../hooks/useResizeObserver';
 import { isPrimaryPointer, startPointerDrag } from '../internal/pointerDrag';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface CarouselProps {
   /** Diapositivas: cada hijo es una. */
@@ -35,8 +36,10 @@ export interface CarouselProps {
  * botones, puntos y reproducción automática opcional.
  */
 export const Carousel: React.FC<CarouselProps> = ({
-  children, perView = 1, gap = 16, index: controlled, defaultIndex = 0, onIndexChange, autoplay, arrows = true, dots = true, label = 'Carrusel', className,
+  children, perView = 1, gap = 16, index: controlled, defaultIndex = 0, onIndexChange, autoplay, arrows = true, dots = true, label: labelProp, className,
 }) => {
+  const { messages: m, format } = useI18n();
+  const label = labelProp ?? m.carousel.label;
   const slides = React.Children.toArray(children);
   const viewport = React.useRef<HTMLDivElement>(null);
   const track = React.useRef<HTMLDivElement>(null);
@@ -111,7 +114,7 @@ export const Carousel: React.FC<CarouselProps> = ({
   return (
     <section
       className={cn('k-carousel', className)}
-      aria-roledescription="carrusel"
+      aria-roledescription={m.carousel.roleDescription}
       aria-label={label}
       data-k-mobile="Carousel"
       onMouseEnter={() => setPaused(true)}
@@ -119,14 +122,14 @@ export const Carousel: React.FC<CarouselProps> = ({
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
-      <div ref={viewport} className="k-carousel-viewport" tabIndex={0} aria-label={`${label ?? 'Diapositivas'}: flechas para pasar`} onKeyDown={onKeyDown} onPointerDown={onPointerDown} onClickCapture={onClickCapture} aria-live={autoplay ? 'off' : 'polite'}>
+      <div ref={viewport} className="k-carousel-viewport" tabIndex={0} aria-label={format(m.carousel.viewport, { label: label ?? m.carousel.slides })} onKeyDown={onKeyDown} onPointerDown={onPointerDown} onClickCapture={onClickCapture} aria-live={autoplay ? 'off' : 'polite'}>
         <div ref={track} className="k-carousel-track" style={{ gap }}>
           {slides.map((slide, i) => (
             <div
               key={i}
               role="group"
-              aria-roledescription="diapositiva"
-              aria-label={`${i + 1} de ${slides.length}`}
+              aria-roledescription={m.carousel.slide}
+              aria-label={format(m.common.ofTotal, { current: i + 1, total: slides.length })}
               aria-hidden={i < index || i >= index + perView || undefined}
               className="k-carousel-slide"
               style={{ flexBasis: step ? step - gap : `${100 / perView}%` }}
@@ -138,14 +141,14 @@ export const Carousel: React.FC<CarouselProps> = ({
       </div>
       {arrows && pages > 1 && (
         <>
-          <button type="button" className="k-carousel-arrow" data-side="prev" aria-label="Anterior" disabled={index === 0} onClick={() => go(index - 1)}><UiIcon slot="chevron-left" size={18} /></button>
-          <button type="button" className="k-carousel-arrow" data-side="next" aria-label="Siguiente" disabled={index === maxIndex} onClick={() => go(index + 1)}><UiIcon slot="chevron-right" size={18} /></button>
+          <button type="button" className="k-carousel-arrow" data-side="prev" aria-label={m.common.previous} disabled={index === 0} onClick={() => go(index - 1)}><UiIcon slot="chevron-left" size={18} /></button>
+          <button type="button" className="k-carousel-arrow" data-side="next" aria-label={m.common.next} disabled={index === maxIndex} onClick={() => go(index + 1)}><UiIcon slot="chevron-right" size={18} /></button>
         </>
       )}
       {dots && pages > 1 && (
-        <div className="k-carousel-dots" role="tablist" aria-label="Elegir diapositiva">
+        <div className="k-carousel-dots" role="tablist" aria-label={m.carousel.dots}>
           {Array.from({ length: pages }, (_, i) => (
-            <button key={i} type="button" role="tab" aria-selected={i === index} aria-label={`Ir a la ${i + 1}`} data-active={i === index || undefined} onClick={() => go(i)} />
+            <button key={i} type="button" role="tab" aria-selected={i === index} aria-label={format(m.carousel.goTo, { index: i + 1 })} data-active={i === index || undefined} onClick={() => go(i)} />
           ))}
         </div>
       )}

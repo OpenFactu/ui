@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Button } from './Button';
 import { useAnimatedPresence } from '../hooks/useAnimatedPresence';
 import { useEscapeStack } from '../internal/escapeStack';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface TourStep {
   /** Elemento que se ilumina: selector CSS o ref. Sin destino, el paso sale centrado. */
@@ -37,6 +38,7 @@ const resolve = (target: TourStep['target']): HTMLElement | null =>
  * y muestra una tarjeta con el texto, el progreso y los botones. Flechas para avanzar y retroceder, Escape para salir.
  */
 export const Tour: React.FC<TourProps> = ({ steps, open, onClose, onFinish, step: controlled, onStepChange, padding = 8, labels = {} }) => {
+  const { messages: m, format } = useI18n();
   const [internal, setInternal] = React.useState(0);
   const index = Math.min(controlled ?? internal, steps.length - 1);
   const current = steps[index];
@@ -123,11 +125,11 @@ export const Tour: React.FC<TourProps> = ({ steps, open, onClose, onFinish, step
         <h2 id={titleId} className="k-tour-title">{current.title}</h2>
         {current.content && <div className="k-tour-content">{current.content}</div>}
         <div className="k-tour-actions">
-          <span className="k-tour-count">{index + 1} de {steps.length}</span>
+          <span className="k-tour-count">{format(m.common.ofTotal, { current: index + 1, total: steps.length })}</span>
           <span className="flex gap-2">
-            {index < steps.length - 1 && <Button size="sm" variant="ghost" onClick={onClose}>{labels.skip ?? 'Saltar'}</Button>}
-            {index > 0 && <Button size="sm" variant="secondary" onClick={previous}>{labels.previous ?? 'Anterior'}</Button>}
-            <Button size="sm" onClick={next}>{index >= steps.length - 1 ? (labels.finish ?? 'Terminar') : (labels.next ?? 'Siguiente')}</Button>
+            {index < steps.length - 1 && <Button size="sm" variant="ghost" onClick={onClose}>{labels.skip ?? m.tour.skip}</Button>}
+            {index > 0 && <Button size="sm" variant="secondary" onClick={previous}>{labels.previous ?? m.common.previous}</Button>}
+            <Button size="sm" onClick={next}>{index >= steps.length - 1 ? (labels.finish ?? m.tour.finish) : (labels.next ?? m.common.next)}</Button>
           </span>
         </div>
       </div>

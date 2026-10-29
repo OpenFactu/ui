@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface TagInputProps {
   value: string[];
@@ -25,7 +26,7 @@ export const TagInput: React.FC<TagInputProps> = ({
   onChange,
   label,
   ariaLabel,
-  placeholder = 'Añadir etiqueta…',
+  placeholder: placeholderProp,
   helperText,
   disabled = false,
   readOnly = false,
@@ -34,6 +35,8 @@ export const TagInput: React.FC<TagInputProps> = ({
   commitOnBlur = true,
   className,
 }) => {
+  const { messages: m, format } = useI18n();
+  const placeholder = placeholderProp ?? m.tagInput.placeholder;
   const id = React.useId();
   const inputRef = React.useRef<HTMLInputElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -50,9 +53,9 @@ export const TagInput: React.FC<TagInputProps> = ({
       .map((part) => part.trim())
       .filter(Boolean)) {
       if (next.some((existing) => existing.toLocaleLowerCase() === tag.toLocaleLowerCase())) {
-        rejection = `La etiqueta «${tag}» ya existe.`;
+        rejection = format(m.tagInput.duplicate, { tag });
       } else if (maxTags !== undefined && next.length >= maxTags) {
-        rejection = `Se permiten como máximo ${maxTags} etiquetas.`;
+        rejection = format(m.tagInput.max, { max: maxTags });
       } else {
         const reason = validateTag?.(tag);
         if (reason) rejection = reason;
@@ -62,7 +65,7 @@ export const TagInput: React.FC<TagInputProps> = ({
     if (next.length !== value.length) onChange(next);
     setBuffer('');
     setInvalid(!!rejection);
-    setMessage(rejection || `${next.length - value.length} etiquetas añadidas.`);
+    setMessage(rejection || format(m.tagInput.added, { count: next.length - value.length }));
   };
   const remove = (index: number) => {
     if (locked) return;
@@ -101,7 +104,7 @@ export const TagInput: React.FC<TagInputProps> = ({
                 type="button"
                 data-remove-tag
                 disabled={disabled}
-                aria-label={`Eliminar etiqueta ${tag}`}
+                aria-label={format(m.tagInput.remove, { tag })}
                 onClick={() => remove(index)}
                 onKeyDown={(event) => {
                   if (event.key === 'Backspace' || event.key === 'Delete') {
@@ -123,7 +126,7 @@ export const TagInput: React.FC<TagInputProps> = ({
           value={buffer}
           disabled={disabled}
           readOnly={readOnly}
-          aria-label={ariaLabel ?? (label ? undefined : 'Etiquetas')}
+          aria-label={ariaLabel ?? (label ? undefined : m.tagInput.label)}
           aria-invalid={invalid || undefined}
           aria-describedby={`${id}-hint ${id}-message`}
           placeholder={readOnly ? undefined : placeholder}
@@ -161,7 +164,7 @@ export const TagInput: React.FC<TagInputProps> = ({
         />
       </div>
       <p id={`${id}-hint`} className="mt-1.5 text-[11px] text-[var(--fg-muted)]">
-        {helperText ?? 'Separa las etiquetas con Intro o comas.'}
+        {helperText ?? m.tagInput.help}
         {maxTags !== undefined && (
           <span className="ml-2">
             {value.length}/{maxTags}

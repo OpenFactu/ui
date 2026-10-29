@@ -3,6 +3,7 @@ import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { Select } from './Select';
 import { pageItems } from './internal/tableFilters';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface PaginationProps {
   /** Página actual, 1-based. */
@@ -26,6 +27,7 @@ export const Pagination: React.FC<PaginationProps> = ({
   onPageSizeChange,
   className,
 }) => {
+  const { messages: m, format } = useI18n();
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
@@ -42,7 +44,7 @@ export const Pagination: React.FC<PaginationProps> = ({
       )}
     >
       <span className="font-mono text-[11px] whitespace-nowrap">
-        {from}–{to} de {total}
+        {format(m.pagination.range, { from, to, total })}
       </span>
       <div className="flex flex-wrap items-center justify-end gap-2">
         {showSizes && (
@@ -51,11 +53,11 @@ export const Pagination: React.FC<PaginationProps> = ({
               options={pageSizeOptions.map((size) => ({ value: String(size), label: String(size) }))}
               value={String(pageSize)}
               onChange={(v) => onPageSizeChange!(Number(v))}
-              ariaLabel="Registros por página"
+              ariaLabel={m.pagination.pageSize}
               containerClassName="w-auto"
               className="px-2 py-1 text-[12px] gap-1 min-w-[56px]"
             />
-            <span>por página</span>
+            <span>{m.pagination.perPage}</span>
           </span>
         )}
         <div className="flex items-center gap-1">
@@ -66,7 +68,7 @@ export const Pagination: React.FC<PaginationProps> = ({
             disabled={page <= 1}
           >
             <UiIcon slot="chevron-left" className="h-3.5 w-3.5" />
-            <span className="k-pages-label">Anterior</span>
+            <span className="k-pages-label">{m.common.previous}</span>
           </button>
           {/* Números de página con «…» en los saltos; siempre el mismo número de huecos para que no bailen. */}
           <span className="k-pages" role="list">
@@ -78,7 +80,7 @@ export const Pagination: React.FC<PaginationProps> = ({
                   <button
                     type="button"
                     className="k-pages-btn"
-                    aria-label={`Página ${n}`}
+                    aria-label={format(m.pagination.page, { page: n })}
                     aria-current={n === page ? 'page' : undefined}
                     onClick={() => n !== page && onPageChange(n)}
                   >
@@ -94,7 +96,7 @@ export const Pagination: React.FC<PaginationProps> = ({
             onClick={() => onPageChange(page + 1)}
             disabled={page >= totalPages}
           >
-            <span className="k-pages-label">Siguiente</span>
+            <span className="k-pages-label">{m.common.next}</span>
             <UiIcon slot="chevron-right" className="h-3.5 w-3.5" />
           </button>
         </div>

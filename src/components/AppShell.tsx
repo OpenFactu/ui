@@ -6,6 +6,7 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useEscapeStack } from '../internal/escapeStack';
 import { useMobileViewport } from '../hooks/useMobileViewport';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface AppShellSidebarState {
   collapsed: boolean;
@@ -48,11 +49,13 @@ export function AppShell({
   sidebarWidth = 240,
   collapsedWidth = 72,
   height = '100dvh',
-  navigationLabel = 'Navegación principal',
+  navigationLabel: navigationLabelProp,
   className,
   contentClassName,
   mobileNavigation,
 }: AppShellProps) {
+  const shell = useMessages('appShell');
+  const navigationLabel = navigationLabelProp ?? shell.navigation;
   const mobile = useIsMobile();
   const viewport = useMobileViewport();
   const [internalCollapsed, setInternalCollapsed] = React.useState(defaultCollapsed);
@@ -93,7 +96,7 @@ export function AppShell({
         href={`#${mainId}`}
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-sm focus:bg-[var(--bg-card,#ffffff)] focus:p-3"
       >
-        Saltar al contenido
+        {shell.skipToContent}
       </a>
       {dialogOpen && (
         <div aria-hidden="true" onClick={close} className="fixed inset-0 z-40 bg-black/40" />
@@ -126,7 +129,7 @@ export function AppShell({
               <button
                 type="button"
                 onClick={close}
-                aria-label="Cerrar navegación"
+                aria-label={shell.closeNavigation}
                 className="shrink-0 rounded-sm p-2 focus-visible:ring-2 focus-visible:ring-current"
               >
                 <UiIcon slot="x" size={18} />
@@ -147,7 +150,7 @@ export function AppShell({
             type="button"
             onClick={toggle}
             aria-label={
-              mobile ? 'Abrir navegación' : collapsed ? 'Expandir navegación' : 'Plegar navegación'
+              mobile ? shell.openNavigation : collapsed ? shell.expandNavigation : shell.collapseNavigation
             }
             aria-expanded={mobile ? menuOpen : !collapsed}
             aria-controls={!mobile || menuOpen ? sidebarId : undefined}

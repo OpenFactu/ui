@@ -3,6 +3,7 @@ import { useDragDismiss } from '../motion/useDragDismiss';
 import * as React from 'react';
 import { UiIcon, type IconSlot } from '../icons';
 import { cn } from '../utils';
+import { useMessages } from '../i18n/I18nProvider';
 
 export type ToastType = 'default' | 'success' | 'error' | 'info' | 'warning' | 'loading';
 
@@ -142,6 +143,7 @@ export const Toast: React.FC<ToastProps> = ({
   peek = false,
   peekHeight,
 }) => {
+  const common = useMessages('common');
   const {
     id,
     message,
@@ -351,7 +353,7 @@ export const Toast: React.FC<ToastProps> = ({
         <button
           type="button"
           onClick={() => onClose(id)}
-          aria-label="Cerrar aviso"
+          aria-label={common.dismiss}
           className={cn(
             '-mr-1 -mt-1 grid h-7 w-7 shrink-0 place-items-center rounded-[var(--k-radius-xs,2px)] transition-colors',
             'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
@@ -421,7 +423,7 @@ export const Toast: React.FC<ToastProps> = ({
         <button
           type="button"
           onClick={() => onClose(id)}
-          aria-label="Cerrar aviso"
+          aria-label={common.dismiss}
           className={cn(
             'absolute -left-2 -top-2 grid h-6 w-6 place-items-center rounded-full border shadow-sm transition-opacity',
             'border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] text-[var(--fg-muted,#52606f)] hover:text-[var(--fg-default,#0a1628)]',

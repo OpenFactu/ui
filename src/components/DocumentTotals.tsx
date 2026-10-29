@@ -2,6 +2,7 @@ import { DEFAULT_LOCALE } from '../internal/intl';
 import * as React from 'react';
 import { cn } from '../utils';
 import { Amount, type AmountProps } from './Amount';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface DocumentTotalLine {
   id: string;
@@ -29,15 +30,20 @@ export interface DocumentTotalsProps {
 export const DocumentTotals: React.FC<DocumentTotalsProps> = ({
   lines,
   total,
-  totalLabel = 'Total',
+  totalLabel: totalLabelProp,
   currency = 'EUR',
   locale = DEFAULT_LOCALE,
   note,
   footer,
   variant = 'default',
   className,
-  'aria-label': ariaLabel = 'Resumen de importes',
-}) => (
+  'aria-label': ariaLabelProp,
+}) => {
+  const totalLabelDefault = useMessages('status').total;
+  const totalLabel = totalLabelProp ?? totalLabelDefault;
+  const ariaLabelDefault = useMessages('documentTotals').label;
+  const ariaLabel = ariaLabelProp ?? ariaLabelDefault;
+  return (
   <section data-k-mobile="DocumentTotals"
     aria-label={ariaLabel}
     className={cn(
@@ -71,4 +77,5 @@ export const DocumentTotals: React.FC<DocumentTotalsProps> = ({
     {note && <div className="mt-3 text-[12px] text-[var(--fg-muted)]">{note}</div>}
     {footer && <div className="mt-5">{footer}</div>}
   </section>
-);
+  );
+};

@@ -8,6 +8,7 @@ import { cn } from '../utils';
 import { useEscapeStack } from '../internal/escapeStack';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface CommandItem {
   id: string;
@@ -86,13 +87,17 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onSearch,
   debounceMs = 200,
   loading = false,
-  placeholder = 'Buscar o ejecutar…',
-  emptyMessage = 'Sin resultados',
+  placeholder: placeholderProp,
+  emptyMessage: emptyMessageProp,
   recentKey = false,
   maxRecent = 5,
   footerHint,
   className,
 }) => {
+  const { messages: m } = useI18n();
+  const cp = m.commandPalette;
+  const placeholder = placeholderProp ?? cp.placeholder;
+  const emptyMessage = emptyMessageProp ?? m.common.noResults;
   const [term, setTerm] = React.useState('');
   const [activeIndex, setActiveIndex] = React.useState(0);
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -195,7 +200,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Paleta de comandos"
+        aria-label={cp.label}
         onClick={(e) => e.stopPropagation()}
         className={cn(
           'w-full max-w-xl flex flex-col overflow-hidden rounded-[var(--k-radius-md,8px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] shadow-xl',
@@ -217,7 +222,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             className="flex-1 min-w-0 h-12 bg-transparent text-[14px] outline-none text-[var(--fg-default,#0a1628)] placeholder:text-[var(--fg-subtle,#657486)]"
           />
           {loading && (
-            <Spinner size="xs" className="shrink-0" label="Buscando" />
+            <Spinner size="xs" className="shrink-0" label={cp.searching} />
           )}
         </div>
 
@@ -235,13 +240,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             <div>
               <div className="flex items-center gap-1.5 px-2 pt-2 pb-1 text-[9px] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
                 <UiIcon slot="clock" className="h-3 w-3" />
-                Búsquedas recientes
+                {cp.recent}
                 <button
                   type="button"
                   onClick={olvidar}
                   className="ml-auto normal-case tracking-normal text-[10px] font-medium text-accent hover:underline"
                 >
-                  Borrar
+                  {m.common.erase}
                 </button>
               </div>
               {recientes.map((texto) => (
@@ -261,7 +266,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             </div>
           ) : flat.length === 0 ? (
             <p className="py-10 text-center text-[11px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
-              {loading ? 'Buscando…' : emptyMessage}
+              {loading ? cp.searchingLong : emptyMessage}
             </p>
           ) : (
             visible.map((section) => (
@@ -355,13 +360,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             {footerHint ?? (
               <>
                 <span className="flex items-center gap-1">
-                  <kbd className="font-mono">↑↓</kbd> moverse
+                  <kbd className="font-mono">↑↓</kbd> {cp.move}
                 </span>
                 <span className="flex items-center gap-1">
-                  <kbd className="font-mono">↵</kbd> abrir
+                  <kbd className="font-mono">↵</kbd> {cp.open}
                 </span>
                 <span className="flex items-center gap-1">
-                  <kbd className="font-mono">esc</kbd> cerrar
+                  <kbd className="font-mono">{cp.escKey}</kbd> {cp.close}
                 </span>
               </>
             )}

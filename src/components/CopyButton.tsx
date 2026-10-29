@@ -2,6 +2,7 @@ import { copyText } from '../hooks/useCopyToClipboard';
 import * as React from 'react';
 import { UiIcon, type IconSlot } from '../icons';
 import { Button, type ButtonProps } from './Button';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface CopyButtonProps extends Omit<
   ButtonProps,
@@ -19,9 +20,9 @@ export interface CopyButtonProps extends Omit<
 /** Copia tras una acción explícita. Un fallo de permisos nunca se muestra como éxito. */
 export const CopyButton: React.FC<CopyButtonProps> = ({
   value,
-  label = 'Copiar',
-  copiedLabel = 'Copiado',
-  errorLabel = 'No se pudo copiar',
+  label: labelProp,
+  copiedLabel: copiedLabelProp,
+  errorLabel: errorLabelProp,
   iconOnly = false,
   onCopy,
   onCopyError,
@@ -30,6 +31,10 @@ export const CopyButton: React.FC<CopyButtonProps> = ({
   disabled,
   ...rest
 }) => {
+  const common = useMessages('common');
+  const label = labelProp ?? common.copy;
+  const copiedLabel = copiedLabelProp ?? common.copied;
+  const errorLabel = errorLabelProp ?? common.copyError;
   const [state, setState] = React.useState<'idle' | 'copying' | 'copied' | 'error'>('idle');
   const request = React.useRef(0);
   const busy = React.useRef(false);

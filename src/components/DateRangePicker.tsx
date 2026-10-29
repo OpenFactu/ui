@@ -6,11 +6,12 @@ import { useIsMobile } from '../hooks/useMediaQuery';
 import { adaptivePortal } from './internal/MobileOverlay';
 import { resolveMobilePresentation, type MobilePresentation } from './internal/mobilePresentation';
 import { ControlField, describedBy } from './internal/ControlField';
-import { MESES, MESES_LARGOS, capitalizar } from '../internal/fechas';
+import { capitalizar } from '../internal/fechas';
 import {
-  DEFAULT_RANGE_PRESETS, addDays, inRange, isoOf, monthGrid, normalizeRange, parseIso, shiftMonth,
+  rangePresets, addDays, inRange, isoOf, monthGrid, normalizeRange, parseIso, shiftMonth,
   type DateRange, type RangePreset,
 } from './internal/calendar';
+import { useI18n } from '../i18n/I18nProvider';
 
 export type { DateRange, RangePreset } from './internal/calendar';
 export { DEFAULT_RANGE_PRESETS } from './internal/calendar';
@@ -37,17 +38,21 @@ export interface DateRangePickerProps {
   className?: string;
 }
 
-const WEEKDAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-const short = (iso: string) => { const p = parseIso(iso)!; return `${p.d} ${MESES[p.m - 1]} ${p.y}`; };
 
 /**
  * Selector de un rango de fechas: dos meses a la vista, atajos («Este mes», «Últimos 30 días»…), vista previa del
  * rango al pasar por encima y teclado (flechas, RePág/AvPág, Intro). En móvil se abre en la hoja común.
  */
 export const DateRangePicker: React.FC<DateRangePickerProps> = ({
-  value, onChange, presets = DEFAULT_RANGE_PRESETS, months = 2, min, max, label, helperText, error, required,
-  placeholder = 'Elegir fechas', disabled, clearable = true, mobilePresentation = 'auto', id, className,
+  value, onChange, presets: presetsProp, months = 2, min, max, label, helperText, error, required,
+  placeholder: placeholderProp, disabled, clearable = true, mobilePresentation = 'auto', id, className,
 }) => {
+  const { messages: texts, format } = useI18n();
+  const drp = texts.dateRangePicker;
+  const placeholder = placeholderProp ?? drp.placeholder;
+  const presets = React.useMemo(() => presetsProp ?? rangePresets(texts.dates.presets), [presetsProp, texts]);
+  const weekdays = [...texts.dates.weekdaysMin.slice(1), texts.dates.weekdaysMin[0]];
+  const short = (iso: string) => { const p = parseIso(iso)!; return format(texts.dates.dayMonthYearShort, { day: p.d, month: texts.dates.monthsShort[p.m - 1], year: p.y }); };
   const autoId = React.useId();
   const fieldId = id ?? autoId;
   const mobile = useIsMobile();
@@ -120,13 +125,13 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
       ref={popoverRef as React.Ref<HTMLDivElement>}
       {...(mobile ? undefined : popoverProps)}
       role="dialog"
-      aria-label="Elegir rango de fechas"
+      aria-label={drp.dialog}
       data-k-mobile="DateRangePicker"
       className={cn('k-range-panel k-appear', !ready && !mobile && 'invisible')}
       style={mobile ? undefined : style}
     >
       {presets && presets.length > 0 && (
-        <div className="k-range-presets" role="group" aria-label="Atajos">
+        <div className="k-range-presets" role="group" aria-label={drp.presets}>
           {presets.map((preset) => {
             const r = preset.range(today);
             const active = r.start === value.start && r.end === value.end;
@@ -136,16 +141,16 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
       )}
       <div className="k-range-calendars">
         <div className="k-range-nav">
-          <button type="button" aria-label="Mes anterior" onClick={() => setView(shiftMonth(view.y, view.m, -1))}><UiIcon slot="chevron-left" size={16} /></button>
-          <span aria-live="polite">{pending ? 'Elige el día final' : 'Elige el día inicial'}</span>
-          <button type="button" aria-label="Mes siguiente" onClick={() => setView(shiftMonth(view.y, view.m, 1))}><UiIcon slot="chevron-right" size={16} /></button>
+          <button type="button" aria-label={texts.dates.previousMonth} onClick={() => setView(shiftMonth(view.y, view.m, -1))}><UiIcon slot="chevron-left" size={16} /></button>
+          <span aria-live="polite">{pending ? drp.pickEnd : drp.pickStart}</span>
+          <button type="button" aria-label={texts.dates.nextMonth} onClick={() => setView(shiftMonth(view.y, view.m, 1))}><UiIcon slot="chevron-right" size={16} /></button>
         </div>
         <div ref={grid} className="k-range-months" onKeyDown={onGridKey} onMouseLeave={() => setHover(null)}>
           {monthsToShow.map(({ y, m }) => (
             <div key={`${y}-${m}`} className="k-range-month">
-              <div className="k-range-month-title">{capitalizar(MESES_LARGOS[m - 1])} {y}</div>
-              <div role="grid" aria-label={`${capitalizar(MESES_LARGOS[m - 1])} ${y}`} className="k-range-grid">
-                <div role="row" className="k-range-row">{WEEKDAYS.map((d) => <span key={d} role="columnheader" className="k-range-weekday">{d}</span>)}</div>
+              <div className="k-range-month-title">{capitalizar(texts.dates.months[m - 1])} {y}</div>
+              <div role="grid" aria-label={`${capitalizar(texts.dates.months[m - 1])} ${y}`} className="k-range-grid">
+                <div role="row" className="k-range-row">{weekdays.map((d, i) => <span key={i} role="columnheader" className="k-range-weekday">{d}</span>)}</div>
                 {monthGrid(y, m).map((week, w) => (
                   <div key={w} role="row" className="k-range-row">
                     {week.map((cell) => {
@@ -164,7 +169,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
                             data-start={start || undefined}
                             data-end={end || undefined}
                             data-today={cell.iso === today || undefined}
-                            aria-label={`${cell.d} de ${MESES_LARGOS[cell.m - 1]} de ${cell.y}`}
+                            aria-label={format(texts.dates.longDate, { day: cell.d, month: texts.dates.months[cell.m - 1], year: cell.y })}
                             onClick={() => pick(cell.iso)}
                             onMouseEnter={() => pending && setHover(cell.iso)}
                           >
@@ -209,7 +214,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
           <span className={cn('truncate', text ? 'text-[var(--fg-default,#0a1628)]' : 'text-[var(--fg-subtle,#657486)]')}>{text || placeholder}</span>
         </button>
         {clearable && text && !disabled && (
-          <button type="button" aria-label="Vaciar fechas" className="absolute right-1.5 grid h-7 w-7 place-items-center rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:bg-[var(--bg-hover,#f1f5f9)]" onClick={() => onChange({ start: null, end: null })}>
+          <button type="button" aria-label={drp.clear} className="absolute right-1.5 grid h-7 w-7 place-items-center rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:bg-[var(--bg-hover,#f1f5f9)]" onClick={() => onChange({ start: null, end: null })}>
             <UiIcon slot="x" size={14} />
           </button>
         )}

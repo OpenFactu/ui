@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { DEFAULT_LOCALE } from '../internal/intl';
 import { createPortal } from 'react-dom';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import { DropdownMenu } from './DropdownMenu';
@@ -8,6 +9,7 @@ import { cn } from '../utils';
 import { useSpring } from '../motion/useSpring';
 import { createVelocityTracker } from '../motion/velocity';
 import { dueLabel, dueState, finalIndex, keyboardTarget, laneToColumnIndex } from './internal/kanban';
+import { useI18n } from '../i18n/I18nProvider';
 
 export type KanbanTone = 'default' | 'accent' | 'success' | 'warning' | 'danger' | 'info';
 
@@ -184,8 +186,11 @@ export const Kanban: React.FC<KanbanProps> = ({
   maxHeight,
   today,
   className,
-  'aria-label': ariaLabel = 'Tablero',
+  'aria-label': ariaLabelProp,
 }) => {
+  const { messages: m, format } = useI18n();
+  const kt = m.kanban;
+  const ariaLabel = ariaLabelProp ?? kt.label;
   const mobile = useIsMobile();
   const hoy = React.useMemo(() => (today ? new Date(today) : new Date()), [today]);
   const [arrastre, setArrastre] = React.useState<Arrastre | null>(null);
@@ -358,10 +363,12 @@ export const Kanban: React.FC<KanbanProps> = ({
   const navegables = columns.filter((c) => !c.locked && !plegadas.has(c.id));
   const carrilesVisibles = carriles.filter((l) => !carrilesPlegados.has(l.id));
 
-  const describir = (d: Celda, pos: number, total: number) => {
+  const describir = (d: Celda, pos: number, total?: number) => {
     const col = columns.find((c) => c.id === d.columnId)!;
     const lane = conCarriles ? lanes!.find((l) => l.id === d.laneId) : null;
-    return `${etiquetaDe(col)}${lane ? `, ${texto(lane.label, lane.id)}` : ''}, posición ${pos + 1} de ${total}`;
+    const vars = { column: etiquetaDe(col), lane: lane ? texto(lane.label, lane.id) : '', pos: pos + 1, total: total ?? 0 };
+    if (total === undefined) return format(lane ? kt.placeInLane : kt.place, vars);
+    return format(lane ? kt.positionInLane : kt.position, vars);
   };
 
   /** Coloca el destino de teclado en una celda y posición final, y lo anuncia. */
@@ -386,20 +393,20 @@ export const Kanban: React.FC<KanbanProps> = ({
       if (!onCardMove || card.locked || mobile) { onCardClick?.(card); return; }
       const r = (event.currentTarget as HTMLElement).getBoundingClientRect();
       setArrastre({ card, desde, desdeCelda, laneId, destino: { columnId: desde.columnId, laneId, index: desdeCelda }, modo: 'teclado', activo: true, alto: r.height, pos: desdeCelda });
-      setAnuncio(`Has cogido «${tituloDe(card)}». Flechas para elegir destino, Espacio para soltar, Escape para cancelar.`);
+      setAnuncio(format(kt.picked, { title: tituloDe(card) }));
       return;
     }
     const d = a.destino ?? { columnId: desde.columnId, laneId, index: desdeCelda };
     if (event.key === 'Escape') {
       event.preventDefault(); event.stopPropagation();
-      setArrastre(null); setAnuncio(`Cancelado: «${tituloDe(card)}» se queda donde estaba.`);
+      setArrastre(null); setAnuncio(format(kt.cancelled, { title: tituloDe(card) }));
       return;
     }
     if (event.key === ' ' || event.key === 'Enter') {
       event.preventDefault();
       setArrastre(null);
       confirmar(a);
-      setAnuncio(`«${tituloDe(card)}» soltada en ${describir(d, a.pos, a.pos + 1).replace(/ de \d+$/, '')}.`);
+      setAnuncio(format(kt.dropped, { title: tituloDe(card), place: describir(d, a.pos) }));
       return;
     }
     if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
@@ -478,7 +485,7 @@ export const Kanban: React.FC<KanbanProps> = ({
               style={{ ...tono(col.tone), gridColumn: iCol + 1 }}
             >
               {plegada ? (
-                <button type="button" className="k-kb-unfold" onClick={() => plegar(col.id)} aria-label={`Desplegar ${etiquetaDe(col)}`} aria-expanded={false}>
+                <button type="button" className="k-kb-unfold" onClick={() => plegar(col.id)} aria-label={format(kt.unfold, { column: etiquetaDe(col) })} aria-expanded={false}>
                   <UiIcon slot="chevron-right" size={14} />
                   <span className="k-kb-count">{total}</span>
                 </button>
@@ -489,14 +496,14 @@ export const Kanban: React.FC<KanbanProps> = ({
                     <span className="k-kb-label">{col.label}</span>
                     <span
                       className="k-kb-count"
-                      title={col.wipLimit !== undefined ? `${total} de un máximo recomendado de ${col.wipLimit}` : undefined}
+                      title={col.wipLimit !== undefined ? format(kt.wipTitle, { count: total, max: col.wipLimit }) : undefined}
                     >
                       {total}
                       {col.wipLimit !== undefined && `/${col.wipLimit}`}
                     </span>
                     {col.actions}
                     {collapsible && (
-                      <button type="button" className="k-kb-fold" onClick={() => plegar(col.id)} aria-label={`Plegar ${etiquetaDe(col)}`} aria-expanded>
+                      <button type="button" className="k-kb-fold" onClick={() => plegar(col.id)} aria-label={format(kt.fold, { column: etiquetaDe(col) })} aria-expanded>
                         <UiIcon slot="chevron-left" size={14} />
                       </button>
                     )}
@@ -506,7 +513,7 @@ export const Kanban: React.FC<KanbanProps> = ({
                       <span style={{ '--k-kb-wip': Math.min(1, total / Math.max(1, col.wipLimit)) } as React.CSSProperties} />
                     </div>
                   )}
-                  {excedida && <p className="k-kb-wip-note">Por encima del límite de {col.wipLimit}</p>}
+                  {excedida && <p className="k-kb-wip-note">{format(kt.wipOver, { max: col.wipLimit ?? 0 })}</p>}
                 </>
               )}
             </header>
@@ -565,7 +572,7 @@ export const Kanban: React.FC<KanbanProps> = ({
                     className="k-kb-cell"
                   >
                     {suyas.length === 0 && hueco < 0 && (
-                      <p className="k-kb-empty">{col.emptyMessage ?? 'Nada por aquí'}</p>
+                      <p className="k-kb-empty">{col.emptyMessage ?? kt.empty}</p>
                     )}
 
                     {suyas.map((card, posCelda) => {
@@ -580,7 +587,7 @@ export const Kanban: React.FC<KanbanProps> = ({
                             data-tarjeta={card.id}
                             role={mobile && onCardMove ? 'group' : 'button'}
                             tabIndex={0}
-                            aria-roledescription={movible && !mobile ? 'tarjeta movible' : undefined}
+                            aria-roledescription={movible && !mobile ? kt.movable : undefined}
                             aria-pressed={esArrastrada && arrastre?.modo === 'teclado' ? true : undefined}
                             onClick={() => { if (!huboArrastre.current && !arrastre) onCardClick?.(card); huboArrastre.current = false; }}
                             onKeyDown={(event) => teclaTarjeta(event, card, desde, posCelda, lane.id)}
@@ -595,10 +602,10 @@ export const Kanban: React.FC<KanbanProps> = ({
                             className="k-kb-card"
                           >
                             {mobile && onCardMove && !card.locked && <div className="k-kanban-mobile-actions" onClick={event => event.stopPropagation()} onPointerDown={event => event.stopPropagation()}><DropdownMenu items={[
-                              ...columns.filter(target => !target.locked && target.id !== col.id).map(target => ({ label: `Mover a ${etiquetaDe(target)}`, onClick: () => onCardMove(card, { columnId: target.id, index: target.cards.length, laneId: desde.laneId }, desde) })),
-                              { label: 'Subir', disabled: index === 0 || col.locked, onClick: () => onCardMove(card, { columnId: col.id, index: index - 1, laneId: desde.laneId }, desde) },
-                              { label: 'Bajar', disabled: index === col.cards.length - 1 || col.locked, onClick: () => onCardMove(card, { columnId: col.id, index: index + 1, laneId: desde.laneId }, desde) },
-                            ]} aria-label={`Mover tarjeta: ${tituloDe(card)}`}><UiIcon slot="more-horizontal" size={18} /></DropdownMenu></div>}
+                              ...columns.filter(target => !target.locked && target.id !== col.id).map(target => ({ label: format(kt.moveTo, { column: etiquetaDe(target) }), onClick: () => onCardMove(card, { columnId: target.id, index: target.cards.length, laneId: desde.laneId }, desde) })),
+                              { label: kt.moveUp, disabled: index === 0 || col.locked, onClick: () => onCardMove(card, { columnId: col.id, index: index - 1, laneId: desde.laneId }, desde) },
+                              { label: kt.moveDown, disabled: index === col.cards.length - 1 || col.locked, onClick: () => onCardMove(card, { columnId: col.id, index: index + 1, laneId: desde.laneId }, desde) },
+                            ]} aria-label={format(kt.moveCard, { title: tituloDe(card) })}><UiIcon slot="more-horizontal" size={18} /></DropdownMenu></div>}
                             {renderCard ? renderCard(card, col) : <ContenidoTarjeta card={card} hoy={hoy} />}
                           </div>
                         </React.Fragment>
@@ -613,8 +620,8 @@ export const Kanban: React.FC<KanbanProps> = ({
                           <input
                             autoFocus
                             value={nuevo}
-                            placeholder="Título de la tarjeta"
-                            aria-label={`Nueva tarjeta en ${etiquetaDe(col)}`}
+                            placeholder={kt.newCardPlaceholder}
+                            aria-label={format(kt.newCardIn, { column: etiquetaDe(col) })}
                             onChange={(e) => setNuevo(e.target.value)}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') { e.preventDefault(); anadir(col, lane.id); }
@@ -623,14 +630,14 @@ export const Kanban: React.FC<KanbanProps> = ({
                             onBlur={() => { if (!nuevo.trim()) setAnadiendo(null); }}
                           />
                           <div className="k-kb-add-actions">
-                            <button type="button" className="k-kb-add-ok" onMouseDown={(e) => e.preventDefault()} onClick={() => anadir(col, lane.id)} disabled={!nuevo.trim()}>Añadir</button>
-                            <button type="button" className="k-kb-add-cancel" onClick={() => { setAnadiendo(null); setNuevo(''); }}>Cancelar</button>
+                            <button type="button" className="k-kb-add-ok" onMouseDown={(e) => e.preventDefault()} onClick={() => anadir(col, lane.id)} disabled={!nuevo.trim()}>{kt.add}</button>
+                            <button type="button" className="k-kb-add-cancel" onClick={() => { setAnadiendo(null); setNuevo(''); }}>{m.common.cancel}</button>
                           </div>
                         </div>
                       ) : (
                         <button type="button" className="k-kb-add" onClick={() => { setAnadiendo(k); setNuevo(''); }}>
                           <UiIcon slot="plus" size={14} />
-                          Añadir tarjeta
+                          {kt.addCard}
                         </button>
                       )
                     )}
@@ -656,6 +663,7 @@ export const Kanban: React.FC<KanbanProps> = ({
 
 /** Pintado por defecto de una tarjeta. */
 const ContenidoTarjeta: React.FC<{ card: KanbanCard; hoy: Date }> = ({ card, hoy }) => {
+  const { messages: { kanban: kc, dates }, format: fmt } = useI18n();
   const due = card.due ? new Date(card.due) : null;
   const estadoDue = due ? (card.done ? 'done' : dueState(due, hoy)) : null;
   const personas = card.assignees ?? [];
@@ -672,7 +680,7 @@ const ContenidoTarjeta: React.FC<{ card: KanbanCard; hoy: Date }> = ({ card, hoy
       )}
       <div className="k-kb-title-row">
         <span className="k-kb-title">
-          {card.done && <UiIcon slot="check-circle" size={14} className="k-kb-done-icon" aria-label="Hecha" />}
+          {card.done && <UiIcon slot="check-circle" size={14} className="k-kb-done-icon" aria-label={kc.done} />}
           {card.title}
         </span>
         {card.meta && <span className="shrink-0">{card.meta}</span>}
@@ -680,7 +688,7 @@ const ContenidoTarjeta: React.FC<{ card: KanbanCard; hoy: Date }> = ({ card, hoy
       {card.description && <p className="k-kb-desc">{card.description}</p>}
       {card.badges && <div className="k-kb-badges">{card.badges}</div>}
       {card.progress && card.progress.total > 0 && (
-        <div className="k-kb-progress" title={`${card.progress.done} de ${card.progress.total} subtareas`}>
+        <div className="k-kb-progress" title={fmt(kc.subtasks, { done: card.progress.done, total: card.progress.total })}>
           <span className="k-kb-progress-bar"><span style={{ width: `${Math.min(100, (card.progress.done / card.progress.total) * 100)}%` }} /></span>
           <span className="k-kb-progress-text">{card.progress.done}/{card.progress.total}</span>
         </div>
@@ -688,9 +696,9 @@ const ContenidoTarjeta: React.FC<{ card: KanbanCard; hoy: Date }> = ({ card, hoy
       {pie && (
         <div className="k-kb-foot">
           {due && (
-            <span className="k-kb-due" data-state={estadoDue ?? undefined} title={`Vence el ${due.toLocaleDateString('es-ES')}`}>
+            <span className="k-kb-due" data-state={estadoDue ?? undefined} title={fmt(kc.dueOn, { date: due.toLocaleDateString(DEFAULT_LOCALE) })}>
               <UiIcon slot="clock" size={12} />
-              {dueLabel(due, hoy)}
+              {dueLabel(due, hoy, dates)}
             </span>
           )}
           {!!card.comments && <span className="k-kb-stat" title={`${card.comments} comentarios`}><UiIcon slot="message-square" size={12} />{card.comments}</span>}

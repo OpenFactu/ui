@@ -2,6 +2,7 @@ import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { Input, type InputProps } from './Input';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface PasswordRequirement {
   label: string;
@@ -63,6 +64,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
   helperText,
   ...rest
 }) => {
+  const pw = useMessages('passwordInput');
   const [internalVisible, setInternalVisible] = React.useState(false);
   const isVisible = visibleProp ?? internalVisible;
   const setVisible = (next: boolean) => {
@@ -88,8 +90,8 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
         <button
           type="button"
           onClick={handleGenerate}
-          aria-label="Generar contraseña"
-          title="Generar contraseña"
+          aria-label={pw.generate}
+          title={pw.generate}
           className="px-2 py-1.5 text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors"
         >
           <UiIcon slot="refresh-cw" className="h-3.5 w-3.5" />
@@ -99,8 +101,8 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
         <button
           type="button"
           onClick={() => setVisible(!isVisible)}
-          aria-label={isVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-          title={isVisible ? 'Ocultar' : 'Mostrar'}
+          aria-label={isVisible ? pw.hide : pw.show}
+          title={isVisible ? pw.hideShort : pw.showShort}
           className="px-2.5 py-1.5 text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors"
         >
           {isVisible ? <UiIcon slot="eye-off" className="h-3.5 w-3.5" /> : <UiIcon slot="eye" className="h-3.5 w-3.5" />}

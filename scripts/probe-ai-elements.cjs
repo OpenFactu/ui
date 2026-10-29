@@ -46,7 +46,7 @@ const base = process.env.LADLE_URL || 'http://localhost:61000';
 
     await go('ai-elements--pruebas');
     const tests = page.locator('.ai-tests').first();
-    assert.ok((await tests.innerText()).includes('1 fallan'));
+    assert.ok((await tests.innerText()).includes('1 falla'));
     assert.ok(await tests.getByText("TypeError: Cannot read properties of undefined (reading 'email')").first().isVisible(), 'failed suites open by default');
 
     await go('ai-elements--archivos');

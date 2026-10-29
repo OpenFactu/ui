@@ -4,6 +4,7 @@ import { safeStorage } from '../internal/storage';
 import * as React from 'react';
 import { cn } from '../utils';
 import { clampSplit, keyboardSplit, toPixels, type SplitSize } from './internal/split';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface SplitPaneHandle {
   /** Pliega o despliega el primer panel. */
@@ -50,10 +51,12 @@ const write = (key: string | undefined, data: { size: number; collapsed: boolean
 export const SplitPane = React.forwardRef<SplitPaneHandle, SplitPaneProps>(function SplitPane(
   {
     children, direction = 'horizontal', defaultSize = '50%', size: controlledSize, onSizeChange, minSize = 120, maxSize, minSecondary = 120,
-    collapsible, collapsed: controlledCollapsed, onCollapsedChange, storageKey, separatorLabel = 'Cambiar tamaño de los paneles', className, paneClassName = [],
+    collapsible, collapsed: controlledCollapsed, onCollapsedChange, storageKey, separatorLabel: separatorLabelProp, className, paneClassName = [],
   },
   ref,
 ) {
+  const separatorLabelDefault = useMessages('layout').resizePanels;
+  const separatorLabel = separatorLabelProp ?? separatorLabelDefault;
   const vertical = direction === 'vertical';
   const root = React.useRef<HTMLDivElement>(null);
   const stored = React.useMemo(() => read(storageKey), [storageKey]);

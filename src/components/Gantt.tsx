@@ -1,15 +1,16 @@
 import { DEFAULT_LOCALE } from '../internal/intl';
 import { MobileScheduleActions } from './internal/MobileScheduleActions';
 import * as React from 'react';
+import { formatMessage } from '../i18n/format';
+import type { Messages } from '../i18n/messages';
 import { cn } from '../utils';
 import {
-  DIAS_SEMANA,
-  MESES,
   aFecha,
   dias,
   esFinde,
   sumarDias,
 } from '../internal/fechas';
+import { useI18n, useMessages } from '../i18n/I18nProvider';
 
 export type GanttScale = 'day' | 'week' | 'month' | 'quarter';
 
@@ -114,7 +115,7 @@ function cubrir(tramos: Tramo[], hasta: Date): Tramo[] {
 }
 
 /** Divisiones menores del encabezado, según la escala. */
-function tramosMenores(desde: Date, hasta: Date, scale: GanttScale): Tramo[] {
+function tramosMenores(desde: Date, hasta: Date, scale: GanttScale, dn: Messages['dates']): Tramo[] {
   const salida: Tramo[] = [];
   if (scale === 'day') {
     for (let d = new Date(desde); d <= hasta; d = sumarDias(d, 1)) {
@@ -132,7 +133,7 @@ function tramosMenores(desde: Date, hasta: Date, scale: GanttScale): Tramo[] {
     const d = new Date(desde);
     d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
     for (; d <= hasta; d.setDate(d.getDate() + 7)) {
-      salida.push({ inicio: new Date(d), ancho: 7, etiqueta: `${d.getDate()} ${MESES[d.getMonth()]}` });
+      salida.push({ inicio: new Date(d), ancho: 7, etiqueta: formatMessage(dn.dayMonthShort, { day: d.getDate(), month: dn.monthsShort[d.getMonth()] }) });
     }
     return cubrir(salida, hasta);
   }
@@ -147,15 +148,15 @@ function tramosMenores(desde: Date, hasta: Date, scale: GanttScale): Tramo[] {
       ancho: dias(d, fin),
       etiqueta:
         scale === 'month'
-          ? MESES[d.getMonth()]
-          : `T${Math.floor(d.getMonth() / 3) + 1}`,
+          ? dn.monthsShort[d.getMonth()]
+          : formatMessage(dn.quarterShort, { quarter: Math.floor(d.getMonth() / 3) + 1 }),
     });
   }
   return cubrir(salida, hasta);
 }
 
 /** Divisiones mayores: mes sobre los días, año sobre los meses. */
-function tramosMayores(desde: Date, hasta: Date, scale: GanttScale): Tramo[] {
+function tramosMayores(desde: Date, hasta: Date, scale: GanttScale, dn: Messages['dates']): Tramo[] {
   const salida: Tramo[] = [];
   const porAnio = scale === 'month' || scale === 'quarter';
   const d = new Date(desde);
@@ -170,7 +171,7 @@ function tramosMayores(desde: Date, hasta: Date, scale: GanttScale): Tramo[] {
       ancho: dias(d, fin),
       etiqueta: porAnio
         ? String(d.getFullYear())
-        : `${MESES[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`,
+        : `${dn.monthsShort[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`,
     });
   }
   return cubrir(salida, hasta);
@@ -236,10 +237,14 @@ export const Gantt: React.FC<GanttProps> = ({
   rowHeight = 34,
   showToday = true,
   today,
-  emptyMessage = 'No hay tareas que mostrar.',
+  emptyMessage: emptyMessageProp,
   className,
-  'aria-label': ariaLabel = 'Diagrama de Gantt',
+  'aria-label': ariaLabelProp,
 }) => {
+  const dn = useMessages('dates');
+  const ganttTexts = useMessages('gantt');
+  const emptyMessage = emptyMessageProp ?? ganttTexts.empty;
+  const ariaLabel = ariaLabelProp ?? ganttTexts.label;
   const pxDia = PX_POR_DIA[scale];
   const hoy = React.useMemo(() => aFecha(today ?? new Date()), [today]);
 
@@ -274,8 +279,8 @@ export const Gantt: React.FC<GanttProps> = ({
 
   const totalDias = Math.max(1, dias(desde, hasta) + 1);
   const anchoLinea = totalDias * pxDia;
-  const menores = React.useMemo(() => tramosMenores(desde, hasta, scale), [desde, hasta, scale]);
-  const mayores = React.useMemo(() => tramosMayores(desde, hasta, scale), [desde, hasta, scale]);
+  const menores = React.useMemo(() => tramosMenores(desde, hasta, scale, dn), [desde, hasta, scale, dn]);
+  const mayores = React.useMemo(() => tramosMayores(desde, hasta, scale, dn), [desde, hasta, scale, dn]);
   const lista = React.useMemo(() => filas(normalizadas), [normalizadas]);
 
   const x = (d: Date) => dias(desde, d) * pxDia;
@@ -418,7 +423,7 @@ export const Gantt: React.FC<GanttProps> = ({
                       : 'text-[var(--fg-muted,#52606f)]',
                   )}
                   style={{ left: x(t.inicio), width: t.ancho * pxDia, height: 26 }}
-                  title={scale === 'day' ? `${DIAS_SEMANA[t.inicio.getDay()]} ${t.etiqueta}` : undefined}
+                  title={scale === 'day' ? `${dn.weekdaysShort[t.inicio.getDay()]} ${t.etiqueta}` : undefined}
                 >
                   {t.etiqueta}
                 </div>
@@ -572,6 +577,7 @@ const Barra: React.FC<BarraProps> = ({
   onEmpezar,
   onClick,
 }) => {
+  const { messages: { gantt: texts }, format } = useI18n();
   const tono = COLOR_ESTADO[task.status ?? 'pendiente'];
   const color = task.color ?? tono.bg;
   const textoColor = task.textColor ?? (task.color ? '#ffffff' : tono.fg);
@@ -580,7 +586,7 @@ const Barra: React.FC<BarraProps> = ({
   const izquierda = x(inicio);
   const ancho = Math.max(pxDia * 0.6, duracion * pxDia - 2);
   const alto = Math.max(12, rowHeight - 14);
-  const etiqueta = `${task.name}, del ${inicio.toLocaleDateString(DEFAULT_LOCALE)} al ${fin.toLocaleDateString(DEFAULT_LOCALE)}`;
+  const etiqueta = format(texts.task, { name: task.name, start: inicio.toLocaleDateString(DEFAULT_LOCALE), end: fin.toLocaleDateString(DEFAULT_LOCALE) });
 
   if (hito) {
     const lado = Math.min(alto, 14);

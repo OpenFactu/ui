@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface SearchTriggerProps {
   onOpen: () => void;
@@ -52,13 +53,16 @@ const TAMANOS = {
  */
 export const SearchTrigger: React.FC<SearchTriggerProps> = ({
   onOpen,
-  placeholder = 'Buscar…',
+  placeholder: placeholderProp,
   shortcut = 'mod+k',
   size = 'md',
   fullWidth = true,
   className,
   'aria-label': ariaLabel,
-}) => (
+}) => {
+  const placeholderDefault = useMessages('common').searchPlaceholder;
+  const placeholder = placeholderProp ?? placeholderDefault;
+  return (
   <button
     type="button"
     onClick={onOpen}
@@ -88,4 +92,5 @@ export const SearchTrigger: React.FC<SearchTriggerProps> = ({
       </kbd>
     )}
   </button>
-);
+  );
+};

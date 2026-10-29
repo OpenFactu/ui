@@ -22,6 +22,7 @@ import { Skeleton } from '../components/Skeleton';
 import { useColorScheme } from '../hooks/useColorScheme';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import { CHART_CHROME, seriesColor, type ChartRole } from './palette';
+import { useMessages } from '../i18n/I18nProvider';
 
 export type ChartType = 'line' | 'area' | 'bar' | 'donut';
 
@@ -92,6 +93,7 @@ export const Chart: React.FC<ChartProps> = ({
   className,
   ...rest
 }) => {
+  const chartTexts = useMessages('charts');
   const mode = useColorScheme();
   const reduceMotion = usePrefersReducedMotion();
   const animated = animate && !reduceMotion;
@@ -124,7 +126,7 @@ export const Chart: React.FC<ChartProps> = ({
   if (!data.length) {
     return (
       <div className={cn('w-full flex items-center justify-center', className)} style={{ height }}>
-        <EmptyState title="Sin datos" {...emptyState} />
+        <EmptyState title={chartTexts.empty} {...emptyState} />
       </div>
     );
   }
@@ -298,7 +300,7 @@ export const Chart: React.FC<ChartProps> = ({
 
       {tableView && (
         <table className="w-full mt-4 text-[12px] border-collapse">
-          <caption className="sr-only">Datos del gráfico en forma de tabla</caption>
+          <caption className="sr-only">{chartTexts.tableCaption}</caption>
           <thead>
             <tr className="border-b border-[var(--border-default,#e2e8f0)]">
               <th className="text-left py-1.5 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-subtle,#657486)]">

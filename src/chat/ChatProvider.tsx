@@ -5,6 +5,7 @@ import { useChatReactions } from './useChatReactions';
 import { useChatMutations } from './useChatMutations';
 import { useChatAttachments } from './useChatAttachments';
 import { updateChatMentions } from './mentions';
+import { useMessages } from '../i18n/I18nProvider';
 
 const StateContext = React.createContext<ChatState | null>(null);
 const ActionsContext = React.createContext<ChatActions | null>(null);
@@ -39,6 +40,9 @@ export function ChatProvider(props: ChatProviderProps) {
 }
 
 function ChatProviderScope(props: ChatProviderProps) {
+  const chatTexts = useMessages('chat');
+  const texts = React.useRef(chatTexts);
+  texts.current = chatTexts;
   const { currentUser, users = EMPTY_USERS, initialConversations, initialMessages, initialConversationId, onSendMessage, onLoadOlderMessages, children } = props;
   const [state, setState] = React.useState(() => createChatState(initialConversations, initialMessages, initialConversationId));
   // Actions update this snapshot synchronously, so two submits before a render cannot send the same draft.
@@ -73,7 +77,7 @@ function ChatProviderScope(props: ChatProviderProps) {
       try {
         const result = await onSendMessage({ ...message });
         if (result && (result.conversationId !== message.conversationId || result.senderId !== currentUser.id)) {
-          throw new Error('La confirmación del mensaje no corresponde a esta conversación.');
+          throw new Error(texts.current.confirmationMismatch);
         }
         const current = snapshot.current.messages.find(item => item.conversationId === message.conversationId && (item.clientId ?? item.id) === clientId);
         receiveMessages([acknowledgeChatMessage(message, current, result)]);
@@ -82,7 +86,7 @@ function ChatProviderScope(props: ChatProviderProps) {
         // A server echo may already have confirmed this send before transport rejected or timed out.
         const confirmed = snapshot.current.messages.find(item => item.conversationId === message.conversationId && (item.clientId ?? item.id) === clientId);
         if (confirmed?.status && ['sent', 'delivered', 'read'].includes(confirmed.status)) return true;
-        receiveMessages([{ ...message, status: 'error', error: error instanceof Error ? error.message : 'No se ha podido enviar. Reintenta el mensaje.' }]);
+        receiveMessages([{ ...message, status: 'error', error: error instanceof Error ? error.message : texts.current.sendError }]);
         return false;
       } finally { pending.current.delete(key); }
     };
@@ -140,7 +144,7 @@ function ChatProviderScope(props: ChatProviderProps) {
           commit({ type: 'history', conversationId: conversation.id, ...result });
         } catch (error) {
           commit({ type: 'history-state', conversationId: conversation.id, value: { loading: false,
-            error: error instanceof Error ? error.message : 'No se han podido cargar los mensajes anteriores.' } });
+            error: error instanceof Error ? error.message : texts.current.historyError } });
         } finally { loading.current.delete(conversation.id); }
       },
     };

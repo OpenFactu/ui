@@ -3,6 +3,7 @@ import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { useIndicator } from '../motion/useIndicator';
 import { Modal } from './Modal';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface BottomNavigationItem {
   key: string; label: string; icon?: React.ReactNode; href?: string; onClick?: () => void; disabled?: boolean; badge?: React.ReactNode;
@@ -12,7 +13,10 @@ export interface BottomNavigationProps {
   onOpenMenu?: () => void; menuLabel?: string; ariaLabel?: string; className?: string;
 }
 /** Destinos aportados por la aplicación; las opciones adicionales nunca se descartan. */
-export function BottomNavigation({ items, value, onChange, onOpenMenu, menuLabel = 'Menú', ariaLabel = 'Navegación inferior', className }: BottomNavigationProps) {
+export function BottomNavigation({ items, value, onChange, onOpenMenu, menuLabel: menuLabelProp, ariaLabel: ariaLabelProp, className }: BottomNavigationProps) {
+  const nav = useMessages('navigation');
+  const menuLabel = menuLabelProp ?? nav.menu;
+  const ariaLabel = ariaLabelProp ?? nav.bottom;
   const [allOpen, setAllOpen] = React.useState(false);
   const navRef = React.useRef<HTMLElement>(null);
   const { ref: indicatorRef } = useIndicator({ containerRef: navRef, activeSelector: items.some((item) => item.key === value) ? '.k-bottom-navigation-item[aria-current="page"]' : null });

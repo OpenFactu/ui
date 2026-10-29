@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
-import { aiLabels } from './labels';
+import { useAILabels } from './labels';
+import { formatMessage } from '../i18n/format';
 import type { AISource, AIUIProps } from './types';
 import { compactNumber, contextUsage, hostOf } from './internal/elements';
 import { safeUrl } from './internal/helpers';
@@ -37,7 +38,7 @@ export interface AICheckpointProps extends AIUIProps {
 }
 /** Un separador entre turnos al que se puede volver. */
 export function AICheckpoint({ label, onRestore, restored, labels, className }: AICheckpointProps) {
-  const l = aiLabels(labels);
+  const l = useAILabels(labels);
   const [busy, setBusy] = React.useState(false);
   return <div className={cn('ai-surface ai-checkpoint', className)} role="separator" aria-label={label ?? l.checkpoint} data-restored={restored || undefined}>
     <UiIcon slot="bookmark" size={13} aria-hidden="true" /><span className="ai-checkpoint-label">{label ?? l.checkpoint}</span><span className="ai-checkpoint-rule" aria-hidden="true" />
@@ -69,7 +70,7 @@ const RING = { size: 18, radius: 7 };
 const CIRCUMFERENCE = 2 * Math.PI * RING.radius;
 /** Cuánto de la ventana de contexto se ha gastado: un anillo con el porcentaje y, al pasar, enfocar o tocar, el detalle. */
 export function AIContextUsage({ usedTokens, maxTokens, variant = 'outlined', modelLabel, breakdown, details, onCompact, placement = 'bottom', align = 'end', labels, className }: AIContextUsageProps) {
-  const l = aiLabels(labels);
+  const l = useAILabels(labels);
   const { ratio, percent, level } = contextUsage(usedTokens, maxTokens);
   const [open, setOpen] = React.useState(false);
   const [pinned, setPinned] = React.useState(false);
@@ -98,7 +99,7 @@ export function AIContextUsage({ usedTokens, maxTokens, variant = 'outlined', mo
           ? parts.map((item, index) => <span key={item.id} style={{ width: `${Math.min(100, (item.tokens / Math.max(1, maxTokens)) * 100)}%` }} data-tone={index % 5} />)
           : <span style={{ width: `${percent}%` }} data-tone="0" />}
       </div>
-      <div className="ai-context-numbers"><span>{compactNumber(usedTokens)} {l.contextOf} {compactNumber(maxTokens)} {l.tokens}</span><span>{l.contextLeft} {compactNumber(left)}</span></div>
+      <div className="ai-context-numbers"><span>{formatMessage(l.contextUsage, { used: compactNumber(usedTokens), max: compactNumber(maxTokens) })}</span><span>{formatMessage(l.contextRemaining, { left: compactNumber(left) })}</span></div>
       {!!parts.length && <ul className="ai-context-legend">{parts.map((item, index) => <li key={item.id}><i data-tone={index % 5} aria-hidden="true" /><span>{item.label}</span><span>{compactNumber(item.tokens)}</span></li>)}</ul>}
       {!!details?.length && <dl className="ai-context-details">{details.map(row => <div key={row.label}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}</dl>}
       {level !== 'ok' && <p className="ai-context-note" data-level={level} role="status">{level === 'danger' ? l.contextFull : l.contextFilling}</p>}
@@ -131,7 +132,7 @@ export interface AIInlineCitationProps extends AIUIProps {
 }
 /** Fuente(s) dentro de la frase que respaldan: un chip con el dominio y, al pasar o enfocar, la ficha. */
 export function AIInlineCitation({ source, sources, labels, className }: AIInlineCitationProps) {
-  const l = aiLabels(labels);
+  const l = useAILabels(labels);
   const list = sources?.length ? sources : source ? [source] : [];
   const [index, setIndex] = React.useState(0);
   const [open, setOpen] = React.useState(false);

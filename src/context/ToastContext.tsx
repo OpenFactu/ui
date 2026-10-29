@@ -10,6 +10,7 @@ import {
   type ToastType,
   type ToastVariant,
 } from '../components/Toast';
+import { useI18n } from '../i18n/I18nProvider';
 
 export type ToastPosition =
   | 'top-right'
@@ -173,6 +174,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({
   gap = 12,
   closeStyle = 'inline',
 }) => {
+  const { messages: { status: statusTexts }, format } = useI18n();
   const [toasts, setToasts] = React.useState<ToastData[]>([]);
   const [leaving, setLeaving] = React.useState<Set<string>>(new Set());
   const [hovered, setHovered] = React.useState(false);
@@ -462,7 +464,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({
             stacked && (fromBottom ? '-top-6' : '-bottom-6'),
           )}
         >
-          +{queued} en espera
+          {format(statusTexts.queued, { count: queued })}
         </span>
       )}
     </div>

@@ -14,7 +14,7 @@ const GROUPS = {
     'probe-theme-focus.cjs', 'probe-theme-controls.cjs', 'probe-select-contrast.cjs', 'probe-code-editor.cjs', 'probe-code-editor-edge.cjs',
     'probe-code-motion.cjs', 'probe-code-caret-position.cjs', 'probe-ai.cjs', 'probe-ai-voice.cjs', 'probe-ai-code.cjs', 'probe-ai-elements.cjs',
     'probe-icons.cjs', 'probe-toast-stack.cjs', 'probe-motion.cjs', 'probe-motion-extras.cjs', 'probe-map.cjs', 'probe-controls.cjs',
-    'probe-mobile-sheets.cjs', 'probe-extras.cjs', 'probe-qr.cjs', 'probe-calendar.cjs', 'probe-kanban.cjs', 'probe-table.cjs', 'probe-virtual-list.cjs', 'probe-ai-layout.cjs', 'probe-notifications.cjs', 'probe-floating-actions.cjs', 'probe-mobile-redesign.cjs',
+    'probe-mobile-sheets.cjs', 'probe-extras.cjs', 'probe-qr.cjs', 'probe-calendar.cjs', 'probe-kanban.cjs', 'probe-table.cjs', 'probe-virtual-list.cjs', 'probe-i18n.cjs', 'probe-ai-layout.cjs', 'probe-notifications.cjs', 'probe-floating-actions.cjs', 'probe-mobile-redesign.cjs',
     'probe-mobile-gallery.cjs', 'probe-table-action-menu.cjs', 'probe-mobile-control-layout.cjs',
   ],
   chat: ['check-chat.mjs', 'check-chat-features.mjs'],

@@ -3,6 +3,7 @@ import { formatBytes } from '../internal/format';
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
+import { useI18n } from '../i18n/I18nProvider';
 
 export type FileRejectReason = 'size' | 'type' | 'count';
 
@@ -47,9 +48,9 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
   maxFiles,
   disabled = false,
   isUploading = false,
-  uploadingLabel = 'Subiendo…',
+  uploadingLabel: uploadingLabelProp,
   progress,
-  label = 'Arrastra archivos o haz clic para seleccionar',
+  label: labelProp,
   hint,
   icon,
   variant = 'area',
@@ -61,6 +62,9 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
   className,
   children,
 }) => {
+  const { messages: m, format } = useI18n();
+  const uploadingLabel = uploadingLabelProp ?? m.common.uploading;
+  const label = labelProp ?? m.fileDropzone.label;
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = React.useState(false);
   // Contador de profundidad: sin él, arrastrar por encima de un hijo dispara
@@ -171,7 +175,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
             <button
               type="button"
               onClick={() => onRemoveFile(i, file)}
-              aria-label={`Quitar ${file.name}`}
+              aria-label={format(m.common.removeItem, { name: file.name })}
               className="shrink-0 p-0.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors"
             >
               <UiIcon slot="x" className="h-3 w-3" />

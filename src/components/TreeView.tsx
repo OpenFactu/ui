@@ -4,6 +4,7 @@ import { cn } from '../utils';
 import { Collapse } from './Collapse';
 import { Spinner } from './Spinner';
 import { checkStates, filterTree, isExpandable, toggleChecked, visibleNodes, type CheckState, type TreeNode } from './internal/tree';
+import { useMessages } from '../i18n/I18nProvider';
 
 export type { TreeNode } from './internal/tree';
 
@@ -51,8 +52,10 @@ const CheckBox: React.FC<{ state: CheckState }> = ({ state }) => (
  */
 export function TreeView<T = unknown>({
   nodes, expanded: controlledExpanded, defaultExpanded = [], onExpandedChange, selected, onSelect, checkable, checked = [], onCheckedChange,
-  loadChildren, filter = '', getIcon = defaultIcon, renderLabel, empty = 'Sin elementos', className, ...rest
+  loadChildren, filter = '', getIcon = defaultIcon, renderLabel, empty: emptyProp, className, ...rest
 }: TreeViewProps<T>) {
+  const emptyDefault = useMessages('status').noItems;
+  const empty = emptyProp ?? emptyDefault;
   const [internalExpanded, setInternalExpanded] = React.useState<string[]>([...defaultExpanded]);
   const expandedList = controlledExpanded ?? internalExpanded;
   const [loaded, setLoaded] = React.useState<Record<string, TreeNode<T>[]>>({});
@@ -174,7 +177,7 @@ export function TreeView<T = unknown>({
             aria-hidden="true"
             onClick={expandable ? (e) => { e.stopPropagation(); setFocusId(node.id); void toggleExpand(node); } : undefined}
           >
-            {loading.has(node.id) ? <Spinner size="xs" tone="muted" label="Cargando" /> : expandable && <UiIcon slot="chevron-right" size={13} />}
+            {loading.has(node.id) ? <Spinner size="xs" tone="muted" /> : expandable && <UiIcon slot="chevron-right" size={13} />}
           </span>
           {state && <span onClick={(e) => { e.stopPropagation(); toggleCheck(node); }}><CheckBox state={state} /></span>}
           <span className="k-tree-icon" aria-hidden="true">{getIcon(node, open)}</span>

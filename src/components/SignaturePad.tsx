@@ -3,6 +3,7 @@ import * as React from 'react';
 import { UiIcon } from '../icons';
 import { Button } from './Button';
 import { ControlField, describedBy } from './internal/ControlField';
+import { useMessages } from '../i18n/I18nProvider';
 
 /** Un trazo: puntos con su grosor. */
 export type SignatureStroke = Array<{ x: number; y: number; w: number }>;
@@ -67,9 +68,12 @@ function strokeToPath(stroke: SignatureStroke): string {
  * con un bolígrafo; se adapta a pantallas de alta densidad y exporta PNG o SVG. Deshacer quita el último trazo.
  */
 export const SignaturePad = React.forwardRef<SignaturePadHandle, SignaturePadProps>(function SignaturePad(
-  { onChange, height = 180, penWidth = 2.4, color, label, helperText, error, hint = 'Firma aquí', disabled, actions = true, id, className },
+  { onChange, height = 180, penWidth = 2.4, color, label, helperText, error, hint: hintProp, disabled, actions = true, id, className },
   ref,
 ) {
+  const sig = useMessages('signaturePad');
+  const common = useMessages('common');
+  const hint = hintProp ?? sig.hint;
   const generated = React.useId();
   const padId = id ?? generated;
   const canvas = React.useRef<HTMLCanvasElement>(null);
@@ -165,7 +169,7 @@ export const SignaturePad = React.forwardRef<SignaturePadHandle, SignaturePadPro
             id={padId}
             role="img"
             aria-labelledby={label ? `${padId}-label` : undefined}
-            aria-label={label ? undefined : 'Área de firma'}
+            aria-label={label ? undefined : sig.area}
             aria-describedby={describedBy(padId, error, helperText)}
             className="text-[var(--fg-default,#0a1628)]"
             onPointerDown={onPointerDown}
@@ -176,8 +180,8 @@ export const SignaturePad = React.forwardRef<SignaturePadHandle, SignaturePadPro
         </div>
         {actions && (
           <div className="k-signature-actions">
-            <Button size="sm" variant="ghost" onClick={undo} disabled={disabled || count === 0}><UiIcon slot="undo-2" size={14} /> Deshacer</Button>
-            <Button size="sm" variant="ghost" onClick={clear} disabled={disabled || count === 0}><UiIcon slot="trash-2" size={14} /> Borrar</Button>
+            <Button size="sm" variant="ghost" onClick={undo} disabled={disabled || count === 0}><UiIcon slot="undo-2" size={14} /> {sig.undo}</Button>
+            <Button size="sm" variant="ghost" onClick={clear} disabled={disabled || count === 0}><UiIcon slot="trash-2" size={14} /> {common.erase}</Button>
           </div>
         )}
       </div>

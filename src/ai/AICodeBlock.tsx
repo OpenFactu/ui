@@ -6,7 +6,7 @@ import { tokenizeCode } from '../components/code-editor/languages';
 import { CodeHighlight } from '../components/code-editor/CodeHighlight';
 import { editorThemeStyle } from '../components/code-editor/themes';
 import { cn } from '../utils';
-import { aiLabels, type AILabels } from './labels';
+import { useAILabels, type AILabels } from './labels';
 import type { AIUIProps } from './types';
 import { AICopyButton, AIIconButton } from './internal/ui';
 import { downloadText } from './internal/helpers';
@@ -28,7 +28,7 @@ const NO_MATCHES: readonly { start: number; end: number }[] = [];
 
 /** Acciones de IA en línea + menú «más», compartido por bloques y selección. */
 export function AICodeActionBar({ actions, context, max = 2, labels, className }: AIUIProps & { actions: AICodeAction[]; context: AICodeActionContext; max?: number }) {
-  const l = aiLabels(labels);
+  const l = useAILabels(labels);
   if (!actions.length) return null;
   const inline = actions.slice(0, max); const rest = actions.slice(max);
   return <div className={cn('ai-code-actions', className)} role="group" aria-label={l.codeActions}>
@@ -50,7 +50,7 @@ function RunOutput({ state, onClear, l }: { state: RunState; onClear: () => void
 }
 
 export const AICodeBlock = React.memo(function AICodeBlock({ code, language = 'plaintext', title, onOpen, onApply, onRun, actions: extra, maxInlineActions = 2, labels, className }: AICodeBlockProps) {
-  const l = aiLabels(labels); const handlers = useAICode();
+  const l = useAILabels(labels); const handlers = useAICode();
   const apply = onApply ?? handlers.onApplyCode; const run = onRun ?? handlers.onRunCode;
   const [expanded, setExpanded] = React.useState(false);
   const [applied, setApplied] = React.useState(false);

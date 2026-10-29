@@ -3,7 +3,7 @@ import { UiIcon } from '../icons';
 import { Button } from '../components/Button';
 import { cn } from '../utils';
 import type { AITool, AIToolStatus, AIActivityStep, AIUIProps } from './types';
-import { aiLabels, type AILabels } from './labels';
+import { useAILabels, type AILabels } from './labels';
 import { displayJson } from './internal/helpers';
 
 function statusLabel(status: AIToolStatus, l: AILabels): string {
@@ -14,7 +14,7 @@ function StatusIcon({ status }: { status: AIToolStatus }) {
 }
 export interface AIToolCallProps extends AIUIProps { tool: AITool; onApprove?: (id: string) => void | Promise<void>; onReject?: (id: string) => void | Promise<void> }
 export const AIToolCall = React.memo(function AIToolCall({ tool, onApprove, onReject, labels, className }: AIToolCallProps) {
-  const l = aiLabels(labels);
+  const l = useAILabels(labels);
   const [open, setOpen] = React.useState(tool.status === 'approval-required' || tool.status === 'error');
   const [busy, setBusy] = React.useState(false);
   const [actionError, setActionError] = React.useState('');
@@ -26,8 +26,8 @@ export const AIToolCall = React.memo(function AIToolCall({ tool, onApprove, onRe
   return <section className={cn('ai-surface ai-tool', className)} data-status={tool.status}>
     <button type="button" className="ai-disclosure" aria-expanded={open} onClick={() => setOpen(value => !value)}><UiIcon slot="wrench" size={14} /><strong>{tool.name}</strong><span className="ai-tool-state"><StatusIcon status={tool.status} />{statusLabel(tool.status, l)}{tool.status === 'completed' && tool.durationMs !== undefined ? ` · ${(tool.durationMs / 1000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} s` : ''}</span><UiIcon slot="chevron-right" size={14} className={open ? 'ai-rotated' : undefined} /></button>
     {open && <div className="ai-tool-body">{tool.status === 'approval-required' && <p className="ai-tool-ask"><UiIcon slot="alert-triangle" size={14} />{l.approvalPrompt}</p>}{tool.description && <p>{tool.description}</p>}
-      {tool.input !== undefined && <div><h5>{l.toolInput}</h5><pre>{displayJson(tool.input)}</pre></div>}
-      {tool.output !== undefined && <div><h5>{l.toolOutput}</h5><pre>{displayJson(tool.output)}</pre></div>}
+      {tool.input !== undefined && <div><h5>{l.toolInput}</h5><pre>{displayJson(tool.input, l.unserializable)}</pre></div>}
+      {tool.output !== undefined && <div><h5>{l.toolOutput}</h5><pre>{displayJson(tool.output, l.unserializable)}</pre></div>}
       {(tool.error || actionError) && <p className="ai-error" role="alert">{tool.error || actionError}</p>}
       {tool.status === 'approval-required' && <div className="ai-inline-actions">{onApprove && <Button size="sm" disabled={busy} onClick={() => void act(onApprove)}><UiIcon slot="check" size={14} />{l.approve}</Button>}{onReject && <Button size="sm" variant="secondary" disabled={busy} onClick={() => void act(onReject)}>{l.reject}</Button>}</div>}
     </div>}
@@ -35,7 +35,7 @@ export const AIToolCall = React.memo(function AIToolCall({ tool, onApprove, onRe
 });
 export interface AIAgentActivityProps extends AIUIProps { steps: AIActivityStep[] }
 export const AIAgentActivity = React.memo(function AIAgentActivity({ steps, labels, className }: AIAgentActivityProps) {
-  const l = aiLabels(labels);
+  const l = useAILabels(labels);
   const [open, setOpen] = React.useState(true);
   return <section className={cn('ai-surface ai-activity', className)} aria-label={l.activity}>
     <button type="button" className="ai-disclosure" aria-expanded={open} onClick={() => setOpen(value => !value)}><UiIcon slot="chevron-right" size={14} className={open ? 'ai-rotated' : undefined} /><strong>{l.activity}</strong><span className="ai-muted">{steps.filter(step => step.status === 'completed').length}/{steps.length}</span></button>

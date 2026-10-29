@@ -7,6 +7,7 @@ import { SkeletonList } from './Skeleton';
 import { EmptyState, type EmptyStateProps } from './EmptyState';
 import { densityClasses, type Density } from './internal/density';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
+import { useMessages } from '../i18n/I18nProvider';
 
 export type ListDensity = Density;
 export type ListVariant = 'plain' | 'divided' | 'bordered' | 'cards';
@@ -146,6 +147,7 @@ export const ListItem: React.FC<ListItemProps> = ({
   delayMs,
   className,
 }) => {
+  const listTexts = useMessages('list');
   const ctx = React.useContext(ListCtx);
   const density = densityProp ?? ctx.density;
   const variant = variantProp ?? ctx.variant;
@@ -281,7 +283,7 @@ export const ListItem: React.FC<ListItemProps> = ({
         checked={isSelected}
         onChange={() => ctx.toggleSelected?.(id)}
         onClick={(e) => e.stopPropagation()}
-        aria-label="Seleccionar elemento"
+        aria-label={listTexts.selectItem}
         className="shrink-0 h-3.5 w-3.5 accent-[color:var(--color-accent)] cursor-pointer"
       />
     ) : null;
@@ -454,6 +456,8 @@ const ListRoot: React.FC<ListProps> = ({
   children,
   ...rest
 }) => {
+  const listTexts = useMessages('list');
+  const noResults = useMessages('common').noResults;
   const [internalSelected, setInternalSelected] = React.useState<Array<string | number>>([]);
   const selected = selectedIds ?? internalSelected;
 
@@ -474,13 +478,13 @@ const ListRoot: React.FC<ListProps> = ({
       <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
       {infinite.loading && (
         <div className="flex items-center justify-center gap-2 py-3 text-[11px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
-          <Spinner size="xs" label="Cargando" />
-          Cargando más
+          <Spinner size="xs" />
+          {listTexts.loadingMore}
         </div>
       )}
       {!infinite.hasMore && !infinite.loading && infinite.endMessage !== false && (
         <div className="py-3 text-center text-[10px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
-          {infinite.endMessage ?? 'No hay más elementos'}
+          {infinite.endMessage ?? listTexts.end}
         </div>
       )}
     </>
@@ -527,7 +531,7 @@ const ListRoot: React.FC<ListProps> = ({
   const emptyNode = isEmptyStateProps(emptyState) ? (
     <EmptyState {...emptyState} />
   ) : (
-    emptyState ?? <EmptyState title="Sin resultados" />
+    emptyState ?? <EmptyState title={noResults} />
   );
 
   return (

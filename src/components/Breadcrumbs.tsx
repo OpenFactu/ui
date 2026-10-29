@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface BreadcrumbItem {
   label: React.ReactNode;
@@ -15,8 +16,10 @@ export interface BreadcrumbsProps {
   className?: string;
 }
 
-export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className }) => (
-  <nav data-k-mobile="Breadcrumbs" aria-label="Migas de pan" className={cn('flex items-center', className)}>
+export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className }) => {
+  const nav = useMessages('navigation');
+  return (
+  <nav data-k-mobile="Breadcrumbs" aria-label={nav.breadcrumbs} className={cn('flex items-center', className)}>
     <ol className="flex items-center gap-1.5 text-[12px]">
       {items.map((item, idx) => {
         const isLast = idx === items.length - 1;
@@ -50,4 +53,5 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className }) =>
       })}
     </ol>
   </nav>
-);
+  );
+};

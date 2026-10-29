@@ -8,6 +8,7 @@ import { groupChatMessages } from './messageGroups';
 import { ChatMessage } from './ChatMessage';
 import { chatDate, chatDay } from './format';
 import type { ChatMessageData } from './types';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface ChatMessageListProps {
   className?: string;
@@ -15,6 +16,8 @@ export interface ChatMessageListProps {
   searchQuery?: string;
 }
 export function ChatMessageList({ className, renderMessage, searchQuery }: ChatMessageListProps) {
+  const ct = useMessages('chat');
+  const dates = useMessages('dates');
   const { conversation, messages, history, currentUser } = useChatConversation();
   const { loadOlderMessages } = useChatActions();
   const { canLoadOlderMessages } = useChatPeople();
@@ -64,8 +67,8 @@ export function ChatMessageList({ className, renderMessage, searchQuery }: ChatM
     observer.observe(content.current);
     return () => observer.disconnect();
   }, []);
-  return <section className={cn('k-chat-timeline', className)} aria-label="Historial de mensajes">
-    <div ref={scroller} className="k-chat-scroll" tabIndex={0} aria-label="Desplazar mensajes" onScroll={() => {
+  return <section className={cn('k-chat-timeline', className)} aria-label={ct.history}>
+    <div ref={scroller} className="k-chat-scroll" tabIndex={0} aria-label={ct.scroll} onScroll={() => {
       const element = scroller.current!;
       nearBottom.current = element.scrollHeight - element.scrollTop - element.clientHeight < 64;
       before.current.top = element.scrollTop; before.current.height = element.scrollHeight;
@@ -82,12 +85,12 @@ export function ChatMessageList({ className, renderMessage, searchQuery }: ChatM
           const firstMessage = element?.querySelector<HTMLElement>('[data-message-id]');
           if (element && id && firstMessage) historyAnchor.current = { id, messageKey: firstMessage.dataset.messageId!, offset: firstMessage.getBoundingClientRect().top - element.getBoundingClientRect().top };
           void loadOlderMessages();
-        }}>{history.error ? 'Reintentar historial' : 'Cargar mensajes anteriores'}</Button></div>}
+        }}>{history.error ? ct.retryHistory : ct.loadOlder}</Button></div>}
       {history.error && <p className="k-chat-history-error" role="alert">{history.error}</p>}
-      {!messages.length && <div className="k-chat-empty"><UiIcon slot="message-square" size={26} /><h3>Todo empieza con un mensaje</h3><p>Escribe para iniciar esta conversación.</p></div>}
-      <div role="log" aria-label="Mensajes" aria-live="off">
+      {!messages.length && <div className="k-chat-empty"><UiIcon slot="message-square" size={26} /><h3>{ct.emptyTitle}</h3><p>{ct.emptyHint}</p></div>}
+      <div role="log" aria-label={ct.log} aria-live="off">
         {messages.map((message, index) => <React.Fragment key={message.clientId ?? message.id}>
-          {(index === 0 || chatDay(message.createdAt) !== chatDay(messages[index - 1].createdAt)) && <div className="k-chat-date"><span>{chatDate(message.createdAt)}</span></div>}
+          {(index === 0 || chatDay(message.createdAt) !== chatDay(messages[index - 1].createdAt)) && <div className="k-chat-date"><span>{chatDate(message.createdAt, dates)}</span></div>}
           {renderMessage ? renderMessage(message) : <ChatMessage message={message} fresh={fresh(message, index)} grouped={grouped.has(message.clientId ?? message.id)} searchQuery={searchQuery} />}
         </React.Fragment>)}
       </div>
@@ -95,6 +98,6 @@ export function ChatMessageList({ className, renderMessage, searchQuery }: ChatM
     </div></div>
     {hasNew && <button type="button" className="k-chat-jump" onClick={() => {
       nearBottom.current = true; scroller.current!.scrollTop = scroller.current!.scrollHeight; setHasNew(false);
-    }}><UiIcon slot="arrow-down" size={14} />Mensajes nuevos</button>}
+    }}><UiIcon slot="arrow-down" size={14} />{ct.newMessages}</button>}
   </section>;
 }

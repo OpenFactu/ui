@@ -3,6 +3,7 @@ import { cn } from '../utils';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import { MobileOverlay } from './internal/MobileOverlay';
 import { Button } from './Button';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface PageHeaderProps {
   title: React.ReactNode;
@@ -59,6 +60,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   sticky = false,
   className,
 }) => {
+  const common = useMessages('common');
   const mobile = useIsMobile(); const [moreOpen, setMoreOpen] = React.useState(false); const moreAnchor = React.useRef<HTMLButtonElement>(null);
   const flatten = (nodes: React.ReactNode): React.ReactNode[] => React.Children.toArray(nodes).flatMap(node => React.isValidElement<{ children?: React.ReactNode }>(node) && node.type === React.Fragment ? flatten(node.props.children) : [node]);
   const actionItems = flatten(actions);
@@ -105,7 +107,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         </div>
         {actions && (
           // En móvil bajan bajo el título y pueden partirse en varias líneas.
-          <div className="k-page-header-actions flex items-center gap-2 shrink-0 max-sm:w-full max-sm:flex-wrap">{mobile && actionItems.length > 1 ? <>{actionItems[0]}<Button ref={moreAnchor} variant="secondary" onClick={() => setMoreOpen(true)}>Más acciones</Button><MobileOverlay open={moreOpen} onClose={() => setMoreOpen(false)} title="Acciones" presentation="sheet" anchorRef={moreAnchor}><div className="k-page-secondary-actions">{actionItems.slice(1)}</div></MobileOverlay></> : actions}</div>
+          <div className="k-page-header-actions flex items-center gap-2 shrink-0 max-sm:w-full max-sm:flex-wrap">{mobile && actionItems.length > 1 ? <>{actionItems[0]}<Button ref={moreAnchor} variant="secondary" onClick={() => setMoreOpen(true)}>{common.moreActions}</Button><MobileOverlay open={moreOpen} onClose={() => setMoreOpen(false)} title={common.actions} presentation="sheet" anchorRef={moreAnchor}><div className="k-page-secondary-actions">{actionItems.slice(1)}</div></MobileOverlay></> : actions}</div>
         )}
       </div>
 

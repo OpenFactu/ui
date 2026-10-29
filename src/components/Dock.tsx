@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { cn } from '../utils';
 import { motionDisabled } from '../motion/dom';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface DockItem {
   key: string;
@@ -31,6 +32,7 @@ export interface DockProps {
  * muestran su nombre encima. Con teclado, el icono enfocado también crece. Sin movimiento, no hay aumento.
  */
 export const Dock: React.FC<DockProps> = ({ items, magnification = 1.7, distance = 140, size = 44, className, ...rest }) => {
+  const nav = useMessages('navigation');
   const bar = React.useRef<HTMLElement>(null);
   const frame = React.useRef(0);
 
@@ -58,7 +60,7 @@ export const Dock: React.FC<DockProps> = ({ items, magnification = 1.7, distance
   return (
     <nav
       ref={bar}
-      aria-label={rest['aria-label'] ?? 'Accesos'}
+      aria-label={rest['aria-label'] ?? nav.dock}
       className={cn('k-dock', className)}
       style={{ '--k-dock-size': `${size}px` } as React.CSSProperties}
       onPointerMove={onMove}

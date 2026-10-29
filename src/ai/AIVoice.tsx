@@ -5,14 +5,14 @@ import { UiIcon } from '../icons';
 import { Select } from '../components/Select';
 import { Button } from '../components/Button';
 import { cn } from '../utils';
-import { aiLabels } from './labels';
+import { useAILabels } from './labels';
 import type { AIUIProps } from './types';
 import { AIIconButton, AIStatus, useBlobUrl } from './internal/ui';
 import { safeUrl } from './internal/helpers';
 
 export interface AIAudioPlayerProps extends AIUIProps { src?: string; blob?: Blob; title?: string }
 export function AIAudioPlayer({ src, blob, title, labels, className }: AIAudioPlayerProps) {
-  const l = aiLabels(labels);
+  const l = useAILabels(labels);
   const objectUrl = useBlobUrl(blob);
   const source = safeUrl(src, 'media') ?? objectUrl;
   const audio = React.useRef<HTMLAudioElement>(null);
@@ -42,7 +42,7 @@ export function AIAudioPlayer({ src, blob, title, labels, className }: AIAudioPl
 
 export interface AIVoiceRecorderProps extends AIUIProps { onRecorded: (blob: Blob) => void | Promise<void>; disabled?: boolean; /** Botón de icono para la barra del compositor. */ compact?: boolean }
 export function AIVoiceRecorder({ onRecorded, disabled, compact, labels, className }: AIVoiceRecorderProps) {
-  const l = aiLabels(labels);
+  const l = useAILabels(labels);
   const recording = useAudioRecording(disabled, l);
   const { available, state, blob, elapsed, error, start, cancel } = recording;
   const active = state === 'recording' || state === 'paused';

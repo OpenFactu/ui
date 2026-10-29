@@ -5,6 +5,7 @@ import { Input } from './Input';
 import { Textarea } from './Textarea';
 import { StatusMark, shake } from './Feedback';
 import { Spinner } from './Spinner';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface InlineEditProps {
   value: string;
@@ -34,8 +35,10 @@ type Phase = 'view' | 'edit' | 'saving' | 'saved';
  * puede ser asíncrono; al terminar se dibuja una marca y, si falla, el campo se sacude y muestra el error.
  */
 export const InlineEdit: React.FC<InlineEditProps> = ({
-  value, onSave, validate, placeholder = 'Sin definir', multiline, saveOnBlur = true, disabled, label, renderValue, className, inputClassName,
+  value, onSave, validate, placeholder: placeholderProp, multiline, saveOnBlur = true, disabled, label, renderValue, className, inputClassName,
 }) => {
+  const { messages: m, format } = useI18n();
+  const placeholder = placeholderProp ?? m.inlineEdit.empty;
   const [phase, setPhase] = React.useState<Phase>('view');
   const [draft, setDraft] = React.useState(value);
   const [error, setError] = React.useState<string | null>(null);
@@ -98,7 +101,7 @@ export const InlineEdit: React.FC<InlineEditProps> = ({
             : <Input {...common} inputSize="sm" error={error ?? undefined} className={inputClassName} onChange={(e) => setDraft(e.target.value)} />}
           {multiline && error && <span className="block mt-1 text-[11px] font-medium text-[var(--k-danger-fg)]">{error}</span>}
         </span>
-        {phase === 'saving' && <Spinner size="xs" tone="muted" label="Guardando" />}
+        {phase === 'saving' && <Spinner size="xs" tone="muted" label={m.inlineEdit.saving} />}
       </span>
     );
   }
@@ -110,7 +113,7 @@ export const InlineEdit: React.FC<InlineEditProps> = ({
         type="button"
         className="k-inline-edit-view"
         disabled={disabled}
-        aria-label={`${label}: ${value || placeholder}. Pulsa para editar`}
+        aria-label={format(m.inlineEdit.edit, { label: String(label ?? ''), value: value || placeholder })}
         onClick={start}
       >
         <span className={cn('truncate', !value && 'k-inline-edit-placeholder')}>{value ? (renderValue ? renderValue(value) : value) : placeholder}</span>

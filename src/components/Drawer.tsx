@@ -11,6 +11,7 @@ import { useDragDismiss } from '../motion/useDragDismiss';
 import { BottomSheet } from './BottomSheet';
 import { useEscapeStack } from '../internal/escapeStack';
 import type { MobilePresentation } from './internal/mobilePresentation';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface DrawerProps {
   mobilePresentation?: MobilePresentation;
@@ -53,6 +54,7 @@ export const Drawer: React.FC<DrawerProps> = ({
   className,
   mobilePresentation = 'auto',
 }) => {
+  const drawerTexts = useMessages('drawer');
   const { mounted, state, ref: presenceRef } = useAnimatedPresence({ open });
   const id = React.useId();
   const dialogRef = React.useRef<HTMLDivElement>(null);
@@ -100,7 +102,7 @@ export const Drawer: React.FC<DrawerProps> = ({
         dismissible={dismissible}
         snapPoints={['auto']}
         title={title}
-        aria-label={ariaLabel ?? (title == null ? 'Panel lateral' : undefined)}
+        aria-label={ariaLabel ?? (title == null ? drawerTexts.label : undefined)}
         initialFocusRef={initialFocusRef}
         footer={footer}
         className={className}
@@ -130,7 +132,7 @@ export const Drawer: React.FC<DrawerProps> = ({
         data-state={state}
         data-side={side}
         aria-modal="true"
-        aria-label={ariaLabel ?? (title == null ? 'Panel lateral' : undefined)}
+        aria-label={ariaLabel ?? (title == null ? drawerTexts.label : undefined)}
         aria-labelledby={!ariaLabel && title != null ? `${id}-title` : undefined}
         aria-describedby={subtitle ? `${id}-description` : undefined}
         className={cn(
@@ -165,7 +167,7 @@ export const Drawer: React.FC<DrawerProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                aria-label="Cerrar panel"
+                aria-label={drawerTexts.close}
                 className="p-1.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--bg-hover)] rounded-[var(--k-radius-xs,2px)] transition-colors shrink-0"
               >
                 <UiIcon slot="x" size={18} />

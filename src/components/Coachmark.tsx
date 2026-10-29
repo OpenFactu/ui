@@ -3,6 +3,7 @@ import { cn } from '../utils';
 import { Button } from './Button';
 import { usePopover } from '../hooks/usePopover';
 import { safeStorage } from '../internal/storage';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface CoachmarkProps {
   /** Identificador estable: con él se recuerda en el navegador que ya se vio y no vuelve a salir. */
@@ -25,7 +26,10 @@ export interface CoachmarkProps {
  * Señal discreta sobre algo nuevo: un faro que late junto al elemento y, al pulsarlo, una tarjeta con la explicación.
  * Al cerrarla no vuelve a aparecer (se recuerda en el navegador con `id`).
  */
-export const Coachmark: React.FC<CoachmarkProps> = ({ id, title, children, target, defaultOpen = false, dismissLabel = 'Entendido', persist = true, onDismiss, className }) => {
+export const Coachmark: React.FC<CoachmarkProps> = ({ id, title, children, target, defaultOpen = false, dismissLabel: dismissLabelProp, persist = true, onDismiss, className }) => {
+  const texts = useMessages('coachmark');
+  const dismissLabelDefault = useMessages('status').gotIt;
+  const dismissLabel = dismissLabelProp ?? dismissLabelDefault;
   const key = `k-coachmark:${id}`;
   const [dismissed, setDismissed] = React.useState<boolean>(() => persist && safeStorage.get<boolean>(key, false));
   const [open, setOpen] = React.useState(defaultOpen);
@@ -42,7 +46,7 @@ export const Coachmark: React.FC<CoachmarkProps> = ({ id, title, children, targe
   return (
     <span className={cn('k-coachmark', className)}>
       {target}
-      <button ref={anchorRef} type="button" className="k-coachmark-beacon" aria-label="Novedad: ver explicación" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+      <button ref={anchorRef} type="button" className="k-coachmark-beacon" aria-label={texts.beacon} aria-expanded={open} onClick={() => setOpen((v) => !v)}>
         <span aria-hidden="true" />
       </button>
       {(open || mounted) && (

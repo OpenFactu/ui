@@ -8,7 +8,7 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { DropdownMenu } from '../components/DropdownMenu';
 import { cn } from '../utils';
 import type { AIConversationItem, AIConversationProject, AIUIProps } from './types';
-import { aiLabels } from './labels';
+import { useAILabels } from './labels';
 import { AIStatus } from './internal/ui';
 import { conversationSections } from './internal/history';
 
@@ -22,7 +22,7 @@ export interface AIConversationHistoryProps extends AIUIProps {
   onDeleteProject?: (id: string) => void; onMoveConversation?: (id: string, projectId?: string) => void;
 }
 export function AIConversationHistory({ conversations, projects, value, onSelect, onNew, onRename, onDelete, onPin, onSearch, onCreateProject, onRenameProject, onDeleteProject, onMoveConversation, loading, labels, className }: AIConversationHistoryProps) {
-  const l = aiLabels(labels); const [query, setQuery] = React.useState('');
+  const l = useAILabels(labels); const [query, setQuery] = React.useState('');
   const [renaming, setRenaming] = React.useState<AIConversationItem>(); const [title, setTitle] = React.useState('');
   const [deleting, setDeleting] = React.useState<AIConversationItem>();
   const [projectEditor, setProjectEditor] = React.useState<{ project?: AIConversationProject; title: string }>();

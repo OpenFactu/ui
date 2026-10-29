@@ -11,6 +11,7 @@ import { UiIcon } from '../icons';
 import { TILE_SIZE, fitBounds as fitBoundsGeo, formatDistance, pathLength, project, unproject, visibleTiles, wrapLng, wrapTileX, type Bounds, type LatLng, type Point } from './geo';
 import { getMapStyle, useDarkMode, useMapStyles, type MapStyleDefinition } from './styles';
 import type { Geocoder, GeocodeResult } from './geocode';
+import { useI18n, useMessages } from '../i18n/I18nProvider';
 
 export interface MapView extends LatLng { zoom: number }
 
@@ -118,11 +119,15 @@ function tileSrc(template: string, subdomains: string, x: number, y: number, z: 
 export const TileMap = React.forwardRef<TileMapHandle, TileMapProps>(function TileMap(
   {
     defaultView, view: controlled, onViewChange, bounds, minZoom = 2, maxZoom = 19, mapStyle, defaultMapStyle = 'standard', onMapStyleChange,
-    tileUrl, subdomains, attribution, controls = ['zoom'], geocoder, searchPlaceholder = 'Buscar un lugar…', onSearchSelect, scrollZoom = true, interactive = true,
-    onMapClick, onMapContextMenu, label = 'Mapa', className, style, children, ...rest
+    tileUrl, subdomains, attribution, controls = ['zoom'], geocoder, searchPlaceholder: searchPlaceholderProp, onSearchSelect, scrollZoom = true, interactive = true,
+    onMapClick, onMapContextMenu, label: labelProp, className, style, children, ...rest
   },
   ref,
 ) {
+  const { messages: m } = useI18n();
+  const mt = m.map;
+  const searchPlaceholder = searchPlaceholderProp ?? mt.searchPlaceholder;
+  const label = labelProp ?? mt.label;
   const host = React.useRef<HTMLDivElement>(null);
   const size = useElementSize(host);
   const initial = React.useRef(defaultView ?? controlled ?? SPAIN);
@@ -263,7 +268,7 @@ export const TileMap = React.forwardRef<TileMapHandle, TileMapProps>(function Ti
       ({ coords }) => { setLocating(false); setLocated({ lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy }); flyTo({ lat: coords.latitude, lng: coords.longitude, zoom: Math.max(viewRef.current.zoom, 15) }); },
       (error) => {
         setLocating(false);
-        setLocateError(error.code === error.PERMISSION_DENIED ? 'Sin permiso para usar tu ubicación' : 'No se pudo obtener tu ubicación');
+        setLocateError(error.code === error.PERMISSION_DENIED ? mt.locateDenied : mt.locateFailed);
       },
       { enableHighAccuracy: true, timeout: 10000 },
     );
@@ -420,7 +425,7 @@ export const TileMap = React.forwardRef<TileMapHandle, TileMapProps>(function Ti
         ref={host}
         role="application"
         aria-label={label}
-        aria-roledescription="mapa"
+        aria-roledescription={mt.roleDescription}
         tabIndex={0}
         data-interactive={interactive || undefined}
         data-tone={active.tone}
@@ -478,37 +483,37 @@ export const TileMap = React.forwardRef<TileMapHandle, TileMapProps>(function Ti
                   case 'zoom':
                     return (
                       <div key={id} data-map-ui className="k-map-controls">
-                        <button type="button" aria-label="Acercar" disabled={current.zoom >= effectiveMax} onClick={() => flyTo({ zoom: Math.floor(current.zoom + 0.001) + 1 })}><UiIcon slot="plus" size={16} /></button>
-                        <button type="button" aria-label="Alejar" disabled={current.zoom <= minZoom} onClick={() => flyTo({ zoom: Math.ceil(current.zoom - 0.001) - 1 })}><UiIcon slot="minus" size={16} /></button>
+                        <button type="button" aria-label={mt.zoomIn} disabled={current.zoom >= effectiveMax} onClick={() => flyTo({ zoom: Math.floor(current.zoom + 0.001) + 1 })}><UiIcon slot="plus" size={16} /></button>
+                        <button type="button" aria-label={mt.zoomOut} disabled={current.zoom <= minZoom} onClick={() => flyTo({ zoom: Math.ceil(current.zoom - 0.001) - 1 })}><UiIcon slot="minus" size={16} /></button>
                       </div>
                     );
                   case 'locate':
                     return (
                       <div key={id} data-map-ui className="k-map-controls k-map-locate">
-                        <button type="button" aria-label={locating ? 'Buscando tu ubicación' : 'Mi ubicación'} aria-busy={locating || undefined} data-active={located ? '' : undefined} onClick={locate}>
-                          {locating ? <Spinner size="xs" tone="inherit" label="Buscando tu ubicación" /> : <LocateIcon />}
+                        <button type="button" aria-label={locating ? mt.locating : mt.locate} aria-busy={locating || undefined} data-active={located ? '' : undefined} onClick={locate}>
+                          {locating ? <Spinner size="xs" tone="inherit" label={mt.locating} /> : <LocateIcon />}
                         </button>
                         {locateError && <span role="status" className="k-map-locate-error">{locateError}</span>}
                       </div>
                     );
                   case 'fullscreen':
-                    return <div key={id} data-map-ui className="k-map-controls"><button type="button" aria-label={fullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'} aria-pressed={fullscreen} onClick={() => setFullscreen((v) => !v)}><FullscreenIcon exit={fullscreen} /></button></div>;
+                    return <div key={id} data-map-ui className="k-map-controls"><button type="button" aria-label={fullscreen ? mt.exitFullscreen : mt.fullscreen} aria-pressed={fullscreen} onClick={() => setFullscreen((v) => !v)}><FullscreenIcon exit={fullscreen} /></button></div>;
                   case 'reset':
-                    return <div key={id} data-map-ui className="k-map-controls"><button type="button" aria-label="Volver a la vista inicial" onClick={reset}><UiIcon slot="rotate-ccw" size={16} /></button></div>;
+                    return <div key={id} data-map-ui className="k-map-controls"><button type="button" aria-label={mt.reset} onClick={reset}><UiIcon slot="rotate-ccw" size={16} /></button></div>;
                   case 'measure':
                     return (
                       <div key={id} data-map-ui className="k-map-controls">
-                        <button type="button" aria-label="Medir distancia" aria-pressed={measuring} data-active={measuring ? '' : undefined} onClick={() => { setMeasuring((v) => !v); setMeasurePoints([]); }}><RulerIcon /></button>
+                        <button type="button" aria-label={mt.measure} aria-pressed={measuring} data-active={measuring ? '' : undefined} onClick={() => { setMeasuring((v) => !v); setMeasurePoints([]); }}><RulerIcon /></button>
                       </div>
                     );
                   case 'styles':
                     return (
                       <div key={id} data-map-ui className="k-map-controls k-map-styles">
-                        <button type="button" aria-label="Estilo del mapa" aria-haspopup="menu" aria-expanded={stylesOpen} onClick={() => setStylesOpen((v) => !v)}><LayersIcon /></button>
+                        <button type="button" aria-label={mt.styleMenu} aria-haspopup="menu" aria-expanded={stylesOpen} onClick={() => setStylesOpen((v) => !v)}><LayersIcon /></button>
                         {stylesOpen && (
                           <div role="menu" className="k-map-styles-menu">
-                            {[{ id: 'auto', label: 'Automático' } as { id: string; label: string }, ...styles].map((s) => (
-                              <button key={s.id} type="button" role="menuitemradio" aria-checked={styleId === s.id} onClick={() => { setMapStyle(s.id); setStylesOpen(false); }}>{s.label}</button>
+                            {[{ id: 'auto', label: mt.styles.auto } as { id: string; label: string }, ...styles].map((s) => (
+                              <button key={s.id} type="button" role="menuitemradio" aria-checked={styleId === s.id} onClick={() => { setMapStyle(s.id); setStylesOpen(false); }}>{(mt.styles as Record<string, string>)[s.id] ?? s.label}</button>
                             ))}
                           </div>
                         )}
@@ -524,8 +529,8 @@ export const TileMap = React.forwardRef<TileMapHandle, TileMapProps>(function Ti
 
         {measuring && (
           <div data-map-ui className="k-map-measure" role="status">
-            {measurePoints.length < 2 ? 'Pulsa en el mapa para medir' : <>Distancia: <strong>{formatDistance(measured)}</strong></>}
-            {measurePoints.length > 0 && <button type="button" onClick={() => setMeasurePoints([])}>Borrar</button>}
+            {measurePoints.length < 2 ? mt.measureHint : <>{mt.distance} <strong>{formatDistance(measured)}</strong></>}
+            {measurePoints.length > 0 && <button type="button" onClick={() => setMeasurePoints([])}>{m.common.erase}</button>}
           </div>
         )}
         {attributionNode && <div data-map-ui className="k-map-attribution">{attributionNode}</div>}
@@ -549,6 +554,7 @@ const UserDot: React.FC<{ point: LatLng & { accuracy: number } }> = ({ point }) 
 
 /** Chincheta del resultado de una búsqueda. */
 const SearchPin: React.FC<{ result: GeocodeResult; onClose: () => void }> = ({ result, onClose }) => {
+  const removeText = useMessages('common').remove;
   const { toScreen } = useMap();
   const p = toScreen(result);
   return (
@@ -560,7 +566,7 @@ const SearchPin: React.FC<{ result: GeocodeResult; onClose: () => void }> = ({ r
       </div>
       <div data-map-ui className="k-map-popup" style={{ translate: `${p.x}px ${p.y - 40}px` }}>
         <div className="k-map-popup-card">
-          <button type="button" className="k-map-popup-close" aria-label="Quitar" onClick={onClose}>×</button>
+          <button type="button" className="k-map-popup-close" aria-label={removeText} onClick={onClose}>×</button>
           <strong>{result.label}</strong>
           {result.description && <div className="k-map-popup-sub">{result.description}</div>}
         </div>
@@ -583,6 +589,7 @@ const MeasureLayer: React.FC<{ points: LatLng[] }> = ({ points }) => {
 
 /** Cuadro de búsqueda con resultados desplegados, teclado y cancelación de peticiones. */
 const MapSearchBox: React.FC<{ geocoder: Geocoder; placeholder: string; onSelect: (result: GeocodeResult) => void }> = ({ geocoder, placeholder, onSelect }) => {
+  const texts = useI18n().messages;
   const [text, setText] = React.useState('');
   const [results, setResults] = React.useState<GeocodeResult[]>([]);
   const [state, setState] = React.useState<'idle' | 'loading' | 'error'>('idle');
@@ -633,7 +640,7 @@ const MapSearchBox: React.FC<{ geocoder: Geocoder; placeholder: string; onSelect
       </div>
       {open && (results.length > 0 || state === 'error') && (
         <ul id={listId} role="listbox" className="k-map-search-results">
-          {state === 'error' && <li className="k-map-search-note">No se pudo buscar. Inténtalo de nuevo.</li>}
+          {state === 'error' && <li className="k-map-search-note">{texts.map.searchError}</li>}
           {results.map((result, index) => (
             <li key={result.id} role="option" aria-selected={index === active} data-active={index === active || undefined} onMouseEnter={() => setActive(index)} onMouseDown={(e) => { e.preventDefault(); choose(result); }}>
               <strong>{result.label}</strong>
@@ -642,7 +649,7 @@ const MapSearchBox: React.FC<{ geocoder: Geocoder; placeholder: string; onSelect
           ))}
         </ul>
       )}
-      {open && state === 'idle' && text.trim().length >= 2 && results.length === 0 && <div className="k-map-search-results k-map-search-note">Sin resultados</div>}
+      {open && state === 'idle' && text.trim().length >= 2 && results.length === 0 && <div className="k-map-search-results k-map-search-note">{texts.common.noResults}</div>}
     </div>
   );
 };

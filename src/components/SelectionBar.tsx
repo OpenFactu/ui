@@ -4,6 +4,7 @@ import { cn } from '../utils';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import { useAnimatedPresence } from '../hooks/useAnimatedPresence';
 import { DropdownMenu } from './DropdownMenu';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface SelectionBarAction {
   label: string;
@@ -34,7 +35,6 @@ export interface SelectionBarProps {
   className?: string;
 }
 
-const defaultCount = (n: number) => (n === 1 ? '1 seleccionado' : `${n} seleccionados`);
 
 /**
  * Barra flotante de acciones sobre una selección: recuento, «Seleccionar los N», acciones (las que no caben, en
@@ -53,12 +53,16 @@ export const SelectionBar: React.FC<SelectionBarProps> = ({
   actions,
   onClear,
   selectAll,
-  countLabel = defaultCount,
+  countLabel: countLabelProp,
   maxInline,
   position = 'sticky',
-  'aria-label': ariaLabel = 'Acciones sobre la selección',
+  'aria-label': ariaLabelProp,
   className,
 }) => {
+  const { messages: m, format } = useI18n();
+  const t = m.selectionBar;
+  const ariaLabel = ariaLabelProp ?? t.label;
+  const countLabel = countLabelProp ?? ((n: number) => format(t.count, { count: n }));
   const mobile = useIsMobile();
   const { mounted, state, ref } = useAnimatedPresence({ open: count > 0, role: 'exit' });
   // Mientras sale conserva el último recuento: si no, se vería «0 seleccionados» al desaparecer.
@@ -72,7 +76,7 @@ export const SelectionBar: React.FC<SelectionBarProps> = ({
   // En móvil «Seleccionar los N» también pasa al menú: en una fila de 360 px no cabe todo.
   const selectAllInMenu = Boolean(selectAll) && mobile;
   const menu = [
-    ...(selectAll && selectAllInMenu ? [{ label: typeof selectAll.label === 'string' ? selectAll.label : `Seleccionar los ${selectAll.total}`, onClick: selectAll.onSelect }] : []),
+    ...(selectAll && selectAllInMenu ? [{ label: typeof selectAll.label === 'string' ? selectAll.label : format(t.selectAll, { total: selectAll.total }), onClick: selectAll.onSelect }] : []),
     ...overflow.map((a, i) => ({ label: a.label, icon: a.icon, onClick: a.onClick, destructive: a.destructive, disabled: a.disabled, separatorBefore: i === 0 && selectAllInMenu })),
   ];
 
@@ -95,13 +99,13 @@ export const SelectionBar: React.FC<SelectionBarProps> = ({
         items[next]?.focus();
       }}
     >
-      <button type="button" className="k-selection-bar-close" aria-label="Quitar la selección" onClick={onClear}>
+      <button type="button" className="k-selection-bar-close" aria-label={t.clear} onClick={onClear}>
         <UiIcon slot="x" size={16} />
       </button>
       <span className="k-selection-bar-count" aria-live="polite">{countLabel(shown.current)}</span>
       {selectAll && !selectAllInMenu && (
         <button type="button" className="k-selection-bar-all" onClick={selectAll.onSelect}>
-          {selectAll.label ?? `Seleccionar los ${selectAll.total}`}
+          {selectAll.label ?? format(t.selectAll, { total: selectAll.total })}
         </button>
       )}
       <span className="k-selection-bar-sep" aria-hidden="true" />
@@ -122,7 +126,7 @@ export const SelectionBar: React.FC<SelectionBarProps> = ({
         {menu.length > 0 && (
           <DropdownMenu items={menu} align="end" className="k-selection-bar-action k-selection-bar-more">
             <UiIcon slot="more-horizontal" size={16} />
-            <span className="sr-only">Más acciones</span>
+            <span className="sr-only">{m.common.moreActions}</span>
           </DropdownMenu>
         )}
       </div>

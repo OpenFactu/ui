@@ -26,7 +26,7 @@ export const Loader = React.forwardRef<HTMLDivElement, LoaderProps>(
         <Spinner
           size={size}
           tone={variant === 'primary' ? 'accent' : variant === 'neutral' ? 'muted' : 'inherit'}
-          label={label ?? 'Cargando'}
+          label={label}
           className={variant === 'white' ? 'text-white' : undefined}
         />
         {label && (

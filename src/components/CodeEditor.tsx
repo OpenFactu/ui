@@ -13,6 +13,7 @@ import { canvasFont } from './code-editor/metrics';
 import { completeAt, EditorHistory, findMatches, indentSelection, insertNewline, insertPair, replaceRange } from './code-editor/editing';
 import type { EditState } from './code-editor/editing';
 import type { CodeCompletion, CodeCompletionContext, CodeEditorThemeValue, CodeLanguageDefinition } from './code-editor/types';
+import { useI18n } from '../i18n/I18nProvider';
 
 export type { CodeToken, CodeTokenType, CodeCompletion, CodeCompletionContext, CodeLanguageDefinition, CodeEditorColors, CodeEditorTheme, CodeEditorThemePreset, CodeEditorThemeValue } from './code-editor/types';
 export { CODE_LANGUAGES } from './code-editor/languages';
@@ -57,6 +58,7 @@ export const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>
   disabled = false, readOnly = false, onKeyDown, onSelect, onScroll, onBlur, onFocus,
   onBeforeInput, onCompositionStart, onCompositionEnd, onPaste, ...textareaProps
 }, forwardedRef) {
+  const { messages: { codeEditor: ce }, format } = useI18n();
   const generatedId = React.useId();
   const editorId = id || generatedId;
   const helpId = `${editorId}-help`;
@@ -383,25 +385,25 @@ export const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>
 
   const themeId = typeof editorTheme === 'string' ? editorTheme : 'custom';
   const themeOptions = [
-    { value: 'auto', label: 'Tema de la app' },
+    { value: 'auto', label: ce.appTheme },
     ...Object.entries(CODE_EDITOR_THEMES).map(([key, preset]) => ({ value: key, label: preset.label })),
-    ...(typeof editorTheme === 'object' ? [{ value: 'custom', label: editorTheme.label ?? 'Personalizado' }] : []),
+    ...(typeof editorTheme === 'object' ? [{ value: 'custom', label: editorTheme.label ?? ce.customTheme }] : []),
   ];
   const messageClass = error ? 'text-[var(--k-danger-fg)]' : 'text-[var(--fg-subtle,#657486)]';
   const description = [textareaProps['aria-describedby'], (error || helperText) && helpId, `${editorId}-keys`].filter(Boolean).join(' ');
-  const keyboardHelp = captureTab ? 'Tab: sangría · Esc: liberar Tab' : 'Tab: salir del editor';
+  const keyboardHelp = captureTab ? ce.keysCapture : ce.keysRelease;
   return (
     <div className={cn('w-full min-w-0 flex flex-col gap-1.5', containerClassName)}>
       {label && <label htmlFor={editorId} className="text-[12px] font-medium text-[var(--fg-body,#2d3a4a)]">{label}{textareaProps.required && <span aria-hidden="true" className="ml-0.5 text-[var(--k-danger-fg)]">*</span>}</label>}
       <div data-k-focus-surface="" className={cn('k-code-editor', className)} style={{ ...editorThemeStyle(editorTheme), tabSize: indentSize, ...style }} data-theme={themeId} data-k-code-motion={motionActive || undefined} data-disabled={disabled || undefined} data-error={!!error || undefined}>
-        {!minimal && <div className="k-code-toolbar" role="toolbar" aria-label="Herramientas de código" aria-controls={editorId}>
+        {!minimal && <div className="k-code-toolbar" role="toolbar" aria-label={ce.toolbar} aria-controls={editorId}>
           <span className="k-code-language">{definition.label}</span>
           <div className="k-code-tools">
-            <ToolButton aria-label="Deshacer" title="Deshacer (Ctrl/Cmd+Z)" disabled={!editable} onClick={() => travelHistory()}><UiIcon slot="undo-2" size={14} /></ToolButton>
-            <ToolButton aria-label="Rehacer" title="Rehacer (Ctrl/Cmd+Shift+Z)" disabled={!editable} onClick={() => travelHistory(true)}><UiIcon slot="redo-2" size={14} /></ToolButton>
-            <ToolButton aria-label="Buscar y reemplazar" title="Buscar y reemplazar (Ctrl/Cmd+F)" disabled={disabled} onClick={openSearch}><UiIcon slot="search" size={14} /></ToolButton>
+            <ToolButton aria-label={ce.undo} title={ce.undoHint} disabled={!editable} onClick={() => travelHistory()}><UiIcon slot="undo-2" size={14} /></ToolButton>
+            <ToolButton aria-label={ce.redo} title={ce.redoHint} disabled={!editable} onClick={() => travelHistory(true)}><UiIcon slot="redo-2" size={14} /></ToolButton>
+            <ToolButton aria-label={ce.findReplace} title={ce.findReplaceHint} disabled={disabled} onClick={openSearch}><UiIcon slot="search" size={14} /></ToolButton>
           </div>
-          {showThemeSelector && <div className="k-code-theme-control"><Select ariaLabel="Tema del editor" disabled={disabled} value={themeId} options={themeOptions}
+          {showThemeSelector && <div className="k-code-theme-control"><Select ariaLabel={ce.themeLabel} disabled={disabled} value={themeId} options={themeOptions}
             onChange={next => { if (next !== 'custom') changeTheme(next as CodeEditorThemeValue); }}
             dropdownClassName="k-code-theme-popup" dropdownStyle={editorThemeStyle(editorTheme)} /></div>}
         </div>}
@@ -410,17 +412,17 @@ export const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>
           if (event.key === 'Enter' && event.target === findRef.current) { event.preventDefault(); navigateMatch(event.shiftKey ? -1 : 1); }
         }}>
           <div className="k-code-find-row">
-            <input ref={findRef} aria-label="Buscar en el código" placeholder="Buscar" value={query} onChange={event => { setQuery(event.target.value); setMatchIndex(0); }} />
-            <label className="k-code-case"><input type="checkbox" aria-label="Distinguir mayúsculas" checked={caseSensitive} onChange={event => { setCaseSensitive(event.target.checked); setMatchIndex(0); }} />Aa</label>
+            <input ref={findRef} aria-label={ce.find} placeholder={ce.findPlaceholder} value={query} onChange={event => { setQuery(event.target.value); setMatchIndex(0); }} />
+            <label className="k-code-case"><input type="checkbox" aria-label={ce.matchCase} checked={caseSensitive} onChange={event => { setCaseSensitive(event.target.checked); setMatchIndex(0); }} />{ce.matchCaseShort}</label>
             <span className="k-code-match-count" role="status">{activeMatch + 1}/{matches.length}</span>
-            <ToolButton aria-label="Coincidencia anterior" disabled={!matches.length} onClick={() => navigateMatch(-1)}><UiIcon slot="chevron-up" size={14} /></ToolButton>
-            <ToolButton aria-label="Coincidencia siguiente" disabled={!matches.length} onClick={() => navigateMatch(1)}><UiIcon slot="chevron-down" size={14} /></ToolButton>
-            <ToolButton aria-label="Cerrar búsqueda" onClick={() => { setSearchOpen(false); inputRef.current?.focus({ preventScroll: true }); }}><UiIcon slot="x" size={14} /></ToolButton>
+            <ToolButton aria-label={ce.previousMatch} disabled={!matches.length} onClick={() => navigateMatch(-1)}><UiIcon slot="chevron-up" size={14} /></ToolButton>
+            <ToolButton aria-label={ce.nextMatch} disabled={!matches.length} onClick={() => navigateMatch(1)}><UiIcon slot="chevron-down" size={14} /></ToolButton>
+            <ToolButton aria-label={ce.closeFind} onClick={() => { setSearchOpen(false); inputRef.current?.focus({ preventScroll: true }); }}><UiIcon slot="x" size={14} /></ToolButton>
           </div>
           <div className="k-code-find-row">
-            <input aria-label="Reemplazar por" placeholder="Reemplazar por" value={replacement} disabled={!editable} onChange={event => setReplacement(event.target.value)} />
-            <ToolButton disabled={!editable || !matches.length} onClick={() => replaceMatches(false)}>Reemplazar</ToolButton>
-            <ToolButton disabled={!editable || !matches.length} onClick={() => replaceMatches(true)}>Reemplazar todo</ToolButton>
+            <input aria-label={ce.replaceWith} placeholder={ce.replaceWith} value={replacement} disabled={!editable} onChange={event => setReplacement(event.target.value)} />
+            <ToolButton disabled={!editable || !matches.length} onClick={() => replaceMatches(false)}>{ce.replace}</ToolButton>
+            <ToolButton disabled={!editable || !matches.length} onClick={() => replaceMatches(true)}>{ce.replaceAll}</ToolButton>
           </div>
         </div>}
         <div className="k-code-body">
@@ -435,7 +437,7 @@ export const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>
                 selection={motionActive && cursor.start !== cursor.end ? cursor : undefined} /></pre>
             </div>
             <textarea {...textareaProps} data-k-focus-input="" ref={inputRef} id={editorId} value={value} disabled={disabled} readOnly={readOnly}
-              aria-label={textareaProps['aria-label'] ?? (label ? undefined : 'Editor de código')}
+              aria-label={textareaProps['aria-label'] ?? (label ? undefined : ce.label)}
               aria-invalid={!!error || textareaProps['aria-invalid']} aria-describedby={description}
               aria-autocomplete="list" aria-controls={completion ? completionId : undefined}
               aria-activedescendant={completion ? `${completionId}-${completion.index}` : undefined}
@@ -471,18 +473,18 @@ export const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>
               onFocus={event => { setFocused(true); setCaptureTab(true); onFocus?.(event); }}
               onBlur={event => { setFocused(false); previousInput.current = null; setCompletion(null); onBlur?.(event); }} />
             {completion && <div className="k-code-completions" style={{ left: completion.left, top: completion.top }}>
-              <div ref={completionRef} className="k-code-completion-list" id={completionId} role="listbox" aria-label="Sugerencias de código" style={{ maxHeight: completion.maxListHeight }}>
+              <div ref={completionRef} className="k-code-completion-list" id={completionId} role="listbox" aria-label={ce.suggestions} style={{ maxHeight: completion.maxListHeight }}>
                 {completion.items.map((item, index) => <div role="option" aria-selected={index === completion.index} id={`${completionId}-${index}`} key={item.label}
                   onMouseDown={event => event.preventDefault()} onMouseEnter={() => setCompletion({ ...completion, index })} onClick={() => acceptCompletion(index)}>
                   <UiIcon slot="code-2" size={13} aria-hidden="true" className="k-code-completion-icon" /><span className="k-code-completion-label">{item.label}</span>{item.detail && <small>{item.detail}</small>}
                 </div>)}
               </div>
-              <div className="k-code-completion-help" aria-hidden="true"><span>↑ ↓ elegir</span><span>Intro insertar</span></div>
+              <div className="k-code-completion-help" aria-hidden="true"><span>{ce.completionMove}</span><span>{ce.completionInsert}</span></div>
             </div>}
           </div>
         </div>
         {!minimal ? <div className="k-code-status">
-          <span>Línea {line}, columna {column}{readOnly ? ' · Solo lectura' : ''}</span>
+          <span>{format(ce.position, { line, column })}{readOnly ? ce.readOnly : ''}</span>
           <span id={`${editorId}-keys`}>{keyboardHelp}</span>
         </div> : <span className="sr-only" id={`${editorId}-keys`}>{keyboardHelp}</span>}
       </div>

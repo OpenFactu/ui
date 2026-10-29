@@ -1,7 +1,10 @@
 import { DEFAULT_LOCALE } from '../internal/intl';
 import * as React from 'react';
 import { cn } from '../utils';
-import { MESES_LARGOS, aInstante, hhmm, mismoDia } from '../internal/fechas';
+import { aInstante, hhmm, mismoDia } from '../internal/fechas';
+import { formatMessage } from '../i18n/format';
+import { esMessages, type Messages } from '../i18n/messages';
+import { useI18n } from '../i18n/I18nProvider';
 
 export type TimelineTone = 'default' | 'accent' | 'success' | 'warning' | 'danger' | 'info';
 
@@ -65,26 +68,27 @@ const TONO_ICONO: Record<TimelineTone, string> = {
  * «hace 2 h», «ayer», «hace 3 días». A partir de una semana se da la fecha:
  * «hace 43 días» no le dice nada a nadie.
  */
-export function fechaRelativa(fecha: Date, ahora: Date): string {
+export function fechaRelativa(fecha: Date, ahora: Date, dates: Messages['dates'] = esMessages.dates): string {
+  const r = dates.relative;
   const seg = Math.round((ahora.getTime() - fecha.getTime()) / 1000);
-  if (seg < 0) return 'en el futuro';
-  if (seg < 60) return 'hace un momento';
+  if (seg < 0) return r.future;
+  if (seg < 60) return r.justNow;
   const min = Math.round(seg / 60);
-  if (min < 60) return `hace ${min} min`;
+  if (min < 60) return formatMessage(r.minutesAgo, { count: min });
   const horas = Math.round(min / 60);
-  if (horas < 24 && mismoDia(fecha, ahora)) return `hace ${horas} h`;
+  if (horas < 24 && mismoDia(fecha, ahora)) return formatMessage(r.hoursAgo, { count: horas });
   const dias = Math.round((ahora.getTime() - fecha.getTime()) / 86400000);
-  if (dias <= 1) return 'ayer';
-  if (dias < 7) return `hace ${dias} días`;
-  return `${fecha.getDate()} de ${MESES_LARGOS[fecha.getMonth()]}`;
+  if (dias <= 1) return r.yesterday;
+  if (dias < 7) return formatMessage(r.daysAgo, { count: dias });
+  return formatMessage(dates.dayMonth, { day: fecha.getDate(), month: dates.months[fecha.getMonth()] });
 }
 
 /** Encabezado del grupo: «Hoy», «Ayer» o la fecha larga. */
-function etiquetaDia(fecha: Date, ahora: Date): string {
-  if (mismoDia(fecha, ahora)) return 'Hoy';
+function etiquetaDia(fecha: Date, ahora: Date, dates: Messages['dates']): string {
+  if (mismoDia(fecha, ahora)) return dates.today;
   const ayer = new Date(ahora.getTime() - 86400000);
-  if (mismoDia(fecha, ayer)) return 'Ayer';
-  return `${fecha.getDate()} de ${MESES_LARGOS[fecha.getMonth()]} de ${fecha.getFullYear()}`;
+  if (mismoDia(fecha, ayer)) return dates.yesterday;
+  return formatMessage(dates.longDate, { day: fecha.getDate(), month: dates.months[fecha.getMonth()], year: fecha.getFullYear() });
 }
 
 interface Fila {
@@ -110,10 +114,13 @@ export const Timeline: React.FC<TimelineProps> = ({
   groupByDay,
   relative = true,
   now,
-  emptyMessage = 'Todavía no hay actividad.',
+  emptyMessage: emptyMessageProp,
   className,
-  'aria-label': ariaLabel = 'Actividad',
+  'aria-label': ariaLabelProp,
 }) => {
+  const { messages: m } = useI18n();
+  const emptyMessage = emptyMessageProp ?? m.timeline.empty;
+  const ariaLabel = ariaLabelProp ?? m.timeline.label;
   const ahora = React.useMemo(() => aInstante(now ?? new Date()), [now]);
   const agrupar = groupByDay ?? variant === 'detallado';
 
@@ -134,7 +141,7 @@ export const Timeline: React.FC<TimelineProps> = ({
         salida.push({
           kind: 'dia',
           key: `dia:${e._fecha.toDateString()}`,
-          etiqueta: etiquetaDia(e._fecha, ahora),
+          etiqueta: etiquetaDia(e._fecha, ahora, m.dates),
         });
       }
       salida.push({ kind: 'evento', key: e.id, evento: e });
@@ -175,7 +182,7 @@ export const Timeline: React.FC<TimelineProps> = ({
         // La línea vertical se corta en el último acontecimiento: si siguiera,
         // parecería que falta algo por cargar.
         const ultimo = !filas.slice(i + 1).some((f) => f.kind === 'evento');
-        const cuando = relative ? fechaRelativa(e._fecha, ahora) : hhmm(e._fecha);
+        const cuando = relative ? fechaRelativa(e._fecha, ahora, m.dates) : hhmm(e._fecha);
 
         return (
           <li key={fila.key} data-evento={e.id} className="relative flex gap-3">

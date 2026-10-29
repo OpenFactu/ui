@@ -10,6 +10,7 @@ import { useSpring } from '../motion/useSpring';
 import { createVelocityTracker, rubberband } from '../motion/velocity';
 import { nearestIndex, pickSnap, resolveSnapPoints, type SnapPoint } from './internal/snap';
 import { UiIcon } from '../icons';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface BottomSheetProps {
   open: boolean;
@@ -58,6 +59,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
   open, onClose, snapPoints = [0.5, 1], defaultSnap = 0, snap: controlledSnap, onSnapChange, title, header, initialFocusRef, bodyClassName, zIndex,
   dismissible = true, modal = true, footer, children, className, ...rest
 }) => {
+  const { messages: m } = useI18n();
   const origin = React.useRef<HTMLSpanElement>(null);
   const sheet = React.useRef<HTMLDivElement>(null);
   const scrim = React.useRef<HTMLDivElement>(null);
@@ -209,11 +211,11 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
                 <div className="k-bottom-sheet-title">
                   {title && <h2 id={titleId}>{title}</h2>}
                   {heights.length > 1 && (
-                    <button type="button" className="k-bottom-sheet-btn" aria-label={atTop ? 'Reducir' : 'Ampliar'} onClick={() => setSnap(atTop ? Math.max(0, nearestIndex(heights[0], heights)) : heights.length - 1)}>
+                    <button type="button" className="k-bottom-sheet-btn" aria-label={atTop ? m.bottomSheet.collapse : m.bottomSheet.expand} onClick={() => setSnap(atTop ? Math.max(0, nearestIndex(heights[0], heights)) : heights.length - 1)}>
                       <UiIcon slot={atTop ? 'chevron-down' : 'chevron-up'} size={16} />
                     </button>
                   )}
-                  {dismissible && <button type="button" className="k-bottom-sheet-btn" aria-label="Cerrar" onClick={onClose}><UiIcon slot="x" size={16} /></button>}
+                  {dismissible && <button type="button" className="k-bottom-sheet-btn" aria-label={m.common.close} onClick={onClose}><UiIcon slot="x" size={16} /></button>}
                 </div>
               ))}
             </div>

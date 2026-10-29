@@ -5,6 +5,7 @@ import { Button, type ButtonProps } from './Button';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
 import { useEscapeStack } from '../internal/escapeStack';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface SplitButtonAction {
   id: string;
@@ -37,9 +38,11 @@ export const SplitButton: React.FC<SplitButtonProps> = ({
   size = 'md',
   disabled = false,
   isLoading = false,
-  menuLabel = 'Más acciones',
+  menuLabel: menuLabelProp,
   className,
 }) => {
+  const menuLabelDefault = useMessages('common').moreActions;
+  const menuLabel = menuLabelProp ?? menuLabelDefault;
   const id = React.useId();
   const [open, setOpen] = React.useState(false);
   const lastOnOpen = React.useRef(false);

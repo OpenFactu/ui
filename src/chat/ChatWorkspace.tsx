@@ -7,6 +7,7 @@ import { ChatHeader } from './ChatHeader';
 import { ChatMessageList } from './ChatMessageList';
 import { ChatComposer } from './ChatComposer';
 import { ChatSearch } from './ChatSearch';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface ChatWorkspaceProps {
   className?: string;
@@ -16,6 +17,7 @@ export interface ChatWorkspaceProps {
 }
 /** Responsive composition. Supply ChatProvider above it, or compose its children yourself. */
 export function ChatWorkspace({ className, style, listActions, headerActions }: ChatWorkspaceProps) {
+  const { messages: { chat: ct }, format } = useI18n();
   const { conversation } = useChatConversation();
   const [query, setQuery] = React.useState(''); const [searchOpen, setSearchOpen] = React.useState(false);
   const root = React.useRef<HTMLDivElement>(null); const scroll = React.useRef(0);
@@ -23,10 +25,10 @@ export function ChatWorkspace({ className, style, listActions, headerActions }: 
   const closeSearch = () => { setQuery(''); setSearchOpen(false); requestAnimationFrame(() => { const element = root.current?.querySelector('.k-chat-scroll'); if (element) element.scrollTop = scroll.current; }); };
   return <div ref={root} className={cn('k-chat-workspace', className)} style={style} data-conversation-open={Boolean(conversation)}>
     <ChatConversationList actions={listActions} />
-    <section className="k-chat-thread" aria-label={conversation ? `Conversación con ${conversation.title}` : 'Conversación'}>
+    <section className="k-chat-thread" aria-label={conversation ? format(ct.conversationWith, { title: conversation.title }) : ct.conversation}>
       {conversation ? <><ChatHeader actions={headerActions} onSearch={() => { scroll.current = root.current?.querySelector('.k-chat-scroll')?.scrollTop ?? 0; setSearchOpen(value => !value); }} />
         {searchOpen && <ChatSearch query={query} onChange={setQuery} onClose={closeSearch} />}<ChatMessageList searchQuery={query} /><ChatComposer /></>
-        : <div className="k-chat-empty"><UiIcon slot="message-square" size={30} /><h2>Tus conversaciones, en un lugar</h2><p>Elige una conversación para leer y responder.</p></div>}
+        : <div className="k-chat-empty"><UiIcon slot="message-square" size={30} /><h2>{ct.emptyWorkspaceTitle}</h2><p>{ct.emptyWorkspaceHint}</p></div>}
     </section>
   </div>;
 }

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { cn } from '../utils';
 import { motionDisabled } from '../motion/dom';
+import { useMessages } from '../i18n/I18nProvider';
 
 /**
  * Onda táctil. Se pone como hijo de un elemento `relative` con `overflow-hidden` (un botón, una fila) y escucha los
@@ -40,11 +41,13 @@ export interface StatusMarkProps extends React.SVGAttributes<SVGSVGElement> {
 }
 
 /** Círculo y signo que se dibujan al aparecer: confirmación de guardado, error de envío, aviso. */
-export const StatusMark: React.FC<StatusMarkProps> = ({ status = 'success', size = 1.5, className, style, ...rest }) => (
+export const StatusMark: React.FC<StatusMarkProps> = ({ status = 'success', size = 1.5, className, style, ...rest }) => {
+  const feedbackTexts = useMessages('feedback');
+  return (
   <svg
     viewBox="0 0 24 24"
     role="img"
-    aria-label={{ success: 'Correcto', error: 'Error', warning: 'Aviso', info: 'Información' }[status]}
+    aria-label={feedbackTexts[status]}
     data-status={status}
     className={cn('k-mark', className)}
     style={{ width: `${size}em`, height: `${size}em`, ...style }}
@@ -56,7 +59,8 @@ export const StatusMark: React.FC<StatusMarkProps> = ({ status = 'success', size
     {status === 'warning' && <><path d="M12 7v6" /><path d="M12 16.6v.1" /></>}
     {status === 'info' && <><path d="M12 11v6" /><path d="M12 7.4v.1" /></>}
   </svg>
-);
+  );
+};
 
 /** Sacude un elemento (campo con error, botón rechazado). Devuelve cuando termina; no hace nada con movimiento reducido. */
 export function shake(element: HTMLElement | null): Promise<void> {

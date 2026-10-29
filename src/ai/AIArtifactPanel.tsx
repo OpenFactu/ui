@@ -3,7 +3,7 @@ import { UiIcon } from '../icons';
 import { CodeEditor } from '../components/CodeEditor';
 import { Table } from '../components/Table';
 import { cn } from '../utils';
-import { aiLabels } from './labels';
+import { useAILabels } from './labels';
 import type { AIArtifact, AIArtifactRenderer, AIUIProps } from './types';
 import { AIIconButton, AICopyButton } from './internal/ui';
 import { artifactContent, displayJson, downloadText, htmlPreviewDocument, safeUrl } from './internal/helpers';
@@ -13,7 +13,7 @@ import { useAICode, useCodeActions, type AICodeSelection } from './codeActions';
 
 /** Editor de un artefacto de código con acciones de IA sobre la selección. */
 function CodeArtifact({ artifact, onChange, labels }: AIUIProps & { artifact: Extract<AIArtifact, { content: string }>; onChange?: (id: string, content: string) => void }) {
-  const l = aiLabels(labels); const handlers = useAICode();
+  const l = useAILabels(labels); const handlers = useAICode();
   const [selection, setSelection] = React.useState<AICodeSelection | null>(null);
   const editable = !!onChange && artifact.editable !== false;
   const context = { code: artifact.content, language: artifact.language, title: artifact.title, source: 'artifact' as const, artifactId: artifact.id, selection: selection ?? undefined, ask: handlers.onAsk,
@@ -32,7 +32,7 @@ export interface AIArtifactPanelProps extends AIUIProps {
   renderers?: Partial<Record<AIArtifact['kind'], AIArtifactRenderer>>;
 }
 function ArtifactView({ artifact, mode, onChange, renderers, labels }: Omit<AIArtifactPanelProps, 'artifacts' | 'onSelect'> & { artifact: AIArtifact; mode: 'preview' | 'code' }) {
-  const l = aiLabels(labels);
+  const l = useAILabels(labels);
   const document = React.useMemo(() => artifact.kind === 'html' ? htmlPreviewDocument(artifact.content) : '', [artifact]);
   const [imageFailed, setImageFailed] = React.useState(false);
   React.useEffect(() => setImageFailed(false), [artifact.id]);
@@ -41,13 +41,13 @@ function ArtifactView({ artifact, mode, onChange, renderers, labels }: Omit<AIAr
   if ((artifact.kind === 'html' || artifact.kind === 'markdown') && mode === 'code') return <CodeArtifact artifact={artifact} onChange={onChange} labels={labels} />;
   if (artifact.kind === 'markdown') return <AIMarkdown labels={labels}>{artifact.content}</AIMarkdown>;
   if (artifact.kind === 'html') return <iframe className="ai-html-preview" title={artifact.title} sandbox="allow-scripts" referrerPolicy="no-referrer" srcDoc={document} />;
-  if (artifact.kind === 'table') return <Table<Record<string, unknown>> data={artifact.rows} rowKey={(_, index) => index} columns={artifact.columns.map(column => ({ id: column.key, header: column.label, cell: row => displayJson(row[column.key]) }))} emptyMessage={l.noResults} />;
+  if (artifact.kind === 'table') return <Table<Record<string, unknown>> data={artifact.rows} rowKey={(_, index) => index} columns={artifact.columns.map(column => ({ id: column.key, header: column.label, cell: row => displayJson(row[column.key], l.unserializable) }))} emptyMessage={l.noResults} />;
   if (artifact.kind === 'image') return imageFailed || !safeUrl(artifact.url, 'media') ? <p className="ai-muted">{l.imageUnavailable}</p> : <img className="ai-artifact-image" src={safeUrl(artifact.url, 'media')} alt={artifact.alt ?? artifact.title} onError={() => setImageFailed(true)} />;
   if (artifact.kind === 'file') return <div className="ai-file-result"><UiIcon slot="file" size={32} /><strong>{artifact.title}</strong><p>{l.unsupportedFile}</p>{safeUrl(artifact.url, 'media') && <a className="ai-text-button" href={safeUrl(artifact.url, 'media')} download={artifact.filename ?? artifact.title}>{l.download}</a>}</div>;
   return null;
 }
 export function AIArtifactPanel({ artifacts, value, onSelect, onClose, onChange, onDownload, renderers, labels, className }: AIArtifactPanelProps) {
-  const l = aiLabels(labels);
+  const l = useAILabels(labels);
   const artifact = artifacts.find(item => item.id === value) ?? artifacts[0];
   const [mode, setMode] = React.useState<'preview' | 'code'>('preview');
   const id = React.useId();

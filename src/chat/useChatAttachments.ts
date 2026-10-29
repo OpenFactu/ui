@@ -5,12 +5,16 @@ import type { ChatController } from './controller';
 import { chatError, chatOperationKey } from './controller';
 import { getChatDraft } from './state';
 import type { ChatActions, ChatAttachment, ChatState } from './types';
+import { useMessages } from '../i18n/I18nProvider';
 interface Upload { file: File; controller?: AbortController; localUrl: string; conversationId: string; duration?: number }
 /** URL de un adjunto si es segura (http, https o blob, sin caracteres de control). */
 export function chatAttachmentUrl(url?: string): string | undefined {
   return safeUrl(url, 'attachment');
 }
 export function useChatAttachments({ snapshot, mounted, commit, props }: ChatController, state: ChatState): Pick<ChatActions, 'addAttachments' | 'removeAttachment' | 'retryAttachment'> {
+  const chatTexts = useMessages('chat');
+  const texts = React.useRef(chatTexts);
+  texts.current = chatTexts;
   const uploads = React.useRef(new Map<string, Upload>());
   React.useEffect(() => () => { for (const upload of uploads.current.values()) { upload.controller?.abort(); URL.revokeObjectURL(upload.localUrl); } uploads.current.clear(); }, []);
   React.useEffect(() => {
@@ -35,10 +39,10 @@ export function useChatAttachments({ snapshot, mounted, commit, props }: ChatCon
         const result = await props.onUploadAttachment({ file: entry.file, conversationId: entry.conversationId, signal: controller.signal,
           onProgress: percent => { if (!controller.signal.aborted) patch(entry.conversationId, id, { progress: Math.max(0, Math.min(100, percent)) }); } });
         if (controller.signal.aborted || !mounted.current) return;
-        if (!chatAttachmentUrl(result.url)) throw new Error('El archivo no tiene una URL de descarga válida.');
+        if (!chatAttachmentUrl(result.url)) throw new Error(texts.current.invalidUrl);
         patch(entry.conversationId, id, { ...result, duration: entry.duration ?? result.duration, status: 'ready', error: undefined });
       } catch (error) {
-        if (!controller.signal.aborted) patch(entry.conversationId, id, { status: 'error', error: chatError(error, 'No se ha podido subir el archivo.') });
+        if (!controller.signal.aborted) patch(entry.conversationId, id, { status: 'error', error: chatError(error, texts.current.uploadError) });
       } finally { if (entry.controller === controller) entry.controller = undefined; }
     };
     return {

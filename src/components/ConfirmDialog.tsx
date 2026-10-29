@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Button } from './Button';
 import { PopupFrame, PopupTone } from './Popup';
+import { useMessages } from '../i18n/I18nProvider';
 
 /**
  * Diálogo de confirmación declarativo (controlado por `open`).
@@ -21,15 +22,19 @@ export interface ConfirmDialogProps {
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   open,
-  title = 'Confirmar',
+  title: titleProp,
   message,
   tone,
-  confirmLabel = 'Confirmar',
-  cancelLabel = 'Cancelar',
+  confirmLabel: confirmLabelProp,
+  cancelLabel: cancelLabelProp,
   loading = false,
   onConfirm,
   onCancel,
 }) => {
+  const common = useMessages('common');
+  const title = titleProp ?? common.confirm;
+  const confirmLabel = confirmLabelProp ?? common.confirm;
+  const cancelLabel = cancelLabelProp ?? common.cancel;
   return (
     <PopupFrame
       open={open}

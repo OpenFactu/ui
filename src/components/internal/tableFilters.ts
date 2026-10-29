@@ -1,6 +1,8 @@
 /** Filtros, búsqueda y agregados de la tabla, sin React. Probados en `scripts/schedule.test.cjs`. */
 import { fold, matchesAllWords } from '../../internal/text';
 import { formatNumber } from '../../internal/intl';
+import { formatMessage } from '../../i18n/format';
+import { esMessages, type Messages } from '../../i18n/messages';
 
 export interface TableFilterOption {
   value: string;
@@ -81,13 +83,13 @@ export function matchesFilter(value: unknown, filter: TableColumnFilter, active:
 }
 
 /** Texto corto de un filtro activo para su chip («Pagada, Borrador», «100 – 500 €», «desde 01/07»). */
-export function describeFilter(filter: TableColumnFilter, active: TableFilterValue): string {
+export function describeFilter(filter: TableColumnFilter, active: TableFilterValue, words: Messages['table'] = esMessages.table): string {
   switch (filter.type) {
     case 'text':
-      return `«${String(active).trim()}»`;
+      return formatMessage(words.filterQuoted, { text: String(active).trim() });
     case 'select': {
       const labels = (active as string[]).map((v) => filter.options.find((o) => o.value === v)?.label ?? v);
-      return labels.length > 2 ? `${labels.slice(0, 2).join(', ')} y ${labels.length - 2} más` : labels.join(', ');
+      return labels.length > 2 ? formatMessage(words.filterAndMore, { list: labels.slice(0, 2).join(', '), count: labels.length - 2 }) : labels.join(', ');
     }
     case 'range': {
       const { min, max } = active as { min?: number | null; max?: number | null };
@@ -99,7 +101,7 @@ export function describeFilter(filter: TableColumnFilter, active: TableFilterVal
       const { start, end } = active as { start?: string | null; end?: string | null };
       const f = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
       if (start && end) return `${f(start)} – ${f(end)}`;
-      return start ? `desde ${f(start)}` : `hasta ${f(end!)}`;
+      return start ? formatMessage(words.filterFrom, { date: f(start) }) : formatMessage(words.filterUntil, { date: f(end!) });
     }
   }
 }

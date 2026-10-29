@@ -9,6 +9,7 @@ import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
+import { useI18n } from '../i18n/I18nProvider';
 
 export interface SearchableSelectOption {
   value: string;
@@ -93,25 +94,30 @@ function splitMatch(text: string, term: string): [string, string, string] | null
 }
 
 export function SearchableSelect(props: SearchableSelectProps) {
+  const { messages: m, format } = useI18n();
+  const ss = m.searchableSelect;
   const {
     options,
-    placeholder = 'Seleccionar...',
+    placeholder: placeholderProp,
     disabled = false,
     className,
     id,
     clearable = false,
     loading = false,
     onSearchChange,
-    emptyMessage = 'Sin resultados',
+    emptyMessage: emptyMessageProp,
     creatable = false,
     onCreate,
-    createLabel = 'Crear «{term}»',
+    createLabel: createLabelProp,
     hasMore = false,
     onLoadMore,
     highlightMatch = true,
     grouped,
     mobilePresentation = 'auto',
   } = props;
+  const placeholder = placeholderProp ?? m.common.select;
+  const emptyMessage = emptyMessageProp ?? m.common.noResults;
+  const createLabel = createLabelProp ?? ss.create;
   const mobile = useIsMobile();
   const presentation = resolveMobilePresentation(mobile, mobilePresentation, 'fullscreen');
 
@@ -375,7 +381,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
             aria-activedescendant={activeDescendant}
             aria-autocomplete="list"
             className="w-full min-w-0 bg-transparent text-xs outline-none text-[var(--fg-default)] placeholder:text-[var(--fg-subtle)] h-7"
-            placeholder="Buscar..."
+            placeholder={ss.search}
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
@@ -384,7 +390,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
             onKeyDown={handleInputKeyDown}
           />
           {loading && (
-            <Spinner size="xs" className="shrink-0" label="Buscando" />
+            <Spinner size="xs" className="shrink-0" label={m.searchInput.searching} />
           )}
         </div>
         <div
@@ -491,14 +497,14 @@ export function SearchableSelect(props: SearchableSelectProps) {
           ) : (
             <div className="py-6 text-center">
               <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
-                {loading ? 'Cargando…' : emptyMessage}
+                {loading ? m.common.loading : emptyMessage}
               </p>
             </div>
           )}
           <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
           {hasMore && rows.length > 0 && (
             <div className="py-2 text-center text-[10px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
-              {loading ? 'Cargando más…' : 'Baja para ver más'}
+              {loading ? ss.loadingMore : ss.scrollForMore}
             </div>
           )}
         </div>
@@ -547,7 +553,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
                 <span className="truncate">{opt.label}</span>
                 {!disabled && (
                   <button type="button"
-                    aria-label={`Quitar ${opt.label}`}
+                    aria-label={format(m.common.removeItem, { name: String(opt.label) })}
                     className="k-search-select-remove shrink-0 hover:text-[var(--k-danger-fg)] transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -574,7 +580,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
           {clearable && hasValue && !disabled && (
             <UiIcon slot="x"
               role="button"
-              aria-label={props.multiple ? 'Limpiar todo' : 'Limpiar selección'}
+              aria-label={props.multiple ? ss.clearAll : ss.clearSelection}
               className="h-3.5 w-3.5 text-[var(--fg-subtle)] hover:text-[var(--k-danger-fg)] transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
