@@ -26,7 +26,7 @@ export interface ColorInputProps {
 }
 
 const SWATCH_SIZES = { sm: 'h-7 w-7', md: 'h-9 w-9', lg: 'h-11 w-11' };
-const FIELD_SIZES = { sm: 'px-2 py-1 text-[11px]', md: 'px-2.5 py-1.5 text-[12px]', lg: 'px-3 py-2 text-[13px]' };
+const FIELD_SIZES = { sm: 'px-2 py-1 text-[length:calc(11px*var(--k-text-scale,1))]', md: 'px-2.5 py-1.5 text-[length:calc(12px*var(--k-text-scale,1))]', lg: 'px-3 py-2 text-[length:calc(13px*var(--k-text-scale,1))]' };
 
 export const ColorInput: React.FC<ColorInputProps> = ({
   value,
@@ -101,7 +101,7 @@ export const ColorInput: React.FC<ColorInputProps> = ({
               error && 'border-[var(--k-danger)]',
             )}
           >
-            <span className="pl-2 font-mono text-[12px] text-[var(--fg-subtle,#657486)] select-none">#</span>
+            <span className="pl-2 font-mono text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)] select-none">#</span>
             <input
               data-k-focus-input=""
               type="text"

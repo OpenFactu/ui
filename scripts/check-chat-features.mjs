@@ -79,25 +79,28 @@ try {
   });
   await check('Editar no modifica el borrador y eliminar conserva una respuesta legible', async () => {
     await field().fill('No perder este borrador');
-    await menu('ana-2'); await page.getByRole('button',{name:'Editar mensaje',exact:true}).click();
+    await menu('ana-2'); await page.getByRole('menuitem',{name:'Editar mensaje',exact:true}).click();
     await page.getByRole('textbox',{name:'Editar mensaje',exact:true}).fill('Texto editado'); await page.getByRole('button',{name:'Guardar cambios',exact:true}).click();
     await article('ana-2').getByText('Texto editado',{exact:true}).waitFor(); assert.equal(await field().inputValue(),'No perder este borrador');
-    await menu('ana-2'); await page.getByRole('button',{name:'Eliminar mensaje',exact:true}).click(); await page.getByRole('button',{name:'Confirmar eliminación',exact:true}).click();
+    await menu('ana-2'); await page.getByRole('menuitem',{name:'Eliminar mensaje',exact:true}).click(); await page.getByRole('button',{name:'Confirmar eliminación',exact:true}).click();
     await article('ana-2').getByText('Mensaje eliminado',{exact:true}).waitFor(); assert.equal(await field().inputValue(),'No perder este borrador');
   });
-  await check('Los adjuntos reales se pueden subir, conservar entre conversaciones y enviar', async () => {
-    await page.locator('input[type=file]').setInputFiles({name:'ejemplo.txt',mimeType:'text/plain',buffer:Buffer.from('Documento de prueba')});
-    await page.waitForFunction(()=>!document.querySelector('progress'));
+  await check('Los adjuntos reales se pueden subir, revisar, conservar entre conversaciones y enviar', async () => {
+    const review = page.getByRole('dialog',{name:'Vista previa del envío',exact:true});
+    await page.locator('.k-chat-attach-trigger input[type=file]').setInputFiles({name:'ejemplo.txt',mimeType:'text/plain',buffer:Buffer.from('Documento de prueba')});
+    await review.locator('.k-chat-review-name',{hasText:'ejemplo.txt'}).waitFor();
+    await page.waitForFunction(()=>!document.querySelector('.k-chat-upload'));
     await page.getByRole('region',{name:'Conversaciones',exact:true}).getByRole('button',{name:/Equipo de producto/}).click();
-    assert.equal(await page.getByText('ejemplo.txt',{exact:true}).count(),0);
+    assert.equal(await review.count(),0);
     await page.getByRole('region',{name:'Conversaciones',exact:true}).getByRole('button',{name:/Ana López/}).click();
-    await page.getByText('ejemplo.txt',{exact:true}).waitFor();
-    await page.getByRole('button',{name:'Enviar mensaje',exact:true}).click();
+    await review.waitFor();
+    await review.getByRole('button',{name:'Enviar mensaje',exact:true}).click();
     await page.getByRole('link',{name:'Descargar ejemplo.txt',exact:true}).waitFor();
-    await page.locator('input[type=file]').setInputFiles({name:'contactos.xlsx',mimeType:'application/octet-stream',buffer:Buffer.from('Demo de hoja de cálculo')});
-    await page.locator('[data-file-kind="spreadsheet"]').waitFor();
-    await page.waitForFunction(()=>!document.querySelector('progress'));
-    await page.getByRole('button',{name:'Enviar mensaje',exact:true}).click();
+    assert.equal(await review.count(),0);
+    await page.locator('.k-chat-attach-trigger input[type=file]').setInputFiles({name:'contactos.xlsx',mimeType:'application/octet-stream',buffer:Buffer.from('Demo de hoja de cálculo')});
+    await review.locator('[data-file-kind="spreadsheet"]').first().waitFor();
+    // Se puede enviar sin esperar a que acabe la subida: el mensaje sale con su progreso y se descarga al terminar.
+    await review.getByRole('button',{name:'Enviar mensaje',exact:true}).click();
     await page.getByRole('link',{name:'Descargar contactos.xlsx',exact:true}).waitFor();
   });
   await check('Mencionar con teclado inserta un participante sin enviar el mensaje', async () => {
@@ -112,7 +115,7 @@ try {
     assert.ok(await page.locator('.k-chat-message-focused').count()<=1);
     assert.notEqual(await page.locator('.k-chat-message-text mark').first().evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 255, 0)');
     await page.getByRole('button',{name:'Cerrar búsqueda de mensajes',exact:true}).click();
-    await menu('ana-1'); await page.getByRole('button',{name:'Fijar mensaje',exact:true}).click(); await page.getByRole('button',{name:'Mensajes fijados (1)',exact:true}).click();
+    await menu('ana-1'); await page.getByRole('menuitem',{name:'Fijar mensaje',exact:true}).click(); await page.getByRole('button',{name:'Mensajes fijados (1)',exact:true}).click();
     await page.getByRole('dialog',{name:'Mensajes fijados (1)',exact:true}).getByRole('button').first().click();
   });
   await check('La conversación se archiva, se recupera y permite favoritos y silencio', async () => {

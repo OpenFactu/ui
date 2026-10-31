@@ -54,7 +54,7 @@ html[data-k-backdrop-motion] { background: none; }
 html[data-k-backdrop-motion]::before, [data-k-backdrop-motion]:not(html)::before {
   content: ''; position: fixed; inset: -22%; z-index: -1; pointer-events: none;
   background: var(--k-app-backdrop, var(--bg-app, #f8fafc));
-  animation: k-backdrop-drift var(--k-backdrop-duration, 60s) ease-in-out infinite alternate;
+  animation: k-backdrop-drift calc(var(--k-backdrop-duration, 60s) * var(--k-motion, 1)) ease-in-out infinite alternate;
   will-change: transform;
 }
 [data-k-backdrop-motion]:not(html) { position: relative; isolation: isolate; overflow: hidden; background: none; }

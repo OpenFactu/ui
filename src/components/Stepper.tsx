@@ -50,8 +50,8 @@ const ESTILO_TEXTO: Record<StepStatus, string> = {
 };
 
 const TAMANOS = {
-  sm: { circulo: 'h-6 w-6 text-[11px]', texto: 'text-[12px]', icono: 12 },
-  md: { circulo: 'h-8 w-8 text-[13px]', texto: 'text-[13px]', icono: 14 },
+  sm: { circulo: 'h-6 w-6 text-[length:calc(11px*var(--k-text-scale,1))]', texto: 'text-[length:calc(12px*var(--k-text-scale,1))]', icono: 12 },
+  md: { circulo: 'h-8 w-8 text-[length:calc(13px*var(--k-text-scale,1))]', texto: 'text-[length:calc(13px*var(--k-text-scale,1))]', icono: 14 },
 };
 
 /**
@@ -121,7 +121,7 @@ export const Stepper: React.FC<StepperProps> = ({
               {step.label}
             </span>
             {step.description && (
-              <span className="mt-0.5 text-[11px] text-[var(--fg-subtle,#657486)]">
+              <span className="mt-0.5 text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)]">
                 {step.description}
               </span>
             )}

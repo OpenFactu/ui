@@ -61,7 +61,7 @@ export const Accordion: React.FC<AccordionProps> = ({
               disabled={item.disabled}
               onClick={() => toggle(item.key)}
               className={cn(
-                'flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-[13px] font-medium text-[var(--fg-default,#0a1628)] transition-colors',
+                'flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-[length:calc(13px*var(--k-text-scale,1))] font-medium text-[var(--fg-default,#0a1628)] transition-colors',
                 'hover:bg-[var(--bg-hover)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent',
                 item.disabled && 'opacity-50 cursor-not-allowed pointer-events-none',
               )}
@@ -75,7 +75,7 @@ export const Accordion: React.FC<AccordionProps> = ({
               />
             </button>
             <Collapse open={isOpen}>
-              <div className="px-4 pb-4 pt-1 text-[13px] text-[var(--fg-body,#2d3a4a)]">{item.content}</div>
+              <div className="px-4 pb-4 pt-1 text-[length:calc(13px*var(--k-text-scale,1))] text-[var(--fg-body,#2d3a4a)]">{item.content}</div>
             </Collapse>
           </div>
         );

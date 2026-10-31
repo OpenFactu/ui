@@ -17,7 +17,7 @@ const GROUPS = {
     'probe-mobile-sheets.cjs', 'probe-extras.cjs', 'probe-qr.cjs', 'probe-calendar.cjs', 'probe-kanban.cjs', 'probe-table.cjs', 'probe-virtual-list.cjs', 'probe-i18n.cjs', 'probe-focus-inputs.cjs', 'probe-ai-layout.cjs', 'probe-notifications.cjs', 'probe-floating-actions.cjs', 'probe-mobile-redesign.cjs',
     'probe-mobile-gallery.cjs', 'probe-table-action-menu.cjs', 'probe-mobile-control-layout.cjs',
   ],
-  chat: ['check-chat.mjs', 'check-chat-features.mjs'],
+  chat: ['check-chat.mjs', 'check-chat-features.mjs', 'probe-chat-touch.cjs'],
   // Sondas antiguas que no corren por defecto (más lentas o más frágiles); se lanzan a mano cuando se toca su zona.
   extra: [
     'probe-api.mjs', 'probe-buscador.mjs', 'probe-gantt.mjs', 'probe-infinite.mjs', 'probe-navmenu.mjs',

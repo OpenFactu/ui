@@ -16,9 +16,9 @@ export interface DensitySpec {
 }
 
 export const densityClasses: Record<Density, DensitySpec> = {
-  compact: { cell: 'px-4 py-2', text: 'text-[12px]', bar: 10 },
-  normal: { cell: 'px-4 py-3', text: 'text-[13px]', bar: 12 },
-  comfy: { cell: 'px-4 py-4', text: 'text-[13px]', bar: 14 },
+  compact: { cell: 'px-4 py-2', text: 'text-[length:calc(12px*var(--k-text-scale,1))]', bar: 10 },
+  normal: { cell: 'px-4 py-3', text: 'text-[length:calc(13px*var(--k-text-scale,1))]', bar: 12 },
+  comfy: { cell: 'px-4 py-4', text: 'text-[length:calc(13px*var(--k-text-scale,1))]', bar: 14 },
 };
 
 /**

@@ -69,7 +69,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
             role="tooltip"
             {...popoverProps}
             className={cn(
-              'z-[var(--k-z-popover,999999)] max-w-[280px] rounded-[var(--k-radius-sm,4px)] bg-[var(--fg-default)] px-2 py-1 text-[11px] font-medium text-[var(--bg-card)] shadow-lg pointer-events-none k-appear duration-150',
+              'z-[var(--k-z-popover,999999)] max-w-[280px] rounded-[var(--k-radius-sm,4px)] bg-[var(--fg-default)] px-2 py-1 text-[length:calc(11px*var(--k-text-scale,1))] font-medium text-[var(--bg-card)] shadow-lg pointer-events-none k-appear duration-150',
               !ready && 'invisible',
             )}
             style={style}

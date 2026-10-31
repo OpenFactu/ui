@@ -56,7 +56,7 @@ export function Alert({
     <div data-k-mobile="Alert"
       role={role}
       className={cn(
-        'flex items-start gap-3 rounded-[var(--k-radius-sm,4px)] border p-4 text-[13px]',
+        'flex items-start gap-3 rounded-[var(--k-radius-sm,4px)] border p-4 text-[length:calc(13px*var(--k-text-scale,1))]',
         TONES[tone],
         variant === 'outline' && 'bg-[var(--bg-card,#ffffff)]',
         className,

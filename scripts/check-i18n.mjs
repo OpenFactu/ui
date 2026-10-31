@@ -29,7 +29,7 @@ const pareceTexto = (s) => {
   if (/^(https?:|mailto:|data:|#|\.|\/)/.test(t)) return false;
   if (/^[a-z0-9]+([-_:][a-z0-9]+)*$/.test(t)) return false; // ids, claves, tokens
   const tokens = t.split(/\s+/);
-  if (tokens.some((k) => /[-:[]/.test(k)) && tokens.every((k) => /^[a-z0-9!:\-[\]()/.%#,_]+$/.test(k))) return false; // clases
+  if (tokens.some((k) => /[-:[]/.test(k)) && tokens.every((k) => /^[a-z0-9!:\-[\]()/.%#,_*+]+$/.test(k))) return false; // clases (también `text-[length:calc(12px*var(…))]`)
   return /[ÁÉÍÓÚÜÑáéíóúüñ¿¡…«»]/.test(t) || /\s/.test(t) || /^[A-ZÁÉÍÓÚ][a-záéíóúñ]/.test(t);
 };
 

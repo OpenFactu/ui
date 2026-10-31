@@ -67,6 +67,9 @@ export interface ChartProps {
 }
 
 /** Miles → «12k», millones → «1,2M». Evita ejes con cifras interminables. */
+/** Tamaño de letra en px con la escala de texto del tema. */
+const chartText = (px: number) => `calc(${px}px * var(--k-text-scale, 1))`;
+
 function compactTick(value: number): string {
   const abs = Math.abs(value);
   if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace('.0', '')}M`;
@@ -135,7 +138,8 @@ export const Chart: React.FC<ChartProps> = ({
   // superficies del tema. Antes esto se repetía en cada página.
   const axisProps = {
     stroke: CHART_CHROME.axis,
-    tick: { fill: CHART_CHROME.axis, fontSize: 11 },
+    // En `style` y no como atributo SVG: un atributo no acepta calc().
+    tick: { fill: CHART_CHROME.axis, style: { fontSize: chartText(11) } },
     tickLine: false,
     axisLine: false,
   } as const;
@@ -145,10 +149,10 @@ export const Chart: React.FC<ChartProps> = ({
       cursor={{ fill: CHART_CHROME.grid, fillOpacity: 0.4 }}
       contentStyle={{
         background: CHART_CHROME.tooltipBg,
-        border: `1px solid ${CHART_CHROME.tooltipBorder}`,
+        border: `var(--k-border-width, 1px) solid ${CHART_CHROME.tooltipBorder}`,
         borderRadius: 'var(--k-radius-sm, 4px)',
         color: CHART_CHROME.tooltipText,
-        fontSize: 12,
+        fontSize: chartText(12),
         boxShadow: 'var(--k-shadow-lg)',
       }}
       labelStyle={{ color: CHART_CHROME.tooltipText, fontWeight: 600, marginBottom: 4 }}
@@ -164,7 +168,7 @@ export const Chart: React.FC<ChartProps> = ({
       height={28}
       iconType="circle"
       iconSize={8}
-      wrapperStyle={{ fontSize: 11, color: CHART_CHROME.axis }}
+      wrapperStyle={{ fontSize: chartText(11), color: CHART_CHROME.axis }}
     />
   ) : null;
 
@@ -212,7 +216,7 @@ export const Chart: React.FC<ChartProps> = ({
             height={28}
             iconType="circle"
             iconSize={8}
-            wrapperStyle={{ fontSize: 11, color: CHART_CHROME.axis }}
+            wrapperStyle={{ fontSize: chartText(11), color: CHART_CHROME.axis }}
           />
         )}
       </PieChart>
@@ -299,17 +303,17 @@ export const Chart: React.FC<ChartProps> = ({
       </div>
 
       {tableView && (
-        <table className="w-full mt-4 text-[12px] border-collapse">
+        <table className="w-full mt-4 text-[length:calc(12px*var(--k-text-scale,1))] border-collapse">
           <caption className="sr-only">{chartTexts.tableCaption}</caption>
           <thead>
             <tr className="border-b border-[var(--border-default,#e2e8f0)]">
-              <th className="text-left py-1.5 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-subtle,#657486)]">
+              <th className="text-left py-1.5 font-mono text-[length:calc(10px*var(--k-text-scale,1))] uppercase tracking-wider text-[var(--fg-subtle,#657486)]">
                 {xKey}
               </th>
               {series.map((s) => (
                 <th
                   key={s.key}
-                  className="text-right py-1.5 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-subtle,#657486)]"
+                  className="text-right py-1.5 font-mono text-[length:calc(10px*var(--k-text-scale,1))] uppercase tracking-wider text-[var(--fg-subtle,#657486)]"
                 >
                   {s.label ?? s.key}
                 </th>

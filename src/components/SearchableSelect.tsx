@@ -407,7 +407,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
                   <div
                     key={`h-${row.label}`}
                     role="presentation"
-                    className="px-2.5 pt-2 pb-1 text-[9px] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]"
+                    className="px-2.5 pt-2 pb-1 text-[length:calc(9px*var(--k-text-scale,1))] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]"
                   >
                     {row.label}
                   </div>
@@ -425,7 +425,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
                     onClick={handleCreate}
                     onMouseEnter={() => setHighlightedIndex(createIndex)}
                     className={cn(
-                      'flex items-center gap-2 rounded-[var(--k-radius-xs,2px)] px-2.5 py-1.5 text-[12px] cursor-pointer transition-colors text-accent',
+                      'flex items-center gap-2 rounded-[var(--k-radius-xs,2px)] px-2.5 py-1.5 text-[length:calc(12px*var(--k-text-scale,1))] cursor-pointer transition-colors text-accent',
                       highlighted && 'bg-[var(--bg-hover,#f1f5f9)]',
                     )}
                   >
@@ -450,7 +450,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
                   onMouseEnter={() => !opt.disabled && setHighlightedIndex(idx)}
                   style={opt.depth ? { paddingLeft: 10 + opt.depth * 14 } : undefined}
                   className={cn(
-                    'group flex items-center justify-between rounded-[var(--k-radius-xs,2px)] px-2.5 py-1.5 text-[12px] cursor-pointer transition-colors',
+                    'group flex items-center justify-between rounded-[var(--k-radius-xs,2px)] px-2.5 py-1.5 text-[length:calc(12px*var(--k-text-scale,1))] cursor-pointer transition-colors',
                     selected
                       ? 'bg-accent text-[color:var(--k-accent-on,#0f172a)]'
                       : highlighted
@@ -481,7 +481,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
                     {opt.secondaryLabel && (
                       <span
                         className={cn(
-                          'text-[9px] font-mono mt-0.5',
+                          'text-[length:calc(9px*var(--k-text-scale,1))] font-mono mt-0.5',
                           !selected && 'text-[var(--fg-subtle)]',
                         )}
                       >
@@ -496,14 +496,14 @@ export function SearchableSelect(props: SearchableSelectProps) {
             })
           ) : (
             <div className="py-6 text-center">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
+              <p className="text-[length:calc(10px*var(--k-text-scale,1))] font-bold uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
                 {loading ? m.common.loading : emptyMessage}
               </p>
             </div>
           )}
           <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
           {hasMore && rows.length > 0 && (
-            <div className="py-2 text-center text-[10px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
+            <div className="py-2 text-center text-[length:calc(10px*var(--k-text-scale,1))] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
               {loading ? ss.loadingMore : ss.scrollForMore}
             </div>
           )}
@@ -535,7 +535,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
         onClick={() => !disabled && setIsOpen(!isOpen)}
         onKeyDown={handleTriggerKeyDown}
         className={cn(
-          'flex w-full items-center justify-between gap-2 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] text-[var(--fg-default,#0a1628)] px-3 py-2 text-[13px] transition-colors focus-visible:outline-none focus-visible:border-accent',
+          'flex w-full items-center justify-between gap-2 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] text-[var(--fg-default,#0a1628)] px-3 py-2 text-[length:calc(13px*var(--k-text-scale,1))] transition-colors focus-visible:outline-none focus-visible:border-accent',
           disabled
             ? 'cursor-not-allowed opacity-50 bg-[var(--bg-muted)]'
             : 'cursor-pointer hover:border-[var(--border-strong)]',
@@ -548,7 +548,7 @@ export function SearchableSelect(props: SearchableSelectProps) {
             {selectedOptions.map((opt) => (
               <span
                 key={opt.value}
-                className="inline-flex items-center gap-1 rounded-[var(--k-radius-xs,2px)] bg-accent/10 dark:bg-accent/20 text-accent px-1.5 py-0.5 text-[11px] font-semibold max-w-[160px]"
+                className="inline-flex items-center gap-1 rounded-[var(--k-radius-xs,2px)] bg-accent/10 dark:bg-accent/20 text-accent px-1.5 py-0.5 text-[length:calc(11px*var(--k-text-scale,1))] font-semibold max-w-[160px]"
               >
                 <span className="truncate">{opt.label}</span>
                 {!disabled && (

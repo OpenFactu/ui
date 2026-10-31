@@ -52,7 +52,7 @@ export const DocumentTotals: React.FC<DocumentTotalsProps> = ({
       className,
     )}
   >
-    <dl className="space-y-3 text-[13px]">
+    <dl className="space-y-3 text-[length:calc(13px*var(--k-text-scale,1))]">
       {lines.map((line) => (
         <div
           key={line.id}
@@ -60,7 +60,7 @@ export const DocumentTotals: React.FC<DocumentTotalsProps> = ({
         >
           <dt className="text-[var(--fg-muted)]">
             {line.label}
-            {line.hint && <span className="mt-0.5 block text-[11px]">{line.hint}</span>}
+            {line.hint && <span className="mt-0.5 block text-[length:calc(11px*var(--k-text-scale,1))]">{line.hint}</span>}
           </dt>
           <dd>
             <Amount value={line.value} currency={currency} locale={locale} tone={line.tone} />
@@ -69,12 +69,12 @@ export const DocumentTotals: React.FC<DocumentTotalsProps> = ({
       ))}
       <div className="flex flex-wrap items-baseline justify-between gap-3 border-t border-[var(--border-default)] pt-4">
         <dt className="font-semibold">{totalLabel}</dt>
-        <dd className={cn('font-semibold', variant === 'compact' ? 'text-[20px]' : 'text-[26px]')}>
+        <dd className={cn('font-semibold', variant === 'compact' ? 'text-[length:calc(20px*var(--k-text-scale,1))]' : 'text-[length:calc(26px*var(--k-text-scale,1))]')}>
           <Amount value={total} currency={currency} locale={locale} />
         </dd>
       </div>
     </dl>
-    {note && <div className="mt-3 text-[12px] text-[var(--fg-muted)]">{note}</div>}
+    {note && <div className="mt-3 text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-muted)]">{note}</div>}
     {footer && <div className="mt-5">{footer}</div>}
   </section>
   );

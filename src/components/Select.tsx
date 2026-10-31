@@ -199,7 +199,7 @@ export const Select: React.FC<SelectProps> = ({
                 onClick={() => selectOption(opt)}
                 onMouseEnter={() => !opt.disabled && setHighlightedIndex(idx)}
                 className={cn(
-                  'flex items-center justify-between gap-2 rounded-[var(--k-radius-xs,2px)] px-2.5 py-1.5 text-[12px] cursor-pointer transition-colors',
+                  'flex items-center justify-between gap-2 rounded-[var(--k-radius-xs,2px)] px-2.5 py-1.5 text-[length:calc(12px*var(--k-text-scale,1))] cursor-pointer transition-colors',
                   isSelected
                     ? 'bg-accent text-[color:var(--k-accent-on,#0f172a)] font-semibold'
                     : highlighted
@@ -215,7 +215,7 @@ export const Select: React.FC<SelectProps> = ({
           })}
           {options.length === 0 && (
             <div className="py-4 text-center">
-              <p className="text-[10px] font-bold text-[var(--fg-subtle)] uppercase tracking-widest">
+              <p className="text-[length:calc(10px*var(--k-text-scale,1))] font-bold text-[var(--fg-subtle)] uppercase tracking-widest">
                 {status.noOptions}
               </p>
             </div>
@@ -248,7 +248,7 @@ export const Select: React.FC<SelectProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={handleKeyDown}
         className={cn(
-          'flex w-full items-center justify-between gap-2 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] px-3 py-2 text-[13px] text-left transition-colors',
+          'flex w-full items-center justify-between gap-2 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] px-3 py-2 text-[length:calc(13px*var(--k-text-scale,1))] text-left transition-colors',
           'focus-visible:outline-none focus-visible:border-accent',
           disabled
             ? 'cursor-not-allowed opacity-50 bg-[var(--bg-muted)]'

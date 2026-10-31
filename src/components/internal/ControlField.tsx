@@ -23,7 +23,7 @@ export interface ControlFieldProps {
 
 /** Etiqueta, control y mensaje con el mismo aspecto y enlace accesible que `Input`. Interno. */
 export const ControlField: React.FC<ControlFieldProps> = ({ id, label, helperText, error, required, labelMode = 'label', labelClassName, mobileName, className, children }) => {
-  const labelClass = cn('text-[12px] font-medium text-[var(--fg-body,#2d3a4a)]', labelClassName);
+  const labelClass = cn('text-[length:calc(12px*var(--k-text-scale,1))] font-medium text-[var(--fg-body,#2d3a4a)]', labelClassName);
   const mark = required && <span className="text-[var(--k-danger-fg)] ml-0.5" aria-hidden="true">*</span>;
   return (
     <div data-k-mobile={mobileName} className={cn('flex flex-col gap-1.5 w-full', className)}>
@@ -34,8 +34,8 @@ export const ControlField: React.FC<ControlFieldProps> = ({ id, label, helperTex
       {(error || helperText) && (
         <div id={`${id}-description`}>
           {error
-            ? <p className="text-[11px] font-medium text-[var(--k-danger-fg)] mt-0.5">{error}</p>
-            : <p className="text-[11px] text-[var(--fg-subtle,#657486)] mt-0.5">{helperText}</p>}
+            ? <p className="text-[length:calc(11px*var(--k-text-scale,1))] font-medium text-[var(--k-danger-fg)] mt-0.5">{error}</p>
+            : <p className="text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)] mt-0.5">{helperText}</p>}
         </div>
       )}
     </div>

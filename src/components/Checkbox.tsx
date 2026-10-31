@@ -84,7 +84,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
         )}
       >
         {label && (
-          <span className="block text-[12px] font-medium text-[var(--fg-body,#2d3a4a)]">
+          <span className="block text-[length:calc(12px*var(--k-text-scale,1))] font-medium text-[var(--fg-body,#2d3a4a)]">
             {label}
             {rest.required && (
               <span className="ml-0.5 text-[var(--k-danger-fg)]" aria-hidden="true">
@@ -94,7 +94,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
           </span>
         )}
         {description && (
-          <span className="mt-0.5 block text-[11px] text-[var(--fg-subtle,#657486)]">
+          <span className="mt-0.5 block text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)]">
             {description}
           </span>
         )}

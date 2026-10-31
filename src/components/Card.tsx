@@ -74,12 +74,12 @@ export const Card = ({
             ) : (
               <>
                 {title && (
-                  <h3 className="text-[16px] font-semibold font-display text-[var(--fg-default,#0a1628)]">
+                  <h3 className="text-[length:calc(16px*var(--k-text-scale,1))] font-semibold font-display text-[var(--fg-default,#0a1628)]">
                     {title}
                   </h3>
                 )}
                 {subtitle && (
-                  <p className="text-[12px] font-sans text-[var(--fg-subtle,#657486)] mt-0.5 leading-relaxed">
+                  <p className="text-[length:calc(12px*var(--k-text-scale,1))] font-sans text-[var(--fg-subtle,#657486)] mt-0.5 leading-relaxed">
                     {subtitle}
                   </p>
                 )}

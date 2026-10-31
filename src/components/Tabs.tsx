@@ -38,13 +38,13 @@ const underlineSizes = {
 };
 
 const pillSizes = {
-  sm: 'px-2.5 py-1 text-[11px] gap-1',
+  sm: 'px-2.5 py-1 text-[length:calc(11px*var(--k-text-scale,1))] gap-1',
   md: 'px-3 py-1.5 text-xs gap-1.5',
 };
 
 const segmentedSizes = {
-  sm: 'px-3 py-1.5 text-[11px] gap-1.5',
-  md: 'px-3.5 py-2 text-[13px] gap-2',
+  sm: 'px-3 py-1.5 text-[length:calc(11px*var(--k-text-scale,1))] gap-1.5',
+  md: 'px-3.5 py-2 text-[length:calc(13px*var(--k-text-scale,1))] gap-2',
 };
 
 export const Tabs: React.FC<TabsProps> = ({

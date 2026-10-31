@@ -693,6 +693,36 @@ Incluye reacciones, emojis, edición/eliminación, archivos con iconos por tipo,
 menciones, notas de voz con controles propios, búsqueda, fijados y gestión de
 conversaciones. Todo se conecta mediante callbacks del provider.
 
+### Componentes dentro de la burbuja
+
+Un mensaje puede llevar cualquier componente. Como los mensajes viajan por tu
+transporte, no llevan JSX sino datos: `blocks: [{ kind, data }]`. Tú dices qué
+componente pinta cada `kind`, para un chat o para toda la aplicación:
+
+```tsx
+import { ChatProvider, registerChatBlock, useChatActions } from '@openfactu/ui';
+
+// Para toda la aplicación (devuelve la función que lo retira).
+registerChatBlock('factura', ({ data, own }) => <FacturaCard factura={data as Factura} />, {
+  summary: data => `Factura ${(data as Factura).numero}`, // vistas previas, respuestas y búsqueda
+  source: 'facturas',
+});
+
+// O solo para este chat (gana al registro). `fill` lo pone de borde a borde.
+<ChatProvider blockRenderers={{ mapa: { fill: true, render: ({ data }) => <MiniMapa {...(data as Punto)} /> } }} … />
+
+// Mensaje: el texto es opcional y hace de pie.
+{ id: 'm1', senderId: 'ana', text: 'Te paso la factura', blocks: [{ kind: 'factura', data: { numero: 'F-12' } }], … }
+
+// Enviarlo desde tu interfaz: pasa por `onSendMessage` como cualquier otro.
+const { sendBlocks } = useChatActions();
+sendBlocks([{ kind: 'factura', data: { numero: 'F-13' } }], { text: 'La de este mes' });
+```
+
+Un `kind` sin renderizador, o un componente que falla, deja un aviso discreto
+en su hueco sin romper la conversación. Reenviar copia los bloques y eliminar
+los borra. Ejemplo en **Chat → Bloques propios**.
+
 En Ladle: **Chat → Mensajeria** para probarlo y **Chat → Temas** para comparar
 seis estilos. También hay ejemplos de reacciones, adjuntos, edición, búsqueda y voz.
 
@@ -1328,7 +1358,9 @@ los totales globales deben venir de la API y mostrarse explícitamente aparte.
   anterior. Si usas `onClick`, no introduzcas controles interactivos en los slots.
 - `Drawer` añade `subtitle`, `ariaLabel`, `initialFocusRef`, retención y
   restauración del foco, bloqueo compartido del scroll y cierre con Escape
-  respetando otras superposiciones abiertas.
+  respetando otras superposiciones abiertas. Para contenido a sangre (un chat,
+  un mapa), `hideHeader` quita la cabecera sin perder el cierre con el fondo y
+  Escape, y `padding="none"` o `bodyClassName` ajustan el cuerpo.
 - `Timeline` permite activar sus eventos con Intro o Espacio mediante botones.
 - `EmptyState` añade `variant="compact" | "panel"` y `secondaryAction`.
 

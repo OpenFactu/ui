@@ -168,7 +168,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
           return (
             <React.Fragment key={item.id}>
               {item.group && first && (
-                <div className="px-2.5 pt-2 pb-1 text-[9px] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
+                <div className="px-2.5 pt-2 pb-1 text-[length:calc(9px*var(--k-text-scale,1))] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
                   {item.group}
                 </div>
               )}
@@ -180,7 +180,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
                 onClick={() => chooseSuggestion(item)}
                 onMouseEnter={() => setActiveIndex(i)}
                 className={cn(
-                  'flex items-center gap-2 rounded-[var(--k-radius-xs,2px)] px-2.5 py-1.5 text-[12px] cursor-pointer transition-colors',
+                  'flex items-center gap-2 rounded-[var(--k-radius-xs,2px)] px-2.5 py-1.5 text-[length:calc(12px*var(--k-text-scale,1))] cursor-pointer transition-colors',
                   i === activeIndex
                     ? 'bg-[var(--bg-hover,#f1f5f9)] text-[var(--fg-default,#0a1628)]'
                     : 'text-[var(--fg-body,#2d3a4a)]',
@@ -189,7 +189,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
                 {item.icon ?? <UiIcon slot="clock" className="h-3 w-3 shrink-0 text-[var(--fg-subtle,#657486)]" />}
                 <span className="flex-1 min-w-0 truncate">{item.label}</span>
                 {item.description && (
-                  <span className="shrink-0 text-[10px] text-[var(--fg-muted,#52606f)]">
+                  <span className="shrink-0 text-[length:calc(10px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)]">
                     {item.description}
                   </span>
                 )}
@@ -241,7 +241,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   };
 
   const hint = shortcut && (showShortcutHint ?? true) && !value && (
-    <kbd className="pointer-events-none select-none rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--fg-subtle,#657486)]">
+    <kbd className="pointer-events-none select-none rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] px-1.5 py-0.5 font-mono text-[length:calc(10px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)]">
       {shortcutLabel(shortcut)}
     </kbd>
   );
@@ -278,7 +278,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
       {tokens.map((token, i) => (
         <span
           key={`${token.field}:${token.value}`}
-          className="inline-flex items-center gap-1 rounded-[var(--k-radius-xs,2px)] bg-accent/10 px-1.5 py-0.5 text-[10px] font-mono text-accent"
+          className="inline-flex items-center gap-1 rounded-[var(--k-radius-xs,2px)] bg-accent/10 px-1.5 py-0.5 text-[length:calc(10px*var(--k-text-scale,1))] font-mono text-accent"
         >
           {token.label ?? `${token.field}:${token.value}`}
           {onTokensChange && (

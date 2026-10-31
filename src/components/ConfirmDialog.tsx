@@ -58,7 +58,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         </>
       }
     >
-      <div className="text-[13px] text-[var(--fg-body,#2d3a4a)]">{message}</div>
+      <div className="text-[length:calc(13px*var(--k-text-scale,1))] text-[var(--fg-body,#2d3a4a)]">{message}</div>
     </PopupFrame>
   );
 };

@@ -22,7 +22,7 @@ export const NavGroup: React.FC<NavGroupProps> = ({
   <div className="space-y-1">
     <button
       onClick={() => onToggle(id)}
-      className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-black uppercase text-[var(--sidebar-fg-muted)] tracking-[0.2em] hover:text-[var(--sidebar-fg)] transition-colors group"
+      className="w-full flex items-center justify-between px-4 py-2 text-[length:calc(10px*var(--k-text-scale,1))] font-black uppercase text-[var(--sidebar-fg-muted)] tracking-[0.2em] hover:text-[var(--sidebar-fg)] transition-colors group"
     >
       <div className="flex items-center gap-2">
         <SectionIcon size={12} className="opacity-50 group-hover:opacity-100 transition-opacity" />

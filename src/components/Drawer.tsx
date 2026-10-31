@@ -28,6 +28,12 @@ export interface DrawerProps {
   footer?: React.ReactNode;
   /** Backdrop + Escape cierran. Default true. */
   dismissible?: boolean;
+  /** Sin cabecera (ni título ni ✕): el contenido ocupa todo el panel. El fondo y Escape siguen cerrando; da un `ariaLabel`. */
+  hideHeader?: boolean;
+  /** `none` quita el relleno del cuerpo, para contenido a sangre (un chat, un mapa, una imagen). Default `md`. */
+  padding?: 'none' | 'md';
+  /** Clases del cuerpo desplazable. */
+  bodyClassName?: string;
   children: React.ReactNode;
   className?: string;
 }
@@ -50,6 +56,9 @@ export const Drawer: React.FC<DrawerProps> = ({
   initialFocusRef,
   footer,
   dismissible = true,
+  hideHeader = false,
+  padding = 'md',
+  bodyClassName,
   children,
   className,
   mobilePresentation = 'auto',
@@ -101,13 +110,14 @@ export const Drawer: React.FC<DrawerProps> = ({
         onClose={onClose}
         dismissible={dismissible}
         snapPoints={['auto']}
-        title={title}
-        aria-label={ariaLabel ?? (title == null ? drawerTexts.label : undefined)}
+        title={hideHeader ? undefined : title}
+        aria-label={ariaLabel ?? (title == null || hideHeader ? drawerTexts.label : undefined)}
         initialFocusRef={initialFocusRef}
         footer={footer}
         className={className}
+        bodyClassName={cn(padding === 'none' && 'k-bottom-sheet-flush', bodyClassName)}
       >
-        {subtitle && <p className="m-0 mb-3 text-[12px] text-[var(--fg-muted)]">{subtitle}</p>}
+        {subtitle && !hideHeader && <p className="m-0 mb-3 text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-muted)]">{subtitle}</p>}
         {children}
       </BottomSheet>
     );
@@ -132,9 +142,9 @@ export const Drawer: React.FC<DrawerProps> = ({
         data-state={state}
         data-side={side}
         aria-modal="true"
-        aria-label={ariaLabel ?? (title == null ? drawerTexts.label : undefined)}
-        aria-labelledby={!ariaLabel && title != null ? `${id}-title` : undefined}
-        aria-describedby={subtitle ? `${id}-description` : undefined}
+        aria-label={ariaLabel ?? (title == null || hideHeader ? drawerTexts.label : undefined)}
+        aria-labelledby={!ariaLabel && title != null && !hideHeader ? `${id}-title` : undefined}
+        aria-describedby={subtitle && !hideHeader ? `${id}-description` : undefined}
         className={cn(
           'k-drawer absolute inset-y-0 flex flex-col w-full bg-[var(--bg-card,#ffffff)] text-[var(--fg-default)] shadow-2xl k-sheet focus:outline-none',
           sizeClasses[size],
@@ -149,16 +159,16 @@ export const Drawer: React.FC<DrawerProps> = ({
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         }}
       >
-        {(title || subtitle || dismissible) && (
+        {!hideHeader && (title || subtitle || dismissible) && (
           <div className="flex items-center justify-between gap-3 px-4 py-4 border-b border-[var(--border-default,#e2e8f0)] shrink-0">
             <div className="min-w-0">
               {title != null && (
-                <h2 id={`${id}-title`} className="text-[15px] font-bold truncate">
+                <h2 id={`${id}-title`} className="text-[length:calc(15px*var(--k-text-scale,1))] font-bold font-display truncate">
                   {title}
                 </h2>
               )}
               {subtitle && (
-                <p id={`${id}-description`} className="mt-1 text-[12px] text-[var(--fg-muted)]">
+                <p id={`${id}-description`} className="mt-1 text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-muted)]">
                   {subtitle}
                 </p>
               )}
@@ -175,7 +185,7 @@ export const Drawer: React.FC<DrawerProps> = ({
             )}
           </div>
         )}
-        <div className="flex-1 overflow-y-auto p-4">{children}</div>
+        <div className={cn('flex-1 min-h-0 overflow-y-auto', padding === 'md' && 'p-4', bodyClassName)}>{children}</div>
         {footer && (
           <div className="flex flex-wrap justify-end gap-2 p-3 border-t border-[var(--border-default,#e2e8f0)] shrink-0">
             {footer}

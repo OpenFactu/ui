@@ -35,9 +35,9 @@ export interface PageHeaderProps {
  * peso y el espaciado se deciden aquí y en ningún otro sitio.
  */
 const TITLE_SIZES = {
-  sm: 'text-[18px]',
-  md: 'text-[22px]',
-  lg: 'text-[28px]',
+  sm: 'text-[length:calc(18px*var(--k-text-scale,1))]',
+  md: 'text-[length:calc(22px*var(--k-text-scale,1))]',
+  lg: 'text-[length:calc(28px*var(--k-text-scale,1))]',
 };
 
 const ICON_SIZES = {
@@ -82,7 +82,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
           {eyebrow && (
-            <p className="text-[10px] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)] mb-1">
+            <p className="text-[length:calc(10px*var(--k-text-scale,1))] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)] mb-1">
               {eyebrow}
             </p>
           )}
@@ -100,7 +100,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             {title}
           </h1>
           {subtitle && (
-            <p className="text-[13px] text-[var(--fg-muted,#52606f)] mt-1 leading-relaxed">
+            <p className="text-[length:calc(13px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)] mt-1 leading-relaxed">
               {subtitle}
             </p>
           )}

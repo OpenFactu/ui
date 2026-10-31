@@ -22,6 +22,8 @@ export function ChatAudioPlayer({ src, blob, duration: knownDuration = 0, title:
       const data = buffer.getChannelData(0); const size = Math.max(1, Math.floor(data.length / 36));
       const values = Array.from({ length: 36 }, (_, index) => { let max = 0; for (let i = index * size; i < Math.min((index + 1) * size, data.length); i += 4) max = Math.max(max, Math.abs(data[i])); return max; });
       const max = Math.max(.01, ...values); setPeaks(values.map(value => Math.max(.18, value / max)));
+      // Las notas grabadas con timeslice (WebM sin duración) dan Infinity en el <audio>: la decodificada sí es real.
+      if (Number.isFinite(buffer.duration)) setDuration(current => current > 0 ? current : buffer.duration);
     }).catch(() => {}).finally(() => { void context.close().catch(() => {}); });
     return () => { cancelled = true; if (context.state !== 'closed') void context.close().catch(() => {}); };
   }, [blob, src]);
@@ -29,12 +31,14 @@ export function ChatAudioPlayer({ src, blob, duration: knownDuration = 0, title:
   React.useEffect(() => { setPlaying(false); setPosition(0); setDuration(knownDuration); setError(''); }, [source, knownDuration]);
   return <div className="k-chat-audio-player" aria-label={title}>
     <audio ref={audio} src={source} preload="metadata" onLoadedMetadata={() => { if (Number.isFinite(audio.current?.duration)) setDuration(audio.current!.duration); }}
+      // Sin duración en los metadatos (WebM grabado a trozos), el navegador la aprende al reproducir: llega aquí.
+      onDurationChange={() => { if (Number.isFinite(audio.current?.duration)) setDuration(audio.current!.duration); }}
       onTimeUpdate={() => setPosition(audio.current?.currentTime ?? 0)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)} onError={() => setError(ct.playError)} />
     <button type="button" className="k-chat-audio-play" aria-label={playing ? ct.pause : ct.play} disabled={!source} onClick={async () => {
       if (!audio.current) return;
       if (playing) audio.current.pause(); else try { await audio.current.play(); setError(''); } catch { setError(ct.playError); }
     }}><UiIcon slot={playing ? 'pause' : 'play'} size={19} /></button>
-    <div className="k-chat-audio-track"><div className="k-chat-audio-wave" aria-hidden="true">{peaks.map((height, index) => <i key={index} style={{ height: `${Math.max(5, height * 25)}px` }} data-played={duration > 0 && index / peaks.length <= position / duration} />)}</div>
+    <div className="k-chat-audio-track"><div className="k-chat-audio-wave" aria-hidden="true">{peaks.map((height, index) => <i key={index} style={{ height: `${Math.max(5, height * 25)}px` }} data-played={duration > 0 && (index + .5) / peaks.length <= position / duration} />)}</div>
       <input type="range" aria-label={ct.position} min={0} max={duration || 0} step={.1} value={Math.min(position, duration)} disabled={!duration} onChange={event => { if (audio.current) { audio.current.currentTime = Number(event.target.value); setPosition(Number(event.target.value)); } }} />
       <span className="k-chat-audio-time">{formatClock(playing || position ? position : duration)}</span>
     </div>

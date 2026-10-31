@@ -98,20 +98,20 @@ export const KpiCard: React.FC<KpiCardProps> = ({
       )}
       <div
         className={cn(
-          'font-mono text-[10px] tracking-[1.5px] uppercase text-[var(--fg-subtle,#657486)] mb-2.5',
+          'font-mono text-[length:calc(10px*var(--k-text-scale,1))] tracking-[1.5px] uppercase text-[var(--fg-subtle,#657486)] mb-2.5',
           icon && 'pr-7',
         )}
       >
         {label}
       </div>
-      <div className="font-display text-[32px] font-bold leading-none text-[var(--fg-default,#0a1628)] break-words">
+      <div className="font-display text-[length:calc(32px*var(--k-text-scale,1))] font-bold leading-none text-[var(--fg-default,#0a1628)] break-words">
         {value}
       </div>
-      {sub && <div className="text-[12px] text-[var(--fg-subtle,#657486)] mt-1.5">{sub}</div>}
+      {sub && <div className="text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)] mt-1.5">{sub}</div>}
       {trend && (
         <div
           className={cn(
-            'inline-flex items-center gap-1 text-[11px] font-mono font-medium mt-3',
+            'inline-flex items-center gap-1 text-[length:calc(11px*var(--k-text-scale,1))] font-mono font-medium mt-3',
             sentiment === 'positive' && 'text-[var(--k-success-fg)]',
             sentiment === 'negative' && 'text-[var(--k-danger-fg)]',
             sentiment === 'neutral' && 'text-[var(--fg-subtle,#657486)]',

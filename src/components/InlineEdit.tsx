@@ -99,7 +99,7 @@ export const InlineEdit: React.FC<InlineEditProps> = ({
           {multiline
             ? <Textarea {...common} rows={3} className={inputClassName} onChange={(e) => setDraft(e.target.value)} />
             : <Input {...common} inputSize="sm" error={error ?? undefined} className={inputClassName} onChange={(e) => setDraft(e.target.value)} />}
-          {multiline && error && <span className="block mt-1 text-[11px] font-medium text-[var(--k-danger-fg)]">{error}</span>}
+          {multiline && error && <span className="block mt-1 text-[length:calc(11px*var(--k-text-scale,1))] font-medium text-[var(--k-danger-fg)]">{error}</span>}
         </span>
         {phase === 'saving' && <Spinner size="xs" tone="muted" label={m.inlineEdit.saving} />}
       </span>

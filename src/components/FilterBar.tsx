@@ -203,7 +203,7 @@ export function FilterBar({
           <button
             type="button"
             onClick={onClear}
-            className="inline-flex items-center gap-1.5 px-3 h-9 text-[11px] font-mono font-medium text-[var(--k-danger-fg)] hover:bg-[var(--k-danger-bg)] rounded-[var(--k-radius-xs,2px)] transition-colors uppercase tracking-[1px]"
+            className="inline-flex items-center gap-1.5 px-3 h-9 text-[length:calc(11px*var(--k-text-scale,1))] font-mono font-medium text-[var(--k-danger-fg)] hover:bg-[var(--k-danger-bg)] rounded-[var(--k-radius-xs,2px)] transition-colors uppercase tracking-[1px]"
           >
             <UiIcon slot="x" size={12} />
             {m.filterBar.clear}
@@ -215,7 +215,7 @@ export function FilterBar({
       </div></MobileOverlay>}
       {actions && <div className="ml-auto flex flex-wrap items-center gap-2">{actions}</div>}
       {(resultCount !== undefined || (showActiveFilters && hayFiltros)) && (
-        <div className="flex w-full flex-wrap items-center gap-2 text-[12px] text-[var(--fg-muted,#52606f)]">
+        <div className="flex w-full flex-wrap items-center gap-2 text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)]">
           {resultCount !== undefined && (
             <span role="status" className="mr-1 tabular-nums">
               {resultCount} {resultCount === 1 ? 'resultado' : 'resultados'}

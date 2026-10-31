@@ -5,12 +5,16 @@ import { useChatReactions } from './useChatReactions';
 import { useChatMutations } from './useChatMutations';
 import { useChatAttachments } from './useChatAttachments';
 import { updateChatMentions } from './mentions';
+import { ChatBlockRenderersContext } from './blocks';
+import { ChatMessageActionsProvider } from './ChatMessageActions';
 import { useMessages } from '../i18n/I18nProvider';
 
 const StateContext = React.createContext<ChatState | null>(null);
 const ActionsContext = React.createContext<ChatActions | null>(null);
 const PeopleContext = React.createContext<{ currentUser: ChatUser; users: ChatUser[]; canLoadOlderMessages: boolean; canUpload: boolean; canManageConversations: boolean;
   canEdit: (message: ChatMessageData) => boolean; canDelete: (message: ChatMessageData) => boolean;
+  renderConversationBadge?: ChatProviderProps['renderConversationBadge'];
+  stickerPacks?: ChatProviderProps['stickerPacks']; onSearchGifs?: ChatProviderProps['onSearchGifs'];
   registerNavigationGuard: (guard: (id: string | null) => boolean) => () => void } | null>(null);
 const EMPTY_USERS: ChatUser[] = [];
 const deliveryKey = (message: ChatMessageData) => JSON.stringify([message.conversationId, message.clientId ?? message.id]);
@@ -64,11 +68,25 @@ function ChatProviderScope(props: ChatProviderProps) {
   const controller = { snapshot, mounted, commit, props };
   const reactionActions = useChatReactions(controller);
   const mutationActions = useChatMutations(controller);
-  const attachmentActions = useChatAttachments(controller, state);
+  const attachments = useChatAttachments(controller, state);
 
   const actions = React.useMemo<ChatActions>(() => {
+    const { settleAttachments, ...attachmentActions } = attachments;
     const activeId = (id?: string) => id ?? snapshot.current.activeConversationId;
     const receiveMessages = (messages: ChatMessageData[]) => commit({ type: 'receive', messages, currentUserId: currentUser.id });
+    // Con subidas en marcha el mensaje ya está en la conversación (con su progreso) y se envía cuando terminan.
+    const deliverWhenUploaded = async (message: ChatMessageData): Promise<boolean> => {
+      if (!message.attachments?.some(item => item.status !== 'ready')) return deliver(message);
+      const uploaded = await settleAttachments(message.conversationId, message.id);
+      const current = snapshot.current.messages.find(item => item.conversationId === message.conversationId && (item.clientId ?? item.id) === (message.clientId ?? message.id));
+      if (!current || current.status !== 'sending') return false;
+      if (!uploaded) {
+        const failed = current.attachments?.find(item => item.status === 'error');
+        commit({ type: 'patch-message', conversationId: message.conversationId, messageId: message.id, patch: { status: 'error', error: failed?.error ?? texts.current.uploadError } });
+        return false;
+      }
+      return deliver({ ...message, attachments: current.attachments });
+    };
     const deliver = async (message: ChatMessageData): Promise<boolean> => {
       const key = deliveryKey(message);
       const clientId = message.clientId ?? message.id;
@@ -99,7 +117,7 @@ function ChatProviderScope(props: ChatProviderProps) {
         const target = snapshot.current.conversations.find(item => item.id === targetConversationId);
         if (!mounted.current || !source || source.deletedAt || ['sending', 'error'].includes(source.status ?? '') || !target || target.readOnly) return false;
         const clientId = globalThis.crypto.randomUUID();
-        const message: ChatMessageData = { id: clientId, clientId, conversationId: target.id, senderId: currentUser.id, text: source.text, createdAt: new Date().toISOString(), status: 'sending', attachments: source.attachments?.map(item => ({ ...item })) };
+        const message: ChatMessageData = { id: clientId, clientId, conversationId: target.id, senderId: currentUser.id, text: source.text, createdAt: new Date().toISOString(), status: 'sending', attachments: source.attachments?.map(item => ({ ...item })), blocks: source.blocks?.map(item => ({ ...item })) };
         receiveMessages([message]);
         return deliver(message);
       },
@@ -110,12 +128,22 @@ function ChatProviderScope(props: ChatProviderProps) {
         if (!conversation || conversation.readOnly) return false;
         const draft = getChatDraft(snapshot.current, conversation.id);
         const text = draft.text.trim();
-        if ((!text && !draft.attachments?.length) || draft.attachments?.some(item => item.status !== 'ready')) return false;
+        if ((!text && !draft.attachments?.length) || draft.attachments?.some(item => item.status === 'error')) return false;
         const clientId = globalThis.crypto.randomUUID();
         const message: ChatMessageData = { id: clientId, clientId, conversationId: conversation.id,
           senderId: currentUser.id, text, createdAt: new Date().toISOString(), status: 'sending', replyToId: draft.replyToId, attachments: draft.attachments,
           mentions: updateChatMentions(draft.text.trimStart(), text, updateChatMentions(draft.text, draft.text.trimStart(), draft.mentions)) };
         commit({ type: 'submit', message });
+        return deliverWhenUploaded(message);
+      },
+      async sendBlocks(blocks, options = {}) {
+        if (!mounted.current || !blocks.length) return false;
+        const conversation = snapshot.current.conversations.find(item => item.id === activeId(options.conversationId));
+        if (!conversation || conversation.readOnly) return false;
+        const clientId = globalThis.crypto.randomUUID();
+        const message: ChatMessageData = { id: clientId, clientId, conversationId: conversation.id, senderId: currentUser.id, text: options.text?.trim() ?? '',
+          createdAt: new Date().toISOString(), status: 'sending', replyToId: options.replyToId, blocks: blocks.map(item => ({ ...item })) };
+        receiveMessages([message]);
         return deliver(message);
       },
       async retryMessage(messageId, conversationId) {
@@ -126,7 +154,9 @@ function ChatProviderScope(props: ChatProviderProps) {
         if (!conversation || conversation.readOnly || !message || message.senderId !== currentUser.id || message.status !== 'error' || pending.current.has(deliveryKey(message))) return false;
         const next: ChatMessageData = { ...message, status: 'sending', error: undefined };
         receiveMessages([next]);
-        return deliver(next);
+        // Si falló una subida, se reintenta antes de enviar.
+        for (const item of message.attachments ?? []) if (item.status === 'error') void attachmentActions.retryAttachment(item.id, message.conversationId);
+        return deliverWhenUploaded(next);
       },
       receiveMessages,
       updateConversation: conversation => commit({ type: 'conversation', conversation }),
@@ -148,13 +178,13 @@ function ChatProviderScope(props: ChatProviderProps) {
         } finally { loading.current.delete(conversation.id); }
       },
     };
-  }, [commit, currentUser.id, onSendMessage, onLoadOlderMessages, reactionActions, mutationActions, attachmentActions]);
+  }, [commit, currentUser.id, onSendMessage, onLoadOlderMessages, reactionActions, mutationActions, attachments]);
   const people = React.useMemo(() => ({ currentUser, users: [...users.filter(user => user.id !== currentUser.id), currentUser], canLoadOlderMessages: Boolean(onLoadOlderMessages), canUpload: Boolean(props.onUploadAttachment), canManageConversations: Boolean(props.onConversationChange),
-    registerNavigationGuard,
+    registerNavigationGuard, renderConversationBadge: props.renderConversationBadge, stickerPacks: props.stickerPacks, onSearchGifs: props.onSearchGifs,
     canEdit: (message: ChatMessageData) => Boolean(props.onEditMessage) && message.senderId === currentUser.id && props.canEditMessage?.(message) !== false,
     canDelete: (message: ChatMessageData) => Boolean(props.onDeleteMessage) && message.senderId === currentUser.id && props.canDeleteMessage?.(message) !== false,
-  }), [currentUser, users, onLoadOlderMessages, props.onUploadAttachment, props.onConversationChange, props.onEditMessage, props.onDeleteMessage, props.canEditMessage, props.canDeleteMessage]);
+  }), [currentUser, users, onLoadOlderMessages, props.onUploadAttachment, props.onConversationChange, props.onEditMessage, props.onDeleteMessage, props.canEditMessage, props.canDeleteMessage, props.renderConversationBadge, props.stickerPacks, props.onSearchGifs]);
   return <PeopleContext.Provider value={people}><ActionsContext.Provider value={actions}><StateContext.Provider value={state}>
-    {children}
+    <ChatBlockRenderersContext.Provider value={props.blockRenderers}><ChatMessageActionsProvider value={props.messageActions ?? {}}>{children}</ChatMessageActionsProvider></ChatBlockRenderersContext.Provider>
   </StateContext.Provider></ActionsContext.Provider></PeopleContext.Provider>;
 }

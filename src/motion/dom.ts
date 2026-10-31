@@ -6,11 +6,12 @@ const FALLBACK_MS: Record<MotionRole, number> = { enter: 360, exit: 220, pop: 28
 
 const root = (el?: Element | null): Element | null => el ?? (typeof document !== 'undefined' ? document.documentElement : null);
 
-/** ¿Hay que saltarse el movimiento? Preferencia del sistema o `data-motion="off"` en un ancestro. */
+/** ¿Hay que saltarse el movimiento? Preferencia del sistema, `data-motion="off"` en un ancestro o un tema con velocidad 0. */
 export function motionDisabled(el?: Element | null): boolean {
   if (typeof window === 'undefined') return true;
   if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return true;
-  return !!root(el)?.closest?.('[data-motion="off"]');
+  if (root(el)?.closest?.('[data-motion="off"]')) return true;
+  return readMotionSpeed(el) === 0;
 }
 
 /** La velocidad del tema (`--k-motion`: 1 normal, 0 sin movimiento, 1,6 lento). */

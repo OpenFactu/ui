@@ -58,7 +58,7 @@ export const NotificationList: React.FC<NotificationListProps> = ({
     >
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-default)] p-4">
         <div className="flex items-center gap-2">
-          <h2 id={id} className="text-sm font-semibold text-[var(--fg-default)]">
+          <h2 id={id} className="text-sm font-semibold font-display text-[var(--fg-default)]">
             {title}
           </h2>
           <Badge variant={unread.length ? 'info' : 'neutral'}>{format(nl.unread, { count: unread.length })}</Badge>
@@ -100,12 +100,12 @@ export const NotificationList: React.FC<NotificationListProps> = ({
                         type="button"
                         disabled={disabled}
                         onClick={() => onActivate(item)}
-                        className="break-words text-left text-[13px] font-semibold text-[var(--fg-default)] hover:text-accent focus-visible:ring-2 focus-visible:ring-accent"
+                        className="break-words text-left text-[length:calc(13px*var(--k-text-scale,1))] font-semibold text-[var(--fg-default)] hover:text-accent focus-visible:ring-2 focus-visible:ring-accent"
                       >
                         {item.title}
                       </button>
                     ) : (
-                      <p className="break-words text-[13px] font-semibold text-[var(--fg-default)]">
+                      <p className="break-words text-[length:calc(13px*var(--k-text-scale,1))] font-semibold text-[var(--fg-default)]">
                         {item.title}
                       </p>
                     )}
@@ -118,10 +118,10 @@ export const NotificationList: React.FC<NotificationListProps> = ({
                   )}
                 </div>
                 {item.description && (
-                  <div className="mt-1 text-[12px] text-[var(--fg-muted)]">{item.description}</div>
+                  <div className="mt-1 text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-muted)]">{item.description}</div>
                 )}
                 {item.timestamp && (
-                  <div className="mt-2 text-[11px] text-[var(--fg-subtle)]">{item.timestamp}</div>
+                  <div className="mt-2 text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-subtle)]">{item.timestamp}</div>
                 )}
                 {(onReadChange || onDismiss || item.action) && (
                   <div className="mt-3 flex flex-wrap gap-2">

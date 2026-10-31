@@ -162,13 +162,13 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
       {files.map((file, i) => (
         <li
           key={`${file.name}-${i}`}
-          className="flex items-center gap-2 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] px-2 py-1.5 text-[12px]"
+          className="flex items-center gap-2 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] px-2 py-1.5 text-[length:calc(12px*var(--k-text-scale,1))]"
         >
           <UiIcon slot="file" className="h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle,#657486)]" />
           <span className="flex-1 truncate text-[var(--fg-body,#2d3a4a)]">
             {file.name}
           </span>
-          <span className="shrink-0 font-mono text-[10px] text-[var(--fg-subtle,#657486)]">
+          <span className="shrink-0 font-mono text-[length:calc(10px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)]">
             {formatFileSize(file.size)}
           </span>
           {onRemoveFile && (
@@ -196,7 +196,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
           disabled={disabled || isUploading}
           {...dragProps}
           className={cn(
-            'inline-flex items-center gap-1.5 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] px-3 py-1.5 text-[12px] font-medium text-[var(--fg-body,#2d3a4a)] transition-colors',
+            'inline-flex items-center gap-1.5 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] px-3 py-1.5 text-[length:calc(12px*var(--k-text-scale,1))] font-medium text-[var(--fg-body,#2d3a4a)] transition-colors',
             'hover:border-accent hover:text-accent disabled:opacity-50 disabled:pointer-events-none',
             dragging && 'border-accent bg-accent/5',
           )}
@@ -205,7 +205,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
           {isUploading ? uploadingLabel : label}
         </button>
         {fileList}
-        {error && <p className="text-[11px] font-medium text-[var(--k-danger-fg)] mt-1">{error}</p>}
+        {error && <p className="text-[length:calc(11px*var(--k-text-scale,1))] font-medium text-[var(--k-danger-fg)] mt-1">{error}</p>}
       </div>
     );
   }
@@ -241,11 +241,11 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
               {icon ?? <UiIcon slot="upload" className={variant === 'area' ? 'h-7 w-7' : 'h-4 w-4'} />}
             </span>
             <span className="flex flex-col gap-0.5">
-              <span className="text-[12px] font-medium text-[var(--fg-body,#2d3a4a)]">
+              <span className="text-[length:calc(12px*var(--k-text-scale,1))] font-medium text-[var(--fg-body,#2d3a4a)]">
                 {isUploading ? uploadingLabel : label}
               </span>
               {hint && (
-                <span className="text-[11px] text-[var(--fg-subtle,#657486)]">
+                <span className="text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)]">
                   {hint}
                 </span>
               )}
@@ -262,7 +262,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
         )}
       </div>
       {fileList}
-      {error && <p className="text-[11px] font-medium text-[var(--k-danger-fg)] mt-1">{error}</p>}
+      {error && <p className="text-[length:calc(11px*var(--k-text-scale,1))] font-medium text-[var(--k-danger-fg)] mt-1">{error}</p>}
     </div>
   );
 };

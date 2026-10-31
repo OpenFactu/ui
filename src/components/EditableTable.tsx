@@ -182,7 +182,7 @@ export function EditableTable<T extends Record<string, any>>({
       case 'percent':
         return <PercentInput {...common} value={current ?? null} onChange={set} precision={editor.precision ?? 2} />;
       case 'select':
-        return <Select disabled={disabled} containerClassName="w-full" className="py-1 text-[12px]" value={String(current ?? '')} onChange={set} options={(editor.options ?? []).map((o) => ({ value: o.value, label: o.label, disabled: o.disabled }))} />;
+        return <Select disabled={disabled} containerClassName="w-full" className="py-1 text-[length:calc(12px*var(--k-text-scale,1))]" value={String(current ?? '')} onChange={set} options={(editor.options ?? []).map((o) => ({ value: o.value, label: o.label, disabled: o.disabled }))} />;
       case 'search-select':
         return <SearchableSelect disabled={disabled} options={editor.options ?? []} value={String(current ?? '')} onChange={set} placeholder={editor.placeholder} />;
       case 'date':
@@ -338,7 +338,7 @@ export function EditableTable<T extends Record<string, any>>({
         const key = getKey(nueva, data.length);
         if (mode === 'row') startEdit(nueva, key);
       }}
-      className="flex w-full items-center gap-1.5 px-4 py-2 text-[12px] font-medium text-accent hover:bg-[var(--bg-hover,#f1f5f9)] transition-colors"
+      className="flex w-full items-center gap-1.5 px-4 py-2 text-[length:calc(12px*var(--k-text-scale,1))] font-medium text-accent hover:bg-[var(--bg-hover,#f1f5f9)] transition-colors"
     >
       <UiIcon slot="plus" className="h-3.5 w-3.5" />
       {addLabel}

@@ -53,10 +53,10 @@ export function DescriptionList({
               'rounded-[var(--k-radius-xs,2px)] bg-[var(--bg-muted,#f8fafc)] p-3',
           )}
         >
-          <dt className="text-[12px] leading-5 text-[var(--fg-muted,#52606f)]">{item.label}</dt>
+          <dt className="text-[length:calc(12px*var(--k-text-scale,1))] leading-5 text-[var(--fg-muted,#52606f)]">{item.label}</dt>
           <dd
             className={cn(
-              'min-w-0 break-words text-[13px] font-medium leading-5 text-[var(--fg-default,#0a1628)]',
+              'min-w-0 break-words text-[length:calc(13px*var(--k-text-scale,1))] font-medium leading-5 text-[var(--fg-default,#0a1628)]',
               layout === 'stacked' && 'mt-1',
               item.mono && 'font-mono tabular-nums',
             )}

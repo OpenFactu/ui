@@ -46,9 +46,9 @@ export interface InputProps
 }
 
 const SIZE_CLASSES = {
-  sm: 'px-2.5 py-1.5 text-[12px]',
-  md: 'px-3 py-2 text-[13px]',
-  lg: 'px-3.5 py-2.5 text-[14px]',
+  sm: 'px-2.5 py-1.5 text-[length:calc(12px*var(--k-text-scale,1))]',
+  md: 'px-3 py-2 text-[length:calc(13px*var(--k-text-scale,1))]',
+  lg: 'px-3.5 py-2.5 text-[length:calc(14px*var(--k-text-scale,1))]',
 };
 
 const STATUS_RING: Record<InputStatus, string> = {
@@ -75,7 +75,7 @@ const STATUS_ICON: Record<InputStatus, React.ReactNode> = {
 };
 
 const ADDON_CLASSES =
-  'flex items-center shrink-0 text-[12px] text-[var(--fg-muted,#52606f)] bg-[var(--bg-muted)] border-[var(--border-default,#e2e8f0)]';
+  'flex items-center shrink-0 text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)] bg-[var(--bg-muted)] border-[var(--border-default,#e2e8f0)]';
 
 export const Input: React.FC<InputProps> = ({
   label,
@@ -112,7 +112,7 @@ export const Input: React.FC<InputProps> = ({
     <label
       htmlFor={inputId}
       className={cn(
-        'text-[12px] font-medium text-[var(--fg-body,#2d3a4a)]',
+        'text-[length:calc(12px*var(--k-text-scale,1))] font-medium text-[var(--fg-body,#2d3a4a)]',
         labelClassName,
       )}
     >
@@ -127,11 +127,11 @@ export const Input: React.FC<InputProps> = ({
 
   const messageNode = (
     <div id={messageId}>
-      {error && <p className="text-[11px] font-medium text-[var(--k-danger-fg)] mt-0.5">{error}</p>}
+      {error && <p className="text-[length:calc(11px*var(--k-text-scale,1))] font-medium text-[var(--k-danger-fg)] mt-0.5">{error}</p>}
       {!error && statusMessage && (
         <p
           className={cn(
-            'text-[11px] mt-0.5',
+            'text-[length:calc(11px*var(--k-text-scale,1))] mt-0.5',
             effectiveStatus === 'success' && 'text-[var(--k-success-fg)]',
             effectiveStatus === 'warning' && 'text-[var(--k-warning-fg)]',
             effectiveStatus === 'default' && 'text-[var(--fg-subtle,#657486)]',
@@ -141,7 +141,7 @@ export const Input: React.FC<InputProps> = ({
         </p>
       )}
       {helperText && !message && (
-        <p className="text-[11px] text-[var(--fg-subtle,#657486)] mt-0.5">
+        <p className="text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)] mt-0.5">
           {helperText}
         </p>
       )}

@@ -4,7 +4,8 @@ import { ChatPopover } from './ChatPopover';
 import { CHAT_EMOJIS, localizeChatEmojis, searchChatEmojis, type ChatEmoji } from './emojiCatalog';
 import { useMessages } from '../i18n/I18nProvider';
 export interface ChatEmojiPickerProps { onSelect: (emoji: string) => void; label?: string; disabled?: boolean; catalog?: ChatEmoji[]; onOpen?: () => void }
-function EmojiChoices({ catalog, select }: { catalog: ChatEmoji[]; select: (emoji: string) => void }) {
+/** Buscador y rejilla de emoji (lo de dentro del selector), para reutilizarlo en otros paneles. */
+export function ChatEmojiChoices({ catalog = CHAT_EMOJIS, select }: { catalog?: ChatEmoji[]; select: (emoji: string) => void }) {
   const ct = useMessages('chat');
   const [query, setQuery] = React.useState('');
   const list = React.useMemo(() => (catalog === CHAT_EMOJIS ? localizeChatEmojis(catalog, ct.emojiNames as Record<string, string>, ct.emojiKeywords as Record<string, string>) : catalog), [catalog, ct]);
@@ -20,8 +21,9 @@ function EmojiChoices({ catalog, select }: { catalog: ChatEmoji[]; select: (emoj
     {!filtered.length && <p role="status">{ct.noEmojis}</p>}</>;
 }
 export function ChatEmojiPicker({ onSelect, label: labelProp, disabled, catalog = CHAT_EMOJIS, onOpen }: ChatEmojiPickerProps) {
-  const label = labelProp ?? useMessages('chat').insertEmoji;
+  const ct = useMessages('chat');
+  const label = labelProp ?? ct.insertEmoji;
   return <ChatPopover label={label} disabled={disabled} trigger={<UiIcon slot="smile" size={18} />} onOpen={onOpen}>
-    {close => <EmojiChoices catalog={catalog} select={emoji => { close(); onSelect(emoji); }} />}
+    {close => <ChatEmojiChoices catalog={catalog} select={emoji => { close(); onSelect(emoji); }} />}
   </ChatPopover>;
 }

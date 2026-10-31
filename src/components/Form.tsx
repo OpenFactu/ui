@@ -34,9 +34,9 @@ export interface FieldProps {
 }
 
 const LABEL_SIZES: Record<FieldLabelSize, string> = {
-  md: 'text-[12px] font-medium',
-  sm: 'text-[11px] font-medium',
-  micro: 'text-[10px] font-bold uppercase tracking-[1.5px]',
+  md: 'text-[length:calc(12px*var(--k-text-scale,1))] font-medium',
+  sm: 'text-[length:calc(11px*var(--k-text-scale,1))] font-medium',
+  micro: 'text-[length:calc(10px*var(--k-text-scale,1))] font-bold uppercase tracking-[1.5px]',
 };
 
 /**
@@ -95,10 +95,10 @@ export const Field: React.FC<FieldProps> = ({
   const messages = (
     <>
       {error && (
-        <p className="text-[11px] font-medium text-[var(--k-danger-fg)] mt-0.5">{error}</p>
+        <p className="text-[length:calc(11px*var(--k-text-scale,1))] font-medium text-[var(--k-danger-fg)] mt-0.5">{error}</p>
       )}
       {hint && !error && (
-        <p className="text-[11px] text-[var(--fg-subtle,#657486)] mt-0.5">{hint}</p>
+        <p className="text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)] mt-0.5">{hint}</p>
       )}
     </>
   );
@@ -155,12 +155,12 @@ export const FormSection: React.FC<FormSectionProps> = ({
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           {title && (
-            <h3 className="text-[14px] font-semibold font-display text-[var(--fg-default,#0a1628)]">
+            <h3 className="text-[length:calc(14px*var(--k-text-scale,1))] font-semibold font-display text-[var(--fg-default,#0a1628)]">
               {title}
             </h3>
           )}
           {description && (
-            <p className="text-[12px] text-[var(--fg-muted,#52606f)] mt-0.5 leading-relaxed">
+            <p className="text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)] mt-0.5 leading-relaxed">
               {description}
             </p>
           )}

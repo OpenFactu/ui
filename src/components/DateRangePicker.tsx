@@ -203,7 +203,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
           disabled={disabled}
           onClick={() => (open ? close() : openPicker())}
           className={cn(
-            'flex w-full items-center gap-2 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] px-3 py-2 text-left text-[13px] transition-colors',
+            'flex w-full items-center gap-2 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] px-3 py-2 text-left text-[length:calc(13px*var(--k-text-scale,1))] transition-colors',
             'focus-visible:outline-none focus-visible:border-accent hover:border-[var(--border-strong)] disabled:cursor-not-allowed disabled:opacity-50',
             open && 'border-accent',
             error && 'border-[var(--k-danger)]',

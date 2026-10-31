@@ -92,7 +92,7 @@ export const StackedBar: React.FC<StackedBarProps> = ({
           {visible.map((segment, i) => {
             const pct = sum > 0 ? (segment.value / sum) * 100 : 0;
             return (
-              <li key={segment.key} className="flex items-center gap-1.5 text-[11px]">
+              <li key={segment.key} className="flex items-center gap-1.5 text-[length:calc(11px*var(--k-text-scale,1))]">
                 <span
                   aria-hidden
                   className="h-2 w-2 shrink-0 rounded-full"

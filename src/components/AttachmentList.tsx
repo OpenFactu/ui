@@ -74,29 +74,29 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
                   type="button"
                   disabled={disabled}
                   onClick={() => onOpen(item)}
-                  className="max-w-full break-all text-left text-[13px] font-medium text-[var(--fg-default)] underline decoration-[var(--border-strong)] underline-offset-4 focus-visible:ring-2 focus-visible:ring-accent"
+                  className="max-w-full break-all text-left text-[length:calc(13px*var(--k-text-scale,1))] font-medium text-[var(--fg-default)] underline decoration-[var(--border-strong)] underline-offset-4 focus-visible:ring-2 focus-visible:ring-accent"
                 >
                   {item.name}
                 </button>
               ) : (
-                <p className="break-all text-[13px] font-medium text-[var(--fg-default)]">
+                <p className="break-all text-[length:calc(13px*var(--k-text-scale,1))] font-medium text-[var(--fg-default)]">
                   {item.name}
                 </p>
               )}
-              <div className="mt-1 text-[11px] text-[var(--fg-muted)]">
+              <div className="mt-1 text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-muted)]">
                 {item.size != null && Number.isFinite(item.size) && item.size >= 0 && (
                   <span>{formatBytes(item.size)}</span>
                 )}
                 {item.description && <div>{item.description}</div>}
               </div>
               {status === 'error' && (
-                <p className="mt-1 text-[12px] text-[var(--k-danger-fg)]">
+                <p className="mt-1 text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--k-danger-fg)]">
                   {item.error ?? m.attachmentList.uploadError}
                 </p>
               )}
               {status === 'uploading' && (
                 <div className="mt-2">
-                  <p className="mb-1 text-[11px] text-[var(--fg-muted)]">
+                  <p className="mb-1 text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-muted)]">
                     {progress === undefined ? m.attachmentList.uploading : format(m.attachmentList.uploadingProgress, { percent: Math.round(progress) })}
                   </p>
                   <progress

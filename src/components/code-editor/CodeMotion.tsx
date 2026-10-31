@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { motionDisabled, readMotionSpeed } from '../../motion/dom';
 import { canvasFont } from './metrics';
 
 export interface CodeMotionHandle { sync: (snap?: boolean) => void }
@@ -38,6 +39,8 @@ function rangeAt(pre: HTMLElement, start: number, end: number): Range | null {
 }
 
 const TIMING: KeyframeAnimationOptions = { duration: 100, easing: 'cubic-bezier(0.23, 1, 0.32, 1)' };
+/** 100 ms al ritmo del tema; sin movimiento, el cursor salta. */
+const timing = (element: Element): KeyframeAnimationOptions | null => motionDisabled(element) ? null : { ...TIMING, duration: 100 * readMotionSpeed(element) };
 
 /** Presentation only; selection, navigation and composition remain native. */
 export const CodeMotion = React.forwardRef<CodeMotionHandle, CodeMotionProps>(function CodeMotion({
@@ -68,9 +71,10 @@ export const CodeMotion = React.forwardRef<CodeMotionHandle, CodeMotionProps>(fu
     element.style.transform = transform;
     element.style.opacity = '1';
     element.dataset.visible = 'true';
-    if (!snap && (visible || selection)) {
+    const options = timing(element);
+    if (!snap && options && (visible || selection)) {
       const frames = visible ? [{ transform: from }, { transform }] : [{ opacity: 0.8 }, { opacity: 1 }];
-      animations.current.set(element, element.animate(frames, TIMING));
+      animations.current.set(element, element.animate(frames, options));
     }
   }
 

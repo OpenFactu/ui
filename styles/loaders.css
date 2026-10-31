@@ -119,7 +119,7 @@
 @keyframes k-grid-fade { 0%, 70%, 100% { opacity: 0.2; transform: scale(0.8); } 35% { opacity: 1; transform: scale(1); } }
 
 /* ── Indicador de IA «pensando» ─────────────────────────────────────────── */
-.k-thinking { display: inline-flex; align-items: center; gap: 0.5em; color: var(--fg-muted, #52606f); font-size: 13px; }
+.k-thinking { display: inline-flex; align-items: center; gap: 0.5em; color: var(--fg-muted, #52606f); font-size: calc(13px * var(--k-text-scale, 1)); }
 
 /* ── Barras de progreso ─────────────────────────────────────────────────── */
 .k-progress-track { position: relative; }
@@ -241,7 +241,7 @@
   justify-content: center;
   min-width: 1.6em;
   padding: 0.05em 0.45em;
-  border: 1px solid var(--border-default, #e2e8f0);
+  border: var(--k-border-width, 1px) solid var(--border-default, #e2e8f0);
   border-bottom-width: 2px;
   border-radius: var(--k-radius-xs, 2px);
   background: var(--bg-muted, #fafbfc);

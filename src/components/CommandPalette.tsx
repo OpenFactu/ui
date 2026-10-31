@@ -220,7 +220,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             aria-expanded
             aria-controls="command-palette-list"
             aria-activedescendant={`command-item-${activeIndex}`}
-            className="flex-1 min-w-0 h-12 bg-transparent text-[14px] outline-none text-[var(--fg-default,#0a1628)] placeholder:text-[var(--fg-subtle,#657486)]"
+            className="flex-1 min-w-0 h-12 bg-transparent text-[length:calc(14px*var(--k-text-scale,1))] outline-none text-[var(--fg-default,#0a1628)] placeholder:text-[var(--fg-subtle,#657486)]"
           />
           {loading && (
             <Spinner size="xs" className="shrink-0" label={cp.searching} />
@@ -239,13 +239,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               historial sería peor. */}
           {!term && recientes.length > 0 && (onSearch || flat.length === 0) ? (
             <div>
-              <div className="flex items-center gap-1.5 px-2 pt-2 pb-1 text-[9px] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
+              <div className="flex items-center gap-1.5 px-2 pt-2 pb-1 text-[length:calc(9px*var(--k-text-scale,1))] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
                 <UiIcon slot="clock" className="h-3 w-3" />
                 {cp.recent}
                 <button
                   type="button"
                   onClick={olvidar}
-                  className="ml-auto normal-case tracking-normal text-[10px] font-medium text-accent hover:underline"
+                  className="ml-auto normal-case tracking-normal text-[length:calc(10px*var(--k-text-scale,1))] font-medium text-accent hover:underline"
                 >
                   {m.common.erase}
                 </button>
@@ -258,7 +258,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                     setTerm(texto);
                     inputRef.current?.focus();
                   }}
-                  className="flex w-full items-center gap-2.5 rounded-[var(--k-radius-xs,2px)] px-2.5 py-2 text-left text-[13px] text-[var(--fg-body,#2d3a4a)] transition-colors hover:bg-[var(--bg-hover)]"
+                  className="flex w-full items-center gap-2.5 rounded-[var(--k-radius-xs,2px)] px-2.5 py-2 text-left text-[length:calc(13px*var(--k-text-scale,1))] text-[var(--fg-body,#2d3a4a)] transition-colors hover:bg-[var(--bg-hover)]"
                 >
                   <UiIcon slot="clock" className="h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle,#657486)]" />
                   {texto}
@@ -266,14 +266,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               ))}
             </div>
           ) : flat.length === 0 ? (
-            <p className="py-10 text-center text-[11px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
+            <p className="py-10 text-center text-[length:calc(11px*var(--k-text-scale,1))] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
               {loading ? cp.searchingLong : emptyMessage}
             </p>
           ) : (
             visible.map((section) => (
               <div key={section.key} className="mb-1 last:mb-0">
                 {section.label && (
-                  <div className="flex items-center gap-1.5 px-2 pt-2 pb-1 text-[9px] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
+                  <div className="flex items-center gap-1.5 px-2 pt-2 pb-1 text-[length:calc(9px*var(--k-text-scale,1))] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
                     {section.icon}
                     {section.label}
                     {section.action && (
@@ -283,7 +283,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                           onClose();
                           section.action!.onSelect();
                         }}
-                        className="ml-auto normal-case tracking-normal text-[10px] font-medium text-accent hover:underline"
+                        className="ml-auto normal-case tracking-normal text-[length:calc(10px*var(--k-text-scale,1))] font-medium text-accent hover:underline"
                       >
                         {section.action.label}
                       </button>
@@ -295,7 +295,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                     return (
                       <div
                         key={item.id}
-                        className="flex items-center gap-2.5 rounded-[var(--k-radius-xs,2px)] px-2.5 py-2 text-[13px] opacity-40"
+                        className="flex items-center gap-2.5 rounded-[var(--k-radius-xs,2px)] px-2.5 py-2 text-[length:calc(13px*var(--k-text-scale,1))] opacity-40"
                       >
                         {item.icon}
                         {item.label}
@@ -321,15 +321,15 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                     >
                       {item.icon && <span className="shrink-0">{item.icon}</span>}
                       <span className="flex-1 min-w-0 flex flex-col">
-                        <span className="truncate text-[13px]">{item.label}</span>
+                        <span className="truncate text-[length:calc(13px*var(--k-text-scale,1))]">{item.label}</span>
                         {item.description && (
-                          <span className="truncate text-[11px] text-[var(--fg-muted,#52606f)]">
+                          <span className="truncate text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)]">
                             {item.description}
                           </span>
                         )}
                       </span>
                       {item.meta && (
-                        <span className="shrink-0 font-mono text-[11px] text-[var(--fg-subtle,#657486)]">
+                        <span className="shrink-0 font-mono text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)]">
                           {item.meta}
                         </span>
                       )}
@@ -338,7 +338,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                           {item.shortcut.map((k) => (
                             <kbd
                               key={k}
-                              className="rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--fg-subtle,#657486)]"
+                              className="rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] px-1.5 py-0.5 font-mono text-[length:calc(10px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)]"
                             >
                               {k}
                             </kbd>
@@ -357,7 +357,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         </div>
 
         {footerHint !== false && (
-          <div className="flex items-center gap-4 px-4 py-2 border-t border-[var(--border-default,#e2e8f0)] bg-[var(--bg-muted,#fafbfc)] text-[10px] text-[var(--fg-subtle,#657486)]">
+          <div className="flex items-center gap-4 px-4 py-2 border-t border-[var(--border-default,#e2e8f0)] bg-[var(--bg-muted,#fafbfc)] text-[length:calc(10px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)]">
             {footerHint ?? (
               <>
                 <span className="flex items-center gap-1">

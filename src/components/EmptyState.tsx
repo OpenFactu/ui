@@ -31,10 +31,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
     )}
   >
     {icon && <div className="text-[var(--fg-subtle,#657486)] opacity-60 mb-1">{icon}</div>}
-    <p className="text-[11px] font-mono font-bold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
+    <p className="text-[length:calc(11px*var(--k-text-scale,1))] font-mono font-bold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
       {title}
     </p>
-    {hint && <p className="text-[12px] text-[var(--fg-muted,#52606f)] max-w-xs">{hint}</p>}
+    {hint && <p className="text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)] max-w-xs">{hint}</p>}
     {(action || secondaryAction) && (
       <div className="mt-3 flex flex-wrap justify-center gap-2">
         {action}

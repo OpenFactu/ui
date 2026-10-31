@@ -40,9 +40,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const sizes = {
-      sm: 'px-[14px] py-[6px] text-[12px]',
-      md: 'px-[18px] py-[9px] text-[13px]',
-      lg: 'px-6 py-3 text-[14px]',
+      sm: 'px-[calc(14px*var(--k-density,1))] py-[calc(6px*var(--k-density,1))] text-[length:calc(12px*var(--k-text-scale,1))]',
+      md: 'px-[calc(18px*var(--k-density,1))] py-[calc(9px*var(--k-density,1))] text-[length:calc(13px*var(--k-text-scale,1))]',
+      lg: 'px-6 py-3 text-[length:calc(14px*var(--k-text-scale,1))]',
     };
 
     return (

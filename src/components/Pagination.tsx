@@ -34,16 +34,16 @@ export const Pagination: React.FC<PaginationProps> = ({
   const showSizes = pageSizeOptions.length > 0 && onPageSizeChange;
 
   const navBtn =
-    'inline-flex items-center gap-1 px-2 py-1 rounded-[var(--k-radius-xs,2px)] text-[12px] font-medium text-[var(--fg-body,#2d3a4a)] hover:text-accent hover:bg-[var(--bg-hover)] transition-colors disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent';
+    'inline-flex items-center gap-1 px-2 py-1 rounded-[var(--k-radius-xs,2px)] text-[length:calc(12px*var(--k-text-scale,1))] font-medium text-[var(--fg-body,#2d3a4a)] hover:text-accent hover:bg-[var(--bg-hover)] transition-colors disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent';
 
   return (
     <div data-k-mobile="Pagination"
       className={cn(
-        'flex items-center justify-between gap-3 flex-wrap text-[12px] text-[var(--fg-muted,#52606f)]',
+        'flex items-center justify-between gap-3 flex-wrap text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)]',
         className,
       )}
     >
-      <span className="font-mono text-[11px] whitespace-nowrap">
+      <span className="font-mono text-[length:calc(11px*var(--k-text-scale,1))] whitespace-nowrap">
         {format(m.pagination.range, { from, to, total })}
       </span>
       <div className="flex flex-wrap items-center justify-end gap-2">
@@ -55,7 +55,7 @@ export const Pagination: React.FC<PaginationProps> = ({
               onChange={(v) => onPageSizeChange!(Number(v))}
               ariaLabel={m.pagination.pageSize}
               containerClassName="w-auto"
-              className="px-2 py-1 text-[12px] gap-1 min-w-[56px]"
+              className="px-2 py-1 text-[length:calc(12px*var(--k-text-scale,1))] gap-1 min-w-[56px]"
             />
             <span>{m.pagination.perPage}</span>
           </span>

@@ -32,8 +32,8 @@ function etiquetaAtajo(atajo: string): string {
 }
 
 const TAMANOS = {
-  sm: 'h-8 text-[12px] gap-2 px-2.5',
-  md: 'h-9 text-[13px] gap-2.5 px-3',
+  sm: 'h-8 text-[length:calc(12px*var(--k-text-scale,1))] gap-2 px-2.5',
+  md: 'h-9 text-[length:calc(13px*var(--k-text-scale,1))] gap-2.5 px-3',
 };
 
 /**
@@ -87,7 +87,7 @@ export const SearchTrigger: React.FC<SearchTriggerProps> = ({
     <UiIcon slot="search" className="h-3.5 w-3.5 shrink-0" />
     <span className="flex-1 truncate text-left">{placeholder}</span>
     {shortcut && (
-      <kbd className="pointer-events-none shrink-0 select-none rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] px-1.5 py-0.5 font-mono text-[10px]">
+      <kbd className="pointer-events-none shrink-0 select-none rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] px-1.5 py-0.5 font-mono text-[length:calc(10px*var(--k-text-scale,1))]">
         {etiquetaAtajo(shortcut)}
       </kbd>
     )}

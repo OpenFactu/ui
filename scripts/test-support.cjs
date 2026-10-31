@@ -4,7 +4,8 @@ const ts = require('typescript');
 for (const extension of ['.ts', '.tsx']) {
   require.extensions[extension] = (module, filename) => {
     const output = ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
-      compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, target: ts.ScriptTarget.ES2020 },
+      // esModuleInterop como en tsconfig.json: hay componentes con `import React from 'react'`.
+      compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, target: ts.ScriptTarget.ES2020, esModuleInterop: true },
       fileName: filename,
     });
     module._compile(output.outputText, filename);

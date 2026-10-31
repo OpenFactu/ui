@@ -66,17 +66,17 @@ export const ApprovalFlow: React.FC<ApprovalFlowProps> = ({
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-[13px] font-semibold text-[var(--fg-default)]">{step.title}</p>
+                  <p className="text-[length:calc(13px*var(--k-text-scale,1))] font-semibold text-[var(--fg-default)]">{step.title}</p>
                   <Badge variant={state.tone}>{flow[step.status]}</Badge>
                 </div>
                 {step.assignee && (
-                  <div className="mt-1 text-[12px] text-[var(--fg-muted)]">{step.assignee}</div>
+                  <div className="mt-1 text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-muted)]">{step.assignee}</div>
                 )}
                 {step.description && (
-                  <div className="mt-2 text-[12px] text-[var(--fg-body)]">{step.description}</div>
+                  <div className="mt-2 text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-body)]">{step.description}</div>
                 )}
                 {step.meta && (
-                  <div className="mt-2 text-[11px] text-[var(--fg-subtle)]">{step.meta}</div>
+                  <div className="mt-2 text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-subtle)]">{step.meta}</div>
                 )}
                 {step.actions && <div className="mt-3 flex flex-wrap gap-2">{step.actions}</div>}
               </div>

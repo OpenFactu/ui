@@ -60,14 +60,14 @@ const STATUS_CLASS: Record<NavStatus, string> = {
 };
 
 const SIZES = {
-  sm: { item: 'h-8 px-2.5 text-[12px] gap-1.5', icon: 12 },
-  md: { item: 'h-9 px-3 text-[13px] gap-2', icon: 14 },
+  sm: { item: 'h-8 px-2.5 text-[length:calc(12px*var(--k-text-scale,1))] gap-1.5', icon: 12 },
+  md: { item: 'h-9 px-3 text-[length:calc(13px*var(--k-text-scale,1))] gap-2', icon: 14 },
 };
 
 const StatusBadge: React.FC<{ status: NavStatus }> = ({ status }) => (
   <span
     className={cn(
-      'shrink-0 rounded-[var(--k-radius-xs,2px)] border px-1 py-px font-mono text-[9px] font-semibold leading-none tracking-wider',
+      'shrink-0 rounded-[var(--k-radius-xs,2px)] border px-1 py-px font-mono text-[length:calc(9px*var(--k-text-scale,1))] font-semibold leading-none tracking-wider',
       STATUS_CLASS[status],
     )}
   >
@@ -281,7 +281,7 @@ const GrupoDesplegable: React.FC<GrupoDesplegableProps> = ({
                     <ItemContent item={item} />
                   </span>
                   {item.description && (
-                    <span className="mt-0.5 block text-[11px] text-[var(--fg-subtle,#657486)]">
+                    <span className="mt-0.5 block text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)]">
                       {item.description}
                     </span>
                   )}
@@ -296,7 +296,7 @@ const GrupoDesplegable: React.FC<GrupoDesplegableProps> = ({
                   onMouseEnter={() => setActivo(idx)}
                   onClick={() => elegir(item)}
                   className={cn(
-                    'flex w-full flex-col rounded-[var(--k-radius-xs,2px)] px-2.5 py-1.5 text-left text-[13px] transition-colors focus-visible:outline-none',
+                    'flex w-full flex-col rounded-[var(--k-radius-xs,2px)] px-2.5 py-1.5 text-left text-[length:calc(13px*var(--k-text-scale,1))] transition-colors focus-visible:outline-none',
                     item.id === value
                       ? 'bg-[rgb(var(--color-accent-rgb)/0.1)] text-accent'
                       : 'text-[var(--fg-body,#2d3a4a)]',

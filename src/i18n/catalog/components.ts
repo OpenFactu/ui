@@ -15,6 +15,10 @@ export const status = {
   total: 'Total',
 };
 
+export const avatar = {
+  status: { online: 'En línea', offline: 'Desconectado', busy: 'Ocupado', away: 'Ausente' },
+};
+
 export const navigation = {
   breadcrumbs: 'Migas de pan',
   main: 'Navegación',

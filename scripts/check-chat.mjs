@@ -101,12 +101,12 @@ try {
     await bubble('Error pendiente ana').getByLabel('Estado del mensaje: Entregado', { exact: true }).waitFor();
   });
   await check('Responder mantiene el texto pendiente y cancelar solo retira la referencia', async () => {
-    await page.getByRole('button', { name: /Responder a Ana López: ¡Buenos días/ }).click();
+    await page.locator('.k-chat-bubble', { hasText: '¡Buenos días' }).first().click({ button: 'right' }); await page.getByRole('menuitem', { name: 'Responder', exact: true }).click();
     assert.equal(await field().inputValue(), 'Nuevo Ana');
     assert.equal(await field().evaluate(element => element === document.activeElement), true);
     await page.getByRole('button', { name: 'Cancelar respuesta', exact: true }).click();
     assert.equal(await field().inputValue(), 'Nuevo Ana');
-    await page.getByRole('button', { name: /Responder a Ana López: ¡Buenos días/ }).click();
+    await page.locator('.k-chat-bubble', { hasText: '¡Buenos días' }).first().click({ button: 'right' }); await page.getByRole('menuitem', { name: 'Responder', exact: true }).click();
     await submit('Respuesta con referencia');
     await bubble('Respuesta con referencia').getByLabel('Estado del mensaje: Entregado', { exact: true }).waitFor();
     assert.ok((await bubble('Respuesta con referencia').locator('blockquote').innerText()).includes('los cambios del pedido'));
@@ -181,7 +181,7 @@ try {
     await go('solo-lectura');
     assert.equal(await field().isDisabled(), true);
     assert.equal(await page.getByRole('button', { name: 'Enviar mensaje', exact: true }).isDisabled(), true);
-    assert.equal(await page.getByRole('button', { name: /^Responder a/ }).count(), 0);
+    assert.equal(await page.getByRole('button', { name: 'Más acciones del mensaje', exact: true }).count(), 0);
     await go('sin-conversaciones');
     await page.getByText('Todavía no hay conversaciones.', { exact: true }).waitFor();
     assert.equal(await field().count(), 0);

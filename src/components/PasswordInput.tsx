@@ -139,7 +139,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
             ))}
           </div>
           {text && (
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--fg-subtle,#657486)]">
+            <span className="text-[length:calc(10px*var(--k-text-scale,1))] font-mono uppercase tracking-wider text-[var(--fg-subtle,#657486)]">
               {strengthLabels[Math.max(0, score - 1)]}
             </span>
           )}
@@ -154,7 +154,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
               <li
                 key={req.label}
                 className={cn(
-                  'flex items-center gap-1.5 text-[11px]',
+                  'flex items-center gap-1.5 text-[length:calc(11px*var(--k-text-scale,1))]',
                   met ? 'text-[var(--k-success-fg)]' : 'text-[var(--fg-subtle,#657486)]',
                 )}
               >

@@ -213,20 +213,20 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
           )}
           <div className="min-w-0">
             {eyebrow && (
-              <p className="text-[10px] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)] mb-0.5">
+              <p className="text-[length:calc(10px*var(--k-text-scale,1))] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)] mb-0.5">
                 {eyebrow}
               </p>
             )}
             {title && (
               <h2
                 id={id}
-                className="text-[16px] font-semibold font-display text-[var(--fg-default,#0a1628)] truncate"
+                className="text-[length:calc(16px*var(--k-text-scale,1))] font-semibold font-display text-[var(--fg-default,#0a1628)] truncate"
               >
                 {title}
               </h2>
             )}
             {subtitle && (
-              <p className="text-[12px] text-[var(--fg-subtle,#657486)] mt-0.5 leading-relaxed">
+              <p className="text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)] mt-0.5 leading-relaxed">
                 {subtitle}
               </p>
             )}
@@ -428,7 +428,7 @@ const ModalRoot: React.FC<ModalProps> = ({
                   disabled={!onStepChange}
                   aria-current={active ? 'step' : undefined}
                   className={cn(
-                    'flex items-center gap-1.5 text-[12px] transition-colors',
+                    'flex items-center gap-1.5 text-[length:calc(12px*var(--k-text-scale,1))] transition-colors',
                     onStepChange && 'hover:text-accent',
                     active
                       ? 'text-accent font-medium'
@@ -439,7 +439,7 @@ const ModalRoot: React.FC<ModalProps> = ({
                 >
                   <span
                     className={cn(
-                      'flex items-center justify-center h-5 w-5 rounded-full text-[10px] font-mono font-semibold shrink-0',
+                      'flex items-center justify-center h-5 w-5 rounded-full text-[length:calc(10px*var(--k-text-scale,1))] font-mono font-semibold shrink-0',
                       active
                         ? 'bg-accent text-[color:var(--color-accent-fg)]'
                         : done
@@ -471,7 +471,7 @@ const ModalRoot: React.FC<ModalProps> = ({
         {isLoading ? (
           <div className="flex flex-col items-center justify-center gap-3 py-12 text-[var(--fg-subtle,#657486)]">
             <Spinner size="md" label={loadingLabel} />
-            <span className="font-mono text-[11px] tracking-wider uppercase">{loadingLabel}</span>
+            <span className="font-mono text-[length:calc(11px*var(--k-text-scale,1))] tracking-wider uppercase">{loadingLabel}</span>
           </div>
         ) : (
           children
@@ -479,7 +479,7 @@ const ModalRoot: React.FC<ModalProps> = ({
       </div>
 
       {error && (
-        <div className="shrink-0 px-6 py-2.5 border-t border-[var(--k-danger)]/30 bg-[var(--k-danger-bg)] text-[12px] text-[var(--k-danger-fg)] flex items-center gap-2">
+        <div className="shrink-0 px-6 py-2.5 border-t border-[var(--k-danger)]/30 bg-[var(--k-danger-bg)] text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--k-danger-fg)] flex items-center gap-2">
           <UiIcon slot="alert-circle" size={14} className="shrink-0" />
           {error}
         </div>

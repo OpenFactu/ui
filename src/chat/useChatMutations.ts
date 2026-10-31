@@ -28,7 +28,7 @@ export function useChatMutations({ snapshot, mounted, commit, props }: ChatContr
         if (current && current.text === message.text && current.editedAt === message.editedAt && current.deletedAt === message.deletedAt) {
           const patch: Partial<ChatMessageData> = kind === 'edit'
             ? { text: text!.trim(), editedAt: new Date().toISOString(), mentions: updateChatMentions(message.text, text!.trim(), message.mentions) }
-            : { text: '', deletedAt: new Date().toISOString(), attachments: [], reactions: [], mentions: [] };
+            : { text: '', deletedAt: new Date().toISOString(), attachments: [], blocks: [], reactions: [], mentions: [] };
           commit({ type: 'patch-message', conversationId: message.conversationId, messageId: message.id, patch });
         }
         commit({ type: 'operation', key, value: { pending: false } }); return true;

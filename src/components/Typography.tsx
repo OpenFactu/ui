@@ -17,11 +17,11 @@ export interface HeadingProps extends React.HTMLAttributes<HTMLHeadingElement> {
 }
 
 const HEADING_SIZE: Record<NonNullable<HeadingProps['size']>, string> = {
-  display: 'text-[40px] leading-[1.08] tracking-[-0.02em] font-bold',
-  1: 'text-[30px] leading-[1.15] tracking-[-0.015em] font-bold',
-  2: 'text-[22px] leading-[1.25] tracking-[-0.01em] font-semibold',
-  3: 'text-[17px] leading-[1.35] font-semibold',
-  4: 'text-[14px] leading-[1.4] font-semibold',
+  display: 'text-[length:calc(40px*var(--k-text-scale,1))] leading-[1.08] tracking-[-0.02em] font-bold',
+  1: 'text-[length:calc(30px*var(--k-text-scale,1))] leading-[1.15] tracking-[-0.015em] font-bold',
+  2: 'text-[length:calc(22px*var(--k-text-scale,1))] leading-[1.25] tracking-[-0.01em] font-semibold',
+  3: 'text-[length:calc(17px*var(--k-text-scale,1))] leading-[1.35] font-semibold',
+  4: 'text-[length:calc(14px*var(--k-text-scale,1))] leading-[1.4] font-semibold',
 };
 
 /** Título con escala propia y reparto equilibrado de líneas. */
@@ -29,7 +29,7 @@ export const Heading: React.FC<HeadingProps> = ({ level = 2, size, balance = tru
   const Component = `h${level}` as 'h1';
   return (
     <>
-      {eyebrow && <p className="m-0 mb-1 font-mono text-[10px] font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">{eyebrow}</p>}
+      {eyebrow && <p className="m-0 mb-1 font-mono text-[length:calc(10px*var(--k-text-scale,1))] font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">{eyebrow}</p>}
       <Component
         className={cn('m-0 font-display text-[var(--fg-default,#0a1628)]', HEADING_SIZE[size ?? level], balance && '[text-wrap:balance]', className)}
         {...rest}
@@ -126,13 +126,13 @@ export interface QuoteProps extends React.BlockquoteHTMLAttributes<HTMLQuoteElem
 export const Quote: React.FC<QuoteProps> = ({ author, source, className, children, ...rest }) => (
   <figure className="m-0">
     <blockquote
-      className={cn('m-0 border-l-[3px] border-[var(--color-accent,#0d9488)] pl-4 text-[18px] leading-[1.55] italic text-[var(--fg-default,#0a1628)] [text-wrap:pretty]', className)}
+      className={cn('m-0 border-l-[3px] border-[var(--color-accent,#0d9488)] pl-4 text-[length:calc(18px*var(--k-text-scale,1))] leading-[1.55] italic text-[var(--fg-default,#0a1628)] [text-wrap:pretty]', className)}
       {...rest}
     >
       {children}
     </blockquote>
     {(author || source) && (
-      <figcaption className="mt-2 pl-4 text-[13px] text-[var(--fg-muted,#52606f)]">
+      <figcaption className="mt-2 pl-4 text-[length:calc(13px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)]">
         {author && <strong className="font-semibold text-[var(--fg-body,#2d3a4a)]">{author}</strong>}
         {author && source && ' · '}
         {source}

@@ -151,7 +151,7 @@ export const Timeline: React.FC<TimelineProps> = ({
 
   if (events.length === 0) {
     return (
-      <p className={cn('py-6 text-center text-[13px] text-[var(--fg-muted,#52606f)]', className)}>
+      <p className={cn('py-6 text-center text-[length:calc(13px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)]', className)}>
         {emptyMessage}
       </p>
     );
@@ -168,7 +168,7 @@ export const Timeline: React.FC<TimelineProps> = ({
               key={fila.key}
               data-dia
               className={cn(
-                'font-mono text-[9px] font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]',
+                'font-mono text-[length:calc(9px*var(--k-text-scale,1))] font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]',
                 i === 0 ? 'pb-2' : 'pb-2 pt-4',
               )}
             >
@@ -221,28 +221,28 @@ export const Timeline: React.FC<TimelineProps> = ({
                   <button
                     type="button"
                     onClick={e.onClick}
-                    className="rounded-sm text-left text-[13px] font-medium text-[var(--fg-default)] hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    className="rounded-sm text-left text-[length:calc(13px*var(--k-text-scale,1))] font-medium text-[var(--fg-default)] hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     {e.title}
                   </button>
                 ) : (
-                  <span className="text-[13px] font-medium text-[var(--fg-default)]">
+                  <span className="text-[length:calc(13px*var(--k-text-scale,1))] font-medium text-[var(--fg-default)]">
                     {e.title}
                   </span>
                 )}
                 {e.author && (
-                  <span className="text-[11px] text-[var(--fg-muted,#52606f)]">{e.author}</span>
+                  <span className="text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)]">{e.author}</span>
                 )}
                 <time
                   dateTime={e._fecha.toISOString()}
                   title={e._fecha.toLocaleString(DEFAULT_LOCALE)}
-                  className="ml-auto shrink-0 font-mono text-[10px] text-[var(--fg-subtle,#657486)]"
+                  className="ml-auto shrink-0 font-mono text-[length:calc(10px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)]"
                 >
                   {cuando}
                 </time>
               </div>
               {e.description && !compacto && (
-                <p className="mt-0.5 text-[12px] text-[var(--fg-muted,#52606f)]">{e.description}</p>
+                <p className="mt-0.5 text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)]">{e.description}</p>
               )}
               {e.content && <div className="mt-1.5">{e.content}</div>}
             </div>

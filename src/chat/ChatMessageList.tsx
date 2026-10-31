@@ -10,9 +10,11 @@ import { chatDate, chatDay } from './format';
 import type { ChatMessageData } from './types';
 import { useMessages } from '../i18n/I18nProvider';
 
+export interface ChatRenderMessageContext { fresh: boolean; grouped: boolean; searchQuery: string; defaultRender: () => React.ReactNode }
 export interface ChatMessageListProps {
   className?: string;
-  renderMessage?: (message: ChatMessageData) => React.ReactNode;
+  /** Vista propia de un mensaje. `context.defaultRender()` devuelve la burbuja de serie, para envolverla o sustituirla solo en algunos. */
+  renderMessage?: (message: ChatMessageData, context: ChatRenderMessageContext) => React.ReactNode;
   searchQuery?: string;
 }
 export function ChatMessageList({ className, renderMessage, searchQuery }: ChatMessageListProps) {
@@ -22,6 +24,7 @@ export function ChatMessageList({ className, renderMessage, searchQuery }: ChatM
   const { loadOlderMessages } = useChatActions();
   const { canLoadOlderMessages } = useChatPeople();
   const scroller = React.useRef<HTMLDivElement>(null);
+  const pointerAt = React.useRef(-Infinity);
   const content = React.useRef<HTMLDivElement>(null);
   const nearBottom = React.useRef(true);
   const historyAnchor = React.useRef<{ id: string; messageKey: string; offset: number } | null>(null);
@@ -68,7 +71,12 @@ export function ChatMessageList({ className, renderMessage, searchQuery }: ChatM
     return () => observer.disconnect();
   }, []);
   return <section className={cn('k-chat-timeline', className)} aria-label={ct.history}>
-    <div ref={scroller} data-k-focus-inset="" className="k-chat-scroll" tabIndex={0} aria-label={ct.scroll} onScroll={() => {
+    {/* Enfocable para desplazarla con el teclado. Si el foco llegó con el ratón o el dedo no lleva anillo, aunque luego se
+        pulse una tecla (el navegador lo pintaría alrededor de toda la caja); con Tab, sí. */}
+    <div ref={scroller} data-k-focus-inset="" className="k-chat-scroll" tabIndex={0} aria-label={ct.scroll}
+      onPointerDown={() => { pointerAt.current = performance.now(); }}
+      onFocus={event => { if (event.target !== event.currentTarget) return; if (performance.now() - pointerAt.current < 600) event.currentTarget.dataset.pointerFocus = ''; else delete event.currentTarget.dataset.pointerFocus; }}
+      onBlur={event => { if (event.target === event.currentTarget) delete event.currentTarget.dataset.pointerFocus; }} onScroll={() => {
       const element = scroller.current!;
       nearBottom.current = element.scrollHeight - element.scrollTop - element.clientHeight < 64;
       before.current.top = element.scrollTop; before.current.height = element.scrollHeight;
@@ -91,7 +99,11 @@ export function ChatMessageList({ className, renderMessage, searchQuery }: ChatM
       <div role="log" aria-label={ct.log} aria-live="off">
         {messages.map((message, index) => <React.Fragment key={message.clientId ?? message.id}>
           {(index === 0 || chatDay(message.createdAt) !== chatDay(messages[index - 1].createdAt)) && <div className="k-chat-date"><span>{chatDate(message.createdAt, dates)}</span></div>}
-          {renderMessage ? renderMessage(message) : <ChatMessage message={message} fresh={fresh(message, index)} grouped={grouped.has(message.clientId ?? message.id)} searchQuery={searchQuery} />}
+          {(() => {
+            const context: ChatRenderMessageContext = { fresh: fresh(message, index), grouped: grouped.has(message.clientId ?? message.id), searchQuery: searchQuery ?? '',
+              defaultRender: () => <ChatMessage message={message} fresh={context.fresh} grouped={context.grouped} searchQuery={searchQuery} /> };
+            return renderMessage ? renderMessage(message, context) : context.defaultRender();
+          })()}
         </React.Fragment>)}
       </div>
       <ChatTypingIndicator />

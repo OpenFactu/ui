@@ -95,11 +95,11 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
                 )}
               </span>
               <span className="flex flex-col">
-                <span className="text-[13px] text-[var(--fg-default,#0a1628)] leading-tight">
+                <span className="text-[length:calc(13px*var(--k-text-scale,1))] text-[var(--fg-default,#0a1628)] leading-tight">
                   {opt.label}
                 </span>
                 {opt.description && (
-                  <span className="text-[11px] text-[var(--fg-subtle,#657486)] mt-0.5">
+                  <span className="text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)] mt-0.5">
                     {opt.description}
                   </span>
                 )}

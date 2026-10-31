@@ -53,7 +53,7 @@ export const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
       <div
         ref={ref}
         className={cn(
-          'inline-flex items-center rounded-[var(--k-radius-xs,2px)] border px-[10px] py-[3px] text-[10px] font-mono font-medium tracking-[0.5px] transition-colors k-pop-in',
+          'inline-flex items-center rounded-[var(--k-radius-xs,2px)] border px-[calc(10px*var(--k-density,1))] py-[calc(3px*var(--k-density,1))] text-[length:calc(10px*var(--k-text-scale,1))] font-mono font-medium tracking-[0.5px] transition-colors k-pop-in',
           variants[variant],
           className,
         )}

@@ -182,10 +182,15 @@ module.exports = {
           to: { backgroundPosition: '-200% 0' },
         },
       },
+      // Todas al ritmo de `--k-motion` (0 = sin movimiento), también las de serie de Tailwind.
       animation: {
-        'k-row-in': 'k-row-in 0.45s ease-out both',
-        'k-card-in': 'k-card-in 0.45s cubic-bezier(0.2, 0, 0, 1) both',
-        'k-skeleton-shimmer': 'k-skeleton-shimmer 1.6s linear infinite',
+        spin: 'spin calc(1s * var(--k-motion, 1)) linear infinite',
+        ping: 'ping calc(1s * var(--k-motion, 1)) cubic-bezier(0, 0, 0.2, 1) infinite',
+        pulse: 'pulse calc(2s * var(--k-motion, 1)) cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        bounce: 'bounce calc(1s * var(--k-motion, 1)) infinite',
+        'k-row-in': 'k-row-in calc(0.45s * var(--k-motion, 1)) ease-out both',
+        'k-card-in': 'k-card-in calc(0.45s * var(--k-motion, 1)) cubic-bezier(0.2, 0, 0, 1) both',
+        'k-skeleton-shimmer': 'k-skeleton-shimmer calc(1.6s * var(--k-motion, 1)) linear infinite',
       },
     },
   },

@@ -1,4 +1,6 @@
 import type * as React from 'react';
+import type { ChatBlockDefinition, ChatBlockRenderer } from './blocks';
+import type { ChatMessageActionsOptions } from './ChatMessageActions';
 
 export interface ChatUser {
   id: string;
@@ -19,6 +21,14 @@ export interface ChatAttachment {
   id: string; name: string; mediaType: string; size: number; url?: string;
   status: 'uploading' | 'ready' | 'error'; progress?: number; error?: string; duration?: number;
 }
+/** Componente propio dentro de la burbuja: se pinta con lo registrado para su `kind` (`registerChatBlock` o `ChatProvider blockRenderers`). `data` debe ser serializable. */
+export interface ChatMessageBlock { kind: string; data?: unknown; id?: string }
+/** Un sticker: una imagen (png, webp, gif, svg; animada o no) que se envía sola y se ve sin burbuja. */
+export interface ChatSticker { id: string; url: string; alt: string; packId?: string; keywords?: string[]; width?: number; height?: number }
+export interface ChatStickerPack { id: string; name: string; /** Portada del paquete en el selector (por defecto, su primer sticker). */ cover?: string; stickers: ChatSticker[] }
+/** Un GIF. Los proveedores suelen servirlos como vídeo (`video/mp4`), que pesa mucho menos: se reproduce en bucle y sin sonido. */
+export interface ChatGif { id: string; url: string; alt: string; mediaType?: string; /** Imagen fija: la del selector y la que se ve sin movimiento. */ previewUrl?: string; width?: number; height?: number; provider?: string }
+export interface ChatGifSearchOptions { signal: AbortSignal; limit: number }
 export interface ChatOperation { pending: boolean; error?: string }
 export type ChatConversationPatch = Partial<Pick<ChatConversationData, 'favorite' | 'archived' | 'muted' | 'markedUnread' | 'pinnedMessageIds'>>;
 
@@ -43,6 +53,8 @@ export interface ChatMessageData {
   deletedAt?: string;
   attachments?: ChatAttachment[];
   mentions?: ChatMention[];
+  /** Componentes propios, antes del texto. Con bloques, `text` puede ir vacío y hace de pie. */
+  blocks?: ChatMessageBlock[];
 }
 
 export interface ChatConversationData {
@@ -60,6 +72,8 @@ export interface ChatConversationData {
   muted?: boolean;
   markedUnread?: boolean;
   pinnedMessageIds?: string[];
+  /** Fecha ISO del último mensaje, para ordenar la lista aunque sus mensajes no estén cargados. */
+  lastMessageAt?: string;
 }
 
 export interface ChatDraft { text: string; replyToId?: string; attachments?: ChatAttachment[]; mentions?: ChatMention[] }
@@ -85,6 +99,8 @@ export interface ChatActions {
   setDraft: (draft: ChatDraft, conversationId?: string) => void;
   /** False means validation failed or transport rejected; failure stays visible on the message. */
   sendMessage: (conversationId?: string) => Promise<boolean>;
+  /** Envía un mensaje con bloques propios (y `text` opcional), sin pasar por el borrador. */
+  sendBlocks: (blocks: ChatMessageBlock[], options?: { text?: string; conversationId?: string; replyToId?: string }) => Promise<boolean>;
   retryMessage: (messageId: string, conversationId?: string) => Promise<boolean>;
   /** For server messages and delivery/read receipts. Unknown conversations are ignored. */
   receiveMessages: (messages: ChatMessageData[]) => void;
@@ -121,5 +137,15 @@ export interface ChatProviderProps {
   canDeleteMessage?: (message: ChatMessageData) => boolean;
   onUploadAttachment?: (input: { file: File; conversationId: string; signal: AbortSignal; onProgress: (percent: number) => void }) => Promise<ChatAttachment>;
   attachmentLimits?: { maxFiles?: number; maxBytes?: number; accept?: string[] };
+  /** Paquetes de stickers de este chat (además de los de `registerStickerPack`; con el mismo id, ganan estos). */
+  stickerPacks?: ChatStickerPack[];
+  /** Búsqueda de GIF (Tenor, Giphy, los tuyos…). Consulta vacía = destacados. Sin esto no hay pestaña de GIF. */
+  onSearchGifs?: (query: string, options: ChatGifSearchOptions) => Promise<ChatGif[]>;
+  /** Reacciones rápidas y menú contextual de los mensajes: emojis, opciones (de serie y propias) o `false` para quitarlos. */
+  messageActions?: ChatMessageActionsOptions | false;
+  /** Cómo se pinta cada `kind` de bloque en este chat. Gana a `registerChatBlock`. */
+  blockRenderers?: Record<string, ChatBlockRenderer | ChatBlockDefinition>;
+  /** Distintivo del avatar de una conversación (lista y cabecera): verificado, bot, canal… `label` es su nombre accesible. */
+  renderConversationBadge?: (conversation: ChatConversationData) => { badge: React.ReactNode; label?: string } | null | undefined;
   children: React.ReactNode;
 }

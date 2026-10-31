@@ -210,3 +210,102 @@ test('server deletion removes pins and repeated navigation creates a new focus r
   state = chatReducer(state, { type: 'focus', conversationId: 'a', messageId: 'one' });
   assert.ok(state.focusRequest > first);
 });
+
+test('message blocks render any component: provider renderers win over the registry, unknown kinds degrade', () => {
+  const React = require('react');
+  const { render } = require('./test-support.cjs');
+  const { ChatProvider } = require('../src/chat/ChatProvider.tsx');
+  const { ChatMessage } = require('../src/chat/ChatMessage.tsx');
+  const { ChatConversationList } = require('../src/chat/ChatConversationList.tsx');
+  const { registerChatBlock, unregisterChatBlockSource, getChatBlock } = require('../src/chat/blocks.tsx');
+  const h = React.createElement;
+  registerChatBlock('card', ({ data, own }) => h('b', { className: 'card' }, `${data.title}${own ? ' (mía)' : ''}`), { source: 'test', summary: data => `Tarjeta ${data.title}` });
+  registerChatBlock('poll', () => h('i', null, 'registro'), { source: 'test' });
+  const blocks = [{ kind: 'card', data: { title: 'A' } }, { kind: 'poll' }, { kind: 'nadie' }];
+  const msg = message('m', 'a', { text: '', blocks, senderId: 'me' });
+  const shell = (child) => render(ChatProvider, { currentUser: { id: 'me', name: 'Yo' }, initialConversations: [conversation('a')], initialMessages: [msg], initialConversationId: 'a',
+    onSendMessage: () => undefined, blockRenderers: { poll: { fill: true, render: () => h('em', null, 'proveedor') } } }, child);
+  const html = shell(h(ChatMessage, { message: msg }));
+  assert.match(html, /<b class="card">A \(mía\)<\/b>/);
+  assert.match(html, /<em>proveedor<\/em>/, 'blockRenderers del proveedor ganan al registro');
+  assert.doesNotMatch(html, /registro/);
+  assert.match(html, /k-chat-block k-chat-block-fill/);
+  assert.match(html, /Este contenido no se puede mostrar/);
+  assert.doesNotMatch(html, /k-chat-message-text/, 'sin texto no pinta un párrafo vacío');
+  assert.match(shell(h(ChatConversationList)), /Tú: Tarjeta A · Contenido · Contenido/, 'la vista previa usa el resumen de los bloques');
+  unregisterChatBlockSource('test');
+  assert.equal(getChatBlock('card'), undefined);
+});
+
+test('conversation list sorts favourites first, then by latest activity (loaded or lastMessageAt), and wraps its actions', () => {
+  const React = require('react');
+  const { render } = require('./test-support.cjs');
+  const { ChatProvider } = require('../src/chat/ChatProvider.tsx');
+  const { ChatConversationList } = require('../src/chat/ChatConversationList.tsx');
+  const h = React.createElement;
+  const conversations = [conversation('old'), conversation('fresh'), { ...conversation('server'), lastMessageAt: '2026-10-28T10:00:00Z' }, { ...conversation('fav'), favorite: true }];
+  const loaded = [message('o1', 'old', { createdAt: '2026-10-20T09:00:00Z' }), message('f1', 'fresh', { createdAt: '2026-10-27T09:00:00Z' })];
+  const html = (sort) => render(ChatProvider, { currentUser: { id: 'me', name: 'Yo' }, initialConversations: conversations, initialMessages: loaded, onSendMessage: () => undefined },
+    h(ChatConversationList, { sort, actions: h(React.Fragment, null, h('button', null, 'uno'), h('button', null, 'dos')) }));
+  const order = (markup) => [...markup.matchAll(/k-chat-conversation-title">(?:<svg[\s\S]*?<\/svg>)? ?([a-z]+)</g)].map(match => match[1]);
+  assert.deepEqual(order(html()), ['fav', 'server', 'fresh', 'old']);
+  assert.deepEqual(order(html('none')), ['old', 'fresh', 'server', 'fav']);
+  assert.match(html(), /<div class="k-chat-list-actions"><button>uno<\/button><button>dos<\/button><\/div>/);
+});
+
+test('avatar badge renders in its corner with an accessible name; status label is translated', () => {
+  const { render } = require('./test-support.cjs');
+  const { Avatar } = require('../src/components/Avatar.tsx');
+  const html = render(Avatar, { name: 'Ana López', status: 'online', badge: '✓', badgeLabel: 'Verificada', badgePlacement: 'bottom-left' });
+  assert.match(html, /k-avatar-badge[^"]*-bottom-0\.5 -left-0\.5[^"]*" role="img" aria-label="Verificada">✓</);
+  assert.match(html, /aria-label="En línea"/);
+});
+
+test('stickers and GIFs are plain blocks: sticker messages render without bubble, packs merge and search without accents', () => {
+  const React = require('react');
+  const { render } = require('./test-support.cjs');
+  const { ChatProvider } = require('../src/chat/ChatProvider.tsx');
+  const { ChatMessage } = require('../src/chat/ChatMessage.tsx');
+  const { ChatConversationList } = require('../src/chat/ChatConversationList.tsx');
+  const { chatStickerBlock, chatGifBlock } = require('../src/chat/expressions.tsx');
+  const { mergeStickerPacks, searchStickers, registerStickerPack, getStickerPacks, unregisterStickerPackSource } = require('../src/chat/stickers.ts');
+  const h = React.createElement;
+  const sticker = { id: 'ok', url: 'https://cdn.test/ok.webp', alt: 'Vale', keywords: ['bien'] };
+  const msg = message('st', 'a', { text: '', senderId: 'me', blocks: [chatStickerBlock(sticker)] });
+  const gif = message('gf', 'a', { text: 'jaja', blocks: [chatGifBlock({ id: 'g', url: 'https://cdn.test/g.mp4', alt: 'Risa', mediaType: 'video/mp4' })] });
+  const shell = (child, messages = [msg]) => render(ChatProvider, { currentUser: { id: 'me', name: 'Yo' }, initialConversations: [conversation('a')], initialMessages: messages, onSendMessage: () => undefined }, child);
+  assert.match(shell(h(ChatMessage, { message: msg })), /k-chat-bubble" data-bare="true"[\s\S]*<img class="k-chat-sticker" src="https:\/\/cdn.test\/ok.webp" alt="Vale"/);
+  const gifHtml = shell(h(ChatMessage, { message: gif }), [gif]);
+  assert.doesNotMatch(gifHtml, /data-bare/, 'un GIF con texto va en su burbuja');
+  assert.match(gifHtml, /<video[^>]*src="https:\/\/cdn.test\/g.mp4"[^>]*loop=""[^>]*muted=""/);
+  assert.match(shell(h(ChatConversationList)), /Tú: Sticker Vale/);
+  const merged = mergeStickerPacks([{ id: 'p', name: 'Mío', stickers: [sticker] }], [{ id: 'p', name: 'Registrado', stickers: [] }, { id: 'q', name: 'Otro', stickers: [] }]);
+  assert.deepEqual(merged.map(pack => pack.name), ['Mío', 'Otro']);
+  assert.equal(merged[0].stickers[0].packId, 'p');
+  assert.deepEqual(searchStickers('BIÉN', merged).map(item => item.id), ['ok']);
+  registerStickerPack({ id: 'r', name: 'R', stickers: [sticker] }, { source: 'test' });
+  assert.equal(getStickerPacks().find(pack => pack.id === 'r').stickers[0].packId, 'r');
+  unregisterStickerPackSource('test');
+  assert.equal(getStickerPacks().length, 0);
+});
+
+test('picker tabs: ids pick and reorder the defaults, mix with custom ones, accept a function or false', () => {
+  const { resolveChatPickerTabs } = require('../src/chat/expressions.tsx');
+  const tab = id => ({ id, label: id, render: () => null });
+  const defaults = [tab('emoji'), tab('stickers'), tab('gifs')];
+  const ids = tabs => tabs.map(item => item.id);
+  assert.deepEqual(ids(resolveChatPickerTabs(undefined, defaults)), ['emoji', 'stickers', 'gifs']);
+  assert.deepEqual(ids(resolveChatPickerTabs(['gifs', 'emoji'], defaults)), ['gifs', 'emoji']);
+  assert.deepEqual(ids(resolveChatPickerTabs(['emoji', tab('recientes'), 'nope'], defaults)), ['emoji', 'recientes'], 'un id de serie que no hay se omite');
+  assert.deepEqual(ids(resolveChatPickerTabs(tabs => tabs.filter(item => item.id !== 'stickers'), defaults)), ['emoji', 'gifs']);
+  assert.deepEqual(resolveChatPickerTabs(false, defaults), []);
+});
+
+test('message actions: quick reactions only once the message is confirmed, configurable or removable', () => {
+  const { chatQuickReactions, DEFAULT_CHAT_QUICK_REACTIONS } = require('../src/chat/ChatMessageActions.tsx');
+  assert.deepEqual(chatQuickReactions(message('m'), {}), DEFAULT_CHAT_QUICK_REACTIONS);
+  assert.deepEqual(chatQuickReactions(message('m'), { quickReactions: ['🔥'] }), ['🔥']);
+  assert.deepEqual(chatQuickReactions(message('m'), { quickReactions: false }), []);
+  assert.equal(chatQuickReactions(message('m', 'a', { status: 'sending' }), {}), null, 'enviándose no se puede reaccionar');
+  assert.equal(chatQuickReactions(message('m', 'a', { status: 'error' }), {}), null);
+});

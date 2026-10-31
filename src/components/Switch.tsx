@@ -60,7 +60,7 @@ export const Switch: React.FC<SwitchProps> = ({
         <label
           htmlFor={switchId}
           className={cn(
-            'text-[13px] text-[var(--fg-body,#2d3a4a)] select-none',
+            'text-[length:calc(13px*var(--k-text-scale,1))] text-[var(--fg-body,#2d3a4a)] select-none',
             disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
           )}
         >

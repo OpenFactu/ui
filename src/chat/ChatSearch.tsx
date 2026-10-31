@@ -1,12 +1,14 @@
 import * as React from 'react';
 import { useChatActions, useChatConversation } from './ChatProvider';
 import { UiIcon } from '../icons';
+import { useChatMessageText } from './blocks';
 import { useMessages } from '../i18n/I18nProvider';
 export function ChatSearch({ query, onChange, onClose }: { query: string; onChange: (query: string) => void; onClose: () => void }) {
   const ct = useMessages('chat');
   const { messages } = useChatConversation(); const { focusMessage } = useChatActions();
   const [index, setIndex] = React.useState(0);
-  const results = messages.filter(message => !message.deletedAt && query.trim() && message.text.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
+  const messageText = useChatMessageText();
+  const results = messages.filter(message => !message.deletedAt && query.trim() && messageText(message).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   const select = (position: number) => { if (!results.length) return; const next = (position + results.length) % results.length; setIndex(next); focusMessage(results[next].id); };
   React.useEffect(() => { setIndex(0); if (results[0]) focusMessage(results[0].id); }, [query]);
   return <div className="k-chat-search-messages" role="search" aria-label={ct.searchLoaded}>

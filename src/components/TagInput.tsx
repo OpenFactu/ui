@@ -79,7 +79,7 @@ export const TagInput: React.FC<TagInputProps> = ({
       {label && (
         <label
           htmlFor={id}
-          className="mb-1.5 block text-[12px] font-medium text-[var(--fg-default)]"
+          className="mb-1.5 block text-[length:calc(12px*var(--k-text-scale,1))] font-medium text-[var(--fg-default)]"
         >
           {label}
         </label>
@@ -96,7 +96,7 @@ export const TagInput: React.FC<TagInputProps> = ({
         {value.map((tag, index) => (
           <span
             key={`${tag}-${index}`}
-            className="inline-flex max-w-full items-center gap-1 rounded-[var(--k-radius-xs)] bg-[var(--bg-muted)] px-2 py-1 text-[12px] text-[var(--fg-default)]"
+            className="inline-flex max-w-full items-center gap-1 rounded-[var(--k-radius-xs)] bg-[var(--bg-muted)] px-2 py-1 text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-default)]"
           >
             <span className="break-all">{tag}</span>
             {!readOnly && (
@@ -160,10 +160,10 @@ export const TagInput: React.FC<TagInputProps> = ({
                 [value.length - 1]?.focus();
             }
           }}
-          className="min-w-0 flex-1 basis-32 bg-transparent px-1 py-1 text-[13px] text-[var(--fg-default)] outline-none placeholder:text-[var(--fg-subtle)]"
+          className="min-w-0 flex-1 basis-32 bg-transparent px-1 py-1 text-[length:calc(13px*var(--k-text-scale,1))] text-[var(--fg-default)] outline-none placeholder:text-[var(--fg-subtle)]"
         />
       </div>
-      <p id={`${id}-hint`} className="mt-1.5 text-[11px] text-[var(--fg-muted)]">
+      <p id={`${id}-hint`} className="mt-1.5 text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-muted)]">
         {helperText ?? m.tagInput.help}
         {maxTags !== undefined && (
           <span className="ml-2">
@@ -174,7 +174,7 @@ export const TagInput: React.FC<TagInputProps> = ({
       <p
         id={`${id}-message`}
         role="status"
-        className={invalid ? 'mt-1 text-[11px] text-[var(--k-danger-fg)]' : 'sr-only'}
+        className={invalid ? 'mt-1 text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--k-danger-fg)]' : 'sr-only'}
       >
         {message}
       </p>

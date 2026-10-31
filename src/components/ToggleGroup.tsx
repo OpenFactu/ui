@@ -37,7 +37,7 @@ export interface ToggleGroupMultipleProps<T extends string = string> extends Tog
 
 export type ToggleGroupProps<T extends string = string> = ToggleGroupSingleProps<T> | ToggleGroupMultipleProps<T>;
 
-const SIZES = { sm: 'h-7 min-w-7 px-2 text-[12px] gap-1', md: 'h-9 min-w-9 px-2.5 text-[13px] gap-1.5' };
+const SIZES = { sm: 'h-7 min-w-7 px-2 text-[length:calc(12px*var(--k-text-scale,1))] gap-1', md: 'h-9 min-w-9 px-2.5 text-[length:calc(13px*var(--k-text-scale,1))] gap-1.5' };
 
 /**
  * Botones que se activan y desactivan: uno solo (alineación, vista) o varios a la vez (negrita, cursiva, filtros).

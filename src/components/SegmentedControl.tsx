@@ -31,8 +31,8 @@ export interface SegmentedControlProps<T extends string = string> {
 }
 
 const SIZES = {
-  sm: 'px-3 py-1.5 text-[11px] gap-1.5',
-  md: 'px-3.5 py-2 text-[13px] gap-2',
+  sm: 'px-3 py-1.5 text-[length:calc(11px*var(--k-text-scale,1))] gap-1.5',
+  md: 'px-3.5 py-2 text-[length:calc(13px*var(--k-text-scale,1))] gap-2',
 };
 
 /**

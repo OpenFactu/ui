@@ -163,7 +163,7 @@ export const SplitButton: React.FC<SplitButtonProps> = ({
                   action.onClick();
                 }}
                 className={cn(
-                  'flex w-full items-center gap-2 rounded-[var(--k-radius-xs)] px-3 py-2 text-left text-[13px] focus:outline-none focus:ring-1 focus:ring-inset focus:ring-accent disabled:opacity-40',
+                  'flex w-full items-center gap-2 rounded-[var(--k-radius-xs)] px-3 py-2 text-left text-[length:calc(13px*var(--k-text-scale,1))] focus:outline-none focus:ring-1 focus:ring-inset focus:ring-accent disabled:opacity-40',
                   action.destructive
                     ? 'text-[var(--k-danger-fg)] hover:bg-[var(--k-danger-bg)] focus:bg-[var(--k-danger-bg)]'
                     : 'text-[var(--fg-default)] hover:bg-[var(--bg-hover)] focus:bg-[var(--bg-hover)]',

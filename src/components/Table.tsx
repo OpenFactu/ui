@@ -302,13 +302,13 @@ function ColumnToggle({
             )}
             style={style}
           >
-            <p className="px-2.5 pt-1.5 pb-1 text-[9px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
+            <p className="px-2.5 pt-1.5 pb-1 text-[length:calc(9px*var(--k-text-scale,1))] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
               {tt.columns}
             </p>
             {entries.map((entry) => (
               <label
                 key={entry.key}
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--k-radius-xs,2px)] text-[12px] text-[var(--fg-body,#2d3a4a)] hover:bg-[var(--bg-hover)] cursor-pointer"
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--k-radius-xs,2px)] text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-body,#2d3a4a)] hover:bg-[var(--bg-hover)] cursor-pointer"
               >
                 <Checkbox
                   checked={entry.visible}
@@ -459,7 +459,7 @@ export function Table<T>({
         aria-atomic="true"
         className={
           isRefreshing && !isLoading
-            ? 'flex items-center gap-2 px-4 py-2 text-[12px] text-[var(--fg-muted,#52606f)]'
+            ? 'flex items-center gap-2 px-4 py-2 text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)]'
             : 'sr-only'
         }
       >
@@ -590,13 +590,13 @@ export function Table<T>({
     <>
       <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
       {infinite.loading && (
-        <div className="flex items-center justify-center gap-2 py-3 text-[11px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
+        <div className="flex items-center justify-center gap-2 py-3 text-[length:calc(11px*var(--k-text-scale,1))] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
           <Spinner size="xs" />
           {t.loadingMore}
         </div>
       )}
       {!infinite.hasMore && !infinite.loading && infinite.endMessage !== false && (
-        <div className="py-3 text-center text-[10px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
+        <div className="py-3 text-center text-[length:calc(10px*var(--k-text-scale,1))] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
           {infinite.endMessage ?? t.end}
         </div>
       )}
@@ -973,7 +973,7 @@ export function Table<T>({
           ) : blockingError ? null : pagedData.length === 0 ? (
             <div className="rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] py-10 text-center">
               {typeof emptyMessage === 'string' ? (
-                <span className="text-[10px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">{emptyMessage}</span>
+                <span className="text-[length:calc(10px*var(--k-text-scale,1))] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">{emptyMessage}</span>
               ) : emptyMessage}
             </div>
           ) : (
@@ -990,7 +990,7 @@ export function Table<T>({
                   onContextMenu={
                     actions && actions.length > 0 ? (e) => openContextMenu(e, actions) : undefined
                   }
-                  style={{ animation: `k-row-in 0.35s ease-out ${Math.min(rowIdx * 20, 200)}ms both` }}
+                  style={{ animation: `k-row-in calc(0.35s * var(--k-motion, 1)) ease-out calc(${Math.min(rowIdx * 20, 200)}ms * var(--k-motion, 1)) both` }}
                   className={cn(
                     'rounded-[var(--k-radius-sm,4px)] border bg-[var(--bg-card,#ffffff)] p-3 flex flex-col gap-2 transition-colors',
                     isRowSelected ? 'border-accent bg-accent/5' : 'border-[var(--border-default,#e2e8f0)]',
@@ -1018,7 +1018,7 @@ export function Table<T>({
                             'text-[var(--fg-default,#0a1628)] truncate',
                             // La fuente monoespaciada es para códigos (columna `primary`); un nombre va en la del cuerpo.
                             titleCol?.primary
-                              ? 'font-mono text-[13px] font-medium'
+                              ? 'font-mono text-[length:calc(13px*var(--k-text-scale,1))] font-medium'
                               : 'text-sm font-semibold',
                           )}
                         >
@@ -1027,7 +1027,7 @@ export function Table<T>({
                         {subtitleCols.map((col) => (
                           <div
                             key={colKeyOf(col)}
-                            className="text-[12px] text-[var(--fg-muted,#52606f)] truncate"
+                            className="text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)] truncate"
                           >
                             {render(col, item, rowIdx)}
                           </div>
@@ -1048,12 +1048,12 @@ export function Table<T>({
                     <dl className="grid grid-cols-2 gap-x-3 gap-y-1">
                       {bodyCols.map((col) => (
                         <div key={colKeyOf(col)} className="flex flex-col min-w-0">
-                          <dt className="text-[9px] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
+                          <dt className="text-[length:calc(9px*var(--k-text-scale,1))] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
                             {col.header}
                           </dt>
                           <dd
                             className={cn(
-                              'text-[12px] text-[var(--fg-body,#2d3a4a)] truncate',
+                              'text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-body,#2d3a4a)] truncate',
                               col.align === 'right' && 'font-mono tabular-nums',
                             )}
                           >
@@ -1065,7 +1065,7 @@ export function Table<T>({
                   )}
 
                   {metaCols.length > 0 && (
-                    <div className="flex items-center justify-end gap-3 pt-1 border-t border-[var(--border-subtle,#f1f5f9)] font-mono text-[13px] tabular-nums text-[var(--fg-default,#0a1628)]">
+                    <div className="flex items-center justify-end gap-3 pt-1 border-t border-[var(--border-subtle,#f1f5f9)] font-mono text-[length:calc(13px*var(--k-text-scale,1))] tabular-nums text-[var(--fg-default,#0a1628)]">
                       {metaCols.map((col) => (
                         <React.Fragment key={colKeyOf(col)}>{render(col, item, rowIdx)}</React.Fragment>
                       ))}
@@ -1077,7 +1077,7 @@ export function Table<T>({
                       type="button"
                       aria-expanded={expanded.has(key)}
                       onClick={(event) => { event.stopPropagation(); toggleExpanded(key); }}
-                      className="self-start text-[12px] text-accent focus-visible:ring-1 focus-visible:ring-accent"
+                      className="self-start text-[length:calc(12px*var(--k-text-scale,1))] text-accent focus-visible:ring-1 focus-visible:ring-accent"
                     >
                       {expanded.has(key) ? t.hideDetail : t.showDetail}
                     </button>
@@ -1097,8 +1097,8 @@ export function Table<T>({
 
         {hasSummary && (
           <section aria-label={t.summary} className="rounded-[var(--k-radius-sm)] border border-[var(--border-default)] bg-[var(--bg-muted)] p-4">
-            <p className="mb-3 text-[12px] font-semibold text-[var(--fg-default)]">{summaryLabel}</p>
-            <dl className="space-y-2 text-[12px]">
+            <p className="mb-3 text-[length:calc(12px*var(--k-text-scale,1))] font-semibold text-[var(--fg-default)]">{summaryLabel}</p>
+            <dl className="space-y-2 text-[length:calc(12px*var(--k-text-scale,1))]">
               {visibleColumns.map((col, index) => summaryCells[index] != null && (
                 <div key={colKeyOf(col)} className="flex flex-wrap justify-between gap-3">
                   <dt className="text-[var(--fg-muted)]">{col.header}</dt>
@@ -1198,7 +1198,7 @@ export function Table<T>({
                     data-filtered={!isEmptyFilter(filters[colKey]) || undefined}
                     className={cn(
                       cellPad,
-                      'relative font-mono text-[10px] tracking-[1px] uppercase font-normal text-[var(--fg-subtle,#657486)] whitespace-nowrap select-none',
+                      'relative font-mono text-[length:calc(10px*var(--k-text-scale,1))] tracking-[1px] uppercase font-normal text-[var(--fg-subtle,#657486)] whitespace-nowrap select-none',
                       col.align === 'center'
                         ? 'text-center'
                         : col.align === 'right'
@@ -1275,7 +1275,7 @@ export function Table<T>({
                 <tr
                   key={`skeleton-${rowIdx}`}
                   aria-hidden="true"
-                  style={{ animation: `k-row-in 0.45s ease-out ${Math.min(rowIdx * 15, 300)}ms both` }}
+                  style={{ animation: `k-row-in calc(0.45s * var(--k-motion, 1)) ease-out calc(${Math.min(rowIdx * 15, 300)}ms * var(--k-motion, 1)) both` }}
                   className="border-b border-[var(--border-subtle,#f1f5f9)] last:border-b-0"
                 >
                   {selectable && (
@@ -1334,7 +1334,7 @@ export function Table<T>({
                 >
                   <div className="flex flex-col items-center gap-3">
                     <Spinner size="sm" />
-                    <span className="animate-pulse font-mono text-[11px] tracking-wider uppercase">
+                    <span className="animate-pulse font-mono text-[length:calc(11px*var(--k-text-scale,1))] tracking-wider uppercase">
                       {loadingLabel}
                     </span>
                   </div>
@@ -1356,7 +1356,7 @@ export function Table<T>({
                       />
                     </svg>
                     {typeof emptyMessage === 'string' ? (
-                      <span className="text-[10px] font-mono uppercase tracking-[1.5px]">
+                      <span className="text-[length:calc(10px*var(--k-text-scale,1))] font-mono uppercase tracking-[1.5px]">
                         {emptyMessage}
                       </span>
                     ) : (
@@ -1388,7 +1388,7 @@ export function Table<T>({
                           : undefined
                       }
                       style={{
-                        animation: `k-row-in 0.45s ease-out ${animDelay}ms both`,
+                        animation: `k-row-in calc(0.45s * var(--k-motion, 1)) ease-out calc(${animDelay}ms * var(--k-motion, 1)) both`,
                       }}
                       className={cn(
                         'group transition-all duration-200 border-b border-[var(--border-subtle,#f1f5f9)] last:border-b-0',
@@ -1463,9 +1463,9 @@ export function Table<T>({
                               cellPad,
                               'transition-colors',
                               isPrimary
-                                ? 'font-mono text-[12px] font-medium text-[var(--fg-default,#0a1628)]'
+                                ? 'font-mono text-[length:calc(12px*var(--k-text-scale,1))] font-medium text-[var(--fg-default,#0a1628)]'
                                 : isRightAligned
-                                  ? 'font-mono text-[12px] text-[var(--fg-default,#0a1628)]'
+                                  ? 'font-mono text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-default,#0a1628)]'
                                   : 'text-[var(--fg-body,#2d3a4a)]',
                               col.align === 'center'
                                 ? 'text-center'
@@ -1525,7 +1525,7 @@ export function Table<T>({
                       style={stickyCellStyle(leadingCount + i)}
                       className={cn(
                         cellPad,
-                        'font-mono text-[12px] font-semibold text-[var(--fg-default,#0a1628)]',
+                        'font-mono text-[length:calc(12px*var(--k-text-scale,1))] font-semibold text-[var(--fg-default,#0a1628)]',
                         stickyCellClass(leadingCount + i, false),
                         col.align === 'center'
                           ? 'text-center'
@@ -1536,7 +1536,7 @@ export function Table<T>({
                     >
                       {/* La primera celda lleva la etiqueta si no se ha dado contenido. */}
                       {cells[i] ?? (i === 0 ? (
-                        <span className="font-sans text-[10px] uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
+                        <span className="font-sans text-[length:calc(10px*var(--k-text-scale,1))] uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
                           {summaryLabel}
                         </span>
                       ) : null)}

@@ -459,7 +459,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({
       {queued > 0 && (
         <span
           className={cn(
-            'pointer-events-none rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-muted,#52606f)] shadow-sm',
+            'pointer-events-none rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] px-2 py-0.5 font-mono text-[length:calc(10px*var(--k-text-scale,1))] uppercase tracking-wider text-[var(--fg-muted,#52606f)] shadow-sm',
             stacked && 'absolute',
             stacked && (fromBottom ? '-top-6' : '-bottom-6'),
           )}
@@ -504,6 +504,9 @@ const SlotMeasure: React.FC<{
 };
 
 /** Lanza avisos desde cualquier componente. */
+/** Igual que `useToast`, pero sin provider devuelve `undefined` en vez de fallar (para avisos opcionales de la librería). */
+export const useToastOptional = (): ToastApi | undefined => React.useContext(ToastContext);
+
 export const useToast = (): ToastApi => {
   const context = React.useContext(ToastContext);
   if (!context) throw new Error('useToast debe usarse dentro de <ToastProvider>');

@@ -338,7 +338,7 @@ export const Gantt: React.FC<GanttProps> = ({
     return (
       <div
         className={cn(
-          'rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-8 text-center text-[13px] text-[var(--fg-muted,#52606f)]',
+          'rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-8 text-center text-[length:calc(13px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)]',
           className,
         )}
       >
@@ -370,9 +370,9 @@ export const Gantt: React.FC<GanttProps> = ({
             key={f.key}
             role="row"
             className={cn(
-              'flex items-center gap-2 border-b border-[var(--border-subtle,#f1f5f9)] px-3 text-[12px] last:border-b-0',
+              'flex items-center gap-2 border-b border-[var(--border-subtle,#f1f5f9)] px-3 text-[length:calc(12px*var(--k-text-scale,1))] last:border-b-0',
               f.kind === 'grupo'
-                ? 'bg-[var(--bg-muted)] font-semibold uppercase tracking-wide text-[var(--fg-subtle,#657486)] text-[10px]'
+                ? 'bg-[var(--bg-muted)] font-semibold uppercase tracking-wide text-[var(--fg-subtle,#657486)] text-[length:calc(10px*var(--k-text-scale,1))]'
                 : 'text-[var(--fg-body,#2d3a4a)]',
             )}
             style={{ height: rowHeight }}
@@ -402,7 +402,7 @@ export const Gantt: React.FC<GanttProps> = ({
               {mayores.map((t) => (
                 <div
                   key={t.inicio.toISOString()}
-                  className="absolute top-0 truncate border-r border-[var(--border-default,#e2e8f0)] px-2 text-[11px] font-semibold leading-[26px] text-[var(--fg-body,#2d3a4a)]"
+                  className="absolute top-0 truncate border-r border-[var(--border-default,#e2e8f0)] px-2 text-[length:calc(11px*var(--k-text-scale,1))] font-semibold leading-[26px] text-[var(--fg-body,#2d3a4a)]"
                   style={{ left: x(t.inicio), width: t.ancho * pxDia, height: 26 }}
                 >
                   {t.etiqueta}
@@ -417,7 +417,7 @@ export const Gantt: React.FC<GanttProps> = ({
                 <div
                   key={t.inicio.toISOString()}
                   className={cn(
-                    'absolute top-0 truncate border-r border-[var(--border-subtle,#f1f5f9)] text-center font-mono text-[10px] leading-[26px]',
+                    'absolute top-0 truncate border-r border-[var(--border-subtle,#f1f5f9)] text-center font-mono text-[length:calc(10px*var(--k-text-scale,1))] leading-[26px]',
                     t.finde
                       ? 'bg-[var(--bg-hover)] text-[var(--fg-subtle,#657486)]'
                       : 'text-[var(--fg-muted,#52606f)]',
@@ -644,7 +644,7 @@ const Barra: React.FC<BarraProps> = ({
       )}
 
       <span
-        className="relative truncate px-1.5 text-[10px] font-medium"
+        className="relative truncate px-1.5 text-[length:calc(10px*var(--k-text-scale,1))] font-medium"
         style={{ color: textoColor }}
       >
         {ancho > 44 ? task.name : ''}

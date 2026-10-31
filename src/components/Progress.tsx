@@ -43,12 +43,12 @@ export const Progress: React.FC<ProgressProps> = ({
       {(label || (showValue && !indeterminate)) && (
         <div className="flex items-center justify-between gap-2">
           {label && (
-            <span className="text-[12px] font-medium text-[var(--fg-body,#2d3a4a)]">
+            <span className="text-[length:calc(12px*var(--k-text-scale,1))] font-medium text-[var(--fg-body,#2d3a4a)]">
               {label}
             </span>
           )}
           {showValue && !indeterminate && (
-            <span className="font-mono text-[11px] text-[var(--fg-muted,#52606f)]">
+            <span className="font-mono text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)]">
               {Math.round(clamped)}%
             </span>
           )}

@@ -1,12 +1,13 @@
 import * as React from 'react';
 import type { Story } from '@ladle/react';
 import {
-  Button, ChatProvider, ChatWorkspace, ChatHeader, ChatMessageList, ChatComposer, ChatConversationList,
+  Badge, Button, ChatProvider, ChatStickerGrid, chatStickerBlock, ChatDetailsFiles, ChatDetailsParticipants, Drawer, UiIcon, ChatWorkspace, ChatHeader, ChatMessageList, ChatComposer, ChatConversationList,
   useChat, useChatActions, useChatConversation,
   useThemePresets,
-  type ChatConversationData, type ChatMessageData, type ChatUser,
+  type ChatConversationData, type ChatGif, type ChatMessageData, type ChatSticker, type ChatStickerPack, type ChatUser,
 } from '../src';
 import { ChatThemePreview } from './shared/ChatThemePreview';
+import { demoImage } from './shared/demoImages';
 
 const people: ChatUser[] = [
   { id: 'me', name: 'Marcos Vidal', status: 'online' },
@@ -90,7 +91,7 @@ function MessagingDemo() {
       onUploadAttachment={async ({ file, signal, onProgress }) => {
         onProgress(20); await operation(); if (signal.aborted) throw new DOMException('Cancelado', 'AbortError'); onProgress(100);
         const url = URL.createObjectURL(file); urls.current.add(url);
-        return { id: file.name, name: file.name, mediaType: file.type || 'application/octet-stream', size: file.size, url, status: 'ready' };
+        return { id: `srv-${crypto.randomUUID()}`, name: file.name, mediaType: file.type || 'application/octet-stream', size: file.size, url, status: 'ready' };
       }}
       onSendMessage={async message => {
         setInFlight(count => count + 1);
@@ -136,6 +137,170 @@ export const Composicion: Story = () => {
       <ChatConversationList title="Mi equipo" />
       <div className="k-chat-thread"><ChatHeader actions={<ReplyActions />} /><ChatMessageList /><ChatComposer placeholder="Escribe a tu equipo…" /></div>
     </div>
+  </ChatProvider>;
+};
+
+// Bloques propios: el mensaje lleva datos (`blocks: [{ kind, data }]`) y el chat sabe qué componente pinta cada `kind`.
+interface Pedido { numero: string; cliente: string; importe: string; estado: 'pendiente' | 'enviado' }
+interface Encuesta { pregunta: string; opciones: string[] }
+function PedidoCard({ pedido }: { pedido: Pedido }) {
+  const [estado, setEstado] = React.useState(pedido.estado);
+  return <div style={{ display: 'grid', gap: 10, minWidth: 240, padding: 12, border: '1px solid var(--border-default)', borderRadius: 'var(--k-radius-sm)', background: 'var(--bg-card)', color: 'var(--fg-default)' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+      <strong style={{ fontSize: 13 }}>Pedido {pedido.numero}</strong>
+      <Badge variant={estado === 'enviado' ? 'success' : 'warning'}>{estado === 'enviado' ? 'Enviado' : 'Pendiente'}</Badge>
+    </div>
+    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--fg-muted)' }}><span>{pedido.cliente}</span><span style={{ fontVariantNumeric: 'tabular-nums', color: 'var(--fg-default)' }}>{pedido.importe}</span></div>
+    {estado === 'pendiente' && <Button size="sm" onClick={() => setEstado('enviado')}>Marcar como enviado</Button>}
+  </div>;
+}
+function EncuestaBlock({ encuesta, own }: { encuesta: Encuesta; own: boolean }) {
+  const [votos, setVotos] = React.useState(() => encuesta.opciones.map((_, index) => index + 1));
+  const [mio, setMio] = React.useState<number | null>(null);
+  const total = votos.reduce((sum, value) => sum + value, 0);
+  return <fieldset style={{ display: 'grid', gap: 6, minWidth: 240, margin: 0, padding: 0, border: 0 }}>
+    <legend style={{ marginBottom: 8, fontWeight: 600, fontSize: 13 }}>{encuesta.pregunta}</legend>
+    {encuesta.opciones.map((opcion, index) => <button key={opcion} type="button" aria-pressed={mio === index} disabled={mio !== null}
+      onClick={() => { setMio(index); setVotos(list => list.map((value, i) => i === index ? value + 1 : value)); }}
+      style={{ position: 'relative', overflow: 'hidden', display: 'flex', justifyContent: 'space-between', padding: '7px 10px', border: '1px solid var(--border-default)', borderRadius: 'var(--k-radius-xs)', background: 'var(--bg-card)', color: 'var(--fg-default)', font: 'inherit', fontSize: 12, cursor: mio === null ? 'pointer' : 'default' }}>
+      {mio !== null && <span aria-hidden style={{ position: 'absolute', inset: 0, width: `${(votos[index] / total) * 100}%`, background: 'color-mix(in srgb, var(--color-accent) 16%, transparent)' }} />}
+      <span style={{ position: 'relative', fontWeight: mio === index ? 600 : 400 }}>{opcion}</span>
+      {mio !== null && <span style={{ position: 'relative', fontVariantNumeric: 'tabular-nums' }}>{Math.round((votos[index] / total) * 100)} %</span>}
+    </button>)}
+    <span style={{ fontSize: 10, color: own ? 'inherit' : 'var(--fg-muted)' }}>{total} votos</span>
+  </fieldset>;
+}
+const bloques = {
+  pedido: { render: ({ data }: { data: unknown }) => <PedidoCard pedido={data as Pedido} />, summary: (data: unknown) => `Pedido ${(data as Pedido).numero}` },
+  encuesta: { render: ({ data, own }: { data: unknown; own: boolean }) => <EncuestaBlock encuesta={data as Encuesta} own={own} />, summary: (data: unknown) => `Encuesta: ${(data as Encuesta).pregunta}` },
+  // `fill`: de borde a borde de la burbuja, sin el relleno interior.
+  imagen: { fill: true, render: ({ data }: { data: unknown }) => <img src={demoImage(data as number, 'Muestra del catálogo', 640, 360)} alt="Muestra del catálogo" style={{ display: 'block', width: 320, maxWidth: '100%', aspectRatio: '16 / 9', objectFit: 'cover' }} />, summary: () => 'Imagen' },
+};
+const mensajesConBloques: ChatMessageData[] = [
+  { id: 'b-1', conversationId: 'ana', senderId: 'ana', text: 'Te paso el pedido que comentamos.', createdAt: '2026-10-27T09:00:00Z', blocks: [{ kind: 'pedido', data: { numero: 'P-2041', cliente: 'Distribuciones Norte', importe: '1.284,50 €', estado: 'pendiente' } satisfies Pedido }] },
+  { id: 'b-2', conversationId: 'ana', senderId: 'me', text: '', createdAt: '2026-10-27T09:02:00Z', status: 'read', blocks: [{ kind: 'encuesta', data: { pregunta: '¿Cuándo lo revisamos?', opciones: ['Hoy por la tarde', 'Mañana a primera hora', 'El jueves'] } satisfies Encuesta }] },
+  { id: 'b-3', conversationId: 'ana', senderId: 'ana', text: 'Así queda la portada del catálogo.', createdAt: '2026-10-27T09:05:00Z', blocks: [{ kind: 'imagen', data: 2 }] },
+  { id: 'b-4', conversationId: 'ana', senderId: 'ana', text: '', createdAt: '2026-10-27T09:06:00Z', blocks: [{ kind: 'desconocido', data: {} }] },
+];
+function EnviarPedido() {
+  const { sendBlocks } = useChatActions();
+  return <Button size="sm" variant="secondary" onClick={() => void sendBlocks([{ kind: 'pedido', data: { numero: 'P-2042', cliente: 'Ferretería Sol', importe: '312,00 €', estado: 'pendiente' } satisfies Pedido }])}>Enviar pedido</Button>;
+}
+export const BloquesPropios: Story = () => <ChatProvider currentUser={people[0]} users={people} blockRenderers={bloques}
+  initialConversations={conversations.map(item => ({ ...item, hasOlderMessages: false }))} initialMessages={[...messages, ...mensajesConBloques]}
+  initialConversationId="ana" onSendMessage={message => ({ ...message, status: 'sent' })}>
+  <div className="k-chat-workspace" data-conversation-open="true" style={{ height: 640 }}>
+    <ChatConversationList />
+    <div className="k-chat-thread"><ChatHeader actions={<EnviarPedido />} /><ChatMessageList /><ChatComposer /></div>
+  </div>
+</ChatProvider>;
+
+// Un segundo de silencio en WAV, para tener una nota de voz sin red.
+function silentWav(): string {
+  const rate = 8000; const data = new Uint8Array(rate).fill(128); const view = new DataView(new ArrayBuffer(44));
+  const text = (offset: number, value: string) => [...value].forEach((char, i) => view.setUint8(offset + i, char.charCodeAt(0)));
+  text(0, 'RIFF'); view.setUint32(4, 36 + data.length, true); text(8, 'WAVEfmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+  view.setUint32(24, rate, true); view.setUint32(28, rate, true); view.setUint16(32, 1, true); view.setUint16(34, 8, true); text(36, 'data'); view.setUint32(40, data.length, true);
+  return URL.createObjectURL(new Blob([view, data], { type: 'audio/wav' }));
+}
+/** El chat dentro de un cajón de 560px: pasa a una columna por su ancho (no el de la ventana) y la cabecera pliega sus acciones. */
+export const EnPanel: Story = () => {
+  const [open, setOpen] = React.useState(true);
+  const voz = React.useMemo(() => silentWav(), []);
+  const conVoz: ChatMessageData[] = [...messages, { id: 'voz-1', conversationId: 'ana', senderId: 'ana', text: '', createdAt: '2026-10-27T08:36:00Z',
+    attachments: [{ id: 'a-voz', name: 'nota-de-voz.wav', mediaType: 'audio/wav', size: 8044, url: voz, status: 'ready', duration: 1 }] }];
+  return <>
+    <Button onClick={() => setOpen(true)}>Abrir mensajes</Button>
+    <Drawer open={open} onClose={() => setOpen(false)} size="lg" hideHeader padding="none" ariaLabel="Mensajes">
+      <ChatProvider currentUser={people[0]} users={people} initialConversations={conversations.map(item => ({ ...item, hasOlderMessages: false }))} initialMessages={conVoz}
+        initialConversationId="ana" onSendMessage={message => ({ ...message, status: 'sent' })} onConversationChange={() => undefined}
+        renderConversationBadge={conversation => conversation.id === 'team' ? { badge: <UiIcon slot="check" />, label: 'Verificada' } : null}>
+        <ChatWorkspace style={{ height: '100%', border: 0, borderRadius: 0 }}
+          listActions={<><button type="button" className="k-chat-icon-button" aria-label="Nueva conversación"><UiIcon slot="plus" size={18} /></button>
+            <button type="button" className="k-chat-icon-button" aria-label="Cerrar" onClick={() => setOpen(false)}><UiIcon slot="x" size={18} /></button></>}
+          headerMenuActions={[{ id: 'save', label: 'Guardar conversación', icon: <UiIcon slot="bookmark" size={18} />, onSelect: () => undefined }]}
+          // Información propia: solo lo que esta app necesita, con las piezas de la librería y algo suyo.
+          details={conversation => <div className="k-chat-details">
+            <section><h3>Cliente</h3><p>{conversation.title} · cuenta 4300-0127</p></section>
+            <ChatDetailsParticipants /><ChatDetailsFiles title="Documentos" />
+          </div>}
+          headerEndActions={<button type="button" className="k-chat-icon-button" aria-label="Cerrar" onClick={() => setOpen(false)}><UiIcon slot="x" size={18} /></button>} />
+      </ChatProvider>
+    </Drawer>
+  </>;
+};
+
+/** Toda la cabecera del hilo es configurable: título, subtítulo, avatar, qué botones salen y qué pasa al pulsar el nombre. */
+export const CabeceraPropia: Story = () => {
+  const [ficha, setFicha] = React.useState<string | null>(null);
+  return <ChatProvider currentUser={people[0]} users={people} initialConversations={conversations.map(item => ({ ...item, hasOlderMessages: false }))}
+    initialMessages={messages} initialConversationId="ana" onSendMessage={message => ({ ...message, status: 'sent' })}>
+    <ChatWorkspace style={{ height: 520 }} search={false} details={false}
+      headerProps={{
+        pinned: false,
+        title: conversation => <>{conversation.title} <Badge variant="info">Cliente</Badge></>,
+        subtitle: (conversation, deSerie) => conversation.id === 'ana' ? `Distribuciones Norte · ${deSerie}` : deSerie,
+        onTitleClick: conversation => setFicha(conversation.title),
+      }}
+      headerActions={<Button size="sm" variant="secondary">Nuevo pedido</Button>} />
+    <Drawer open={ficha !== null} onClose={() => setFicha(null)} title={ficha ?? ''} subtitle="Ficha del cliente">Aquí iría la ficha que monta tu aplicación.</Drawer>
+  </ChatProvider>;
+};
+
+/** Adjuntos compactos (imagen, nota de voz, fichero) y el compositor en una fila, como en WhatsApp. */
+export const AdjuntosCompactos: Story = () => {
+  const urls = React.useMemo(() => {
+    const svg = decodeURIComponent(demoImage(3, 'Plano del almacén', 800, 600).split(',')[1]);
+    return { imagen: URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })), voz: silentWav(), pdf: URL.createObjectURL(new Blob(['%PDF-1.4'], { type: 'application/pdf' })) };
+  }, []);
+  const conAdjuntos: ChatMessageData[] = [...messages,
+    { id: 'adj-1', conversationId: 'ana', senderId: 'ana', text: 'Te paso el plano', createdAt: '2026-10-27T08:40:00Z', attachments: [{ id: 'img', name: 'plano-almacen.svg', mediaType: 'image/svg+xml', size: 75000, url: urls.imagen, status: 'ready' }] },
+    { id: 'adj-2', conversationId: 'ana', senderId: 'me', text: '', createdAt: '2026-10-27T08:41:00Z', status: 'read', attachments: [{ id: 'voz', name: 'nota.wav', mediaType: 'audio/wav', size: 48600, url: urls.voz, status: 'ready', duration: 1 }] },
+    { id: 'adj-3', conversationId: 'ana', senderId: 'ana', text: 'Y el presupuesto firmado', createdAt: '2026-10-27T08:42:00Z', attachments: [{ id: 'pdf', name: 'presupuesto-2026-firmado.pdf', mediaType: 'application/pdf', size: 184000, url: urls.pdf, status: 'ready' }] },
+  ];
+  return <ChatProvider currentUser={people[0]} users={people} initialConversations={conversations.map(item => ({ ...item, hasOlderMessages: false }))} initialMessages={conAdjuntos}
+    initialConversationId="ana" onSendMessage={message => ({ ...message, status: 'sent' })}
+    // Subida simulada de unos 3 s: se puede enviar antes de que acabe y el mensaje enseña el progreso en el chat.
+    onUploadAttachment={async ({ file, signal, onProgress }) => {
+      for (let percent = 0; percent < 100; percent += 10) {
+        onProgress(percent); await new Promise(resolve => setTimeout(resolve, 300));
+        if (signal.aborted) throw new DOMException('Cancelado', 'AbortError');
+      }
+      return { id: `srv-${crypto.randomUUID()}`, name: file.name, mediaType: file.type || 'application/octet-stream', size: file.size, url: URL.createObjectURL(file), status: 'ready' };
+    }}>
+    <ChatWorkspace style={{ height: 600 }} composerLayout="inline" />
+  </ChatProvider>;
+};
+
+// Stickers y GIF: la librería solo pone la compatibilidad. El paquete, la búsqueda de GIF y la pestaña «Recientes»
+// son de la app (aquí, de la historia: SVG generados, sin red).
+const svgUrl = (svg: string) => URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+function demoStickers(): ChatStickerPack {
+  const caras = [['Vale', '👍', ['ok', 'vale', 'bien']], ['Gracias', '🙏', ['gracias']], ['Risa', '😂', ['jaja', 'risa']], ['Enviado', '📦', ['pedido', 'envío']],
+    ['Factura', '🧾', ['factura', 'cobro']], ['Fiesta', '🎉', ['fiesta', 'genial']], ['Café', '☕', ['café', 'pausa']], ['Cohete', '🚀', ['rápido', 'listo']]] as const;
+  return { id: 'oficina', name: 'Oficina', stickers: caras.map(([alt, emoji, keywords], i) => ({ id: `s${i}`, alt, keywords: [...keywords],
+    url: svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160"><circle cx="80" cy="80" r="74" fill="hsl(${i * 45} 80% 88%)" stroke="#fff" stroke-width="6"/><text x="80" y="104" font-size="72" text-anchor="middle">${emoji}</text></svg>`) })) };
+}
+const demoGifs = (query: string): ChatGif[] => Array.from({ length: 8 }, (_, i) => {
+  const url = svgUrl(decodeURIComponent(demoImage(i, query || 'Destacado', 480, 360).split(',')[1]));
+  return { id: `${query}-${i}`, url, previewUrl: url, alt: `${query || 'Destacado'} ${i + 1}`, mediaType: 'image/svg+xml', width: 240, height: 180 };
+});
+export const StickersYGif: Story = () => {
+  const packs = React.useMemo(() => [demoStickers()], []);
+  const [recientes, setRecientes] = React.useState<ChatSticker[]>([]);
+  return <ChatProvider currentUser={people[0]} users={people} initialConversations={conversations.map(item => ({ ...item, hasOlderMessages: false }))}
+    initialMessages={[...messages, { id: 'st-1', conversationId: 'ana', senderId: 'ana', text: '', createdAt: '2026-10-27T08:50:00Z', blocks: [chatStickerBlock(packs[0].stickers[0])] }]}
+    initialConversationId="ana" onSendMessage={message => {
+      const sticker = message.blocks?.find(block => block.kind === 'sticker')?.data as ChatSticker | undefined;
+      if (sticker) setRecientes(list => [sticker, ...list.filter(item => item.id !== sticker.id)].slice(0, 8));
+      return { ...message, status: 'sent' };
+    }}
+    stickerPacks={packs}
+    onSearchGifs={async query => { await new Promise(resolve => setTimeout(resolve, 250)); return demoGifs(query); }}>
+    <ChatWorkspace style={{ height: 600 }} composerLayout="inline" composerProps={{
+      // Una pestaña propia de la app, delante de las de serie.
+      pickerTabs: tabs => recientes.length ? [{ id: 'recientes', label: 'Recientes', render: ({ close, sendBlocks }) => <ChatStickerGrid stickers={recientes} onSelect={sticker => { close(); sendBlocks([chatStickerBlock(sticker)]); }} /> }, ...tabs] : tabs,
+    }} />
   </ChatProvider>;
 };
 

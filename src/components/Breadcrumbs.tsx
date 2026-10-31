@@ -20,7 +20,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className }) =>
   const nav = useMessages('navigation');
   return (
   <nav data-k-mobile="Breadcrumbs" aria-label={nav.breadcrumbs} className={cn('flex items-center', className)}>
-    <ol className="flex items-center gap-1.5 text-[12px]">
+    <ol className="flex items-center gap-1.5 text-[length:calc(12px*var(--k-text-scale,1))]">
       {items.map((item, idx) => {
         const isLast = idx === items.length - 1;
         const interactive =

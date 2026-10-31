@@ -286,7 +286,7 @@ export const Toast: React.FC<ToastProps> = ({
               <p
                 className={cn(
                   'font-semibold leading-snug tracking-[-0.005em]',
-                  minimal ? 'text-[14px]' : 'text-[13.5px]',
+                  minimal ? 'text-[length:calc(14px*var(--k-text-scale,1))]' : 'text-[length:calc(13.5px*var(--k-text-scale,1))]',
                   textOn ?? 'text-[var(--fg-default,#0a1628)]',
                 )}
               >
@@ -296,7 +296,7 @@ export const Toast: React.FC<ToastProps> = ({
             <p
               className={cn(
                 'break-words leading-snug',
-                minimal ? 'text-[13.5px]' : 'text-[13px]',
+                minimal ? 'text-[length:calc(13.5px*var(--k-text-scale,1))]' : 'text-[length:calc(13px*var(--k-text-scale,1))]',
                 title ? 'mt-0.5' : hasIcon && !minimal ? 'mt-[5px] font-medium' : 'font-medium',
                 textOn ??
                   (title ? 'text-[var(--fg-muted,#52606f)]' : 'text-[var(--fg-default,#0a1628)]'),
@@ -315,7 +315,7 @@ export const Toast: React.FC<ToastProps> = ({
                       onClose(id);
                     }}
                     className={cn(
-                      'inline-flex h-7 items-center rounded-[var(--k-radius-xs,2px)] border px-2.5 text-[12px] font-semibold transition-colors',
+                      'inline-flex h-7 items-center rounded-[var(--k-radius-xs,2px)] border px-2.5 text-[length:calc(12px*var(--k-text-scale,1))] font-semibold transition-colors',
                       'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
                       filled
                         ? 'border-[color-mix(in_srgb,var(--k-tone-on)_45%,transparent)] text-[var(--k-tone-on)] hover:bg-[color-mix(in_srgb,var(--k-tone-on)_14%,transparent)]'
@@ -333,7 +333,7 @@ export const Toast: React.FC<ToastProps> = ({
                       onClose(id);
                     }}
                     className={cn(
-                      'inline-flex h-7 items-center rounded-[var(--k-radius-xs,2px)] px-2 text-[12px] font-medium transition-colors',
+                      'inline-flex h-7 items-center rounded-[var(--k-radius-xs,2px)] px-2 text-[length:calc(12px*var(--k-text-scale,1))] font-medium transition-colors',
                       'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
                       filled
                         ? 'text-[var(--k-tone-on)] opacity-75 hover:opacity-100'

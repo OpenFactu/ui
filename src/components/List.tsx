@@ -173,7 +173,7 @@ export const ListItem: React.FC<ListItemProps> = ({
       status.label ? (
         <span
           className={cn(
-            'shrink-0 rounded-[var(--k-radius-xs,2px)] px-1.5 py-0.5 text-[10px] font-mono uppercase tracking-wider',
+            'shrink-0 rounded-[var(--k-radius-xs,2px)] px-1.5 py-0.5 text-[length:calc(10px*var(--k-text-scale,1))] font-mono uppercase tracking-wider',
             TONE_TEXT[status.tone],
           )}
         >
@@ -207,12 +207,12 @@ export const ListItem: React.FC<ListItemProps> = ({
           {badge}
         </span>
         {subtitle && (
-          <span className="truncate text-[11px] text-[var(--fg-muted,#52606f)]">
+          <span className="truncate text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)]">
             {subtitle}
           </span>
         )}
         {description && (
-          <span className="text-[11px] text-[var(--fg-muted,#52606f)] line-clamp-2">
+          <span className="text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)] line-clamp-2">
             {description}
           </span>
         )}
@@ -220,7 +220,7 @@ export const ListItem: React.FC<ListItemProps> = ({
       </span>
       {trailing ??
         (meta ? (
-          <span className="shrink-0 text-[11px] font-mono text-[var(--fg-muted,#52606f)] tabular-nums">
+          <span className="shrink-0 text-[length:calc(11px*var(--k-text-scale,1))] font-mono text-[var(--fg-muted,#52606f)] tabular-nums">
             {meta}
           </span>
         ) : null)}
@@ -240,7 +240,7 @@ export const ListItem: React.FC<ListItemProps> = ({
     className,
   );
 
-  const style = delayMs !== undefined ? { animation: `k-row-in 0.35s ease-out ${delayMs}ms both` } : undefined;
+  const style = delayMs !== undefined ? { animation: `k-row-in calc(0.35s * var(--k-motion, 1)) ease-out calc(${delayMs}ms * var(--k-motion, 1)) both` } : undefined;
 
   // Las acciones van FUERA del elemento interactivo: un <button> dentro de otro
   // <button> es HTML inválido y rompe la navegación por teclado.
@@ -343,14 +343,14 @@ export const ListSection: React.FC<ListSectionProps> = ({
       {icon && <span className={cn('shrink-0', TONE_TEXT[tone])}>{icon}</span>}
       <span
         className={cn(
-          'flex-1 text-[10px] font-mono font-semibold uppercase tracking-[1.5px]',
+          'flex-1 text-[length:calc(10px*var(--k-text-scale,1))] font-mono font-semibold uppercase tracking-[1.5px]',
           TONE_TEXT[tone],
         )}
       >
         {label}
       </span>
       {meta && (
-        <span className="text-[11px] font-mono text-[var(--fg-subtle,#657486)]">
+        <span className="text-[length:calc(11px*var(--k-text-scale,1))] font-mono text-[var(--fg-subtle,#657486)]">
           {meta}
         </span>
       )}
@@ -477,13 +477,13 @@ const ListRoot: React.FC<ListProps> = ({
     <>
       <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
       {infinite.loading && (
-        <div className="flex items-center justify-center gap-2 py-3 text-[11px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
+        <div className="flex items-center justify-center gap-2 py-3 text-[length:calc(11px*var(--k-text-scale,1))] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
           <Spinner size="xs" />
           {listTexts.loadingMore}
         </div>
       )}
       {!infinite.hasMore && !infinite.loading && infinite.endMessage !== false && (
-        <div className="py-3 text-center text-[10px] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
+        <div className="py-3 text-center text-[length:calc(10px*var(--k-text-scale,1))] font-mono uppercase tracking-widest text-[var(--fg-subtle,#657486)]">
           {infinite.endMessage ?? listTexts.end}
         </div>
       )}

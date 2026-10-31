@@ -81,7 +81,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
             'linear-gradient(90deg, var(--bg-hover) 0%, var(--bg-muted) 40%, var(--bg-hover) 80%)',
           backgroundSize: '200% 100%',
           animationName: 'k-skeleton-shimmer',
-          animationDuration: '1.6s',
+          animationDuration: 'calc(1.6s * var(--k-motion, 1))',
           animationTimingFunction: 'linear',
           animationIterationCount: 'infinite',
         }
