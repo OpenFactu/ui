@@ -354,3 +354,58 @@ test('pregunta: controles, paso y respuesta ya dada', () => {
   renderToStaticMarkup(h(AIQuestion, { question: 'x', options: [{ label: 'Una', rol: 'dato' }], renderOption: (o, s) => { seen.push([o.rol, s.selected]); return 'p'; }, optionClassName: 'mi-clase' }));
   assert.deepEqual(seen, [['dato', false]]);
 });
+
+test('citas en el texto: se convierten donde toca y el resto se queda', () => {
+  const React = require('react'); const { renderToStaticMarkup } = require('react-dom/server');
+  const { AIMarkdown } = require('../src/ai/AIMarkdown.tsx');
+  const { quoteMarkdown } = require('../src/ai/internal/remarkCitations.ts');
+  const { closeIncompleteMarkdown } = require('../src/ai/internal/markdownStream.ts');
+  const sources = [{ id: 'a', title: 'A', url: 'https://a.example' }, { id: 'b', title: 'B', url: 'https://b.example' }];
+  const md = (text, s = sources) => renderToStaticMarkup(React.createElement(AIMarkdown, { sources: s }, text));
+  const chips = (html) => (html.match(/data-numbered/g) ?? []).length;
+  assert.equal(chips(md('Dicho [1] y hecho [2].')), 2);
+  assert.equal(chips(md('Las dos [1][2]')), 1, 'seguidas, una sola cita');
+  assert.match(md('Las dos [1][2]'), />1, 2</);
+  assert.equal(chips(md('Con coma [1], [2]')), 1);
+  assert.match(md('Sin fuente [7]'), /\[7\]/);
+  assert.equal(chips(md('Sin fuente [7]')), 0);
+  assert.equal(chips(md('`codigo [1]`')), 0, 'en el código no');
+  assert.equal(chips(md('```\n[1]\n```')), 0);
+  assert.equal(chips(md('[enlace [1]](https://e.com)')), 0, 'dentro de un enlace no');
+  assert.equal(chips(md('Texto [1]', [])), 0, 'sin fuentes, tal cual');
+  assert.match(md('Texto [1]', []), /\[1\]/);
+  assert.equal(chips(md('- En lista [1]\n\n**Fuerte [2]**')), 2);
+  assert.equal(closeIncompleteMarkdown('Dicho [1'), 'Dicho ', 'una cita a medias no se enseña');
+  assert.equal(closeIncompleteMarkdown('Dicho ['), 'Dicho ');
+  assert.equal(quoteMarkdown(' Uno\nDos\n\nTres '), '> Uno\n> Dos\n>\n> Tres');
+});
+
+test('versiones con flechas y opciones al aprobar', () => {
+  const React = require('react'); const { renderToStaticMarkup } = require('react-dom/server');
+  const { AIVersionNav } = require('../src/ai/AIMessage.tsx');
+  const { AIToolCall } = require('../src/ai/AIToolCall.tsx');
+  const h = React.createElement;
+  const nav = renderToStaticMarkup(h(AIVersionNav, { versions: [{ id: 'a' }, { id: 'b' }, { id: 'c', label: 'Corta' }], value: 'c', onChange() {} }));
+  assert.match(nav, /3 de 3/);
+  assert.match(nav, /title="Corta"/);
+  assert.equal((nav.match(/disabled=""/g) ?? []).length, 1, 'en la última, solo se puede ir atrás');
+  const tool = { id: 't', name: 'x', status: 'approval-required' };
+  const f = () => undefined;
+  assert.doesNotMatch(renderToStaticMarkup(h(AIToolCall, { tool, onApprove: f, onReject: f })), /Permitir siempre/, 'solo si la herramienta lo dice');
+  assert.match(renderToStaticMarkup(h(AIToolCall, { tool: { ...tool, allowAlways: true }, onApprove: f, onReject: f })), /Permitir siempre/);
+});
+
+test('el avatar del mensaje es el Avatar de la librería: mismo tamaño con foto, iniciales o icono', () => {
+  const React = require('react'); const { renderToStaticMarkup } = require('react-dom/server');
+  const { AIMessage } = require('../src/ai/AIMessage.tsx');
+  const h = React.createElement;
+  const parts = [{ type: 'text', text: 'x', format: 'plain' }];
+  const assistant = renderToStaticMarkup(h(AIMessage, { message: { id: 'a', role: 'assistant', parts } }));
+  assert.match(assistant, /data-color="accent"/);
+  assert.match(assistant, /k-avatar-face[^>]*aria-hidden="true"/, 'el nombre ya está al lado');
+  assert.match(assistant, /<svg/);
+  const user = renderToStaticMarkup(h(AIMessage, { message: { id: 'u', role: 'user', name: 'Ana López', parts } }));
+  assert.match(user, /data-color="auto"/);
+  assert.match(user, />AL</);
+  assert.match(renderToStaticMarkup(h(AIMessage, { message: { id: 'p', role: 'user', name: 'Ana', avatar: 'https://example.com/a.png', parts } })), /<img[^>]*a\.png/);
+});

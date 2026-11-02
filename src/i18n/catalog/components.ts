@@ -16,6 +16,8 @@ export const status = {
 };
 
 export const avatar = {
+  more: '+{count}',
+  groupMore: { one: '# persona más', other: '# personas más' },
   status: { online: 'En línea', offline: 'Desconectado', busy: 'Ocupado', away: 'Ausente' },
 };
 

@@ -78,8 +78,10 @@ const DOUBLE_TAP_SLOP = 24;
 const normalizeAngle = (deg: number) => ((deg + 540) % 360) - 180;
 
 export function createGestureRecognizer(options: GestureRecognizerOptions, emit: (gesture: Gesture) => void): GestureRecognizer {
-  const o = { ...GESTURE_DEFAULTS, ...options };
-  const wants = { tap: !!o.tap, doubleTap: !!o.doubleTap, longPress: !!o.longPress, swipe: !!o.swipe, pan: !!o.pan, pinch: !!o.pinch };
+  // Una opción sin valor (`slop: undefined`) deja la de por defecto: si la pisara, el reconocedor compararía con nada.
+  const o = { ...GESTURE_DEFAULTS };
+  for (const [key, value] of Object.entries(options)) if (value !== undefined) (o as Record<string, unknown>)[key] = value;
+  const wants = { tap: !!options.tap, doubleTap: !!options.doubleTap, longPress: !!options.longPress, swipe: !!options.swipe, pan: !!options.pan, pinch: !!options.pinch };
   const pointers = new Map<number, GesturePointer>();
   const vx = createVelocityTracker(100); const vy = createVelocityTracker(100);
   let state: GestureState = 'idle';

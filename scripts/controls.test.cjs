@@ -388,3 +388,33 @@ test('la personalización llega a cada familia sin perder los roles', () => {
   assert.deepEqual(locked, [undefined], 'sin poder editar, no se puede quitar');
   assert.match(render(ComponentDefaults, { value: { RadioGroup: { optionClassName: 'global' } } }, React.createElement(RadioGroup, { options, value: 'a', onChange: noop })), /global/, 'y también desde ComponentDefaults');
 });
+
+test('Avatar: iniciales seguras, color estable, formas y grupo', () => {
+  const React = require('react');
+  const { Avatar, AvatarGroup, avatarHue, avatarInitials } = require('../src/components/Avatar.tsx');
+  const { ComponentDefaults } = require('../src/context/ComponentDefaults.tsx');
+  assert.equal(avatarInitials('Ángel Acedo Requejo'), 'ÁA');
+  assert.equal(avatarInitials('  ana  '), 'A');
+  assert.equal(avatarInitials('😀 Ana'), '😀A', 'sin partir un emoji');
+  assert.equal(avatarInitials(''), '');
+  assert.equal(avatarHue('Ana López'), avatarHue(' ana lópez '), 'la misma persona, el mismo tono');
+  const hues = new Set(['Ana', 'Luis', 'Marta', 'Ángel', 'Adrián', 'Clínica', 'Talleres', 'Prueba'].map(avatarHue));
+  assert.ok(hues.size >= 4, `tonos variados: ${[...hues]}`);
+  for (const name of ['Ana', 'x', '']) { const hue = avatarHue(name); assert.ok(hue >= 0 && hue < 360 && hue % 30 === 0); }
+  const html = render(Avatar, { name: 'Ana López' });
+  assert.match(html, /data-color="auto"/);
+  assert.match(html, /--k-avatar-h:/);
+  assert.match(html, /role="img"/);
+  assert.match(html, /aria-label="Ana López"/);
+  assert.doesNotMatch(render(Avatar, { name: 'Ana', decorative: true }), /role="img"/);
+  assert.match(render(Avatar, { name: 'Ana', color: '#123456' }), /--k-avatar-base:#123456/);
+  assert.match(render(Avatar, { name: 'Ana', shape: 'square', size: 'xl' }), /h-16/);
+  assert.match(render(Avatar, { name: 'Ana', fallback: React.createElement('b', null, 'i') }), /<b>i<\/b>/);
+  assert.match(render(ComponentDefaults, { value: { Avatar: { color: 'ink' } } }, React.createElement(Avatar, { name: 'Ana' })), /data-color="ink"/);
+  const group = render(AvatarGroup, { people: [{ name: 'A' }, { name: 'B' }, { name: 'C' }, { name: 'D' }, { name: 'E' }], max: 3 });
+  assert.equal((group.match(/k-avatar-face/g) ?? []).length, 3);
+  assert.match(group, /\+2/);
+  assert.match(group, /2 personas más/);
+  assert.match(render(AvatarGroup, { people: [{ name: 'A' }], total: 10 }), /\+9/);
+  assert.doesNotMatch(render(AvatarGroup, { people: [{ name: 'A' }] }), /k-avatar-more/);
+});

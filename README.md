@@ -215,6 +215,17 @@ const swipe = useSwipeAction({ direction: 'left', distance: 72, onTrigger: () =>
 - El reconocedor es puro (`createGestureRecognizer`, `scripts/gestures.test.cjs`): recibe punteros y emite gestos, así que se prueba sin navegador y sirve fuera de React.
 - Lo usan el chat (mantener pulsado y deslizar para responder) y, para cerrar hojas y avisos, `useDragDismiss`. Story: **Gestos**.
 
+### Avatares
+
+`Avatar` saca un tono estable del nombre, para distinguir a las personas de un vistazo; el texto y el fondo se mezclan con el tema, así que se leen igual en claro y en oscuro.
+
+- `color`: `auto` (por defecto), `accent`, `ink` (el de antes) o cualquier color CSS.
+- `shape`: `circle`, `rounded` o `square`. `size` añade `xl`.
+- `fallback`: un icono en lugar de las iniciales. `decorative`: el nombre ya se lee al lado.
+- Una imagen que falla deja las iniciales, y una nueva lo vuelve a intentar.
+- `AvatarGroup`: apilados con «+N», y se separan al pasar por encima.
+- `ComponentDefaults` con `Avatar: { color: 'ink' }` devuelve el aspecto anterior en todas partes.
+
 ### Texto, lectura y microinteracciones
 
 Piezas sueltas, sin contenido propio y con el tema: colores, muelles y `--k-motion`. Con movimiento reducido o velocidad 0 queda el estado final. Stories: **Efectos de texto**, **Prosa** y **Microinteracciones**.
@@ -986,6 +997,16 @@ registerToolView('consultar_facturas', {
 Varias llamadas seguidas van juntas en una línea («3 acciones», `AIToolGroup`). Se ve abierta mientras algo está en marcha o necesita a la persona, y se pliega sola al terminar. `groupTools={false}` lo quita.
 
 **Preguntas guiadas.** Una parte `{ type: 'question', id, question, options, multiple, allowText, step, answer }` pregunta a la persona, y la respuesta llega por `onAnswerQuestion(id, answer)`. Puede ser asíncrona: si falla, se ve el error y se puede repetir. `AIQuestion` también va suelta, encima del compositor, para que un flujo guiado avance siempre en el mismo sitio; usa `key` por paso. Admite `renderOption` y `optionClassName`, como los selectores.
+
+**Citas en el texto.** Con una parte `sources` en el mensaje (o `AIMarkdown sources`), un `[1]` abre su fuente y `[1][2]` es una sola cita. Lo que no tenga fuente se queda como está, y dentro de código o enlaces no se toca.
+
+**Citar y gestos.** Con `onQuote(text, { messageId })`, al seleccionar texto de una respuesta sale un botón para citarlo (`AISelectionAction`, ampliable con `items`). En táctil, deslizar el mensaje a la derecha cita el mensaje entero. `AIWorkspace` lo mete en el borrador si no le pasas `onQuote`. Mantener pulsado para ver las acciones está apagado por defecto (`gestures={{ longPress: true }}`): sin él, mantener pulsado sigue siendo seleccionar texto.
+
+**Aprobar herramientas.** `tool.allowAlways` ofrece «Permitir siempre», que llega como `onApproveTool(id, { always: true })`; recordarlo es cosa de la app. `tool.askRejectReason` pide el motivo, que llega como `onRejectTool(id, motivo)`.
+
+**Versiones.** `AIVersionNav`: flechas y «2 de 3», en lugar de un desplegable.
+
+**Conversaciones largas.** A partir de 40 mensajes, los que están fuera de pantalla no se pintan ni se calculan (`content-visibility`). Siguen montados, así que conservan lo que estuviera abierto o escrito.
 
 **Mensajes a medida.** Cada función recibe lo de serie, para envolverlo, añadirle algo o quitarlo devolviendo `null`.
 

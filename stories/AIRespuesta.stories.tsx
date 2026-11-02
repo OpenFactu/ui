@@ -147,3 +147,68 @@ export const MensajesAMedida = () => {
     </Frame>
   );
 };
+
+const FUENTES = [
+  { id: 'a', title: 'Cierre contable mensual', url: 'https://example.com/cierre', description: 'Guía paso a paso del cierre.' },
+  { id: 'b', title: 'Conciliación bancaria', url: 'https://docs.example.org/conciliacion' },
+];
+
+/** Un `[1]` en el texto abre su fuente; `[7]`, sin fuente, se queda como está, y el código no se toca. */
+export const CitasEnElTexto = () => (
+  <Frame>
+    <AIMessage message={{ id: 'c', role: 'assistant', parts: [
+      { type: 'text', format: 'markdown', text: 'El cierre se hace en tres pasos [1] y la conciliación va aparte [1][2].\n\nUna referencia sin fuente [7], un [enlace [1]](https://example.com) y `codigo [1]`.' },
+      { type: 'sources', sources: FUENTES },
+    ] }} />
+  </Frame>
+);
+
+/** Selecciona texto de la respuesta para citarlo. En táctil, desliza el mensaje a la derecha. */
+export const CitarYGestos = () => {
+  const [citas, setCitas] = React.useState<string[]>([]);
+  const actions = React.useMemo(() => ({ onQuote: (text: string) => setCitas((all) => [...all, text]), onRetry: () => undefined }), []);
+  const messages: AIMessageData[] = [
+    { id: 'u', role: 'user', parts: [{ type: 'text', text: '¿Cómo cierro el mes?' }] },
+    { id: 'a', role: 'assistant', parts: [{ type: 'text', format: 'markdown', text: 'Primero revisa los cobros pendientes.\n\nDespués, concilia el banco y **cierra el periodo**.' }] },
+  ];
+  return (
+    <Frame>
+      <AIConversation messages={messages} actions={actions} />
+      <AIMessage message={{ id: 'p', role: 'assistant', parts: [{ type: 'text', text: 'Mantenme pulsado.', format: 'plain' }] }} actions={actions} gestures={{ longPress: true }} />
+      <ol data-testid="citas" className="m-0 pl-5">{citas.map((cita, index) => <li key={index}>{cita}</li>)}</ol>
+    </Frame>
+  );
+};
+
+export const AprobarConOpciones = () => {
+  const [log, setLog] = React.useState<string[]>([]);
+  const [hechas, setHechas] = React.useState<Record<string, AITool['status']>>({});
+  const tool = (id: string, extra: Partial<AITool>): AITool => ({ id, name: `herramienta_${id}`, status: hechas[id] ?? 'approval-required', input: { a: 1 }, ...extra });
+  return (
+    <Frame>
+      <AIToolCall tool={tool('siempre', { allowAlways: true })} onApprove={(id, options) => { setLog((l) => [...l, `${id}:${options?.always ? 'siempre' : 'una'}`]); setHechas((h) => ({ ...h, [id]: 'completed' })); }} onReject={(id) => { setHechas((h) => ({ ...h, [id]: 'denied' })); }} />
+      <AIToolCall tool={tool('motivo', { askRejectReason: true })} onApprove={() => undefined} onReject={(id, reason) => { setLog((l) => [...l, `${id}:${reason ?? 'sin motivo'}`]); setHechas((h) => ({ ...h, [id]: 'denied' })); }} />
+      <p data-testid="registro" className="m-0">{log.join(' | ')}</p>
+    </Frame>
+  );
+};
+
+export const VersionesConFlechas = () => {
+  const [version, setVersion] = React.useState('v1');
+  const message: AIMessageData = { id: 'v', role: 'assistant', parts: [], versionId: version, versions: [
+    { id: 'v1', label: 'Primera', parts: [{ type: 'text', text: 'Primera versión.', format: 'plain' }] },
+    { id: 'v2', label: 'Más corta', parts: [{ type: 'text', text: 'Segunda versión.', format: 'plain' }] },
+    { id: 'v3', parts: [{ type: 'text', text: 'Tercera versión.', format: 'plain' }] },
+  ] };
+  return <Frame><AIMessage message={message} actions={{ onVersionChange: (_id, id) => setVersion(id) }} /></Frame>;
+};
+
+/** Con muchos mensajes, los que están fuera de pantalla no se pintan, pero siguen montados. */
+export const ConversacionLarga = () => {
+  const messages = React.useMemo<AIMessageData[]>(() => Array.from({ length: 1000 }, (_, i) => ({
+    id: `m${i}`,
+    role: i % 2 ? 'assistant' : 'user',
+    parts: [{ type: 'text', format: 'markdown', text: `Mensaje **${i}**.\n\n- Uno con [enlace](https://example.com)\n- Otro [1]\n\n| a | b |\n| - | - |\n| 1 | 2 |` }, ...(i % 2 ? [{ type: 'sources' as const, sources: FUENTES }] : [])],
+  })), []);
+  return <div style={{ height: 640, display: 'flex', flexDirection: 'column' }}><AIConversation messages={messages} /></div>;
+};

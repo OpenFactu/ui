@@ -19,6 +19,8 @@ export const ai = {
   error: 'Ha ocurrido un error', sources: 'Fuentes', activity: 'Actividad del agente', toolInput: 'Entrada', toolOutput: 'Resultado',
   pending: 'Pendiente', running: 'En ejecución', approval: 'Requiere aprobación', completed: 'Completado', denied: 'Rechazado',
   approvalPrompt: 'El asistente quiere usar esta herramienta. ¿Le das permiso?', messageFailed: 'No se ha podido completar la respuesta.',
+  quote: 'Citar', previousVersion: 'Versión anterior', nextVersion: 'Versión siguiente', versionOf: '{current} de {total}',
+  approveAlways: 'Permitir siempre', rejectReason: 'Motivo del rechazo (opcional)',
   toolGroup: { one: '# acción', other: '# acciones' },
   questionGuided: 'Paso a paso', questionStep: 'Paso {current} de {total}', questionPlaceholder: 'Escribe tu respuesta…', questionSend: 'Enviar respuesta', questionConfirm: 'Confirmar', questionAnswered: 'Respondida',
   approve: 'Aprobar', reject: 'Rechazar', openResult: 'Abrir resultado', results: 'Resultados', code: 'Código', preview: 'Vista previa',

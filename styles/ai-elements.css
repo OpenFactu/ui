@@ -184,3 +184,41 @@ li > .ai-tree-row:hover { background: var(--bg-hover, #f1f5f9); }
 .ai-question-option-label { display: inline-flex; align-items: center; gap: 5px; font-weight: 500; }
 .ai-question-option small { font-size: calc(11px * var(--k-text-scale, 1)); color: var(--fg-muted, #52606f); }
 .ai-question-text { display: flex; align-items: center; gap: 6px; }
+
+/* Citas numeradas dentro del texto */
+.ai-markdown .ai-citation { margin-inline: 1px; vertical-align: baseline; }
+.ai-chip[data-numbered] { min-width: 18px; justify-content: center; padding: 0 5px; font-size: calc(10px * var(--k-text-scale, 1)); font-variant-numeric: tabular-nums; }
+
+/* Citar lo seleccionado */
+.ai-selection-action { position: fixed; z-index: var(--k-z-popover, 999999); display: flex; gap: 2px; padding: 3px; translate: -50% -100%; border: var(--k-border-width, 1px) solid var(--border-default, #e2e8f0); border-radius: var(--k-radius-md, 8px); background: var(--bg-card, #ffffff); box-shadow: var(--k-shadow-md, 0 4px 12px -4px rgb(15 23 42 / 0.2)); animation: ai-selection-in calc(var(--k-spring-pop-duration, 280ms) * var(--k-motion, 1)) var(--k-spring-pop, cubic-bezier(.22,1,.36,1)) both; }
+@keyframes ai-selection-in { from { opacity: 0; scale: .92; } to { opacity: 1; scale: 1; } }
+.ai-selection-action button { display: inline-flex; align-items: center; gap: 5px; min-height: 28px; padding: 0 9px; border: 0; border-radius: var(--k-radius-sm, 4px); background: transparent; color: var(--fg-default, #0a1628); font-size: calc(12px * var(--k-text-scale, 1)); font-weight: 500; cursor: pointer; }
+.ai-selection-action button:hover { background: var(--bg-hover, #f1f5f9); }
+
+/* Gestos: deslizar el mensaje para citarlo; el indicador sale de --k-swipe (lo escribe useSwipeAction). */
+.ai-message { position: relative; }
+.ai-message-swipe { position: absolute; top: 4px; left: 6px; display: grid; place-items: center; width: 26px; height: 26px; border-radius: var(--k-radius-full, 999px); background: var(--bg-muted, #f8fafc); color: var(--fg-muted, #52606f); opacity: var(--k-swipe, 0); scale: calc(.6 + .4 * var(--k-swipe, 0)); pointer-events: none; }
+.ai-message[data-swipe='armed'] .ai-message-swipe { background: var(--ai-accent, #0d9488); color: var(--k-accent-on, #ffffff); transition: background calc(120ms * var(--k-motion, 1)) var(--k-ease, ease), color calc(120ms * var(--k-motion, 1)) var(--k-ease, ease); }
+@media (hover: none) { .ai-message[data-hold] .ai-message-main { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; } }
+
+/* Versiones */
+.ai-version-nav { display: inline-flex; align-items: center; gap: 2px; color: var(--fg-muted, #52606f); font-size: calc(11px * var(--k-text-scale, 1)); font-variant-numeric: tabular-nums; }
+.ai-version-nav .ai-icon-button { width: 24px; height: 24px; }
+.ai-version-nav .ai-icon-button:disabled { opacity: .35; cursor: default; }
+
+/* Rechazar con motivo */
+.ai-tool-reject { flex-wrap: wrap; align-items: center; }
+.ai-tool-reject > :first-child { min-width: 160px; }
+
+/* Movimiento: lo nuevo entra suave; lo que ya estaba no se vuelve a animar. */
+.ai-markdown[data-streaming] > * { animation: ai-block-in calc(240ms * var(--k-motion, 1)) var(--k-ease, ease) backwards; }
+@keyframes ai-block-in { from { opacity: 0; translate: 0 4px; } to { opacity: 1; translate: 0 0; } }
+.ai-tool { transition: border-color calc(200ms * var(--k-motion, 1)) var(--k-ease, ease), background-color calc(200ms * var(--k-motion, 1)) var(--k-ease, ease); }
+.ai-tool[data-status='approval-required'] { border-color: color-mix(in srgb, var(--k-warning, #d97706) 45%, var(--border-default, #e2e8f0)); }
+.ai-tool[data-status='error'] { border-color: color-mix(in srgb, var(--k-danger, #dc2626) 40%, var(--border-default, #e2e8f0)); }
+.ai-tool-state { transition: color calc(200ms * var(--k-motion, 1)) var(--k-ease, ease); }
+.ai-tool-body, .ai-tool-group-list { animation: ai-block-in calc(200ms * var(--k-motion, 1)) var(--k-ease, ease) backwards; }
+
+/* Conversaciones largas: lo que está fuera de pantalla no se pinta ni se calcula, pero sigue montado (conserva lo abierto o
+   lo escrito). La contención recorta lo que sobresale, así que se quita al señalar o enfocar: las fichas de las citas. */
+.ai-message-list[data-many] > .ai-message:not(:hover, :focus-within) { content-visibility: auto; contain-intrinsic-size: auto var(--ai-message-estimate, 160px); }

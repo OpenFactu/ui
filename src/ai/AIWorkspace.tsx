@@ -1,3 +1,4 @@
+import { quoteMarkdown } from './internal/remarkCitations';
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { Modal } from '../components/Modal';
@@ -58,6 +59,17 @@ export function AIWorkspace({ state, actions: suppliedActions, title, header, ch
   }, []);
   React.useEffect(() => { setMobilePane(state.artifactId ? 'results' : 'conversation'); }, [state.artifactId]);
   React.useEffect(() => { if (!narrow) setHistoryOpen(false); }, [narrow]);
+  // Citar, si la app no dice otra cosa: la cita va al principio del borrador y el foco, al compositor.
+  const draftRef = React.useRef(state.draft);
+  draftRef.current = state.draft;
+  const conversationActions = React.useMemo(() => (actions.onQuote ? actions : {
+    ...actions,
+    onQuote: (text: string) => {
+      const draft = draftRef.current;
+      actions.onDraftChange({ ...draft, text: `${quoteMarkdown(text)}\n\n${draft.text}` });
+      root.current?.querySelector<HTMLTextAreaElement>('.ai-workspace-composer textarea')?.focus();
+    },
+  }), [actions]);
   const selectConversation = React.useCallback((id: string) => { actions.onSelectConversation(id); setHistoryOpen(false); setMobilePane('conversation'); }, [actions]);
   // Las acciones de código «preguntan» al asistente con un mensaje nuevo, sin tocar el borrador.
   const ask = React.useCallback((text: string) => actions.onSubmit({ text, attachments: [], modelId: state.modelId }), [actions, state.modelId]);
@@ -81,7 +93,7 @@ export function AIWorkspace({ state, actions: suppliedActions, title, header, ch
     </header>
       <div className="ai-mobile-tabs" role="tablist" aria-label={l.conversation}><button type="button" role="tab" aria-selected={mobilePane === 'conversation'} onClick={() => setMobilePane('conversation')}><UiIcon slot="message-square" size={14} />{l.conversation}</button><button type="button" role="tab" aria-selected={mobilePane === 'results'} disabled={!artifactOpen} onClick={() => setMobilePane('results')}><UiIcon slot="panel-right" size={14} />{l.results}</button></div>
       <div className="ai-workspace-chat">{children ?? <>
-        <AIConversation messages={state.messages} conversationId={state.conversationId} run={state.run} actions={actions}
+        <AIConversation messages={state.messages} conversationId={state.conversationId} run={state.run} actions={conversationActions}
           loading={state.historyLoading} hasOlder={state.hasOlderMessages} loadingOlder={state.olderMessagesLoading} onLoadOlder={actions.onLoadOlderMessages}
           suggestions={suggestions} onSelectPrompt={fillPrompt} onOpenCode={actions.onOpenCode} labels={labels} {...conversationProps} />
         <div className="ai-workspace-composer"><AIComposer draft={state.draft} onDraftChange={actions.onDraftChange} onSubmit={actions.onSubmit} run={state.run} onStop={actions.onStop}

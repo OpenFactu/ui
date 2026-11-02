@@ -121,3 +121,13 @@ test('touch-action leaves the browser what the gesture does not use', () => {
   assert.equal(touchActionFor({ pan: true }), 'none');
   assert.equal(touchActionFor({ pinch: true, axis: 'x' }), 'none');
 });
+
+test('an option left undefined keeps its default instead of disabling the gesture', () => {
+  const { r, events, p } = setup({ longPress: true, tap: true, pan: true, longPressMs: undefined, slop: undefined, doubleTapMs: undefined, swipeDistance: undefined });
+  r.down(p(1, 10, 10, 0));
+  assert.equal(r.pendingAt, 450, 'mantener pulsado sigue teniendo su tiempo');
+  r.move(p(1, 13, 12, 100));
+  assert.equal(r.state, 'pending', 'moverse dentro del margen no es arrastrar');
+  r.tick(450);
+  assert.deepEqual(events.map((e) => e.type), ['longPress']);
+});

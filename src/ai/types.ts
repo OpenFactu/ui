@@ -30,7 +30,12 @@ export interface AICommand { id: string; label: string; description?: string; in
 export interface AIDraft { text: string; attachments: AIAttachment[]; mentions?: AIMention[]; modelId?: string; /** Ids de herramientas del compositor activadas (ver registerComposerTool). */ tools?: string[] }
 export interface AISource { id: string; title: string; url: string; description?: string }
 export type AIToolStatus = 'pending' | 'running' | 'approval-required' | 'completed' | 'error' | 'cancelled' | 'denied';
-export interface AITool { id: string; name: string; description?: string; status: AIToolStatus; input?: unknown; output?: unknown; error?: string; durationMs?: number }
+export interface AITool { id: string; name: string; description?: string; status: AIToolStatus; input?: unknown; output?: unknown; error?: string; durationMs?: number;
+  /** Ofrece «Permitir siempre», que llega como `onApproveTool(id, { always: true })`. Recordarlo es cosa de la app. */
+  allowAlways?: boolean;
+  /** Al rechazar, ofrece escribir el motivo, que llega como `onRejectTool(id, motivo)`. */
+  askRejectReason?: boolean;
+}
 export interface AIActivityStep { id: string; title: string; description?: string; status: AIToolStatus; durationMs?: number }
 
 export interface AIQuestionOption {
@@ -158,8 +163,10 @@ export interface AIWorkspaceActions {
   onSelectModel?: (id: string) => void;
   onLoadOlderMessages?: () => void;
   onFiles?: (files: File[]) => void;
-  onApproveTool?: (id: string) => void;
-  onRejectTool?: (id: string) => void;
+  onApproveTool?: (id: string, options?: { always?: boolean }) => void;
+  onRejectTool?: (id: string, reason?: string) => void;
+  /** Citar en el compositor un fragmento seleccionado o, deslizando en móvil, el mensaje. `AIWorkspace` lo hace por su cuenta si no se indica. */
+  onQuote?: (text: string, context: { messageId?: string }) => void;
   onAnswerQuestion?: (id: string, answer: AIQuestionAnswer) => void | Promise<void>;
   onOpenArtifact?: (id: string) => void;
   onOpenCode?: (code: string, language?: string) => void;

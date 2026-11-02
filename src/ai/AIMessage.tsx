@@ -4,7 +4,10 @@ import { UiIcon } from '../icons';
 import { Avatar } from '../components/Avatar';
 import { Button } from '../components/Button';
 import { Textarea } from '../components/Textarea';
-import { Select } from '../components/Select';
+import { ContextMenu, type ContextMenuItem } from '../components/ContextMenu';
+import { useSwipeAction } from '../gestures/useSwipeAction';
+import { copyText } from '../hooks/useCopyToClipboard';
+import { useI18n } from '../i18n/I18nProvider';
 import { cn } from '../utils';
 import type { AIMessageData, AIMessagePart, AIUIProps, AIWorkspaceActions } from './types';
 import { useAILabels } from './labels';
@@ -48,9 +51,14 @@ export interface AIMessageCustomization {
   renderPart?: (part: AIMessagePart, context: { message: AIMessageData; index: number; defaults: React.ReactNode }) => React.ReactNode;
   /** Junta las llamadas a herramientas seguidas en una línea. Default true. */
   groupTools?: boolean;
+  /**
+   * Gestos táctiles. Deslizar a la derecha cita el mensaje (si hay `onQuote`). Mantener pulsado abre sus acciones, pero está
+   * apagado por defecto: sin él, mantener pulsado sigue siendo seleccionar texto, y seleccionar es lo que permite citar un trozo.
+   */
+  gestures?: false | { swipeToQuote?: boolean; longPress?: boolean };
 }
 
-export type AIMessageCallbacks = Pick<AIWorkspaceActions, 'onRetry' | 'onEditMessage' | 'onFeedback' | 'onReadAloud' | 'onVersionChange' | 'onOpenArtifact' | 'onApproveTool' | 'onRejectTool' | 'onAnswerQuestion' | 'onOpenFile' | 'onRestoreCheckpoint'>;
+export type AIMessageCallbacks = Pick<AIWorkspaceActions, 'onRetry' | 'onEditMessage' | 'onFeedback' | 'onReadAloud' | 'onVersionChange' | 'onOpenArtifact' | 'onApproveTool' | 'onRejectTool' | 'onAnswerQuestion' | 'onQuote' | 'onOpenFile' | 'onRestoreCheckpoint'>;
 export interface AIMessageActionsProps extends AIUIProps { message: AIMessageData; actions?: AIMessageCallbacks; onEdit?: () => void }
 export function AIMessageActions({ message, actions, onEdit, labels, className }: AIMessageActionsProps) {
   const l = useAILabels(labels); const text = messageText(message);
@@ -80,9 +88,13 @@ export interface AIMessageContentProps extends AIUIProps {
 }
 export const AIMessageContent = React.memo(function AIMessageContent({ parts, role = 'assistant', actions, onOpenCode, streaming, groupTools = true, renderPart, labels, className }: AIMessageContentProps) {
   const l = useAILabels(labels);
+  const sources = React.useMemo(() => {
+    const found = parts.flatMap((part) => (part.type === 'sources' ? part.sources : []));
+    return found.length ? found : undefined;
+  }, [parts]);
   const single = (part: AIMessagePart, index: number): React.ReactNode => {
     switch (part.type) {
-      case 'text': return part.format === 'plain' || (!part.format && role !== 'assistant') ? <p key={index} className="ai-plain-text">{part.text}</p> : <AIMarkdown key={index} onOpenCode={onOpenCode} streaming={streaming && index === parts.length - 1} labels={labels}>{part.text}</AIMarkdown>;
+      case 'text': return part.format === 'plain' || (!part.format && role !== 'assistant') ? <p key={index} className="ai-plain-text">{part.text}</p> : <AIMarkdown key={index} onOpenCode={onOpenCode} streaming={streaming && index === parts.length - 1} sources={sources} labels={labels}>{part.text}</AIMarkdown>;
       case 'code': return <AICodeBlock key={index} code={part.code} language={part.language} title={part.title} onOpen={onOpenCode} labels={labels} />;
       case 'diff': return <AICodeDiff key={part.id} id={part.id} original={part.original} modified={part.modified} language={part.language} title={part.title} status={part.status} labels={labels} />;
       case 'reasoning': return <AIReasoning key={index} text={part.text} streaming={part.streaming} durationMs={part.durationMs} labels={labels} />;
@@ -120,16 +132,24 @@ export const AIMessageContent = React.memo(function AIMessageContent({ parts, ro
   }
   return <div className={cn('ai-message-content', className)}>{rows}</div>;
 });
-/**
- * Avatar del mensaje: la imagen si la hay; si no, el asistente lleva un destello sobre el acento y la persona sus
- * iniciales sobre un tinte del acento (antes ambos eran círculos oscuros iguales).
- */
-function MessageAvatar({ message, name }: { message: AIMessageData; name: string }) {
-  const src = safeUrl(message.avatar, 'media');
-  if (src) return <Avatar name={name} src={src} size="sm" />;
-  if (message.role === 'assistant') return <span className="ai-avatar" data-role="assistant" title={name}><UiIcon slot="sparkles" size={15} /></span>;
-  const initials = name.trim().split(/\s+/).slice(0, 2).map(word => word[0]?.toUpperCase() ?? '').join('');
-  return <span className="ai-avatar" data-role="user" title={name}>{initials}</span>;
+/** Las versiones de una respuesta: flechas y «2 de 3». */
+export interface AIVersionNavProps extends AIUIProps {
+  versions: { id: string; label?: string }[];
+  value?: string;
+  onChange: (id: string) => void;
+}
+export function AIVersionNav({ versions, value, onChange, labels, className }: AIVersionNavProps) {
+  const l = useAILabels(labels);
+  const { format } = useI18n();
+  const index = Math.max(0, versions.findIndex((version) => version.id === value));
+  const current = versions[index];
+  return (
+    <div className={cn('ai-version-nav', className)} role="group" aria-label={l.version}>
+      <AIIconButton label={l.previousVersion} disabled={index === 0} onClick={() => onChange(versions[index - 1].id)}><UiIcon slot="chevron-left" size={13} /></AIIconButton>
+      <span aria-live="polite" title={current?.label}>{format(l.versionOf, { current: index + 1, total: versions.length })}</span>
+      <AIIconButton label={l.nextVersion} disabled={index >= versions.length - 1} onClick={() => onChange(versions[index + 1].id)}><UiIcon slot="chevron-right" size={13} /></AIIconButton>
+    </div>
+  );
 }
 export interface AIMessageProps extends AIUIProps, AIMessageCustomization {
   message: AIMessageData; actions?: AIMessageCallbacks; onOpenCode?: (code: string, language?: string) => void;
@@ -138,28 +158,52 @@ export interface AIMessageProps extends AIUIProps, AIMessageCustomization {
   showError?: boolean;
 }
 export const AIMessage = React.memo(function AIMessage(rawProps: AIMessageProps) {
-  const { message, actions, onOpenCode, fresh, showError = true, renderActions, renderFooter, renderHeader, renderAvatar, renderPart, groupTools, labels, className } = useComponentDefaults('AIMessage', rawProps);
+  const { message, actions, onOpenCode, fresh, showError = true, renderActions, renderFooter, renderHeader, renderAvatar, renderPart, groupTools, gestures, labels, className } = useComponentDefaults('AIMessage', rawProps);
   const l = useAILabels(labels);
   const [editing, setEditing] = React.useState(false); const [text, setText] = React.useState('');
   const name = message.name ?? ({ user: l.user, assistant: l.assistant, system: l.system })[message.role];
   const parts = currentMessageParts(message);
   const created = message.createdAt ? new Date(message.createdAt) : undefined;
-  const defaultAvatar = <MessageAvatar message={message} name={name} />;
+  // El nombre ya está al lado: el avatar no lo repite. El asistente lleva el destello sobre el acento, y su imagen si la tiene.
+  const defaultAvatar = <Avatar name={name} src={safeUrl(message.avatar, 'media')} size="sm" decorative color={message.role === 'assistant' ? 'accent' : undefined} fallback={message.role === 'assistant' ? <UiIcon slot="sparkles" size={15} /> : undefined} />;
   const avatar = renderAvatar ? renderAvatar(message, defaultAvatar) : defaultAvatar;
   const defaultHeader = <header className="ai-message-header"><strong>{name}</strong>{created && !Number.isNaN(created.getTime()) && <time dateTime={message.createdAt}>{formatTimeOfDay(created)}</time>}
     {message.status === 'streaming' && <AIThinking>{l.streaming}</AIThinking>}</header>;
   const header = renderHeader ? renderHeader(message, defaultHeader) : defaultHeader;
+  const root = React.useRef<HTMLElement>(null);
+  const [menuAt, setMenuAt] = React.useState<{ x: number; y: number } | null>(null);
+  const plain = messageText(message);
+  const canQuote = gestures !== false && gestures?.swipeToQuote !== false && Boolean(actions?.onQuote) && !editing && Boolean(plain);
+  const canHold = Boolean(gestures && gestures.longPress) && !editing;
+  const swipe = useSwipeAction({
+    direction: 'right',
+    distance: 64,
+    disabled: !canQuote && !canHold,
+    progressRef: root,
+    onTrigger: canQuote ? () => actions!.onQuote!(plain, { messageId: message.id }) : undefined,
+    onLongPress: canHold ? (gesture) => setMenuAt(gesture.point) : undefined,
+  });
+  const menu: ContextMenuItem[] = [
+    ...(plain ? [{ label: l.copy, onClick: () => { void copyText(plain); } }] : []),
+    ...(plain && actions?.onQuote ? [{ label: l.quote, onClick: () => actions.onQuote!(plain, { messageId: message.id }) }] : []),
+    ...(actions?.onEditMessage ? [{ label: l.edit, onClick: () => { setText(plain); setEditing(true); } }] : []),
+    ...(message.role === 'assistant' && actions?.onRetry ? [{ label: l.regenerate, onClick: () => actions.onRetry!(message.id) }] : []),
+    ...(message.role === 'assistant' && actions?.onFeedback ? [{ label: l.positive, onClick: () => actions.onFeedback!(message.id, 'positive') }, { label: l.negative, onClick: () => actions.onFeedback!(message.id, 'negative') }] : []),
+    ...(plain && actions?.onReadAloud ? [{ label: l.readAloud, onClick: () => actions.onReadAloud!(message.id, plain) }] : []),
+  ];
   const defaultActions = <AIMessageActions message={message} actions={actions} labels={labels} onEdit={actions?.onEditMessage && !editing ? () => { setText(messageText(message)); setEditing(true); } : undefined} />;
-  return <article className={cn('ai-surface ai-message', className)} data-role={message.role} data-message-id={message.id} data-fresh={fresh || undefined} data-streaming={message.status === 'streaming' || undefined} aria-label={name}>
+  return <article className={cn('ai-surface ai-message', className)} data-role={message.role} data-message-id={message.id} data-fresh={fresh || undefined} data-streaming={message.status === 'streaming' || undefined} data-hold={canHold || undefined} aria-label={name} ref={root}>
     {avatar != null && avatar !== false && <div className="ai-message-avatar">{avatar}</div>}
-    <div className="ai-message-main">{header}
+    {canQuote && <span className="ai-message-swipe" aria-hidden="true"><UiIcon slot="corner-down-left" size={14} /></span>}
+    <div className="ai-message-main" ref={swipe.ref as React.RefObject<HTMLDivElement>} {...swipe.bind} style={swipe.style}>{header}
       {editing ? <form className="ai-message-edit" onSubmit={event => { event.preventDefault(); actions?.onEditMessage?.(message.id, text); setEditing(false); }}><Textarea aria-label={l.edit} autoFocus value={text} onChange={event => setText(event.target.value)} /><div className="ai-inline-actions"><Button type="submit" size="sm" disabled={!text.trim()}>{l.save}</Button><Button size="sm" variant="secondary" onClick={() => setEditing(false)}>{l.cancel}</Button></div></form>
         : <AIMessageContent parts={parts} role={message.role} actions={actions} onOpenCode={onOpenCode} streaming={message.status === 'streaming'} groupTools={groupTools} renderPart={renderPart ? (part, index, defaults) => renderPart(part, { message, index, defaults }) : undefined} labels={labels} />}
       {message.status === 'error' && showError && <div className="ai-message-error" role="alert"><UiIcon slot="alert-circle" size={15} /><span>{l.messageFailed}</span>{actions?.onRetry && <button type="button" className="ai-text-button" onClick={() => actions.onRetry!(message.id)}><UiIcon slot="refresh-cw" size={13} />{l.retry}</button>}</div>}
       <div className="ai-message-footer">{renderActions ? renderActions(message, defaultActions) : defaultActions}
-        {!!message.versions?.length && actions?.onVersionChange && <div className="ai-version-selector"><Select ariaLabel={l.version} value={message.versionId ?? message.versions[0].id} options={message.versions.map((version, index) => ({ value: version.id, label: version.label ?? `${l.version} ${index + 1}` }))} onChange={id => actions.onVersionChange!(message.id, id)} /></div>}
+        {!!message.versions && message.versions.length > 1 && actions?.onVersionChange && <AIVersionNav versions={message.versions} value={message.versionId ?? message.versions[0].id} onChange={id => actions.onVersionChange!(message.id, id)} labels={labels} />}
       </div>
       {renderFooter?.(message)}
+      {menuAt && <ContextMenu x={menuAt.x} y={menuAt.y} items={menu} onClose={() => setMenuAt(null)} />}
     </div>
   </article>;
 });

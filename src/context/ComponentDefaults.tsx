@@ -11,6 +11,7 @@ import type { ToggleGroupBaseProps } from '../components/ToggleGroup';
 import type { SegmentedControlProps } from '../components/SegmentedControl';
 import type { ChoiceBaseProps } from '../components/ChoiceCards';
 import type { TagInputProps } from '../components/TagInput';
+import type { AvatarProps } from '../components/Avatar';
 
 /** Lo que se puede fijar para todos los de un tipo. Quedan fuera los datos de cada uso (`value`, `options`, `onChange`…). */
 export interface ComponentDefaultsMap {
@@ -26,6 +27,7 @@ export interface ComponentDefaultsMap {
   SegmentedControl?: Partial<Pick<SegmentedControlProps<string>, 'renderOption' | 'optionClassName' | 'size' | 'variant'>>;
   ChoiceCards?: Partial<ChoiceBaseProps<string>>;
   TagInput?: Partial<Pick<TagInputProps, 'renderTag' | 'tagClassName'>>;
+  Avatar?: Partial<Pick<AvatarProps, 'color' | 'shape' | 'size'>>;
 }
 
 const Defaults = React.createContext<ComponentDefaultsMap>({});

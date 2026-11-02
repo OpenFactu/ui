@@ -129,9 +129,11 @@ export interface AIInlineCitationProps extends AIUIProps {
   source?: AISource;
   /** …o varias para la misma afirmación: el chip muestra «dominio +N» y la ficha se pagina. */
   sources?: AISource[];
+  /** Lo que dice el chip. Por defecto, el dominio. */
+  label?: React.ReactNode;
 }
 /** Fuente(s) dentro de la frase que respaldan: un chip con el dominio y, al pasar o enfocar, la ficha. */
-export function AIInlineCitation({ source, sources, labels, className }: AIInlineCitationProps) {
+export function AIInlineCitation({ source, sources, label, labels, className }: AIInlineCitationProps) {
   const l = useAILabels(labels);
   const list = sources?.length ? sources : source ? [source] : [];
   const [index, setIndex] = React.useState(0);
@@ -148,7 +150,7 @@ export function AIInlineCitation({ source, sources, labels, className }: AIInlin
   const step = (delta: number) => setIndex(value => (value + delta + list.length) % list.length);
   return <span className={cn('ai-surface ai-citation', className)} onMouseEnter={show} onMouseLeave={hide} onFocus={show}
     onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) hide(); }} onKeyDown={event => { if (event.key === 'Escape') setOpen(false); }}>
-    <a className="ai-chip" href={safeUrl(list[0].url)} target="_blank" rel="noreferrer noopener" aria-describedby={open ? id : undefined}>{hostOf(list[0].url)}{list.length > 1 && <span className="ai-chip-more">+{list.length - 1}</span>}</a>
+    <a className="ai-chip" href={safeUrl(list[0].url)} target="_blank" rel="noreferrer noopener" aria-describedby={open ? id : undefined} data-numbered={label != null || undefined}>{label ?? <>{hostOf(list[0].url)}{list.length > 1 && <span className="ai-chip-more">+{list.length - 1}</span>}</>}</a>
     {open && <span ref={fit.ref as React.RefObject<HTMLSpanElement>} id={id} role="group" aria-label={l.source2} className="ai-context-card ai-citation-card" data-placement={fit.placement} data-align={fit.align}>
       {list.length > 1 && <span className="ai-citation-pager">
         <button type="button" className="ai-icon-button" aria-label={l.previous} onClick={() => step(-1)}><UiIcon slot="chevron-left" size={14} /></button>

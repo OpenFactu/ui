@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { Button } from '../components/Button';
+import { Input } from '../components/Input';
 import { cn } from '../utils';
 import type { AITool, AIToolStatus, AIActivityStep, AIUIProps } from './types';
 import { useAILabels, type AILabels } from './labels';
@@ -17,8 +18,8 @@ function StatusIcon({ status }: { status: AIToolStatus }) {
 }
 export interface AIToolCallProps extends AIUIProps {
   tool: AITool;
-  onApprove?: (id: string) => void | Promise<void>;
-  onReject?: (id: string) => void | Promise<void>;
+  onApprove?: (id: string, options?: { always?: boolean }) => void | Promise<void>;
+  onReject?: (id: string, reason?: string) => void | Promise<void>;
   /** Vista de esta llamada; gana a la registrada con `registerToolView`. */
   view?: AIToolViewDefinition;
 }
@@ -36,9 +37,11 @@ export const AIToolCall = React.memo(function AIToolCall(rawProps: AIToolCallPro
   const [busy, setBusy] = React.useState(false);
   const [actionError, setActionError] = React.useState('');
   React.useEffect(() => { if (tool.status === 'approval-required' || tool.status === 'error') setOpen(true); }, [tool.status]);
-  const act = async (callback: (id: string) => void | Promise<void>) => {
+  const [rejecting, setRejecting] = React.useState(false);
+  const [reason, setReason] = React.useState('');
+  const act = async (callback: () => void | Promise<void>) => {
     if (busy) return; setBusy(true); setActionError('');
-    try { await callback(tool.id); } catch (error) { setActionError(error instanceof Error ? error.message : l.error); } finally { setBusy(false); }
+    try { await callback(); } catch (error) { setActionError(error instanceof Error ? error.message : l.error); } finally { setBusy(false); }
   };
   return <section className={cn('ai-surface ai-tool', className)} data-status={tool.status}>
     <button type="button" data-k-focus-inset="" className="ai-disclosure" aria-expanded={open} onClick={() => setOpen(value => !value)}>{view?.icon ?? <UiIcon slot="wrench" size={14} />}<strong>{toolDisplayName(tool, view)}</strong>{summary != null && summary !== false && <span className="ai-tool-summary">{summary}</span>}<span className="ai-tool-state"><StatusIcon status={tool.status} />{statusLabel(tool.status, l)}{tool.status === 'completed' && tool.durationMs !== undefined ? ` · ${(tool.durationMs / 1000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} s` : ''}</span><UiIcon slot="chevron-right" size={14} className={open ? 'ai-rotated' : undefined} /></button>
@@ -47,7 +50,19 @@ export const AIToolCall = React.memo(function AIToolCall(rawProps: AIToolCallPro
         ? <ToolViewBoundary fallback={raw} resetKey={tool.output}><ToolBody view={view} tool={tool} raw={raw} /></ToolViewBoundary>
         : raw}
       {(tool.error || actionError) && <p className="ai-error" role="alert">{tool.error || actionError}</p>}
-      {tool.status === 'approval-required' && <div className="ai-inline-actions">{onApprove && <Button size="sm" disabled={busy} onClick={() => void act(onApprove)}><UiIcon slot="check" size={14} />{l.approve}</Button>}{onReject && <Button size="sm" variant="secondary" disabled={busy} onClick={() => void act(onReject)}>{l.reject}</Button>}</div>}
+      {tool.status === 'approval-required' && (rejecting ? (
+        <form className="ai-inline-actions ai-tool-reject" onSubmit={(event) => { event.preventDefault(); void act(() => onReject?.(tool.id, reason.trim() || undefined)); }}>
+          <Input autoFocus aria-label={l.rejectReason} placeholder={l.rejectReason} value={reason} containerClassName="flex-1" onChange={(event) => setReason(event.target.value)} onKeyDown={(event) => { if (event.key === 'Escape') { event.stopPropagation(); setRejecting(false); } }} />
+          <Button type="submit" size="sm" variant="danger" disabled={busy}>{l.reject}</Button>
+          <Button size="sm" variant="secondary" disabled={busy} onClick={() => setRejecting(false)}>{l.cancel}</Button>
+        </form>
+      ) : (
+        <div className="ai-inline-actions">
+          {onApprove && <Button size="sm" disabled={busy} onClick={() => void act(() => onApprove(tool.id))}><UiIcon slot="check" size={14} />{l.approve}</Button>}
+          {onApprove && tool.allowAlways && <Button size="sm" variant="secondary" disabled={busy} onClick={() => void act(() => onApprove(tool.id, { always: true }))}>{l.approveAlways}</Button>}
+          {onReject && <Button size="sm" variant="secondary" disabled={busy} onClick={() => { if (tool.askRejectReason) setRejecting(true); else void act(() => onReject(tool.id)); }}>{l.reject}</Button>}
+        </div>
+      ))}
     </div>}
   </section>;
 });
@@ -59,8 +74,8 @@ function ToolBody({ view, tool, raw }: { view: AIToolViewDefinition; tool: AIToo
 
 export interface AIToolGroupProps extends AIUIProps {
   tools: AITool[];
-  onApprove?: (id: string) => void | Promise<void>;
-  onReject?: (id: string) => void | Promise<void>;
+  onApprove?: AIToolCallProps['onApprove'];
+  onReject?: AIToolCallProps['onReject'];
 }
 const needsAttention = (tool: AITool) => tool.status === 'approval-required' || tool.status === 'error';
 const isActive = (tool: AITool) => tool.status === 'running' || tool.status === 'pending';

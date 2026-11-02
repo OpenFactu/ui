@@ -230,6 +230,7 @@
   .ai-workspace-composer { padding: 8px 10px 12px; }
   .ai-message { gap: 7px; }
   .ai-message-avatar > span, .ai-message-avatar > span > span:first-child { width: 24px; height: 24px; font-size: calc(10px * var(--k-text-scale, 1)); }
+  .ai-message-avatar svg { width: 12px; height: 12px; }
   .ai-history-dialog-overlay.ai-history-dialog-overlay { padding: 0; }
   [role='dialog'].ai-history-dialog { max-width: none; height: 100dvh; max-height: 100dvh; border: 0; border-radius: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
   .ai-history-dialog .ai-history > header > strong { display: none; }
@@ -508,29 +509,9 @@
 /* ── Mensajes, estados, herramientas y compositor (segunda pasada) ─────────────────────────────────────────── */
 
 /* Avatares: destello sobre el acento para el asistente, iniciales sobre un tinte para la persona. */
-.ai-avatar {
-  display: inline-grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  font-size: calc(11px * var(--k-text-scale, 1));
-  font-weight: 650;
-  user-select: none;
-}
-.ai-avatar[data-role='assistant'] {
-  color: var(--k-accent-on, #ffffff);
-  background: linear-gradient(135deg, var(--ai-accent, #0d9488), var(--ai-accent-strong, #0f766e));
-  box-shadow: 0 4px 12px -6px color-mix(in srgb, var(--ai-accent, #0d9488) 70%, transparent);
-}
-.ai-avatar[data-role='user'] {
-  color: color-mix(in srgb, var(--ai-accent, #0d9488) 70%, var(--fg-default, #0a1628));
-  background: var(--ai-accent-soft, rgb(13 148 136 / 0.12));
-  box-shadow: inset 0 0 0 1px var(--ai-accent-line, rgb(13 148 136 / 0.38));
-}
-.ai-message[data-streaming] .ai-avatar[data-role='assistant'] { animation: ai-avatar-breathe calc(1.6s * var(--k-motion, 1)) ease-in-out infinite; }
+/* El asistente respira mientras escribe. El aspecto del avatar es el de `Avatar` (`styles/expressive.css`). */
+.ai-message[data-streaming][data-role='assistant'] .k-avatar-face { animation: ai-avatar-breathe calc(1.6s * var(--k-motion, 1)) ease-in-out infinite; }
 @keyframes ai-avatar-breathe { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--ai-accent, #0d9488) 18%, transparent); } }
-@media (max-width: 767px) { .ai-avatar { width: 24px; height: 24px; font-size: calc(10px * var(--k-text-scale, 1)); } .ai-avatar svg { width: 12px; height: 12px; } }
 
 /* Burbuja de la persona: tinte del acento, sin borde, con la esquina junto al avatar más cerrada. */
 .ai-message[data-role='user'] .ai-message-content {

@@ -77,6 +77,8 @@ export function closeIncompleteMarkdown(block: string): string {
     // Lo que aún no dice nada: unas comillas invertidas sueltas, o solo la marca de un título, lista o cita.
     .replace(/(^|\n)[ \t]*`{1,2}[ \t]*$/, '$1')
     .replace(/(^|\n)[ \t]*(?:#{1,6}|[-*+]|\d{1,9}[.)]|>)[ \t]*$/, '$1')
+    // Una cita a medias: fuera, hasta que se pueda enseñar entera.
+    .replace(/\[\d*$/, '')
     // Imagen sin terminar: fuera (no hay que pedir una URL a medias). Enlace sin terminar: solo su texto.
     .replace(/!\[[^\]\n]*(?:\](?:\([^)\n]*)?)?$/, '')
     .replace(/\[([^\]\n]*)\]\([^)\n]*$/, '$1')

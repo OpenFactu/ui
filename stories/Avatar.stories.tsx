@@ -1,5 +1,6 @@
 import type { Story } from '@ladle/react';
-import { Avatar } from '../src/components/Avatar';
+import { Bot } from 'lucide-react';
+import { Avatar, AvatarGroup } from '../src/components/Avatar';
 
 export const Tamanos: Story = () => (
   <div className="flex items-center gap-4">
@@ -34,3 +35,36 @@ export const ConImagen: Story = () => (
     <Avatar name="Imagen rota" src="data:image/png;base64,not-a-png" status="online" />
   </div>
 );
+
+const GENTE = ['Ana López', 'Luis Romero', 'Marta Ruiz', 'Ángel Acedo', 'Adrián Mora', 'Clínica Sol', 'Talleres Ruiz', 'Prueba humo', 'user_prueba', 'Ventas', 'Soporte', 'Dirección'];
+
+/** Cada persona sale siempre del mismo tono, y se lee igual de bien en claro y en oscuro. */
+export const Colores: Story = () => (
+  <div className="flex flex-col gap-5">
+    <div className="flex flex-wrap gap-3">{GENTE.map((name) => <Avatar key={name} name={name} />)}</div>
+    <div className="flex flex-wrap items-center gap-3">
+      <Avatar name="Tema" color="accent" />
+      <Avatar name="Tinta" color="ink" />
+      <Avatar name="Propio" color="#7c3aed" />
+      <Avatar name="Con icono" color="accent" fallback={<Bot size={18} />} />
+    </div>
+  </div>
+);
+
+export const Formas: Story = () => (
+  <div className="flex items-center gap-4">
+    <Avatar name="Ana López" size="xl" />
+    <Avatar name="Clínica Sol" size="xl" shape="rounded" />
+    <Avatar name="Talleres Ruiz" size="xl" shape="square" status="online" />
+  </div>
+);
+
+export const Grupo: Story = () => (
+  <div className="flex flex-col items-start gap-5">
+    <AvatarGroup aria-label="Equipo" people={GENTE.map((name) => ({ name }))} />
+    <AvatarGroup aria-label="Pequeño" size="xs" max={3} people={GENTE.map((name) => ({ name }))} />
+    <AvatarGroup aria-label="Muestra" size="md" total={128} people={GENTE.slice(0, 3).map((name) => ({ name }))} />
+  </div>
+);
+
+export const ImagenQueFalla: Story = () => <Avatar name="Ana López" src="data:image/png;base64,AAAA" size="lg" />;
