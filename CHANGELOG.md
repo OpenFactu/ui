@@ -2,7 +2,7 @@
 
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Antes de la 1.0, una versión menor puede cambiar lo que se ve, y cada entrada dice cómo volver a lo anterior.
 
-## [0.7.0] - Sin publicar
+## [0.7.0] - 2026-11-02
 
 ### Añadido
 
@@ -63,7 +63,7 @@ Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Antes de
 
 - Chat: mensajería con temas, reacciones, adjuntos y voz.
 
-[0.7.0]: https://github.com/OpenFactu/ui/compare/v0.6.1...HEAD
+[0.7.0]: https://github.com/OpenFactu/ui/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/OpenFactu/ui/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/OpenFactu/ui/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/OpenFactu/ui/compare/v0.5.0...v0.5.1
