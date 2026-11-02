@@ -142,8 +142,8 @@
    abierto la fila queda marcada y el resto de la conversación se apaga. La marca es un ::before de todo el ancho. */
 .k-chat-message { isolation: isolate; }
 .k-chat-message::before { content: ''; position: absolute; inset: -3px -24px; z-index: -1; background: color-mix(in srgb, var(--color-accent) 16%, transparent); opacity: 0; pointer-events: none; transition: opacity calc(150ms * var(--k-motion, 1)) var(--k-ease, ease); }
-.k-chat-message[data-pressing]::before { opacity: .7; transition-duration: calc(450ms * var(--k-motion, 1)); }
-.k-chat-message[data-pressing] .k-chat-bubble { scale: .97; transition: scale calc(450ms * var(--k-motion, 1)) var(--k-ease, ease); }
+.k-chat-message:has(.k-chat-bubble[data-gesture='pressing'])::before { opacity: .7; transition-duration: calc(450ms * var(--k-motion, 1)); }
+.k-chat-bubble[data-gesture='pressing'] { scale: .97; transition-duration: calc(450ms * var(--k-motion, 1)); }
 @media (hover: none) {
   .k-chat-timeline::after { content: ''; position: absolute; inset: 0; z-index: 1; background: color-mix(in srgb, var(--k-ink-900, #0a1628) 45%, transparent); opacity: 0; pointer-events: none; transition: opacity calc(180ms * var(--k-motion, 1)) var(--k-ease, ease); }
   .k-chat-timeline:has(.k-chat-message[data-menu-open])::after { opacity: 1; }
@@ -162,10 +162,11 @@
 .k-chat-menu-item[data-danger] { color: var(--k-danger-fg); }
 .k-chat-menu-item[data-danger] > svg { color: currentColor; }
 
-/* Gestos táctiles: deslizar a la derecha para responder. El scroll vertical sigue siendo del navegador. */
-.k-chat-bubble { touch-action: pan-y; transition: transform calc(220ms * var(--k-motion, 1)) var(--k-spring-move, cubic-bezier(.22,1,.36,1)), scale calc(220ms * var(--k-motion, 1)) var(--k-spring-move, cubic-bezier(.22,1,.36,1)); }
-.k-chat-bubble[data-dragging] { transition: none; }
-.k-chat-swipe-reply { position: absolute; left: 4px; top: 50%; display: grid; place-items: center; width: 28px; height: 28px; margin-top: -14px; border-radius: var(--k-radius-full, 999px); background: var(--bg-muted); color: var(--fg-muted); pointer-events: none; }
+/* Gestos táctiles (`useSwipeAction`): deslizar a la derecha para responder. La burbuja sigue al dedo (`translate`, con
+   muelle al volver) y la fila recibe `--k-swipe` (0-1) y `data-swipe="active|armed"`, de los que sale el indicador. */
+.k-chat-bubble { touch-action: pan-y; transition: scale calc(220ms * var(--k-motion, 1)) var(--k-spring-move, cubic-bezier(.22,1,.36,1)); }
+.k-chat-swipe-reply { position: absolute; left: 4px; top: 50%; display: grid; place-items: center; width: 28px; height: 28px; margin-top: -14px; border-radius: var(--k-radius-full, 999px); background: var(--bg-muted); color: var(--fg-muted); pointer-events: none; opacity: var(--k-swipe, 0); scale: calc(.6 + .4 * var(--k-swipe, 0)); }
+.k-chat-bubble-row[data-swipe='armed'] .k-chat-swipe-reply { background: var(--color-accent); color: var(--color-accent-fg, var(--bg-card)); transition: background calc(120ms * var(--k-motion, 1)) var(--k-ease, ease), color calc(120ms * var(--k-motion, 1)) var(--k-ease, ease); }
 /* En táctil, mantener pulsado es el gesto del mensaje (copiar está en su menú): ni selección ni menú del sistema. */
 @media (hover: none) { .k-chat-bubble { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; } }
 .k-chat-reactions { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: calc(5px * var(--k-density, 1)); }
@@ -311,10 +312,23 @@
 .k-chat-mention-suggestions { display: grid; padding: 5px; margin-top: 5px; border: var(--k-border-width, 1px) solid var(--border-default); border-radius: var(--k-radius-sm); background: var(--bg-card); }
 .k-chat-mention-suggestions button { border: 0; text-align: left; padding: 8px; background: transparent; color: var(--fg-default); border-radius: var(--k-radius-xs); cursor: pointer; }
 .k-chat-mention-suggestions button[aria-selected='true'] { background: var(--bg-muted); }
-.k-chat-search-messages { display: flex; align-items: center; gap: 5px; padding: 8px 14px; border-bottom: var(--k-border-width, 1px) solid var(--border-default); font-size: calc(11px * var(--k-text-scale, 1)); }
-.k-chat-search-messages input { flex: 1; min-width: 0; width: 0; }
-.k-chat-search-messages > span { flex-shrink: 0; }
-.k-chat-search-messages .k-chat-icon-button { min-width: 28px; min-height: 28px; }
+/* Buscar en la conversación: el campo se queda con todo el ancho; contador y borrar van dentro, flechas y cerrar fuera. */
+.k-chat-search-messages { --k-chat-search-radius: calc(var(--k-radius-lg, 12px) * 2); display: flex; align-items: center; gap: 2px; padding: calc(8px * var(--k-density, 1)) 10px; border-bottom: var(--k-border-width, 1px) solid var(--border-default); animation: k-chat-search-in calc(160ms * var(--k-motion, 1)) var(--k-ease, ease) both; }
+@keyframes k-chat-search-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.k-chat-search-field { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; margin-right: 4px; padding: 0 6px 0 10px; border: var(--k-border-width, 1px) solid var(--border-default); border-radius: var(--k-chat-search-radius); background: color-mix(in srgb, var(--bg-muted) 35%, var(--bg-card)); color: var(--fg-subtle); cursor: text; transition: border-color calc(120ms * var(--k-motion, 1)) var(--k-ease, ease); }
+.k-chat-search-field > svg { flex-shrink: 0; }
+.k-chat-search-field:focus-within { border-color: var(--k-focus-color, var(--color-accent)); }
+.k-chat-search-field input { flex: 1; min-width: 0; width: 100%; padding: calc(7px * var(--k-density, 1)) 0; border: 0; outline: 0; background: transparent; color: var(--fg-default); font: inherit; font-size: calc(13px * var(--k-text-scale, 1)); appearance: none; }
+.k-chat-search-field input::placeholder { color: var(--fg-subtle); }
+.k-chat-search-field input::-webkit-search-cancel-button { display: none; }
+.k-chat-search-count { flex-shrink: 0; color: var(--fg-muted); font-size: calc(11px * var(--k-text-scale, 1)); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.k-chat-search-count[data-empty] { color: var(--k-danger-fg); }
+.k-chat-search-clear { position: relative; flex-shrink: 0; display: grid; place-items: center; width: 18px; height: 18px; padding: 0; border: 0; border-radius: var(--k-radius-full, 999px); background: var(--bg-muted); color: var(--fg-muted); cursor: pointer; }
+.k-chat-search-clear::after { content: ''; position: absolute; inset: -8px; }
+.k-chat-search-clear:hover { color: var(--fg-default); }
+.k-chat-search-messages .k-chat-icon-button { flex-shrink: 0; min-width: 30px; min-height: 30px; border-radius: var(--k-chat-search-radius); }
+/* Panel estrecho: la X de fuera ya lo deja todo limpio, y el sitio es para lo que se escribe. */
+@container k-chat (max-width: 360px) { .k-chat-search-clear { display: none; } .k-chat-workspace .k-chat-search-messages .k-chat-icon-button { min-width: 32px; } }
 .k-chat-conversation-tabs { display: flex; gap: 5px; padding: 0 14px 10px; font-size: calc(12px * var(--k-text-scale, 1)); }
 .k-chat-conversation-tabs button { padding: 5px 9px; border: 0; border-radius: var(--k-radius-xs); background: transparent; color: var(--fg-muted); cursor: pointer; }
 .k-chat-conversation-tabs button[aria-pressed='true'] { background: var(--bg-muted); color: var(--fg-default); }
@@ -331,10 +345,20 @@
 .k-chat-composer[data-voice-active='true'] .k-chat-composer-input { min-height: 68px; justify-content: center; }
 .k-chat-audio-player { display: flex; align-items: center; min-width: 0; flex: 1; gap: 10px; color: var(--fg-default); }
 .k-chat-audio-player > audio { display: none; }
-.k-chat-audio-play { display: grid; place-items: center; width: 36px; height: 36px; flex-shrink: 0; border: 0; border-radius: var(--k-radius-full); background: color-mix(in srgb,var(--color-accent) 14%,var(--bg-card)); color: var(--fg-default); cursor: pointer; }
+.k-chat-audio-play { position: relative; display: grid; place-items: center; width: 36px; height: 36px; flex-shrink: 0; border: 0; border-radius: var(--k-radius-full); background: color-mix(in srgb,var(--color-accent) 14%,var(--bg-card)); color: var(--fg-default); cursor: pointer; transition: scale calc(var(--k-spring-pop-duration, 280ms) * var(--k-motion, 1)) var(--k-spring-pop, cubic-bezier(.22,1,.36,1)); }
+.k-chat-audio-play:active:not(:disabled) { scale: .9; }
+/* Mientras suena, un aro sale del botón; el icono cambia con el muelle del tema. */
+.k-chat-audio-player[data-playing] .k-chat-audio-play::after { content: ''; position: absolute; inset: 0; border-radius: inherit; border: calc(var(--k-border-width, 1px) * 2) solid var(--color-accent); opacity: 0; pointer-events: none; animation: k-chat-audio-ring calc(1600ms * var(--k-motion, 1)) var(--k-ease, ease-out) infinite; }
+@keyframes k-chat-audio-ring { from { opacity: .45; scale: 1; } to { opacity: 0; scale: 1.5; } }
+.k-chat-audio-icon { display: grid; place-items: center; animation: k-chat-audio-icon-in calc(var(--k-spring-pop-duration, 280ms) * var(--k-motion, 1)) var(--k-spring-pop, cubic-bezier(.22,1,.36,1)) both; }
+@keyframes k-chat-audio-icon-in { from { opacity: 0; scale: .5; filter: blur(2px); } to { opacity: 1; scale: 1; filter: blur(0); } }
 .k-chat-audio-track { position: relative; flex: 1; min-width: 45px; padding-bottom: 14px; }
-.k-chat-audio-wave { display: flex; align-items: center; justify-content: space-between; gap: 2px; height: 27px; overflow: hidden; }
-.k-chat-audio-wave i { flex: 1; max-width: 4px; min-width: 2px; border-radius: var(--k-radius-full); background: color-mix(in srgb,var(--fg-muted) 35%,var(--bg-card)); }
+/* La altura de las barras la escribe `useWaveMotion` en cada fotograma (`data-live`): sin transición, y con `contain` para
+   que ese trabajo no salga de la onda. En reposo sí transiciona, y así la forma provisional se convierte en la real. */
+.k-chat-audio-wave { display: flex; align-items: center; justify-content: space-between; gap: 2px; height: 27px; overflow: hidden; contain: layout paint; }
+.k-chat-audio-wave i { flex: 1; max-width: 4px; min-width: 2px; border-radius: var(--k-radius-full); background: color-mix(in srgb,var(--fg-muted) 35%,var(--bg-card)); transition: background calc(140ms * var(--k-motion, 1)) var(--k-ease, ease), height calc(var(--k-spring-move-duration, 320ms) * var(--k-motion, 1)) var(--k-spring-move, cubic-bezier(.22,1,.36,1)); }
+.k-chat-audio-wave[data-live] i { transition: background calc(140ms * var(--k-motion, 1)) var(--k-ease, ease); }
+.k-chat-audio-wave[data-rewind] i { transition-delay: calc((36 - var(--i, 0)) * 9ms * var(--k-motion, 1)); }
 .k-chat-audio-wave i[data-played='true'] { background: var(--color-accent); }
 .k-chat-audio-track input { position: absolute; left: 0; top: 0; width: 100%; height: 28px; opacity: 0; cursor: pointer; }
 /* Solo con teclado: al tocar o arrastrar la barra no sale anillo. */

@@ -1,12 +1,16 @@
 import { ControlField, describedBy } from './internal/ControlField';
 import * as React from 'react';
 import { cn } from '../utils';
+import { useComponentDefaults } from '../context/ComponentDefaults';
+import { resolveItemClass, type ItemClassName, type ItemRenderState } from './internal/optionStyle';
 
 export interface RadioOption {
   value: string;
   label: React.ReactNode;
   description?: string;
   disabled?: boolean;
+  /** Datos propios, para `renderOption`. */
+  [key: string]: any;
 }
 
 export interface RadioGroupProps {
@@ -24,9 +28,16 @@ export interface RadioGroupProps {
   orientation?: 'vertical' | 'horizontal';
   disabled?: boolean;
   className?: string;
+  /** Pinta el texto de cada opción, junto al círculo (o sola, con `indicator={false}`). */
+  renderOption?: (option: RadioOption, state: ItemRenderState) => React.ReactNode;
+  /** Clases de cada opción: forma, fondo, tamaño. La marcada lleva `data-checked`. También como función. */
+  optionClassName?: ItemClassName<RadioOption>;
+  /** Muestra el círculo. Default true. Sin él, marca tú la elegida: `data-checked:` o `renderOption`. */
+  indicator?: boolean;
 }
 
-export const RadioGroup: React.FC<RadioGroupProps> = ({
+export const RadioGroup: React.FC<RadioGroupProps> = (rawProps) => {
+  const {
   options,
   value,
   onChange,
@@ -39,7 +50,10 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
   orientation = 'vertical',
   disabled = false,
   className,
-}) => {
+  renderOption,
+  optionClassName,
+  indicator = true,
+} = useComponentDefaults('RadioGroup', rawProps);
   const generatedName = React.useId();
   const groupName = name || generatedName;
   const groupId = id ?? `${generatedName}-group`;
@@ -59,15 +73,31 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
         {options.map((opt) => {
           const isDisabled = disabled || opt.disabled;
           const isChecked = value === opt.value;
+          const content = (
+            <span className="flex flex-col">
+              <span className="text-[length:calc(13px*var(--k-text-scale,1))] text-[var(--fg-default,#0a1628)] leading-tight">
+                {opt.label}
+              </span>
+              {opt.description && (
+                <span className="text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)] mt-0.5">
+                  {opt.description}
+                </span>
+              )}
+            </span>
+          );
+          const state: ItemRenderState = { selected: isChecked, highlighted: false, disabled: Boolean(isDisabled), query: '', label: opt.label, content };
           return (
             <label
               key={opt.value}
+              data-checked={isChecked || undefined}
               className={cn(
                 'group flex items-start gap-2.5 py-1',
                 isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+                !indicator && 'has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent',
+                resolveItemClass(optionClassName, opt, state),
               )}
             >
-              <span className="relative flex items-center justify-center mt-0.5">
+              <span className={indicator ? 'relative flex items-center justify-center mt-0.5' : 'sr-only'}>
                 <input
                   type="radio"
                   name={groupName}
@@ -94,16 +124,7 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
                   <span aria-hidden className="absolute h-1.5 w-1.5 rounded-full bg-[var(--color-accent-fg,#ffffff)]" />
                 )}
               </span>
-              <span className="flex flex-col">
-                <span className="text-[length:calc(13px*var(--k-text-scale,1))] text-[var(--fg-default,#0a1628)] leading-tight">
-                  {opt.label}
-                </span>
-                {opt.description && (
-                  <span className="text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)] mt-0.5">
-                    {opt.description}
-                  </span>
-                )}
-              </span>
+              {renderOption ? renderOption(opt, state) : content}
             </label>
           );
         })}

@@ -16,7 +16,34 @@ export function matchesAllWords(text: string, query: string): boolean {
 export function foldedRange(text: string, term: string): [number, number] | null {
   const needle = fold(term);
   if (!needle) return null;
-  // Se pliega carácter a carácter para saber de qué posición original sale cada letra plegada.
+  const { folded, toOriginal } = foldWithOrigin(text);
+  const start = folded.indexOf(needle);
+  return start === -1 ? null : toOriginal(start, needle.length);
+}
+
+/**
+ * Todo lo que hay que resaltar de una búsqueda: cada aparición de cada palabra de `query`, sin mirar acentos ni
+ * mayúsculas, en índices del texto original, en orden y sin solaparse. Es la pareja de `matchesAllWords`.
+ */
+export function foldedRanges(text: string, query: string): Array<[number, number]> {
+  const words = fold(query).split(/\s+/).filter(Boolean);
+  if (!words.length) return [];
+  const { folded, toOriginal } = foldWithOrigin(text);
+  const ranges: Array<[number, number]> = [];
+  for (const word of words) {
+    for (let at = folded.indexOf(word); at !== -1; at = folded.indexOf(word, at + word.length)) ranges.push(toOriginal(at, word.length));
+  }
+  ranges.sort((a, b) => a[0] - b[0]);
+  const merged: Array<[number, number]> = [];
+  for (const range of ranges) {
+    const last = merged[merged.length - 1];
+    if (last && range[0] <= last[1]) last[1] = Math.max(last[1], range[1]); else merged.push(range);
+  }
+  return merged;
+}
+
+/** Pliega carácter a carácter para saber de qué posición original sale cada letra plegada. */
+function foldWithOrigin(text: string) {
   let folded = '';
   const origin: number[] = [];
   Array.from(text).reduce((at, char) => {
@@ -25,11 +52,11 @@ export function foldedRange(text: string, term: string): [number, number] | null
     folded += f;
     return at + char.length;
   }, 0);
-  const start = folded.indexOf(needle);
-  if (start === -1) return null;
-  const lastOrigin = origin[start + needle.length - 1];
-  const end = lastOrigin + (text.codePointAt(lastOrigin)! > 0xffff ? 2 : 1);
-  return [origin[start], end];
+  const toOriginal = (start: number, length: number): [number, number] => {
+    const lastOrigin = origin[start + length - 1];
+    return [origin[start], lastOrigin + (text.codePointAt(lastOrigin)! > 0xffff ? 2 : 1)];
+  };
+  return { folded, toOriginal };
 }
 
 /** Escapa un texto para usarlo literalmente dentro de una expresión regular. */

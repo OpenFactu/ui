@@ -212,3 +212,145 @@ test('context usage, durations and hosts read well', () => {
   assert.equal(hostOf('https://www.react.dev/learn'), 'react.dev'); assert.equal(hostOf('no es url'), 'no es url');
   assert.deepEqual(planProgress([{ status: 'done' }, { status: 'running' }, { status: 'done' }]), { done: 2, total: 3 });
 });
+
+test('markdown en bloques: juntos dan lo mismo que el texto entero', () => {
+  const React = require('react'); const { renderToStaticMarkup } = require('react-dom/server');
+  const { default: ReactMarkdown } = require('react-markdown'); const { default: remarkGfm } = require('remark-gfm');
+  const { splitMarkdownBlocks } = require('../src/ai/internal/markdownStream.ts');
+  const html = (text) => renderToStaticMarkup(React.createElement(ReactMarkdown, { remarkPlugins: [remarkGfm] }, text)).replace(/\n/g, '');
+  const corpus = [
+    'Uno\n\nDos\n\nTres',
+    '# Título\n\nTexto **fuerte**\n\n## Otro\n\nMás',
+    '- a\n- b\n\n- c\n\nFuera de la lista',
+    '1. a\n2. b\n\n3. c\n\nTexto',
+    '- a\n\n  sigue en a\n\n- b',
+    'Antes\n\n```js\nconst a = 1;\n\nconst b = 2;\n```\n\nDespués',
+    '~~~\ncon\n\nhueco\n~~~',
+    '| a | b |\n| - | - |\n| 1 | 2 |\n\nTexto',
+    '> cita\n> sigue\n\nFuera',
+    'Texto\n\n    código sangrado\n\nFin',
+    'Con [ref][x] dentro\n\n[x]: https://example.com',
+    'Nota[^1]\n\n[^1]: La nota',
+    '\n\nCon huecos\n\n\n\nEn medio\n\n',
+    '',
+  ];
+  for (const text of corpus) assert.equal(splitMarkdownBlocks(text).map(html).join(''), html(text), JSON.stringify(text));
+  assert.deepEqual(splitMarkdownBlocks('Uno\n\nDos'), ['Uno', 'Dos']);
+  assert.deepEqual(splitMarkdownBlocks(''), []);
+  assert.equal(splitMarkdownBlocks('A\n\n```\nb\n\nc').length, 2, 'un bloque de código sin cerrar no se parte');
+  assert.equal(splitMarkdownBlocks('Con [ref][x]\n\nOtro\n\n[x]: https://e.com').length, 1, 'con referencias, entero');
+});
+
+test('markdown a medias: se cierra lo abierto y no se enseña la sintaxis', () => {
+  const { closeIncompleteMarkdown: close } = require('../src/ai/internal/markdownStream.ts');
+  assert.equal(close('Texto normal'), 'Texto normal');
+  assert.equal(close('Una **negrita'), 'Una **negrita**');
+  assert.equal(close('Una **negrita '), 'Una **negrita**');
+  assert.equal(close('Ya **cerrada** bien'), 'Ya **cerrada** bien');
+  assert.equal(close('Una `cosa'), 'Una `cosa`');
+  assert.equal(close('Un ~~tachado'), 'Un ~~tachado~~');
+  assert.equal(close('Una *cursiva'), 'Una *cursiva*');
+  assert.equal(close('Una _cursiva'), 'Una _cursiva_');
+  assert.equal(close('Cuenta 2*3'), 'Cuenta 2*3', 'un por no es una cursiva');
+  assert.equal(close('snake_case'), 'snake_case');
+  assert.equal(close('Código `a**b` sigue'), 'Código `a**b` sigue', 'dentro del código no cuenta');
+  assert.equal(close('```js\nconst a'), '```js\nconst a\n```');
+  assert.equal(close('~~~~\nx\n~~~'), '~~~~\nx\n~~~\n~~~~', 'una valla más corta no cierra');
+  assert.equal(close('```js\nconst a\n```'), '```js\nconst a\n```');
+  assert.equal(close('Mira [el texto](https://exa'), 'Mira el texto');
+  assert.equal(close('Mira [el tex'), 'Mira el tex');
+  assert.equal(close('Mira [el texto](https://e.com) ya'), 'Mira [el texto](https://e.com) ya');
+  assert.equal(close('Foto ![alt](https://exa'), 'Foto ');
+  assert.equal(close('Foto ![al'), 'Foto ');
+  assert.equal(close('- [ ] tarea'), '- [ ] tarea', 'una casilla no es un enlace');
+  assert.equal(close('- [ '), '- [ ');
+  assert.equal(close('#'), '', 'solo la marca de un título');
+  assert.equal(close('Línea\n-'), 'Línea\n');
+  assert.equal(close('`'), '');
+  assert.equal(close('| a | b'), '', 'tabla sin separación: aún no');
+  assert.equal(close('| a | b |\n| -'), '', 'separación a medias');
+  assert.equal(close('| a | b |\n| - | - |\n| 1'), '| a | b |\n| - | - |\n| 1');
+});
+
+test('AIMarkdown en directo: el último bloque se cierra; sin streaming, tal cual', () => {
+  const React = require('react'); const { renderToStaticMarkup } = require('react-dom/server');
+  const { AIMarkdown } = require('../src/ai/AIMarkdown.tsx');
+  const md = (children, streaming) => renderToStaticMarkup(React.createElement(AIMarkdown, { streaming }, children));
+  assert.match(md('Uno\n\nDos **fuerte', true), /<strong>fuerte<\/strong>/);
+  assert.match(md('Uno\n\nDos **fuerte', false), /\*\*fuerte/);
+  assert.doesNotMatch(md('**Uno**\n\n| a | b', true), /\|/);
+  assert.match(md('Texto\n\n```js\nconst a', true), /ai-code/);
+});
+
+test('vistas por herramienta: nombre, resumen, cuerpo, comodín y fallo', () => {
+  const React = require('react'); const { renderToStaticMarkup } = require('react-dom/server');
+  const { AIToolCall, AIToolGroup } = require('../src/ai/AIToolCall.tsx');
+  const { registerToolView, unregisterToolViewSource, getToolView } = require('../src/ai/toolViews.tsx');
+  const h = React.createElement;
+  registerToolView('facturas', { label: 'Facturas', summary: (t) => `${t.output.length} filas`, render: ({ output }) => h('b', null, output.length) }, { source: 't' });
+  // Errores: se abren solos, así se ve el cuerpo en el HTML de servidor.
+  const html = renderToStaticMarkup(h(AIToolCall, { tool: { id: '1', name: 'facturas', status: 'error', output: [1, 2] } }));
+  assert.match(html, /<strong>Facturas<\/strong>/);
+  assert.match(html, /2 filas/);
+  assert.match(html, /<b>2<\/b>/);
+  assert.doesNotMatch(html, /<pre>/, 'la vista sustituye al JSON');
+  registerToolView('funcion', ({ raw }) => h('i', null, raw), { source: 't' });
+  assert.match(renderToStaticMarkup(h(AIToolCall, { tool: { id: '2', name: 'funcion', status: 'error', input: { a: 1 } } })), /<i>.*<pre>/s, 'una función basta, y puede usar el JSON');
+  registerToolView('vuelve', { render: () => undefined }, { source: 't' });
+  assert.match(renderToStaticMarkup(h(AIToolCall, { tool: { id: '3', name: 'vuelve', status: 'error', input: { a: 1 } } })), /<pre>/, 'undefined deja lo de serie');
+  assert.match(renderToStaticMarkup(h(AIToolCall, { tool: { id: '4', name: 'otra', status: 'error', input: { a: 1 } } })), /<strong>otra<\/strong>.*<pre>/s);
+  registerToolView('*', { label: 'Herramienta' }, { source: 't' });
+  assert.equal(getToolView('otra').label, 'Herramienta', 'el comodín recoge las demás');
+  assert.match(renderToStaticMarkup(h(AIToolCall, { tool: { id: '5', name: 'facturas', status: 'error', output: [] }, view: { label: 'Mía' } })), /<strong>Mía<\/strong>/, 'la prop gana al registro');
+  unregisterToolViewSource('t');
+  registerToolView('facturas', { label: 'Facturas' }, { source: 't' });
+  const running = renderToStaticMarkup(h(AIToolGroup, { tools: [{ id: 'a', name: 'x', status: 'running' }, { id: 'b', name: 'y', status: 'completed' }] }));
+  assert.match(running, /2 acciones/);
+  assert.match(running, /aria-expanded="true"/);
+  const done = renderToStaticMarkup(h(AIToolGroup, { tools: [{ id: 'a', name: 'x', status: 'completed' }, { id: 'b', name: 'y', status: 'completed' }] }));
+  assert.match(done, /aria-expanded="false"/);
+  assert.match(done, /x, y/);
+  unregisterToolViewSource('t');
+  assert.equal(getToolView('facturas'), undefined);
+});
+
+test('los mensajes agrupan solo las llamadas seguidas, y se pueden personalizar', () => {
+  const React = require('react'); const { renderToStaticMarkup } = require('react-dom/server');
+  const { AIMessage, AIMessageContent } = require('../src/ai/AIMessage.tsx');
+  const { ComponentDefaults } = require('../src/context/ComponentDefaults.tsx');
+  const h = React.createElement;
+  const tool = (id) => ({ type: 'tool', tool: { id, name: id, status: 'completed' } });
+  const text = { type: 'text', text: 'Hola', format: 'plain' };
+  const count = (parts, extra) => (renderToStaticMarkup(h(AIMessageContent, { parts, ...extra })).match(/ai-tool-group/g) ?? []).length;
+  assert.equal(count([tool('a'), tool('b')]), 1);
+  assert.equal(count([tool('a'), text, tool('b')]), 0, 'una sola llamada no se agrupa');
+  assert.equal(count([tool('a'), tool('b'), text, tool('c'), tool('d')]), 2);
+  assert.equal(count([tool('a'), tool('b')], { groupTools: false }), 0);
+  const message = { id: 'm', role: 'assistant', parts: [text] };
+  const full = renderToStaticMarkup(h(AIMessage, { message, renderFooter: () => h('u', null, 'pie'), renderAvatar: () => null, renderHeader: (m, d) => h('h6', null, d), renderActions: () => h('s', null, 'acciones') }));
+  assert.match(full, /<u>pie<\/u>/);
+  assert.doesNotMatch(full, /ai-message-avatar/);
+  assert.match(full, /<h6><header/);
+  assert.match(full, /<s>acciones<\/s>/);
+  assert.match(renderToStaticMarkup(h(AIMessage, { message, renderPart: (p, c) => h('em', null, c.index, c.defaults) })), /<em>0<p/);
+  assert.match(renderToStaticMarkup(h(ComponentDefaults, { value: { AIMessage: { renderFooter: () => h('u', null, 'global') } } }, h(AIMessage, { message }))), /<u>global<\/u>/, 'también desde ComponentDefaults');
+});
+
+test('pregunta: controles, paso y respuesta ya dada', () => {
+  const React = require('react'); const { renderToStaticMarkup } = require('react-dom/server');
+  const { AIQuestion } = require('../src/ai/AIQuestion.tsx');
+  const h = React.createElement;
+  const html = renderToStaticMarkup(h(AIQuestion, { question: '¿Cuál?', options: [{ label: 'Una', description: 'La primera' }, { id: 'b', label: 'Otra' }], multiple: true, allowText: true, step: { current: 2, total: 5 } }));
+  assert.match(html, /role="group"/);
+  assert.match(html, /Paso 2 de 5/);
+  assert.match(html, /La primera/);
+  assert.match(html, /aria-pressed="false"/);
+  assert.match(html, /Confirmar/);
+  assert.match(html, /<input/);
+  const answered = renderToStaticMarkup(h(AIQuestion, { question: '¿Cuál?', options: [{ label: 'Una' }], answer: { optionIds: ['Una'], label: 'Una' } }));
+  assert.match(answered, /data-answered/);
+  assert.doesNotMatch(answered, /<button/);
+  const seen = [];
+  renderToStaticMarkup(h(AIQuestion, { question: 'x', options: [{ label: 'Una', rol: 'dato' }], renderOption: (o, s) => { seen.push([o.rol, s.selected]); return 'p'; }, optionClassName: 'mi-clase' }));
+  assert.deepEqual(seen, [['dato', false]]);
+});

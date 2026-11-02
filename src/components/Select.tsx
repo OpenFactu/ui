@@ -7,18 +7,25 @@ import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
 import { useMessages } from '../i18n/I18nProvider';
+import { useComponentDefaults } from '../context/ComponentDefaults';
+import { optionCheckClass, optionRowClass, resolveItemClass, type ItemRenderState, type OptionCustomization } from './internal/optionStyle';
 
 export interface SelectOption {
   value: string;
   label: string;
   disabled?: boolean;
+  /** Icono a la izquierda, también en el control. */
+  icon?: React.ReactNode;
+  secondaryLabel?: string;
+  /** Datos propios, para `renderOption` y `renderValue`. */
+  [key: string]: any;
 }
 
 /**
  * Select con dropdown estilizado (sin buscador). Para listas largas con
  * búsqueda usa SearchableSelect.
  */
-export interface SelectProps {
+export interface SelectProps extends OptionCustomization<SelectOption> {
   mobilePresentation?: MobilePresentation;
   options: SelectOption[];
   value: string;
@@ -44,7 +51,8 @@ export interface SelectProps {
   ariaLabel?: string;
 }
 
-export const Select: React.FC<SelectProps> = ({
+export const Select: React.FC<SelectProps> = (rawProps) => {
+  const {
   options,
   value,
   onChange,
@@ -61,7 +69,11 @@ export const Select: React.FC<SelectProps> = ({
   id,
   ariaLabel,
   mobilePresentation = 'auto',
-}) => {
+  renderOption,
+  selectedStyle = 'fill',
+  optionClassName,
+  renderValue,
+} = useComponentDefaults('Select', rawProps);
   const status = useMessages('status');
   const placeholderDefault = useMessages('common').select;
   const placeholder = placeholderProp ?? placeholderDefault;
@@ -186,6 +198,16 @@ export const Select: React.FC<SelectProps> = ({
           {options.map((opt, idx) => {
             const isSelected = opt.value === value;
             const highlighted = idx === highlightedIndex;
+            const content = opt.icon || opt.secondaryLabel ? (
+              <span className="flex min-w-0 items-center gap-2">
+                {opt.icon && <span className="shrink-0">{opt.icon}</span>}
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate">{opt.label}</span>
+                  {opt.secondaryLabel && <span className={cn('truncate text-[length:calc(10px*var(--k-text-scale,1))]', (!isSelected || selectedStyle !== 'fill') && 'text-[var(--fg-subtle,#657486)]')}>{opt.secondaryLabel}</span>}
+                </span>
+              </span>
+            ) : <span className="truncate">{opt.label}</span>;
+            const state: ItemRenderState = { selected: isSelected, highlighted, disabled: Boolean(opt.disabled), query: '', label: opt.label, content };
             return (
               <div
                 key={opt.value}
@@ -196,20 +218,20 @@ export const Select: React.FC<SelectProps> = ({
                 onKeyDown={mobile ? handleKeyDown : undefined}
                 aria-selected={isSelected}
                 aria-disabled={opt.disabled || undefined}
+                data-selected={isSelected || undefined}
+                data-highlighted={highlighted || undefined}
                 onClick={() => selectOption(opt)}
                 onMouseEnter={() => !opt.disabled && setHighlightedIndex(idx)}
                 className={cn(
                   'flex items-center justify-between gap-2 rounded-[var(--k-radius-xs,2px)] px-2.5 py-1.5 text-[length:calc(12px*var(--k-text-scale,1))] cursor-pointer transition-colors',
-                  isSelected
-                    ? 'bg-accent text-[color:var(--k-accent-on,#0f172a)] font-semibold'
-                    : highlighted
-                      ? 'bg-[var(--bg-hover)] text-[var(--fg-body,#2d3a4a)]'
-                      : 'text-[var(--fg-body,#2d3a4a)]',
+                  optionRowClass(selectedStyle, isSelected, highlighted),
+                  isSelected && selectedStyle !== 'none' && 'font-semibold',
                   opt.disabled && 'opacity-40 cursor-not-allowed',
+                  resolveItemClass(optionClassName, opt, state),
                 )}
               >
-                <span className="truncate">{opt.label}</span>
-                {isSelected && <UiIcon slot="check" className="h-3.5 w-3.5 shrink-0" />}
+                {renderOption ? <div className="min-w-0 flex-1">{renderOption(opt, state)}</div> : content}
+                {isSelected && selectedStyle !== 'none' && <UiIcon slot="check" className={optionCheckClass(selectedStyle)} />}
               </div>
             );
           })}
@@ -266,7 +288,9 @@ export const Select: React.FC<SelectProps> = ({
               : 'text-[var(--fg-subtle,#657486)]',
           )}
         >
-          {selectedOption ? selectedOption.label : placeholder}
+          {selectedOption && renderValue ? renderValue(selectedOption) : selectedOption?.icon ? (
+            <span className="flex min-w-0 items-center gap-2"><span className="shrink-0">{selectedOption.icon}</span><span className="truncate">{selectedOption.label}</span></span>
+          ) : selectedOption ? selectedOption.label : placeholder}
         </span>
         <UiIcon slot="chevron-down"
           className={cn(

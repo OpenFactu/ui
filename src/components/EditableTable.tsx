@@ -8,6 +8,7 @@ import { NumberInput, CurrencyInput, PercentInput } from './NumberInput';
 import { DatePicker } from './DatePicker';
 import { Checkbox } from './Checkbox';
 import { SearchableSelect, type SearchableSelectOption } from './SearchableSelect';
+import type { OptionCustomization } from './internal/optionStyle';
 import { useI18n } from '../i18n/I18nProvider';
 
 /** Tipos de editor listos para usar; `custom` deja el control en tus manos. */
@@ -26,6 +27,8 @@ export interface CellEditor<T> {
   type: CellEditorType;
   /** Opciones de `select` y `search-select`. */
   options?: SearchableSelectOption[];
+  /** `renderOption`, `selectedStyle`, `optionClassName` y `renderValue` de `select` y `search-select`. */
+  customize?: OptionCustomization<SearchableSelectOption>;
   /** Decimales de `number`, `currency` y `percent`. */
   precision?: number;
   min?: number;
@@ -182,9 +185,9 @@ export function EditableTable<T extends Record<string, any>>({
       case 'percent':
         return <PercentInput {...common} value={current ?? null} onChange={set} precision={editor.precision ?? 2} />;
       case 'select':
-        return <Select disabled={disabled} containerClassName="w-full" className="py-1 text-[length:calc(12px*var(--k-text-scale,1))]" value={String(current ?? '')} onChange={set} options={(editor.options ?? []).map((o) => ({ value: o.value, label: o.label, disabled: o.disabled }))} />;
+        return <Select disabled={disabled} containerClassName="w-full" className="py-1 text-[length:calc(12px*var(--k-text-scale,1))]" value={String(current ?? '')} onChange={set} {...editor.customize} options={editor.options ?? []} />;
       case 'search-select':
-        return <SearchableSelect disabled={disabled} options={editor.options ?? []} value={String(current ?? '')} onChange={set} placeholder={editor.placeholder} />;
+        return <SearchableSelect disabled={disabled} options={editor.options ?? []} value={String(current ?? '')} onChange={set} placeholder={editor.placeholder} {...editor.customize} />;
       case 'date':
         return <DatePicker disabled={disabled} value={current ?? null} onChange={set} className="w-full" />;
       case 'checkbox':

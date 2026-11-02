@@ -8,6 +8,16 @@ const format = require('../src/internal/format.ts');
 const files = require('../src/internal/files.ts');
 const url = require('../src/internal/url.ts');
 
+test('letras con clave estable y minutos de lectura', () => {
+  const { morphKeys } = require('../src/components/TextFx.tsx');
+  const { readingMinutes } = require('../src/components/Prose.tsx');
+  assert.deepEqual(morphKeys('ala'), ['a\u00000', 'l\u00000', 'a\u00001']);
+  assert.equal(morphKeys('Guardar')[0], morphKeys('Guardado')[0], 'lo común conserva su clave');
+  assert.equal(readingMinutes(''), 1);
+  assert.equal(readingMinutes(Array(650).fill('palabra').join(' ')), 3);
+  assert.equal(readingMinutes(Array(100).fill('palabra').join(' '), 50), 2);
+});
+
 test('text: fold, every-word match, folded range and regexp escape', () => {
   assert.equal(text.fold('Facturación ÑANDÚ'), 'facturacion nandu');
   assert.equal(text.matchesAllWords('Factura de Acme', 'acme fac'), true);
@@ -17,6 +27,10 @@ test('text: fold, every-word match, folded range and regexp escape', () => {
   assert.deepEqual(text.foldedRange('Mi Facturación', 'facturacion'), [3, 14], 'marca la palabra entera con su tilde');
   assert.deepEqual(text.foldedRange('Árbol', 'arb'), [0, 3]);
   assert.equal(text.foldedRange('Árbol', 'xyz'), null);
+  assert.deepEqual(text.foldedRanges('Pedido y pedidos', 'pedido'), [[0, 6], [9, 15]], 'todas las apariciones');
+  assert.deepEqual(text.foldedRanges('Envío del Pedido', 'pedido envio'), [[0, 5], [10, 16]], 'cada palabra, en orden y sin acentos');
+  assert.deepEqual(text.foldedRanges('factura', 'fact tura'), [[0, 7]], 'lo que se solapa se une');
+  assert.deepEqual(text.foldedRanges('Hola', '  '), []);
   assert.equal(text.foldedRange('Árbol', ''), null);
   assert.equal(new RegExp(text.escapeRegExp('1+1=2 (a.b)*')).test('1+1=2 (a.b)*'), true);
 });

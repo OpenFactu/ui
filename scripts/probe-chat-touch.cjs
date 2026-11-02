@@ -17,7 +17,8 @@ run(async ({ browser, check }) => {
   // Mantener pulsado: marca mientras tanto y abre el menú pasado el umbral (el dedo sigue apoyado un poco más).
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
   await page.waitForTimeout(250);
-  check('mientras se mantiene, el mensaje se marca', await message.evaluate(el => el.hasAttribute('data-pressing')));
+  check('mientras se mantiene, la burbuja lo sabe (data-gesture=pressing)', await message.locator('.k-chat-bubble').getAttribute('data-gesture') === 'pressing');
+  check('mientras se mantiene, el mensaje se marca', await message.evaluate(el => Number(getComputedStyle(el, '::before').opacity) > .05));
   await page.waitForTimeout(450);
   const menu = page.getByRole('menu');
   check('el menú contextual se abre al mantener pulsado', await menu.isVisible());
@@ -42,8 +43,19 @@ run(async ({ browser, check }) => {
   check('copiar avisa con «Mensaje copiado»', await page.getByText('Mensaje copiado').first().isVisible({ timeout: 2000 }).catch(() => false) || await page.getByText('Mensaje copiado').first().waitFor({ timeout: 2000 }).then(() => true, () => false));
   check('el menú se cierra al elegir', !(await menu.isVisible()));
 
-  // Deslizar a la derecha responde.
-  await touch(cdp, [[x, y], [x + 20, y, 16], [x + 50, y, 16], [x + 80, y, 16], [x + 95, y, 16]]);
+  // Deslizar a la derecha: la burbuja sigue al dedo, el indicador asoma (--k-swipe) y, pasada la distancia, se arma; al soltar responde y vuelve.
+  const bubble = message.locator('.k-chat-bubble'); const row = message.locator('.k-chat-bubble-row');
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+  for (const dx of [12, 24, 36]) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x + dx, y }] }); await page.waitForTimeout(16); }
+  check('la burbuja sigue al dedo (translate)', /^3[0-9]/.test(await bubble.evaluate(el => el.style.translate)));
+  check('el indicador va saliendo (--k-swipe entre 0 y 1)', await row.evaluate(el => { const v = Number(el.style.getPropertyValue('--k-swipe')); return v > .4 && v < .9 && el.dataset.swipe === 'active'; }));
+  check('el indicador de responder se ve a medias', await message.locator('.k-chat-swipe-reply').evaluate(el => { const o = Number(getComputedStyle(el).opacity); return o > .3 && o < .95; }));
+  for (const dx of [50, 66, 80, 95]) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x + dx, y }] }); await page.waitForTimeout(16); }
+  check('pasada la distancia se arma y hay goma', await row.evaluate(el => el.dataset.swipe === 'armed') && Number((await bubble.evaluate(el => el.style.translate)).split('px')[0]) < 95);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   check('deslizar a la derecha responde', await page.locator('.k-chat-reply-preview').isVisible());
+  await page.waitForTimeout(900);
+  check('la burbuja vuelve a su sitio', (await bubble.evaluate(el => el.style.translate || '')) === '');
+  check('el indicador se apaga al volver', await row.evaluate(el => !el.dataset.swipe && !el.style.getPropertyValue('--k-swipe')));
   await context.close();
 });

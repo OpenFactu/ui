@@ -1,5 +1,6 @@
 import * as React from 'react';
 import type { Story } from '@ladle/react';
+import { Input } from '../src/components/Input';
 import { Kanban, type KanbanCard, type KanbanColumn, type KanbanMove } from '../src/components/Kanban';
 import { Badge } from '../src/components/Badge';
 import { Avatar } from '../src/components/Avatar';
@@ -142,6 +143,28 @@ export const Carriles: Story = () => {
 };
 
 /** Con `wipLimit`, llegar al máximo se marca en ámbar y pasarse en rojo; avisa pero no impide. */
+/** Terminar con un clic, filtrar sin mover y, en táctil, mantener pulsado para levantar una tarjeta. */
+export const TerminarYFiltrar: Story = () => {
+  const [columnas, setColumnas] = React.useState(INICIAL);
+  const [filtro, setFiltro] = React.useState('');
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="max-w-xs"><Input placeholder="Filtrar por título…" aria-label="Filtrar tarjetas" value={filtro} onChange={(e) => setFiltro(e.target.value)} /></div>
+      <Kanban
+        columns={columnas}
+        today={HOY}
+        highlight={filtro ? (card) => String(card.title).toLowerCase().includes(filtro.toLowerCase()) : undefined}
+        onCardDone={(card, done) => setColumnas((cols) => cols.map((col) => ({ ...col, cards: col.cards.map((c) => (c.id === card.id ? { ...c, done } : c)) })))}
+        onCardMove={(card, to, from) => setColumnas((cols) => {
+          const sin = cols.map((col) => (col.id === from.columnId ? { ...col, cards: col.cards.filter((c) => c.id !== card.id) } : col));
+          return sin.map((col) => { if (col.id !== to.columnId) return col; const cards = [...col.cards]; cards.splice(to.index, 0, card); return { ...col, cards }; });
+        })}
+        onCardAdd={(columnId, title) => setColumnas((cols) => cols.map((col) => (col.id === columnId ? { ...col, cards: [...col.cards, { id: `n-${Date.now()}`, title }] } : col)))}
+      />
+    </div>
+  );
+};
+
 export const LimiteDeTrabajo: Story = () => (
   <Kanban
     columns={[

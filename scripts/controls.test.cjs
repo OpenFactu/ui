@@ -84,6 +84,32 @@ test('snap: resolve points and choose with position and velocity', () => {
   assert.equal(snap.nearestIndex(500, h), 1);
 });
 
+test('snap: un lanzamiento normal avanza un solo anclaje; solo uno muy fuerte va al extremo o cierra', () => {
+  const h = [246, 492, 820];
+  // Hacia arriba, 60 px por encima del primero.
+  assert.equal(snap.pickSnap(306, 0.8, h), 1);
+  assert.equal(snap.pickSnap(306, 1.4, h), 1, 'a velocidad normal no se salta el del medio');
+  assert.equal(snap.pickSnap(306, 2.4, h), 1, 'justo por debajo del límite, tampoco');
+  assert.equal(snap.pickSnap(306, 2.5, h), 2, 'muy fuerte: al más alto');
+  // Hacia abajo.
+  assert.equal(snap.pickSnap(750, -1, h), 1);
+  assert.equal(snap.pickSnap(750, -2, h), 1, 'desde arriba no se cierra de un lanzamiento normal');
+  assert.equal(snap.pickSnap(422, -1, h), 0, 'desde el del medio baja al primero, sin cerrar');
+  assert.equal(snap.pickSnap(422, -1.5, h), 0);
+  assert.equal(snap.pickSnap(180, -1, h), -1, 'desde el primero sí se cierra');
+  assert.equal(snap.pickSnap(750, -2.5, h), -1, 'muy fuerte: se cierra desde cualquier sitio');
+  // Sin poder cerrarse, el lanzamiento se queda en el primero.
+  assert.equal(snap.pickSnap(750, -3, h, { dismissible: false }), 0);
+  assert.equal(snap.pickSnap(180, -1, h, { dismissible: false }), 0);
+  // El lanzamiento cuenta desde donde está la hoja, con un margen para no quedarse en el que acaba de alcanzar.
+  assert.equal(snap.pickSnap(470, 1, h), 1, 'aún no ha llegado al siguiente: va a él');
+  assert.equal(snap.pickSnap(490, 1, h), 2, 'ya está en él: avanza al otro');
+  assert.equal(snap.pickSnap(250, -1, h), -1, 'prácticamente en el primero: se cierra');
+  // Un solo anclaje, y el límite ajustable.
+  assert.equal(snap.pickSnap(300, 1, [300]), 0);
+  assert.equal(snap.pickSnap(306, 1.4, h, { jump: 1 }), 2);
+});
+
 test('tree: visible nodes, tri-state checks, toggle and filter with ancestors', () => {
   const nodes = [
     { id: 'a', label: 'Ventas', children: [{ id: 'a1', label: 'Facturas' }, { id: 'a2', label: 'Albaranes' }, { id: 'a3', label: 'Bloqueado', disabled: true }] },
@@ -286,4 +312,79 @@ test('server markup of the new showcase and guide components', () => {
   const swipe = render(SwipeCards, { items: [1, 2, 3, 4], getKey: (n) => n, renderCard: (n) => `c${n}`, onSwipe: noop, stack: 2 });
   assert.equal((swipe.match(/class="k-swipe-card"/g) || []).length, 3, 'la de arriba y dos detrás');
   assert.match(swipe, /aria-label="Aceptar"/);
+});
+
+test('SearchableSelect pinta lo elegido a medida, con el icono de serie y sin perder el combobox', () => {
+  const React = require('react');
+  const { render } = require('./test-support.cjs');
+  const { SearchableSelect } = require('../src/components/SearchableSelect.tsx');
+  const options = [{ value: 'a', label: 'Ana', icon: React.createElement('i', { 'data-icon': 'a' }), rol: 'Ventas' }, { value: 'b', label: 'Luis' }];
+  const noop = () => undefined;
+  const single = render(SearchableSelect, { options, value: 'a', onChange: noop });
+  assert.match(single, /data-icon="a"/, 'el icono llega al control');
+  assert.match(single, /role="combobox"/);
+  assert.doesNotMatch(render(SearchableSelect, { options, value: 'b', onChange: noop }), /data-icon/, 'sin icono, como siempre');
+  assert.match(render(SearchableSelect, { options, value: 'a', onChange: noop, renderValue: (o) => React.createElement('b', null, o.rol) }), /<b>Ventas<\/b>/, 'renderValue recibe los datos propios');
+  assert.match(render(SearchableSelect, { options, multiple: true, value: ['a'], onChange: noop }), /data-icon="a"/, 'y a los chips');
+  const seen = [];
+  const chips = render(SearchableSelect, { options, multiple: true, value: ['a', 'b'], onChange: noop, renderChip: (o, helpers) => { seen.push(typeof helpers.remove); return React.createElement('u', null, o.label); } });
+  assert.match(chips, /<u>Ana<\/u>.*<u>Luis<\/u>/);
+  assert.deepEqual(seen, ['function', 'function']);
+  const locked = [];
+  render(SearchableSelect, { options, multiple: true, disabled: true, value: ['a'], onChange: noop, renderChip: (o, helpers) => { locked.push(helpers.remove); return null; } });
+  assert.deepEqual(locked, [undefined], 'desactivado, no se puede quitar');
+});
+
+test('ComponentDefaults: vale para todos, se anida prop a prop y la prop propia gana', () => {
+  const React = require('react');
+  const { ComponentDefaults, useComponentDefaults } = require('../src/context/ComponentDefaults.tsx');
+  const { renderToStaticMarkup } = require('react-dom/server');
+  const seen = (props) => { const P = () => { const merged = useComponentDefaults('Select', props); return React.createElement('i', { 'data-v': JSON.stringify(merged) }); }; return P; };
+  const read = (html) => JSON.parse(html.match(/data-v="([^"]*)"/)[1].replace(/&quot;/g, '"'));
+  const tree = (props, outer, inner) => React.createElement(ComponentDefaults, { value: outer }, React.createElement(ComponentDefaults, { value: inner }, React.createElement(seen(props))));
+  const out = read(renderToStaticMarkup(tree({ placeholder: undefined }, { Select: { selectedStyle: 'soft', placeholder: 'Fuera' } }, { Select: { placeholder: 'Dentro' } })));
+  assert.equal(out.selectedStyle, 'soft', 'lo de fuera se hereda');
+  assert.equal(out.placeholder, 'Dentro', 'lo de dentro lo sustituye, y undefined no pisa');
+  assert.equal(read(renderToStaticMarkup(tree({ selectedStyle: 'check' }, { Select: { selectedStyle: 'soft' } }, {}))).selectedStyle, 'check', 'la prop gana');
+  assert.deepEqual(read(renderToStaticMarkup(React.createElement(seen({ a: 1 })))), { a: 1 }, 'sin proveedor no cambia nada');
+});
+
+test('la personalización llega a cada familia sin perder los roles', () => {
+  const React = require('react');
+  const b = (text) => React.createElement('b', null, text);
+  const noop = () => undefined;
+  const { Select } = require('../src/components/Select.tsx');
+  const { RadioGroup } = require('../src/components/RadioGroup.tsx');
+  const { ToggleGroup } = require('../src/components/ToggleGroup.tsx');
+  const { SegmentedControl } = require('../src/components/SegmentedControl.tsx');
+  const { ChoiceCards } = require('../src/components/ChoiceCards.tsx');
+  const { TagInput } = require('../src/components/TagInput.tsx');
+  const { ComponentDefaults } = require('../src/context/ComponentDefaults.tsx');
+  const options = [{ value: 'a', label: 'Ana', title: 'Ana', extra: 'dato' }];
+  assert.match(render(Select, { options, value: 'a', onChange: noop, renderValue: (o) => b(o.extra) }), /<b>dato<\/b>/);
+  const radio = render(RadioGroup, { options, value: 'a', onChange: noop, indicator: false, optionClassName: 'mi-clase', renderOption: (o, s) => b(`${o.extra}:${s.selected}`) });
+  assert.match(radio, /<b>dato:true<\/b>/);
+  assert.match(radio, /type="radio"/, 'sin círculo sigue siendo un radio');
+  assert.match(radio, /data-checked="true"/);
+  assert.match(radio, /mi-clase/);
+  const toggle = render(ToggleGroup, { type: 'single', items: options, value: 'a', onChange: noop, itemClassName: 'mi-clase', renderItem: (o, s) => b(String(s.selected)) });
+  assert.match(toggle, /aria-pressed="true"/);
+  assert.match(toggle, /<b>true<\/b>/);
+  assert.match(toggle, /mi-clase/);
+  const segmented = render(SegmentedControl, { options, value: 'a', onChange: noop, optionClassName: (o, s) => (s.selected ? 'activa' : undefined), renderOption: (o) => b(o.extra) });
+  assert.match(segmented, /role="radio"/);
+  assert.match(segmented, /activa/);
+  assert.match(segmented, /<b>dato<\/b>/);
+  const cards = render(ChoiceCards, { options, value: 'a', onChange: noop, indicator: false, renderOption: (o) => b(o.extra) });
+  assert.match(cards, /<b>dato<\/b>/);
+  assert.doesNotMatch(cards, /k-choice-mark/);
+  assert.match(cards, /type="radio"/);
+  const removes = [];
+  const tags = render(TagInput, { value: ['x'], onChange: noop, renderTag: (t, h) => { removes.push(typeof h.remove); return b(`#${t}`); } });
+  assert.match(tags, /<b>#x<\/b>/);
+  assert.deepEqual(removes, ['function']);
+  const locked = [];
+  render(TagInput, { value: ['x'], onChange: noop, readOnly: true, renderTag: (t, h) => { locked.push(h.remove); return null; } });
+  assert.deepEqual(locked, [undefined], 'sin poder editar, no se puede quitar');
+  assert.match(render(ComponentDefaults, { value: { RadioGroup: { optionClassName: 'global' } } }, React.createElement(RadioGroup, { options, value: 'a', onChange: noop })), /global/, 'y también desde ComponentDefaults');
 });

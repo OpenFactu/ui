@@ -185,6 +185,46 @@ const custom = { motion: { character: 'smooth', springs: { enter: { bounce: 0.35
 
 Para tus propios componentes: `useAnimatedPresence`, `useSpring`, `useDragDismiss`, `useIndicator` y las funciones puras `spring`, `springAt`, `springToLinear` están en la entrada principal. `stories/Motion.stories.tsx` compara los caracteres y `ThemeEditor` los edita en vivo.
 
+### Gestos táctiles
+
+Una sola API para los gestos del móvil, sin dependencias y sin pasar por el estado de React: **toque, doble toque, mantener pulsado, deslizar, arrastrar y pellizcar**. Se activa lo que tenga manejador; el resto (el scroll del eje contrario, por ejemplo) se deja al navegador con el `touch-action` que devuelve.
+
+```tsx
+import { useGestures, useSwipeAction } from '@openfactu/ui';
+
+// Cualquier elemento: un manejador por gesto.
+const g = useGestures({
+  axis: 'x',                                   // deslizar y arrastrar en horizontal; el scroll vertical sigue siendo del navegador
+  onSwipe: s => s.direction === 'left' && archive(row.id),
+  onLongPress: p => openMenu(p.point),         // vibra un instante donde el dispositivo pueda
+  onDoubleTap: () => toggleZoom(),
+  onPinch: p => p.phase === 'move' && setScale(p.scale),   // también `rotation`, `center`, `dx`, `dy`
+  onPan: p => { /* start · move · end · cancel, con dx, dy, vx, vy */ },
+});
+<li {...g.bind} style={g.style} />            // mientras hay gesto: data-gesture="pressing|held|pan|pinch"
+
+// Deslizar un elemento para hacer algo y que vuelva solo (responder, archivar, completar).
+const swipe = useSwipeAction({ direction: 'left', distance: 72, onTrigger: () => archive(row.id), onLongPress: openMenu });
+<div ref={swipe.ref} {...swipe.bind} style={swipe.style} />   // escribe --k-swipe (0-1) y data-swipe="active|armed" para el indicador
+```
+
+- **Por defecto solo dedo y lápiz** (`pointerTypes: ['touch', 'pen']`): con ratón ya están el hover, el clic derecho y la selección de texto. Añade `'mouse'` para probarlo en escritorio.
+- Dentro de enlaces, botones, campos y reproductores no hay gesto (`ignore`, un selector).
+- Ajustes: `slop`, `longPressMs`, `doubleTapMs`, `swipeDistance`, `swipeVelocity` (un lanzamiento corto pero rápido también cuenta; un lanzamiento hacia atrás lo anula).
+- `useSwipeAction` sigue al dedo escribiendo `translate`, pone goma pasada la distancia, vibra al armarse y vuelve con el muelle `gesture` del tema arrancando con la velocidad del dedo.
+- El reconocedor es puro (`createGestureRecognizer`, `scripts/gestures.test.cjs`): recibe punteros y emite gestos, así que se prueba sin navegador y sirve fuera de React.
+- Lo usan el chat (mantener pulsado y deslizar para responder) y, para cerrar hojas y avisos, `useDragDismiss`. Story: **Gestos**.
+
+### Texto, lectura y microinteracciones
+
+Piezas sueltas, sin contenido propio y con el tema: colores, muelles y `--k-motion`. Con movimiento reducido o velocidad 0 queda el estado final. Stories: **Efectos de texto**, **Prosa** y **Microinteracciones**.
+
+- **Efectos de texto:** `WaveText` (ola de letras al pasar, en bucle o una vez), `TextRotate` (una palabra de la frase se turna y el hueco se ajusta), `TextMorph` (las letras comunes viajan a su sitio nuevo), `ScrollText` (el párrafo se enciende al bajar) y `TextLink` (subrayado dibujado; para el `Link` de tu router, la clase `k-underline`).
+- **Párrafos:** `Paragraph` gana `reveal` (`lines`, `words`), `firstLine` y `dropCap="accent"`. `Quote` gana `variant` (`pull`, `card`) y `align`.
+- **Texto largo:** `Prose` da forma a cualquier HTML (títulos, listas, citas, código, tablas) con `size`, `lead` y `dropCap`, también si viene de un editor o de Markdown. `SectionIntro` abre una sección. `ReadingProgress`, `ReadingTime` y `readingMinutes` cuentan la lectura.
+- **Microinteracciones:** `BurstToggle` (favorito con estallido), `HoldToConfirm` (mantener para confirmar, también con teclado), `IconSwap`, `CountBadge`, `Magnetic` y `Reveal` (entrar al aparecer, con `stagger`). Funciones: `pop(el)`, `flyTo(desde, hasta)` y `usePopOnChange(valor)`. Clases: `k-press`, `k-lift`, `k-attention`. `Button` ya se hunde al pulsar.
+- **Listas que se reordenan:** `useFlip(raiz, { selector, watch })` anima los cambios de sitio con el muelle del tema, y `useInView` dice cuándo algo entra en pantalla.
+
 ### Loaders y texto en movimiento
 
 Todo con CSS y el acento del tema; respeta `motion.speed`, `prefers-reduced-motion` y `data-motion="off"`.
@@ -224,8 +264,53 @@ Todos siguen el contrato de los demás controles: controlados (`value` + `onChan
 - **`ScrollArea`**: scroll con las barras del tema y sombras en los bordes donde queda contenido. `autoHide` las oculta hasta pasar el ratón.
 - **`VirtualList`**: miles de filas pintando solo las visibles, con altura fija o variable (medida). Incluye `scrollToIndex` y `onEndReached` para la carga infinita.
 - **`TreeView`**: árbol accesible (flechas, Inicio y Fin, y búsqueda tecleando), con ramas animadas, casillas en tres estados, carga perezosa (`loadChildren`) y `filter`.
-- **`BottomSheet`**: hoja inferior con **puntos de anclaje** (`snapPoints={[0.3, 0.6, 1]}`, o `'auto'` para ajustarse a su contenido). Al soltarla va al anclaje que marcan la posición y la velocidad del dedo; lanzada hacia abajo desde el primero, se cierra. Con `modal={false}` convive con la página.
+- **`BottomSheet`**: hoja inferior con **puntos de anclaje** (`snapPoints={[0.3, 0.6, 1]}`, o `'auto'` para ajustarse a su contenido). Al soltarla sin lanzar va al anclaje más cercano. Un lanzamiento avanza un solo anclaje en su sentido y, hacia abajo desde el primero, la cierra. Solo uno muy fuerte (2,5 px/ms o más) va directo al más alto o la cierra. Con `modal={false}` convive con la página.
   - **Es la hoja de toda la librería en móvil**: `Modal` (presentación `sheet`, la de por defecto), `Drawer` con `mobilePresentation="sheet"` y todos los menús y selectores que se adaptan al móvil (`DropdownMenu`, `Select`, `SearchableSelect`, `DatePicker`, `NavMenu`, menús de `Table`, `FilterBar`…) la usan, con anclaje `'auto'`. La presentación `fullscreen` sigue siendo un diálogo a pantalla completa.
+
+### Opciones y menús a medida
+
+Todo lo que muestra opciones o elementos elegibles se personaliza igual, con el mismo estado y los mismos nombres. La fila, el teclado, la búsqueda y la accesibilidad siguen siendo del componente.
+
+| Componente | Pintar | Clases | Además |
+| --- | --- | --- | --- |
+| `Select`, `SearchableSelect` | `renderOption`, `renderValue` | `optionClassName` | `selectedStyle` (`fill`, `soft`, `check`, `none`). `SearchableSelect`: `renderChip` |
+| `DropdownMenu`, `ContextMenu`, `useContextMenu`, `SplitButton` | `renderItem` | `itemClassName` | Cada elemento admite `description` |
+| `CommandPalette` | `renderItem` | `itemClassName` | |
+| `SearchInput` | `renderSuggestion` | `suggestionClassName` | |
+| `RadioGroup`, `ChoiceCards` | `renderOption` | `optionClassName` | `indicator={false}` quita la marca. La marcada lleva `data-checked` |
+| `SegmentedControl` | `renderOption` | `optionClassName` | |
+| `ToggleGroup` | `renderItem` | `itemClassName` | |
+| `TagInput` | `renderTag` | `tagClassName` | |
+| `FilterBar` (`config`), `EditableTable` (`editor`) | `customize` | `customize` | Pasa lo de `Select` a sus desplegables |
+
+Cada `render…` recibe el elemento, con tus datos propios tal cual (`option.rol`), y su estado: `selected`, `highlighted`, `disabled`, `query`, `label` (con la coincidencia marcada) y `content`, lo que se pintaría de serie, para envolverlo en vez de rehacerlo. Las clases ganan a las de serie y también pueden ser una función del elemento y su estado.
+
+```tsx
+<SearchableSelect
+  options={usuarios}
+  value={valor}
+  onChange={setValor}
+  selectedStyle="soft"
+  optionClassName="rounded-[var(--k-radius-lg,12px)] py-2"
+  renderOption={(option, { label }) => (
+    <span className="flex items-center gap-2"><Avatar name={option.label} size="sm" />{label}<Badge>{option.rol}</Badge></span>
+  )}
+/>
+```
+
+**Todos a la vez.** `ComponentDefaults` fija las props de todos los de un tipo desde un solo sitio, sin tocar cada uso. Se puede anidar, y una prop en el propio componente siempre gana.
+
+```tsx
+<ComponentDefaults value={{
+  SearchableSelect: { selectedStyle: 'soft', optionClassName: 'rounded-[var(--k-radius-lg,12px)]' },
+  Select: { selectedStyle: 'soft' },
+  DropdownMenu: { itemClassName: 'py-2' },
+}}>
+  <App />
+</ComponentDefaults>
+```
+
+Story: **Personalización**.
 
 ### Fechas, galería, guías y vitrina
 
@@ -257,6 +342,19 @@ Todos siguen el contrato de los demás controles: controlados (`value` + `onChan
   - `TiltCard`: inclinación 3D con brillo.
   - `BentoGrid` y `BentoItem`: rejilla de bloques.
   - `SwipeCards`: tarjetas que se lanzan a izquierda o derecha para aprobar o descartar, también con botones y flechas.
+
+### Gantt
+
+`Gantt toolbar` añade la escala y «Ir a hoy», y Ctrl o ⌘ + rueda acerca o aleja dejando en el centro la misma fecha. `onProgressChange` hace arrastrable el avance.
+
+- **Arrastrar:** un chip cuenta las fechas y los días, queda el hueco de donde estaba, y cerca de los bordes se desplaza sola. El clic de soltar ya no abre la tarea.
+- **Teclado:** sobre una barra, las flechas mueven un día, Mayús + flechas cambia el fin y Alt + flechas el inicio.
+- **Lectura:** señalar una tarea ilumina su fila y enciende sus dependencias. Las barras cortas llevan el nombre fuera, y `meta` por fin se pinta. Lo vencido sin terminar se marca en rojo.
+- **Grupos:** se pliegan (`collapsibleGroups`) y llevan una barra resumen con su avance. El scroll arranca en hoy (`initialScroll`).
+
+### Kanban
+
+Al soltar, la copia vuela hasta su hueco y las demás tarjetas se apartan con el muelle del tema; `onCardMove` se llama en el mismo momento de soltar. Con el dedo, mantener pulsado levanta la tarjeta y moverse antes es desplazarse. `onCardDone` añade un círculo para terminar con un clic, y `highlight(card)` atenúa las que no cumplan un filtro sin moverlas.
 
 ### Calendario, kanban y tablas
 
@@ -870,6 +968,36 @@ registerCodeAction({
 }, { source: 'plugin-docs' });
 unregisterCodeActionSource('ui'); // retirar las de fábrica
 ```
+
+## Respuesta, herramientas y preguntas (`@openfactu/ui/ai`)
+
+**Respuesta en directo.** `AIMarkdown` trocea el texto en bloques: los terminados no se vuelven a procesar con cada trozo. Con `streaming`, lo que está a medias en el último bloque se cierra para que no se vea su sintaxis (negrita, código, enlaces, tablas). `AIMessage` lo activa solo cuando `message.status` es `streaming`.
+
+**Vistas por herramienta.** De serie una llamada enseña su nombre técnico y su JSON. Con `registerToolView` dices su nombre legible, una línea de resumen y cómo pintar su resultado. El nombre `*` vale para las demás, y `AIToolCall view` gana al registro. Si una vista falla, se ve el JSON.
+
+```tsx
+registerToolView('consultar_facturas', {
+  label: 'Consultar facturas',
+  summary: tool => tool.output ? `${tool.output.length} facturas` : undefined,
+  render: ({ output, raw }) => <InvoiceTable rows={output} />,   // `raw` es el JSON de serie, por si lo quieres detrás de un «ver detalle»
+}, { source: 'plugin-facturas' });
+```
+
+Varias llamadas seguidas van juntas en una línea («3 acciones», `AIToolGroup`). Se ve abierta mientras algo está en marcha o necesita a la persona, y se pliega sola al terminar. `groupTools={false}` lo quita.
+
+**Preguntas guiadas.** Una parte `{ type: 'question', id, question, options, multiple, allowText, step, answer }` pregunta a la persona, y la respuesta llega por `onAnswerQuestion(id, answer)`. Puede ser asíncrona: si falla, se ve el error y se puede repetir. `AIQuestion` también va suelta, encima del compositor, para que un flujo guiado avance siempre en el mismo sitio; usa `key` por paso. Admite `renderOption` y `optionClassName`, como los selectores.
+
+**Mensajes a medida.** Cada función recibe lo de serie, para envolverlo, añadirle algo o quitarlo devolviendo `null`.
+
+| Prop | Qué cambia |
+| --- | --- |
+| `renderActions(message, defaults)` | La fila de acciones |
+| `renderFooter(message)` | Bajo el mensaje: tokens, velocidad, avisos |
+| `renderHeader(message, defaults)` | Nombre, hora y estado |
+| `renderAvatar(message, defaults)` | El avatar |
+| `renderPart(part, { message, index, defaults })` | Cada parte (también apaga la agrupación de herramientas) |
+
+Van en `AIMessage`, en `AIConversation messageProps` (conviene `useMemo`: una función nueva repinta todos los mensajes con cada trozo), en `AIWorkspace conversationProps` o en `ComponentDefaults` (`AIMessage`, `AIToolCall`, `AIQuestion`). `AIConversation renderMessage(message, { fresh, defaults })` cambia el mensaje entero. Story: **AI Respuesta**.
 
 ## Elementos del agente (`@openfactu/ui/ai`)
 

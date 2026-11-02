@@ -63,6 +63,26 @@ export const gantt = {
   task: '{name}, del {start} al {end}',
   label: 'Diagrama de Gantt',
   empty: 'No hay tareas que mostrar.',
+  milestone: '{task} (hito)',
+  late: 'con retraso',
+  today: 'Hoy',
+  goToday: 'Ir a hoy',
+  scale: 'Escala de tiempo',
+  scales: { day: 'Día', week: 'Semana', month: 'Mes', quarter: 'Trimestre' },
+  fold: 'Plegar {group}',
+  unfold: 'Desplegar {group}',
+  progress: 'Avance de {name}',
+  moved: '{name}: del {start} al {end}',
+  dragRange: '{start} – {end} · {days}',
+  days: { one: '# día', other: '# días' },
+};
+
+export const reading = {
+  time: { one: '# min de lectura', other: '# min de lectura' },
+};
+
+export const holdToConfirm = {
+  hint: 'Mantén pulsado para confirmar',
 };
 
 export const pagination = {

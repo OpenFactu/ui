@@ -33,6 +33,38 @@ export type AIToolStatus = 'pending' | 'running' | 'approval-required' | 'comple
 export interface AITool { id: string; name: string; description?: string; status: AIToolStatus; input?: unknown; output?: unknown; error?: string; durationMs?: number }
 export interface AIActivityStep { id: string; title: string; description?: string; status: AIToolStatus; durationMs?: number }
 
+export interface AIQuestionOption {
+  /** Lo que identifica a la opción en la respuesta. Por defecto, su `label`. */
+  id?: string;
+  label: string;
+  description?: string;
+  icon?: React.ReactNode;
+  disabled?: boolean;
+  /** Datos propios, para `renderOption`. */
+  [key: string]: unknown;
+}
+export interface AIQuestionAnswer {
+  optionIds: string[];
+  /** Lo escrito a mano, si lo hay. */
+  text?: string;
+  /** La respuesta legible, lista para enseñarla o enviarla como mensaje. */
+  label: string;
+}
+export interface AIQuestionData {
+  id: string;
+  question: string;
+  options?: AIQuestionOption[];
+  /** Se pueden elegir varias, y hay que confirmar. */
+  multiple?: boolean;
+  /** Además de las opciones (o en su lugar), un campo de texto. */
+  allowText?: boolean;
+  placeholder?: string;
+  /** En un flujo guiado: «paso 2 de 5». */
+  step?: { current: number; total: number; title?: string };
+  /** Ya respondida: se enseña la respuesta en lugar de los controles. */
+  answer?: AIQuestionAnswer;
+}
+
 export type AIMessagePart =
   | { type: 'text'; text: string; format?: 'plain' | 'markdown' }
   | { type: 'code'; code: string; language?: string; title?: string }
@@ -57,6 +89,8 @@ export type AIMessagePart =
   | { type: 'tests'; suites: AITestSuite[]; durationMs?: number }
   | { type: 'files'; files: AIChangedFile[] }
   | { type: 'checkpoint'; id: string; label?: string; restored?: boolean }
+  /** Pregunta a la persona; la respuesta llega por `onAnswerQuestion`. */
+  | ({ type: 'question' } & AIQuestionData)
   /** Parte de un plugin: se pinta con lo registrado en `registerMessagePart(kind, …)`. */
   | { type: 'custom'; kind: string; data?: unknown };
 export interface AIMessageVersion { id: string; label?: string; parts: AIMessagePart[] }
@@ -126,6 +160,7 @@ export interface AIWorkspaceActions {
   onFiles?: (files: File[]) => void;
   onApproveTool?: (id: string) => void;
   onRejectTool?: (id: string) => void;
+  onAnswerQuestion?: (id: string, answer: AIQuestionAnswer) => void | Promise<void>;
   onOpenArtifact?: (id: string) => void;
   onOpenCode?: (code: string, language?: string) => void;
   onCloseArtifact?: (id: string) => void;

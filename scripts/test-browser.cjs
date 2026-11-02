@@ -12,12 +12,12 @@ const path = require('node:path');
 const GROUPS = {
   browser: [
     'probe-theme-focus.cjs', 'probe-theme-controls.cjs', 'probe-select-contrast.cjs', 'probe-code-editor.cjs', 'probe-code-editor-edge.cjs',
-    'probe-code-motion.cjs', 'probe-code-caret-position.cjs', 'probe-ai.cjs', 'probe-ai-voice.cjs', 'probe-ai-code.cjs', 'probe-ai-elements.cjs',
+    'probe-code-motion.cjs', 'probe-code-caret-position.cjs', 'probe-ai.cjs', 'probe-ai-voice.cjs', 'probe-ai-code.cjs', 'probe-ai-elements.cjs', 'probe-ai-response.cjs',
     'probe-icons.cjs', 'probe-toast-stack.cjs', 'probe-motion.cjs', 'probe-motion-extras.cjs', 'probe-map.cjs', 'probe-controls.cjs',
     'probe-mobile-sheets.cjs', 'probe-extras.cjs', 'probe-qr.cjs', 'probe-calendar.cjs', 'probe-kanban.cjs', 'probe-table.cjs', 'probe-virtual-list.cjs', 'probe-i18n.cjs', 'probe-focus-inputs.cjs', 'probe-ai-layout.cjs', 'probe-notifications.cjs', 'probe-floating-actions.cjs', 'probe-mobile-redesign.cjs',
-    'probe-mobile-gallery.cjs', 'probe-table-action-menu.cjs', 'probe-mobile-control-layout.cjs',
+    'probe-mobile-gallery.cjs', 'probe-table-action-menu.cjs', 'probe-mobile-control-layout.cjs', 'probe-gestures.cjs', 'probe-expressive.cjs', 'probe-select-render.cjs', 'probe-customization.cjs',
   ],
-  chat: ['check-chat.mjs', 'check-chat-features.mjs', 'probe-chat-touch.cjs'],
+  chat: ['check-chat.mjs', 'check-chat-features.mjs', 'probe-chat-touch.cjs', 'probe-chat-search.cjs', 'probe-chat-audio.cjs'],
   // Sondas antiguas que no corren por defecto (más lentas o más frágiles); se lanzan a mano cuando se toca su zona.
   extra: [
     'probe-api.mjs', 'probe-buscador.mjs', 'probe-gantt.mjs', 'probe-infinite.mjs', 'probe-navmenu.mjs',

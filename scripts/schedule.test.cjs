@@ -3,6 +3,46 @@ const assert = require('node:assert/strict');
 require('./test-support.cjs');
 const s = require('../src/components/internal/schedule.ts');
 
+const g = require('../src/components/internal/gantt.ts');
+const day = (d) => new Date(2026, 6, d);
+
+test('Gantt: mover y estirar nunca dejan el fin antes del inicio', () => {
+  const moved = g.applyDrag(day(10), day(14), 'mover', 3);
+  assert.deepEqual([moved.start.getDate(), moved.end.getDate()], [13, 17]);
+  assert.equal(g.applyDrag(day(10), day(14), 'fin', -2).end.getDate(), 12);
+  assert.equal(g.applyDrag(day(10), day(14), 'fin', -9).end.getDate(), 10, 'el fin se queda en el inicio');
+  assert.equal(g.applyDrag(day(10), day(14), 'inicio', 2).start.getDate(), 12);
+  assert.equal(g.applyDrag(day(10), day(14), 'inicio', 9).start.getDate(), 14, 'el inicio se queda en el fin');
+});
+
+test('Gantt: avance ajustado al 5 % y dentro de 0-100', () => {
+  assert.equal(g.progressFromDrag(0.5, 26, 100), 0.75);
+  assert.equal(g.progressFromDrag(0.5, 500, 100), 1);
+  assert.equal(g.progressFromDrag(0.5, -500, 100), 0);
+});
+
+test('Gantt: la flecha hace un codo si hay sitio y da la vuelta si no', () => {
+  const codo = g.dependencyPath(10, 17, 100, 51);
+  assert.ok(codo.startsWith('M 10 17') && codo.endsWith('L 100 51') && codo.includes('Q 92 17'), codo);
+  const vuelta = g.dependencyPath(100, 17, 40, 85);
+  assert.ok(vuelta.includes('Q 108 17') && vuelta.includes('Q 32 85') && vuelta.endsWith('L 40 85'), vuelta);
+  assert.ok(!g.dependencyPath(100, 17, 40, 17).includes('NaN'), 'en la misma fila tampoco se rompe');
+});
+
+test('Gantt: el resumen de un grupo va del primer inicio al último fin, con el avance pesado por duración', () => {
+  const r = g.groupSummary([{ start: day(1), end: day(10), progress: 1 }, { start: day(11), end: day(20), progress: 0 }, { start: day(5), end: day(5) }]);
+  assert.deepEqual([r.start.getDate(), r.end.getDate()], [1, 20]);
+  assert.ok(Math.abs(r.progress - 10 / 21) < 1e-9);
+  assert.equal(g.groupSummary([]), null);
+});
+
+test('Gantt: la escala vecina se queda en los extremos', () => {
+  assert.equal(g.nextScale('week', 1), 'month');
+  assert.equal(g.nextScale('week', -1), 'day');
+  assert.equal(g.nextScale('quarter', 1), 'quarter');
+  assert.equal(g.nextScale('day', -1), 'day');
+});
+
 const slots = (items) => Object.fromEntries(s.layoutOverlaps(items));
 
 test('layoutOverlaps: sin solapes todos ocupan el ancho entero', () => {

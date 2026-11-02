@@ -1,6 +1,8 @@
 import { enabledIndices, rovingNext } from '../internal/roving';
 import * as React from 'react';
 import { cn } from '../utils';
+import { useComponentDefaults } from '../context/ComponentDefaults';
+import { resolveItemClass, type ItemClassName, type ItemRenderState } from './internal/optionStyle';
 import { attrValue, useIndicator } from '../motion/useIndicator';
 
 export interface SegmentedOption<T extends string = string> {
@@ -28,6 +30,10 @@ export interface SegmentedControlProps<T extends string = string> {
   disabled?: boolean;
   'aria-label'?: string;
   className?: string;
+  /** Pinta el contenido de cada opción. El indicador que viaja y el teclado siguen siendo del control. */
+  renderOption?: (option: SegmentedOption<T>, state: ItemRenderState) => React.ReactNode;
+  /** Clases de cada opción, que ganan a las de serie. También como función. */
+  optionClassName?: ItemClassName<SegmentedOption<T>>;
 }
 
 const SIZES = {
@@ -44,7 +50,8 @@ const SIZES = {
  * lo que cambia es la vista, usa `<Tabs variant="segmented">`, que tiene el
  * mismo aspecto pero anuncia pestañas.
  */
-export function SegmentedControl<T extends string = string>({
+export function SegmentedControl<T extends string = string>(rawProps: SegmentedControlProps<T>) {
+  const {
   options,
   value,
   onChange,
@@ -54,8 +61,10 @@ export function SegmentedControl<T extends string = string>({
   fullWidth = false,
   disabled = false,
   className,
+  renderOption,
+  optionClassName,
   ...rest
-}: SegmentedControlProps<T>) {
+} = useComponentDefaults('SegmentedControl', rawProps);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const { ref: indicatorRef } = useIndicator({ containerRef, activeSelector: options.some((o) => o.value === value) ? `[data-segment="${attrValue(value)}"]` : null });
 
@@ -100,6 +109,8 @@ export function SegmentedControl<T extends string = string>({
       />
       {options.map((option, i) => {
         const isActive = option.value === value;
+        const content = <>{option.icon}{option.label}</>;
+        const state: ItemRenderState = { selected: isActive, highlighted: false, disabled: Boolean(option.disabled || disabled), query: '', label: option.label, content };
         return (
           <button
             key={option.value}
@@ -134,10 +145,10 @@ export function SegmentedControl<T extends string = string>({
                       ? 'text-[color:var(--color-accent-fg)]'
                       : 'text-[var(--fg-muted,#52606f)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--bg-hover,#f1f5f9)]',
                   ),
+              resolveItemClass(optionClassName, option, state),
             )}
           >
-            {option.icon}
-            {option.label}
+            {renderOption ? renderOption(option, state) : content}
           </button>
         );
       })}

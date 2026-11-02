@@ -22,9 +22,35 @@ import { CustomPart } from './partRegistry';
 import { AIAttachments } from './AIAttachments';
 import { AIAudioPlayer } from './AIVoice';
 import { AISources } from './AISources';
-import { AIToolCall, AIAgentActivity } from './AIToolCall';
+import { AIToolCall, AIToolGroup, AIAgentActivity } from './AIToolCall';
+import { AIQuestion, type AIQuestionProps } from './AIQuestion';
+import { useComponentDefaults } from '../context/ComponentDefaults';
+import type { AIToolViewDefinition } from './toolViews';
 
-export type AIMessageCallbacks = Pick<AIWorkspaceActions, 'onRetry' | 'onEditMessage' | 'onFeedback' | 'onReadAloud' | 'onVersionChange' | 'onOpenArtifact' | 'onApproveTool' | 'onRejectTool' | 'onOpenFile' | 'onRestoreCheckpoint'>;
+declare module '../context/ComponentDefaults' {
+  interface ComponentDefaultsMap {
+    AIMessage?: AIMessageCustomization;
+    AIToolCall?: { view?: AIToolViewDefinition };
+    AIQuestion?: Pick<AIQuestionProps, 'renderOption' | 'optionClassName'>;
+  }
+}
+
+/** Lo que se puede cambiar de un mensaje. Cada función recibe lo de serie, para envolverlo, añadirle algo o quitarlo (`null`). */
+export interface AIMessageCustomization {
+  /** La fila de acciones: copiar, regenerar, valorar… */
+  renderActions?: (message: AIMessageData, defaults: React.ReactNode) => React.ReactNode;
+  /** Bajo el mensaje: tokens, velocidad, un aviso de que se cortó. */
+  renderFooter?: (message: AIMessageData) => React.ReactNode;
+  /** Nombre, hora y estado. */
+  renderHeader?: (message: AIMessageData, defaults: React.ReactNode) => React.ReactNode;
+  renderAvatar?: (message: AIMessageData, defaults: React.ReactNode) => React.ReactNode;
+  /** Cada parte del mensaje. */
+  renderPart?: (part: AIMessagePart, context: { message: AIMessageData; index: number; defaults: React.ReactNode }) => React.ReactNode;
+  /** Junta las llamadas a herramientas seguidas en una línea. Default true. */
+  groupTools?: boolean;
+}
+
+export type AIMessageCallbacks = Pick<AIWorkspaceActions, 'onRetry' | 'onEditMessage' | 'onFeedback' | 'onReadAloud' | 'onVersionChange' | 'onOpenArtifact' | 'onApproveTool' | 'onRejectTool' | 'onAnswerQuestion' | 'onOpenFile' | 'onRestoreCheckpoint'>;
 export interface AIMessageActionsProps extends AIUIProps { message: AIMessageData; actions?: AIMessageCallbacks; onEdit?: () => void }
 export function AIMessageActions({ message, actions, onEdit, labels, className }: AIMessageActionsProps) {
   const l = useAILabels(labels); const text = messageText(message);
@@ -43,12 +69,20 @@ function MessageImage({ url, alt, labels }: AIUIProps & { url: string; alt: stri
   const [failed, setFailed] = React.useState(false); const l = useAILabels(labels);
   return failed || !safeUrl(url, 'media') ? <p className="ai-muted">{alt || l.imageUnavailable}</p> : <img className="ai-message-image" src={safeUrl(url, 'media')} alt={alt} loading="lazy" onError={() => setFailed(true)} />;
 }
-export interface AIMessageContentProps extends AIUIProps { parts: AIMessagePart[]; role?: AIMessageData['role']; actions?: AIMessageCallbacks; onOpenCode?: (code: string, language?: string) => void }
-export const AIMessageContent = React.memo(function AIMessageContent({ parts, role = 'assistant', actions, onOpenCode, labels, className }: AIMessageContentProps) {
+export interface AIMessageContentProps extends AIUIProps {
+  parts: AIMessagePart[]; role?: AIMessageData['role']; actions?: AIMessageCallbacks; onOpenCode?: (code: string, language?: string) => void;
+  /** Aún está llegando: el Markdown de la última parte cierra lo que tenga a medias. */
+  streaming?: boolean;
+  /** Junta las llamadas a herramientas seguidas en una línea. Default true. */
+  groupTools?: boolean;
+  /** Cada parte: recibe lo que se pintaría de serie. */
+  renderPart?: (part: AIMessagePart, index: number, defaults: React.ReactNode) => React.ReactNode;
+}
+export const AIMessageContent = React.memo(function AIMessageContent({ parts, role = 'assistant', actions, onOpenCode, streaming, groupTools = true, renderPart, labels, className }: AIMessageContentProps) {
   const l = useAILabels(labels);
-  return <div className={cn('ai-message-content', className)}>{parts.map((part, index) => {
+  const single = (part: AIMessagePart, index: number): React.ReactNode => {
     switch (part.type) {
-      case 'text': return part.format === 'plain' || (!part.format && role !== 'assistant') ? <p key={index} className="ai-plain-text">{part.text}</p> : <AIMarkdown key={index} onOpenCode={onOpenCode} labels={labels}>{part.text}</AIMarkdown>;
+      case 'text': return part.format === 'plain' || (!part.format && role !== 'assistant') ? <p key={index} className="ai-plain-text">{part.text}</p> : <AIMarkdown key={index} onOpenCode={onOpenCode} streaming={streaming && index === parts.length - 1} labels={labels}>{part.text}</AIMarkdown>;
       case 'code': return <AICodeBlock key={index} code={part.code} language={part.language} title={part.title} onOpen={onOpenCode} labels={labels} />;
       case 'diff': return <AICodeDiff key={part.id} id={part.id} original={part.original} modified={part.modified} language={part.language} title={part.title} status={part.status} labels={labels} />;
       case 'reasoning': return <AIReasoning key={index} text={part.text} streaming={part.streaming} durationMs={part.durationMs} labels={labels} />;
@@ -61,6 +95,7 @@ export const AIMessageContent = React.memo(function AIMessageContent({ parts, ro
       case 'files': return <AIFileTree key={index} files={part.files} onSelect={actions?.onOpenFile ? path => actions.onOpenFile!(path) : undefined} labels={labels} />;
       case 'checkpoint': return <AICheckpoint key={part.id} label={part.label} restored={part.restored} onRestore={actions?.onRestoreCheckpoint ? () => actions.onRestoreCheckpoint!(part.id) : undefined} labels={labels} />;
       case 'custom': return <CustomPart key={index} kind={part.kind} data={part.data} />;
+      case 'question': return <AIQuestion key={part.id} question={part.question} options={part.options} multiple={part.multiple} allowText={part.allowText} placeholder={part.placeholder} step={part.step} answer={part.answer} onAnswer={actions?.onAnswerQuestion ? answer => actions.onAnswerQuestion!(part.id, answer) : undefined} disabled={!actions?.onAnswerQuestion} labels={labels} />;
       case 'file': return <AIAttachments key={index} attachments={[part.attachment]} labels={labels} />;
       case 'image': return <MessageImage key={index} url={part.url} alt={part.alt} labels={labels} />;
       case 'audio': return <div key={index}><AIAudioPlayer src={part.src} blob={part.blob} title={part.title} labels={labels} />{part.transcript && <p>{part.transcript}</p>}</div>;
@@ -69,7 +104,21 @@ export const AIMessageContent = React.memo(function AIMessageContent({ parts, ro
       case 'activity': return <AIAgentActivity key={index} steps={part.steps} labels={labels} />;
       case 'artifact': return actions?.onOpenArtifact ? <button type="button" key={part.artifactId} className="ai-artifact-link" onClick={() => actions.onOpenArtifact!(part.artifactId)}><UiIcon slot="panel-right-open" size={16} /><span><strong>{part.title}</strong><small>{l.openResult}</small></span></button> : <div key={part.artifactId} className="ai-artifact-link" data-static=""><UiIcon slot="panel-right" size={16} /><span><strong>{part.title}</strong></span></div>;
     }
-  })}</div>;
+  };
+  const one = (part: AIMessagePart, index: number) => {
+    const defaults = single(part, index);
+    return renderPart ? <React.Fragment key={index}>{renderPart(part, index, defaults)}</React.Fragment> : defaults;
+  };
+  const rows: React.ReactNode[] = [];
+  for (let index = 0; index < parts.length; index += 1) {
+    let end = index;
+    if (groupTools && !renderPart) while (parts[index].type === 'tool' && parts[end + 1]?.type === 'tool') end += 1;
+    if (end === index) { rows.push(one(parts[index], index)); continue; }
+    const tools = parts.slice(index, end + 1).flatMap((part) => (part.type === 'tool' ? [part.tool] : []));
+    rows.push(<AIToolGroup key={`tools-${tools[0].id}`} tools={tools} onApprove={actions?.onApproveTool} onReject={actions?.onRejectTool} labels={labels} />);
+    index = end;
+  }
+  return <div className={cn('ai-message-content', className)}>{rows}</div>;
 });
 /**
  * Avatar del mensaje: la imagen si la hay; si no, el asistente lleva un destello sobre el acento y la persona sus
@@ -82,28 +131,35 @@ function MessageAvatar({ message, name }: { message: AIMessageData; name: string
   const initials = name.trim().split(/\s+/).slice(0, 2).map(word => word[0]?.toUpperCase() ?? '').join('');
   return <span className="ai-avatar" data-role="user" title={name}>{initials}</span>;
 }
-export interface AIMessageProps extends AIUIProps {
+export interface AIMessageProps extends AIUIProps, AIMessageCustomization {
   message: AIMessageData; actions?: AIMessageCallbacks; onOpenCode?: (code: string, language?: string) => void;
   /** Anima la entrada del mensaje (lo decide la conversación). */ fresh?: boolean;
   /** Aviso de respuesta fallida con «Reintentar». La conversación lo apaga cuando ya muestra el error de la ejecución. Default true. */
   showError?: boolean;
 }
-export const AIMessage = React.memo(function AIMessage({ message, actions, onOpenCode, fresh, showError = true, labels, className }: AIMessageProps) {
+export const AIMessage = React.memo(function AIMessage(rawProps: AIMessageProps) {
+  const { message, actions, onOpenCode, fresh, showError = true, renderActions, renderFooter, renderHeader, renderAvatar, renderPart, groupTools, labels, className } = useComponentDefaults('AIMessage', rawProps);
   const l = useAILabels(labels);
   const [editing, setEditing] = React.useState(false); const [text, setText] = React.useState('');
   const name = message.name ?? ({ user: l.user, assistant: l.assistant, system: l.system })[message.role];
   const parts = currentMessageParts(message);
   const created = message.createdAt ? new Date(message.createdAt) : undefined;
+  const defaultAvatar = <MessageAvatar message={message} name={name} />;
+  const avatar = renderAvatar ? renderAvatar(message, defaultAvatar) : defaultAvatar;
+  const defaultHeader = <header className="ai-message-header"><strong>{name}</strong>{created && !Number.isNaN(created.getTime()) && <time dateTime={message.createdAt}>{formatTimeOfDay(created)}</time>}
+    {message.status === 'streaming' && <AIThinking>{l.streaming}</AIThinking>}</header>;
+  const header = renderHeader ? renderHeader(message, defaultHeader) : defaultHeader;
+  const defaultActions = <AIMessageActions message={message} actions={actions} labels={labels} onEdit={actions?.onEditMessage && !editing ? () => { setText(messageText(message)); setEditing(true); } : undefined} />;
   return <article className={cn('ai-surface ai-message', className)} data-role={message.role} data-message-id={message.id} data-fresh={fresh || undefined} data-streaming={message.status === 'streaming' || undefined} aria-label={name}>
-    <div className="ai-message-avatar"><MessageAvatar message={message} name={name} /></div>
-    <div className="ai-message-main"><header className="ai-message-header"><strong>{name}</strong>{created && !Number.isNaN(created.getTime()) && <time dateTime={message.createdAt}>{formatTimeOfDay(created)}</time>}
-      {message.status === 'streaming' && <AIThinking>{l.streaming}</AIThinking>}</header>
+    {avatar != null && avatar !== false && <div className="ai-message-avatar">{avatar}</div>}
+    <div className="ai-message-main">{header}
       {editing ? <form className="ai-message-edit" onSubmit={event => { event.preventDefault(); actions?.onEditMessage?.(message.id, text); setEditing(false); }}><Textarea aria-label={l.edit} autoFocus value={text} onChange={event => setText(event.target.value)} /><div className="ai-inline-actions"><Button type="submit" size="sm" disabled={!text.trim()}>{l.save}</Button><Button size="sm" variant="secondary" onClick={() => setEditing(false)}>{l.cancel}</Button></div></form>
-        : <AIMessageContent parts={parts} role={message.role} actions={actions} onOpenCode={onOpenCode} labels={labels} />}
+        : <AIMessageContent parts={parts} role={message.role} actions={actions} onOpenCode={onOpenCode} streaming={message.status === 'streaming'} groupTools={groupTools} renderPart={renderPart ? (part, index, defaults) => renderPart(part, { message, index, defaults }) : undefined} labels={labels} />}
       {message.status === 'error' && showError && <div className="ai-message-error" role="alert"><UiIcon slot="alert-circle" size={15} /><span>{l.messageFailed}</span>{actions?.onRetry && <button type="button" className="ai-text-button" onClick={() => actions.onRetry!(message.id)}><UiIcon slot="refresh-cw" size={13} />{l.retry}</button>}</div>}
-      <div className="ai-message-footer"><AIMessageActions message={message} actions={actions} labels={labels} onEdit={actions?.onEditMessage && !editing ? () => { setText(messageText(message)); setEditing(true); } : undefined} />
+      <div className="ai-message-footer">{renderActions ? renderActions(message, defaultActions) : defaultActions}
         {!!message.versions?.length && actions?.onVersionChange && <div className="ai-version-selector"><Select ariaLabel={l.version} value={message.versionId ?? message.versions[0].id} options={message.versions.map((version, index) => ({ value: version.id, label: version.label ?? `${l.version} ${index + 1}` }))} onChange={id => actions.onVersionChange!(message.id, id)} /></div>}
       </div>
+      {renderFooter?.(message)}
     </div>
   </article>;
 });

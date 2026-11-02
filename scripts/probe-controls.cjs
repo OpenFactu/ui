@@ -193,7 +193,8 @@ const shot = async (page, name) => { if (OUT) await page.screenshot({ path: `${O
   const flick = async (dy) => {
     const top = 844 - (await visible()) + 12;
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 195, y: top }] });
-    for (let i = 1; i <= 4; i += 1) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 195, y: top + (dy * i) / 4 }] });
+    // Con pausas, a ritmo de pantalla: sin ellas, la velocidad depende de lo rápido que responda Chrome en cada máquina.
+    for (let i = 1; i <= 4; i += 1) { await mobile.waitForTimeout(16); await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 195, y: top + (dy * i) / 4 }] }); }
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await mobile.waitForTimeout(1300);
   };

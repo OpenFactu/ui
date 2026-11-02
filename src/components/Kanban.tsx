@@ -7,6 +7,9 @@ import { Avatar } from './Avatar';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { useSpring } from '../motion/useSpring';
+import { useFlip } from '../motion/useFlip';
+import { motionDisabled, readSpringCss } from '../motion/dom';
+import { IconSwap, usePopOnChange } from './Microinteractions';
 import { createVelocityTracker } from '../motion/velocity';
 import { dueLabel, dueState, finalIndex, keyboardTarget, laneToColumnIndex } from './internal/kanban';
 import { useI18n } from '../i18n/I18nProvider';
@@ -102,6 +105,10 @@ export interface KanbanProps {
   onCardClick?: (card: KanbanCard) => void;
   /** Con esto aparece «Añadir tarjeta» al pie de cada columna. */
   onCardAdd?: (columnId: string, title: string, laneId?: string) => void;
+  /** Con esto, cada tarjeta lleva un círculo para darla por terminada: se rellena y el título se tacha. */
+  onCardDone?: (card: KanbanCard, done: boolean) => void;
+  /** Destaca las que cumplan esto y atenúa las demás (búsqueda, filtro por persona), sin moverlas de sitio. */
+  highlight?: (card: KanbanCard) => boolean;
   /** Carriles horizontales (por persona, prioridad…): cada tarjeta va al de su `lane`. */
   lanes?: KanbanLane[];
   /** Columnas y carriles plegables. Default true. */
@@ -154,7 +161,19 @@ interface Arrastre {
   alto: number;
   /** Posición final con teclado (ya sin la tarjeta). */
   pos: number;
+  /** Con el dedo: no se levanta hasta mantener pulsado; moverse antes es desplazarse. */
+  tactil?: boolean;
 }
+
+/** Mantener pulsado para levantar una tarjeta con el dedo, en ms, y lo que se puede mover el dedo mientras tanto, en px. */
+const LEVANTAR_MS = 350;
+const LEVANTAR_HOLGURA = 8;
+
+/** Contador de la cabecera, que da un salto cuando cambia. */
+const Contador: React.FC<React.HTMLAttributes<HTMLSpanElement> & { value: unknown }> = ({ value, ...rest }) => {
+  const ref = usePopOnChange<HTMLSpanElement>(value, 1.22);
+  return <span ref={ref} className="k-kb-count" {...rest} />;
+};
 
 /**
  * Tablero de tarjetas por columnas, con carriles opcionales.
@@ -178,6 +197,8 @@ export const Kanban: React.FC<KanbanProps> = ({
   onCardMove,
   onCardClick,
   onCardAdd,
+  onCardDone,
+  highlight,
   lanes,
   collapsible = true,
   onColumnCollapse,
@@ -210,8 +231,29 @@ export const Kanban: React.FC<KanbanProps> = ({
   // Tras un arrastre de verdad, el clic que llega al soltar no debe abrir la tarjeta.
   const huboArrastre = React.useRef(false);
   const focoPendiente = React.useRef<string | null>(null);
+  // Con el dedo: el temporizador de mantener pulsado, y si ya está levantada (entonces el scroll del navegador se bloquea).
+  const tactil = React.useRef<{ timer?: ReturnType<typeof setTimeout>; levantada: boolean; quitar?: () => void }>({ levantada: false });
+  // Tras soltar, la copia vuela hasta su sitio. El movimiento ya está hecho: es solo la vista, y no retrasa a nadie.
+  const [aterrizando, setAterrizando] = React.useState<Arrastre | null>(null);
+  const aterrizaje = React.useRef<Animation | null>(null);
+  const terminarTactil = () => {
+    clearTimeout(tactil.current.timer);
+    tactil.current.quitar?.();
+    tactil.current = { levantada: false };
+  };
+  React.useEffect(() => () => { terminarTactil(); aterrizaje.current?.cancel(); }, []);
 
   const inclinacion = useSpring({ ref: flotante, role: 'gesture', apply: (v, el) => { el.style.rotate = `${v}deg`; } });
+
+  // Las tarjetas se apartan al abrirse el hueco y al cambiar de sitio; la nueva entra creciendo. La soltada no: ya aterrizó.
+  const huella = columns.map((c) => `${c.id}:${c.cards.map((card) => card.id).join(',')}`).join('|');
+  const huellaHueco = arrastre?.activo && arrastre.destino ? `${arrastre.destino.columnId}/${arrastre.destino.laneId}/${arrastre.destino.index}` : '';
+  useFlip(raiz, {
+    selector: '[data-tarjeta]',
+    getKey: (el) => el.dataset.tarjeta,
+    skip: (el) => el.dataset.tarjeta === soltada,
+    watch: [huella, huellaHueco],
+  });
 
   const conCarriles = Boolean(lanes?.length);
   const carriles: KanbanLane[] = conCarriles ? lanes! : [{ id: SIN_CARRIL, label: null }];
@@ -303,22 +345,50 @@ export const Kanban: React.FC<KanbanProps> = ({
   }, [arrastre?.activo, arrastre?.modo]);
 
   const empezar = (e: React.PointerEvent, card: KanbanCard, desde: KanbanMove, desdeCelda: number, laneId: string) => {
-    if (!onCardMove || card.locked || mobile || e.button !== 0) return;
+    const dedo = e.pointerType === 'touch';
+    if (!onCardMove || card.locked || (mobile && !dedo) || e.button !== 0) return;
     if ((e.target as HTMLElement).closest('button, a, input')) return;
-    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    // Si la anterior aún vuela, llega ya: la copia es la misma.
+    aterrizaje.current?.finish();
+    const elemento = e.currentTarget as HTMLElement; const { pointerId } = e;
+    const r = elemento.getBoundingClientRect();
+    if (dedo) {
+      // Mientras no se levante, el dedo desplaza con normalidad. Una vez levantada, se cancela el scroll (el oyente tiene
+      // que estar puesto antes de que empiece: si no, el navegador ya no deja cancelarlo).
+      const bloquear = (ev: TouchEvent) => { if (tactil.current.levantada && ev.cancelable) ev.preventDefault(); };
+      window.addEventListener('touchmove', bloquear, { passive: false });
+      tactil.current = {
+        levantada: false,
+        quitar: () => window.removeEventListener('touchmove', bloquear),
+        timer: setTimeout(() => {
+          tactil.current.levantada = true;
+          huboArrastre.current = true;
+          try { elemento.setPointerCapture(pointerId); } catch { /* el puntero ya no existe */ }
+          navigator.vibrate?.(10);
+          setArrastre((a) => (a ? { ...a, activo: true } : a));
+        }, LEVANTAR_MS),
+      };
+    } else {
+      elemento.setPointerCapture(pointerId);
+    }
     huboArrastre.current = false;
     agarre.current = { dx: e.clientX - r.left, dy: e.clientY - r.top, ancho: r.width, x0: e.clientX, y0: e.clientY };
     puntero.current = { x: e.clientX, y: e.clientY };
     velocidad.current.reset();
-    setArrastre({ card, desde, desdeCelda, laneId, destino: { columnId: desde.columnId, laneId, index: desdeCelda }, modo: 'puntero', activo: false, alto: r.height, pos: desdeCelda });
+    setArrastre({ card, desde, desdeCelda, laneId, destino: { columnId: desde.columnId, laneId, index: desdeCelda }, modo: 'puntero', activo: false, alto: r.height, pos: desdeCelda, tactil: dedo });
   };
 
   const mover = (e: React.PointerEvent) => {
     if (!arrastre || arrastre.modo !== 'puntero') return;
     puntero.current = { x: e.clientX, y: e.clientY };
     if (!arrastre.activo) {
-      if (Math.hypot(e.clientX - agarre.current.x0, e.clientY - agarre.current.y0) < 5) return;
+      const movido = Math.hypot(e.clientX - agarre.current.x0, e.clientY - agarre.current.y0);
+      if (arrastre.tactil) {
+        // Se ha movido antes de tiempo: quería desplazarse, no coger la tarjeta.
+        if (movido >= LEVANTAR_HOLGURA) { terminarTactil(); setArrastre(null); }
+        return;
+      }
+      if (movido < 5) return;
       huboArrastre.current = true;
       setArrastre((a) => (a ? { ...a, activo: true } : a));
     }
@@ -352,10 +422,25 @@ export const Kanban: React.FC<KanbanProps> = ({
   const soltar = () => {
     if (!arrastre || arrastre.modo !== 'puntero') return;
     const a = arrastre;
-    setArrastre(null);
+    terminarTactil();
     clearTimeout(reposo.current);
     puntero.current = null;
-    if (a.activo) confirmar(a);
+    const el = flotante.current;
+    // El sitio donde caerá se mide antes de que desaparezcan el hueco y la marca de origen.
+    const objetivo = a.activo && el && !motionDisabled(el)
+      ? (raiz.current?.querySelector('[data-insercion]') ?? raiz.current?.querySelector('[data-source]'))?.getBoundingClientRect()
+      : undefined;
+    setArrastre(null);
+    if (!a.activo) return;
+    confirmar(a);
+    if (!objetivo || !el) return;
+    // La copia vuela hasta allí (o de vuelta a su sitio) y la tarjeta de verdad espera oculta a que llegue.
+    const { easing, duration } = readSpringCss('move', el);
+    inclinacion.to(0);
+    setAterrizando(a);
+    const animacion = el.animate([{ transform: el.style.transform }, { transform: `translate3d(${objetivo.left}px, ${objetivo.top}px, 0)` }], { duration: Math.min(duration, 320), easing, fill: 'forwards' });
+    aterrizaje.current = animacion;
+    animacion.onfinish = () => { aterrizaje.current = null; animacion.cancel(); setAterrizando(null); };
   };
 
   // ── Teclado ───────────────────────────────────────────────────────────
@@ -453,7 +538,7 @@ export const Kanban: React.FC<KanbanProps> = ({
   };
 
   const plantilla = columns.map((c) => (plegadas.has(c.id) ? '44px' : `${columnWidth}px`)).join(' ');
-  const flotando = arrastre?.activo && arrastre.modo === 'puntero' ? arrastre : null;
+  const flotando = arrastre?.activo && arrastre.modo === 'puntero' ? arrastre : aterrizando;
   const columnaDeFlotante = flotando ? columns.find((c) => c.id === flotando.desde.columnId) : undefined;
 
   return (
@@ -494,13 +579,13 @@ export const Kanban: React.FC<KanbanProps> = ({
                   <div className="k-kb-head-row">
                     <span className="k-kb-dot" aria-hidden="true" />
                     <span className="k-kb-label">{col.label}</span>
-                    <span
-                      className="k-kb-count"
+                    <Contador
+                      value={total}
                       title={col.wipLimit !== undefined ? format(kt.wipTitle, { count: total, max: col.wipLimit }) : undefined}
                     >
                       {total}
                       {col.wipLimit !== undefined && `/${col.wipLimit}`}
-                    </span>
+                    </Contador>
                     {col.actions}
                     {collapsible && (
                       <button type="button" className="k-kb-fold" onClick={() => plegar(col.id)} aria-label={format(kt.fold, { column: etiquetaDe(col) })} aria-expanded>
@@ -593,7 +678,12 @@ export const Kanban: React.FC<KanbanProps> = ({
                             onKeyDown={(event) => teclaTarjeta(event, card, desde, posCelda, lane.id)}
                             onBlur={() => { if (arrastre?.modo === 'teclado' && esArrastrada) setArrastre(null); }}
                             onPointerDown={(e) => empezar(e, card, desde, posCelda, lane.id)}
+                            onContextMenu={(e) => { if (arrastre?.tactil) e.preventDefault(); }}
                             data-movable={(movible && !mobile) || undefined}
+                            data-lift={movible || undefined}
+                            data-arriving={aterrizando?.card.id === card.id ? true : undefined}
+                            data-dim={highlight && !highlight(card) ? true : undefined}
+                            data-checkable={onCardDone ? true : undefined}
                             data-source={(esArrastrada && arrastre?.activo && arrastre.modo === 'puntero') || undefined}
                             data-picked={(esArrastrada && arrastre?.modo === 'teclado') || undefined}
                             data-dropped={soltada === card.id || undefined}
@@ -606,7 +696,7 @@ export const Kanban: React.FC<KanbanProps> = ({
                               { label: kt.moveUp, disabled: index === 0 || col.locked, onClick: () => onCardMove(card, { columnId: col.id, index: index - 1, laneId: desde.laneId }, desde) },
                               { label: kt.moveDown, disabled: index === col.cards.length - 1 || col.locked, onClick: () => onCardMove(card, { columnId: col.id, index: index + 1, laneId: desde.laneId }, desde) },
                             ]} aria-label={format(kt.moveCard, { title: tituloDe(card) })}><UiIcon slot="more-horizontal" size={18} /></DropdownMenu></div>}
-                            {renderCard ? renderCard(card, col) : <ContenidoTarjeta card={card} hoy={hoy} />}
+                            {renderCard ? renderCard(card, col) : <ContenidoTarjeta card={card} hoy={hoy} onDone={onCardDone} />}
                           </div>
                         </React.Fragment>
                       );
@@ -650,7 +740,7 @@ export const Kanban: React.FC<KanbanProps> = ({
       </div>
 
       {flotando && typeof document !== 'undefined' && createPortal(
-        <div ref={flotante} className="k-kb-float" aria-hidden="true" style={{ width: agarre.current.ancho, ...tono(flotando.card.tone) }}>
+        <div ref={flotante} className="k-kb-float" aria-hidden="true" data-landing={!arrastre?.activo || undefined} style={{ width: agarre.current.ancho, ...tono(flotando.card.tone) }}>
           <div className="k-kb-card" data-lifted style={tono(flotando.card.tone)}>
             {renderCard && columnaDeFlotante ? renderCard(flotando.card, columnaDeFlotante) : <ContenidoTarjeta card={flotando.card} hoy={hoy} />}
           </div>
@@ -662,8 +752,9 @@ export const Kanban: React.FC<KanbanProps> = ({
 };
 
 /** Pintado por defecto de una tarjeta. */
-const ContenidoTarjeta: React.FC<{ card: KanbanCard; hoy: Date }> = ({ card, hoy }) => {
+const ContenidoTarjeta: React.FC<{ card: KanbanCard; hoy: Date; onDone?: (card: KanbanCard, done: boolean) => void }> = ({ card, hoy, onDone }) => {
   const { messages: { kanban: kc, dates }, format: fmt } = useI18n();
+  const nombre = texto(card.title, card.id);
   const due = card.due ? new Date(card.due) : null;
   const estadoDue = due ? (card.done ? 'done' : dueState(due, hoy)) : null;
   const personas = card.assignees ?? [];
@@ -680,8 +771,18 @@ const ContenidoTarjeta: React.FC<{ card: KanbanCard; hoy: Date }> = ({ card, hoy
       )}
       <div className="k-kb-title-row">
         <span className="k-kb-title">
-          {card.done && <UiIcon slot="check-circle" size={14} className="k-kb-done-icon" aria-label={kc.done} />}
-          {card.title}
+          {onDone ? (
+            <button
+              type="button"
+              className="k-kb-check"
+              aria-pressed={Boolean(card.done)}
+              aria-label={fmt(card.done ? kc.markPending : kc.markDone, { title: nombre })}
+              onClick={(event) => { event.stopPropagation(); onDone(card, !card.done); }}
+            >
+              <IconSwap state={Boolean(card.done)}><UiIcon slot="check" size={11} /></IconSwap>
+            </button>
+          ) : card.done && <UiIcon slot="check-circle" size={14} className="k-kb-done-icon" aria-label={kc.done} />}
+          <span className="k-kb-title-text">{card.title}</span>
         </span>
         {card.meta && <span className="shrink-0">{card.meta}</span>}
       </div>
@@ -701,8 +802,8 @@ const ContenidoTarjeta: React.FC<{ card: KanbanCard; hoy: Date }> = ({ card, hoy
               {dueLabel(due, hoy, dates)}
             </span>
           )}
-          {!!card.comments && <span className="k-kb-stat" title={`${card.comments} comentarios`}><UiIcon slot="message-square" size={12} />{card.comments}</span>}
-          {!!card.attachments && <span className="k-kb-stat" title={`${card.attachments} adjuntos`}><UiIcon slot="paperclip" size={12} />{card.attachments}</span>}
+          {!!card.comments && <span className="k-kb-stat" title={fmt(kc.comments, { count: card.comments })}><UiIcon slot="message-square" size={12} />{card.comments}</span>}
+          {!!card.attachments && <span className="k-kb-stat" title={fmt(kc.attachments, { count: card.attachments })}><UiIcon slot="paperclip" size={12} />{card.attachments}</span>}
           {personas.length > 0 && (
             <span className="k-kb-people" title={personas.map((p) => p.name).join(', ')}>
               {personas.slice(0, 3).map((p) => <Avatar key={p.name} name={p.name} src={p.src} size="xs" />)}

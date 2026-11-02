@@ -195,9 +195,10 @@ export const BloquesPropios: Story = () => <ChatProvider currentUser={people[0]}
   </div>
 </ChatProvider>;
 
-// Un segundo de silencio en WAV, para tener una nota de voz sin red.
+// Seis segundos de un tono bajito con forma de frases en WAV, para tener una nota de voz sin red.
 function silentWav(): string {
-  const rate = 8000; const data = new Uint8Array(rate).fill(128); const view = new DataView(new ArrayBuffer(44));
+  const rate = 8000; const data = new Uint8Array(rate * 6); const view = new DataView(new ArrayBuffer(44));
+  data.forEach((_, i) => { const t = i / rate; const phrase = Math.max(0, Math.sin(t * 2.3) * Math.sin(t * 7.1 + 1)); data[i] = 128 + 22 * phrase * Math.sin(t * 2 * Math.PI * 180); });
   const text = (offset: number, value: string) => [...value].forEach((char, i) => view.setUint8(offset + i, char.charCodeAt(0)));
   text(0, 'RIFF'); view.setUint32(4, 36 + data.length, true); text(8, 'WAVEfmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
   view.setUint32(24, rate, true); view.setUint32(28, rate, true); view.setUint16(32, 1, true); view.setUint16(34, 8, true); text(36, 'data'); view.setUint32(40, data.length, true);
@@ -208,7 +209,7 @@ export const EnPanel: Story = () => {
   const [open, setOpen] = React.useState(true);
   const voz = React.useMemo(() => silentWav(), []);
   const conVoz: ChatMessageData[] = [...messages, { id: 'voz-1', conversationId: 'ana', senderId: 'ana', text: '', createdAt: '2026-10-27T08:36:00Z',
-    attachments: [{ id: 'a-voz', name: 'nota-de-voz.wav', mediaType: 'audio/wav', size: 8044, url: voz, status: 'ready', duration: 1 }] }];
+    attachments: [{ id: 'a-voz', name: 'nota-de-voz.wav', mediaType: 'audio/wav', size: 48044, url: voz, status: 'ready', duration: 6 }] }];
   return <>
     <Button onClick={() => setOpen(true)}>Abrir mensajes</Button>
     <Drawer open={open} onClose={() => setOpen(false)} size="lg" hideHeader padding="none" ariaLabel="Mensajes">
@@ -255,7 +256,7 @@ export const AdjuntosCompactos: Story = () => {
   }, []);
   const conAdjuntos: ChatMessageData[] = [...messages,
     { id: 'adj-1', conversationId: 'ana', senderId: 'ana', text: 'Te paso el plano', createdAt: '2026-10-27T08:40:00Z', attachments: [{ id: 'img', name: 'plano-almacen.svg', mediaType: 'image/svg+xml', size: 75000, url: urls.imagen, status: 'ready' }] },
-    { id: 'adj-2', conversationId: 'ana', senderId: 'me', text: '', createdAt: '2026-10-27T08:41:00Z', status: 'read', attachments: [{ id: 'voz', name: 'nota.wav', mediaType: 'audio/wav', size: 48600, url: urls.voz, status: 'ready', duration: 1 }] },
+    { id: 'adj-2', conversationId: 'ana', senderId: 'me', text: '', createdAt: '2026-10-27T08:41:00Z', status: 'read', attachments: [{ id: 'voz', name: 'nota.wav', mediaType: 'audio/wav', size: 48044, url: urls.voz, status: 'ready', duration: 6 }] },
     { id: 'adj-3', conversationId: 'ana', senderId: 'ana', text: 'Y el presupuesto firmado', createdAt: '2026-10-27T08:42:00Z', attachments: [{ id: 'pdf', name: 'presupuesto-2026-firmado.pdf', mediaType: 'application/pdf', size: 184000, url: urls.pdf, status: 'ready' }] },
   ];
   return <ChatProvider currentUser={people[0]} users={people} initialConversations={conversations.map(item => ({ ...item, hasOlderMessages: false }))} initialMessages={conAdjuntos}

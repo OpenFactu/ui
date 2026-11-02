@@ -1,3 +1,6 @@
+import type { MenuItemCustomization, MenuItemShape } from './internal/MenuItemButton';
+import { resolveItemClass } from './internal/optionStyle';
+import { useComponentDefaults } from '../context/ComponentDefaults';
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { UiIcon } from '../icons';
@@ -15,7 +18,7 @@ export interface SplitButtonAction {
   disabled?: boolean;
   destructive?: boolean;
 }
-export interface SplitButtonProps {
+export interface SplitButtonProps extends MenuItemCustomization<SplitButtonAction & MenuItemShape> {
   label: string;
   onClick: () => void;
   actions: SplitButtonAction[];
@@ -29,7 +32,8 @@ export interface SplitButtonProps {
 }
 
 /** Acción principal y alternativas; flechas, Inicio/Fin, Escape y foco real. */
-export const SplitButton: React.FC<SplitButtonProps> = ({
+export const SplitButton: React.FC<SplitButtonProps> = (rawProps) => {
+  const {
   label,
   onClick,
   actions,
@@ -40,7 +44,9 @@ export const SplitButton: React.FC<SplitButtonProps> = ({
   isLoading = false,
   menuLabel: menuLabelProp,
   className,
-}) => {
+  renderItem,
+  itemClassName,
+} = useComponentDefaults('SplitButton', rawProps);
   const menuLabelDefault = useMessages('common').moreActions;
   const menuLabel = menuLabelProp ?? menuLabelDefault;
   const id = React.useId();
@@ -167,10 +173,12 @@ export const SplitButton: React.FC<SplitButtonProps> = ({
                   action.destructive
                     ? 'text-[var(--k-danger-fg)] hover:bg-[var(--k-danger-bg)] focus:bg-[var(--k-danger-bg)]'
                     : 'text-[var(--fg-default)] hover:bg-[var(--bg-hover)] focus:bg-[var(--bg-hover)]',
+                  resolveItemClass(itemClassName, action, { selected: false, highlighted: false, disabled: Boolean(action.disabled), query: '', label: action.label, content: null }),
                 )}
               >
-                {action.icon}
-                {action.label}
+                {renderItem
+                  ? renderItem(action, { selected: false, highlighted: false, disabled: Boolean(action.disabled), query: '', label: action.label, content: <>{action.icon}{action.label}</> })
+                  : <>{action.icon}{action.label}</>}
               </button>
             ))}
           </div>,

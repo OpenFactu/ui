@@ -7,7 +7,7 @@ import type { AIWorkspaceState, AIWorkspaceActions, AIArtifactRenderer, AIArtifa
 import { useAILabels } from './labels';
 import { AIIconButton, useStableCallbacks } from './internal/ui';
 import { AIConversationHistory } from './AIConversationHistory';
-import { AIConversation, type AIPromptSuggestion } from './AIConversation';
+import { AIConversation, type AIConversationProps, type AIPromptSuggestion } from './AIConversation';
 import { AIComposer, type AIComposerProps } from './AIComposer';
 import { AIArtifactPanel } from './AIArtifactPanel';
 import { AIContextUsage } from './AIContext';
@@ -23,6 +23,8 @@ export interface AIWorkspaceProps extends AIUIProps {
   sidebarWidth?: number;
   onSidebarWidthChange?: (width: number) => void;
   suggestions?: AIPromptSuggestion[];
+  /** `messageProps` y `renderMessage` de la conversación de serie. */
+  conversationProps?: Pick<AIConversationProps, 'messageProps' | 'renderMessage'>;
   mentions?: AIComposerProps['mentions']; commands?: AIComposerProps['commands'];
   attachmentLimits?: { accept?: string; maxFiles?: number; maxSizeMb?: number };
   artifactRenderers?: Partial<Record<AIArtifact['kind'], AIArtifactRenderer>>;
@@ -30,7 +32,7 @@ export interface AIWorkspaceProps extends AIUIProps {
   /** Acciones de IA sobre código solo para este espacio; se suman a las registradas. */
   codeActions?: AICodeAction[];
 }
-export function AIWorkspace({ state, actions: suppliedActions, title, header, children, composer, sidebarWidth, onSidebarWidthChange, suggestions, mentions, commands, attachmentLimits, artifactRenderers, codeActions, labels, className, style }: AIWorkspaceProps) {
+export function AIWorkspace({ state, actions: suppliedActions, title, header, children, conversationProps, composer, sidebarWidth, onSidebarWidthChange, suggestions, mentions, commands, attachmentLimits, artifactRenderers, codeActions, labels, className, style }: AIWorkspaceProps) {
   const l = useAILabels(labels); const actions = useStableCallbacks(suppliedActions);
   const narrowViewport = useMediaQuery('(max-width: 1023px)');
   const [historyOpen, setHistoryOpen] = React.useState(false);
@@ -81,7 +83,7 @@ export function AIWorkspace({ state, actions: suppliedActions, title, header, ch
       <div className="ai-workspace-chat">{children ?? <>
         <AIConversation messages={state.messages} conversationId={state.conversationId} run={state.run} actions={actions}
           loading={state.historyLoading} hasOlder={state.hasOlderMessages} loadingOlder={state.olderMessagesLoading} onLoadOlder={actions.onLoadOlderMessages}
-          suggestions={suggestions} onSelectPrompt={fillPrompt} onOpenCode={actions.onOpenCode} labels={labels} />
+          suggestions={suggestions} onSelectPrompt={fillPrompt} onOpenCode={actions.onOpenCode} labels={labels} {...conversationProps} />
         <div className="ai-workspace-composer"><AIComposer draft={state.draft} onDraftChange={actions.onDraftChange} onSubmit={actions.onSubmit} run={state.run} onStop={actions.onStop}
           models={state.models} modelId={state.modelId} onSelectModel={actions.onSelectModel} mentions={mentions} commands={commands}
           onCommand={actions.onCommand} onFiles={actions.onFiles} onRecordAudio={actions.onRecordAudio} {...attachmentLimits} labels={labels}>{composer}</AIComposer></div>

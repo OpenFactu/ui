@@ -1,3 +1,5 @@
+import { resolveItemClass, type ItemClassName, type ItemRenderState } from './internal/optionStyle';
+import { useComponentDefaults } from '../context/ComponentDefaults';
 import { Spinner } from './Spinner';
 import { useRecentSearches } from '../internal/storage';
 import * as React from 'react';
@@ -31,6 +33,10 @@ export interface SearchInputProps
   /** Sugerencias en desplegable mientras se escribe. */
   suggestions?: SearchSuggestion[];
   onSuggestionSelect?: (suggestion: SearchSuggestion) => void;
+  /** Pinta el contenido de cada sugerencia. El rol, las flechas y el elegir siguen siendo del campo. */
+  renderSuggestion?: (suggestion: SearchSuggestion, state: ItemRenderState) => React.ReactNode;
+  /** Clases de la fila, que ganan a las de serie. También como función. */
+  suggestionClassName?: ItemClassName<SearchSuggestion>;
   /**
    * Guarda y ofrece las últimas búsquedas. Se le pasa la clave de
    * almacenamiento; con `false` (default) no se guarda nada.
@@ -52,6 +58,8 @@ export interface SearchSuggestion {
   icon?: React.ReactNode;
   /** Sección bajo la que se agrupa. */
   group?: string;
+  /** Datos propios, para `renderSuggestion`. */
+  [key: string]: any;
 }
 
 export interface SearchToken {
@@ -78,7 +86,8 @@ function shortcutLabel(shortcut: Exclude<SearchInputProps['shortcut'], false | u
   return shortcut === 'mod+k' && isMac ? '⌘K' : 'Ctrl+K';
 }
 
-export const SearchInput: React.FC<SearchInputProps> = ({
+export const SearchInput: React.FC<SearchInputProps> = (rawProps) => {
+  const {
   value,
   onChange,
   onDebouncedChange,
@@ -93,6 +102,8 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   bare = false,
   suggestions,
   onSuggestionSelect,
+  renderSuggestion,
+  suggestionClassName,
   recentKey = false,
   maxRecent = 5,
   tokens,
@@ -102,7 +113,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   containerClassName,
   onKeyDown,
   ...rest
-}) => {
+} = useComponentDefaults('SearchInput', rawProps);
   const { messages: m, format } = useI18n();
   const placeholder = placeholderProp ?? m.common.searchPlaceholder;
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -165,6 +176,18 @@ export const SearchInput: React.FC<SearchInputProps> = ({
       >
         {panelItems.map((item, i) => {
           const first = i === 0 || panelItems[i - 1].group !== item.group;
+          const content = (
+            <>
+                {item.icon ?? <UiIcon slot="clock" className="h-3 w-3 shrink-0 text-[var(--fg-subtle,#657486)]" />}
+                <span className="flex-1 min-w-0 truncate">{item.label}</span>
+                {item.description && (
+                  <span className="shrink-0 text-[length:calc(10px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)]">
+                    {item.description}
+                  </span>
+                )}
+            </>
+          );
+          const state: ItemRenderState = { selected: false, highlighted: i === activeIndex, disabled: false, query: value, label: item.label, content };
           return (
             <React.Fragment key={item.id}>
               {item.group && first && (
@@ -184,15 +207,10 @@ export const SearchInput: React.FC<SearchInputProps> = ({
                   i === activeIndex
                     ? 'bg-[var(--bg-hover,#f1f5f9)] text-[var(--fg-default,#0a1628)]'
                     : 'text-[var(--fg-body,#2d3a4a)]',
+                  resolveItemClass(suggestionClassName, item, state),
                 )}
               >
-                {item.icon ?? <UiIcon slot="clock" className="h-3 w-3 shrink-0 text-[var(--fg-subtle,#657486)]" />}
-                <span className="flex-1 min-w-0 truncate">{item.label}</span>
-                {item.description && (
-                  <span className="shrink-0 text-[length:calc(10px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)]">
-                    {item.description}
-                  </span>
-                )}
+                {renderSuggestion ? <span className="min-w-0 flex-1">{renderSuggestion(item, state)}</span> : content}
               </div>
             </React.Fragment>
           );

@@ -15,28 +15,51 @@ export function resolveSnapPoints(points: readonly SnapPoint[], available: numbe
   return [...new Set(heights)].sort((a, b) => a - b);
 }
 
+/** Lo que tiene que pasarse la hoja de un anclaje para que el siguiente lanzamiento cuente a partir de él (px). */
+const SNAP_MARGIN = 8;
+
+export interface PickSnapOptions {
+  /** Velocidad (px/ms) a partir de la que soltar es un lanzamiento. Default 0,5. */
+  flick?: number;
+  /** Velocidad (px/ms) a partir de la que un lanzamiento va al extremo o cierra. Default 2,5. */
+  jump?: number;
+  dismissible?: boolean;
+  /** Frenada de la inercia al soltar sin lanzar, como `decelerationRate` en iOS. Default 0,997. */
+  deceleration?: number;
+}
+
 /**
  * Anclaje al que va la hoja al soltarla. `height` es la altura visible en ese momento y `velocity` la velocidad del
- * dedo en px/ms, positiva hacia **arriba** (la hoja crece).
+ * dedo en px/ms, positiva hacia **arriba** (la hoja crece). Devuelve `-1` si la hoja debe cerrarse.
  *
- * Se proyecta adónde llegaría por inercia y se elige el anclaje más cercano a esa proyección. Un lanzamiento claro
- * avanza al menos un anclaje en su sentido. Devuelve `-1` si la hoja debe cerrarse: lanzada hacia abajo desde el
- * primero, o soltada bastante por debajo de él.
+ * - **Soltar sin lanzar:** el anclaje más cercano a donde llegaría por inercia. Se cierra si acaba bastante por debajo
+ *   del primero.
+ * - **Lanzamiento normal:** un solo anclaje en su sentido, contando desde donde está la hoja. Hacia abajo desde el
+ *   primero, se cierra. Proyectar aquí no sirve: cada px/ms son unos 330 px, así que un gesto corriente rebasaría
+ *   anclajes enteros y podría cerrar una hoja abierta del todo.
+ * - **Lanzamiento muy fuerte:** al anclaje más alto o, hacia abajo, se cierra.
+ *
+ * Si la hoja no se puede cerrar, donde tocaría cerrar se queda en el primero.
  */
-export function pickSnap(height: number, velocity: number, heights: readonly number[], options: { flick?: number; dismissible?: boolean; deceleration?: number } = {}): number {
-  const { flick = 0.5, dismissible = true, deceleration = 0.997 } = options;
+export function pickSnap(height: number, velocity: number, heights: readonly number[], options: PickSnapOptions = {}): number {
+  const { flick = 0.5, jump = 2.5, dismissible = true, deceleration = 0.997 } = options;
   if (!heights.length) return -1;
+  const last = heights.length - 1;
+  const closed = dismissible ? -1 : 0;
+  if (velocity >= jump) return last;
+  if (velocity <= -jump) return closed;
+  if (velocity > flick) {
+    const next = heights.findIndex((h) => h > height + SNAP_MARGIN);
+    return next === -1 ? last : next;
+  }
+  if (velocity < -flick) {
+    for (let i = last; i >= 0; i -= 1) if (heights[i] < height - SNAP_MARGIN) return i;
+    return closed;
+  }
   // Distancia que recorrería frenando de forma exponencial: v·d/(1−d) por milisegundo.
   const projected = height + (velocity * deceleration) / (1 - deceleration);
-  const lowest = heights[0];
-  if (dismissible && (projected < lowest * 0.5 || (velocity < -flick && height <= lowest + 8))) return -1;
-  let best = 0;
-  for (let i = 1; i < heights.length; i += 1) if (Math.abs(heights[i] - projected) < Math.abs(heights[best] - projected)) best = i;
-  // Un lanzamiento claro nunca se queda en el mismo sitio: avanza al menos uno.
-  const current = nearestIndex(height, heights);
-  if (velocity > flick && best <= current && current < heights.length - 1) best = current + 1;
-  if (velocity < -flick && best >= current && current > 0) best = current - 1;
-  return best;
+  if (dismissible && projected < heights[0] * 0.5) return -1;
+  return nearestIndex(projected, heights);
 }
 
 /** Índice del anclaje más cercano a una altura. */

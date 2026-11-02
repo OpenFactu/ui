@@ -120,6 +120,25 @@ export const Arrastrable: Story = () => {
   );
 };
 
+/** Con barra de herramientas, zoom con Ctrl + rueda, avance arrastrable y teclado (flechas sobre una barra). */
+export const Completo: Story = () => {
+  const [tasks, setTasks] = React.useState(OBRA);
+  const [note, setNote] = React.useState('Señala una tarea: se encienden sus dependencias. Arrastra una barra, sus bordes o el punto de avance.');
+  return (
+    <div className="space-y-3">
+      <Gantt
+        toolbar
+        tasks={tasks}
+        today={HOY}
+        onTaskChange={(task, { start, end }) => setTasks((list) => list.map((t) => (t.id === task.id ? { ...t, start, end } : t)))}
+        onProgressChange={(task, progress) => setTasks((list) => list.map((t) => (t.id === task.id ? { ...t, progress } : t)))}
+        onTaskClick={(task) => setNote(`Abierta: ${task.name}`)}
+      />
+      <p className="text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)]">{note}</p>
+    </div>
+  );
+};
+
 export const SinAgrupar: Story = () => (
   <Gantt
     scale="day"

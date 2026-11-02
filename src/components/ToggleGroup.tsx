@@ -1,6 +1,8 @@
 import { enabledIndices, rovingNext } from '../internal/roving';
 import * as React from 'react';
 import { cn } from '../utils';
+import { useComponentDefaults } from '../context/ComponentDefaults';
+import { resolveItemClass, type ItemClassName, type ItemRenderState } from './internal/optionStyle';
 
 export interface ToggleItem<T extends string = string> {
   value: T;
@@ -11,7 +13,7 @@ export interface ToggleItem<T extends string = string> {
   disabled?: boolean;
 }
 
-interface ToggleGroupBase<T extends string> {
+export interface ToggleGroupBaseProps<T extends string> {
   items: readonly ToggleItem<T>[];
   size?: 'sm' | 'md';
   /** `outline` (por defecto) con borde común; `ghost` sin marco, para barras de herramientas. */
@@ -19,9 +21,13 @@ interface ToggleGroupBase<T extends string> {
   disabled?: boolean;
   'aria-label'?: string;
   className?: string;
+  /** Pinta el contenido de cada botón. */
+  renderItem?: (item: ToggleItem<T>, state: ItemRenderState) => React.ReactNode;
+  /** Clases de cada botón, que ganan a las de serie. El pulsado lleva `aria-pressed`. También como función. */
+  itemClassName?: ItemClassName<ToggleItem<T>>;
 }
 
-export interface ToggleGroupSingleProps<T extends string = string> extends ToggleGroupBase<T> {
+export interface ToggleGroupSingleProps<T extends string = string> extends ToggleGroupBaseProps<T> {
   type: 'single';
   value: T | null;
   onChange: (value: T | null) => void;
@@ -29,7 +35,7 @@ export interface ToggleGroupSingleProps<T extends string = string> extends Toggl
   deselectable?: boolean;
 }
 
-export interface ToggleGroupMultipleProps<T extends string = string> extends ToggleGroupBase<T> {
+export interface ToggleGroupMultipleProps<T extends string = string> extends ToggleGroupBaseProps<T> {
   type: 'multiple';
   value: readonly T[];
   onChange: (value: T[]) => void;
@@ -43,8 +49,9 @@ const SIZES = { sm: 'h-7 min-w-7 px-2 text-[length:calc(12px*var(--k-text-scale,
  * Botones que se activan y desactivan: uno solo (alineación, vista) o varios a la vez (negrita, cursiva, filtros).
  * Es una barra de herramientas accesible: un único tabulador para todo el grupo y flechas, Inicio y Fin dentro.
  */
-export function ToggleGroup<T extends string = string>(props: ToggleGroupProps<T>) {
-  const { items, size = 'md', variant = 'outline', disabled, className } = props;
+export function ToggleGroup<T extends string = string>(rawProps: ToggleGroupProps<T>) {
+  const props = useComponentDefaults('ToggleGroup', rawProps);
+  const { items, size = 'md', variant = 'outline', disabled, className, renderItem, itemClassName } = props;
   const ref = React.useRef<HTMLDivElement>(null);
   const isOn = (v: T) => (props.type === 'multiple' ? props.value.includes(v) : props.value === v);
   const [focus, setFocus] = React.useState(() => Math.max(0, items.findIndex((i) => isOn(i.value) && !i.disabled)));
@@ -83,6 +90,8 @@ export function ToggleGroup<T extends string = string>(props: ToggleGroupProps<T
     >
       {items.map((item, index) => {
         const on = isOn(item.value);
+        const content = <>{item.icon}{item.label}</>;
+        const state: ItemRenderState = { selected: on, highlighted: false, disabled: Boolean(item.disabled || disabled), query: '', label: item.label, content };
         return (
           <button
             key={item.value}
@@ -103,10 +112,10 @@ export function ToggleGroup<T extends string = string>(props: ToggleGroupProps<T
               on
                 ? 'bg-accent/10 text-accent'
                 : 'text-[var(--fg-muted,#52606f)] hover:bg-[var(--bg-hover,#f1f5f9)] hover:text-[var(--fg-default,#0a1628)]',
+              resolveItemClass(itemClassName, item, state),
             )}
           >
-            {item.icon}
-            {item.label}
+            {renderItem ? renderItem(item, state) : content}
           </button>
         );
       })}

@@ -10,6 +10,7 @@ import { SearchableSelect } from './SearchableSelect';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import { MobileOverlay } from './internal/MobileOverlay';
 import { useI18n } from '../i18n/I18nProvider';
+import type { OptionCustomization } from './internal/optionStyle';
 
 export interface FilterBarConfig {
   key: string;
@@ -19,7 +20,10 @@ export interface FilterBarConfig {
    * (interlocutores, artículos, plan contable).
    */
   type: 'text' | 'select' | 'search-select' | 'date';
-  options?: { label: string; value: any }[];
+  /** Con `icon`, `secondaryLabel` o datos propios, llegan tal cual al desplegable. */
+  options?: { label: string; value: any; [key: string]: any }[];
+  /** `renderOption`, `selectedStyle`, `optionClassName` y `renderValue` de `select` y `search-select`. */
+  customize?: OptionCustomization<any>;
   placeholder?: string;
   /** Ancho del control en píxeles. Default 160. */
   width?: number;
@@ -96,12 +100,10 @@ export function FilterBar({
                   ariaLabel={filter.label}
                   onChange={(v) => onFilterChange(filter.key, v)}
                   placeholder={filter.label}
+                  {...filter.customize}
                   options={[
                     { value: '', label: filter.label },
-                    ...(filter.options ?? []).map((o) => ({
-                      value: String(o.value),
-                      label: o.label,
-                    })),
+                    ...(filter.options ?? []).map((o) => ({ ...o, value: String(o.value) })),
                   ]}
                 />
               </div>
@@ -117,10 +119,8 @@ export function FilterBar({
                   onChange={(v) => onFilterChange(filter.key, v)}
                   placeholder={filter.placeholder ?? filter.label}
                   clearable
-                  options={(filter.options ?? []).map((o) => ({
-                    value: String(o.value),
-                    label: o.label,
-                  }))}
+                  {...filter.customize}
+                  options={(filter.options ?? []).map((o) => ({ ...o, value: String(o.value) }))}
                 />
               </div>
             );

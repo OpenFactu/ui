@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { UiIcon } from '../icons';
-import { MenuItemButton, MenuSeparator, MenuItemShape } from './internal/MenuItemButton';
+import { MenuItemButton, MenuSeparator, MenuItemShape, type MenuItemCustomization } from './internal/MenuItemButton';
+import { useComponentDefaults } from '../context/ComponentDefaults';
 import { useEscapeStack } from '../internal/escapeStack';
 
 export interface ContextMenuItem extends MenuItemShape {
@@ -9,7 +10,7 @@ export interface ContextMenuItem extends MenuItemShape {
   submenu?: ContextMenuItem[];
 }
 
-export interface ContextMenuProps {
+export interface ContextMenuProps extends MenuItemCustomization<ContextMenuItem> {
   x: number;
   y: number;
   items: ContextMenuItem[];
@@ -27,7 +28,8 @@ const MENU_WIDTH = 220;
  * document.body, position:fixed). Se clampa al viewport y se cierra con
  * click fuera, scroll, resize o Escape. Soporta un nivel de submenú.
  */
-export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose, header, width = MENU_WIDTH }) => {
+export const ContextMenu: React.FC<ContextMenuProps> = (rawProps) => {
+  const { x, y, items, onClose, header, width = MENU_WIDTH, renderItem: renderCustom, itemClassName } = useComponentDefaults('ContextMenu', rawProps);
   const menuRef = React.useRef<HTMLDivElement>(null);
   const [pos, setPos] = React.useState<{ top: number; left: number }>({ top: y, left: x });
   const [openSub, setOpenSub] = React.useState<number | null>(null);
@@ -80,6 +82,8 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose, 
             item={{ ...item, onClick: undefined }}
             onSelect={() => {}}
             active={openSub === i}
+            renderItem={renderCustom}
+            itemClassName={itemClassName}
             trailing={
               <UiIcon slot="chevron-right" className="h-3 w-3 text-[var(--fg-subtle,#657486)]" />
             }
@@ -92,14 +96,14 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose, 
               {item.submenu.map((sub, j) => (
                 <React.Fragment key={j}>
                   {sub.separatorBefore && <MenuSeparator />}
-                  <MenuItemButton item={sub} onSelect={onClose} />
+                  <MenuItemButton item={sub} onSelect={onClose} renderItem={renderCustom} itemClassName={itemClassName} />
                 </React.Fragment>
               ))}
             </div>
           )}
         </div>
       ) : (
-        <MenuItemButton item={item} onSelect={onClose} />
+        <MenuItemButton item={item} onSelect={onClose} renderItem={renderCustom} itemClassName={itemClassName} />
       )}
     </React.Fragment>
   );
@@ -128,7 +132,7 @@ export interface UseContextMenuReturn {
    * Pasar a onContextMenu; hace preventDefault y abre el menú en el cursor. También acepta un punto
    * (`{ x, y }`: el dedo al mantener pulsado, la esquina de un botón…) y una cabecera opcional.
    */
-  openContextMenu: (at: React.MouseEvent | { x: number; y: number }, items: ContextMenuItem[], options?: { header?: React.ReactNode; width?: number }) => void;
+  openContextMenu: (at: React.MouseEvent | { x: number; y: number }, items: ContextMenuItem[], options?: { header?: React.ReactNode; width?: number } & MenuItemCustomization<ContextMenuItem>) => void;
   closeContextMenu: () => void;
 }
 
@@ -139,7 +143,7 @@ export function useContextMenu(): UseContextMenuReturn {
     items: ContextMenuItem[];
     header?: React.ReactNode;
     width?: number;
-  } | null>(null);
+  } & MenuItemCustomization<ContextMenuItem> | null>(null);
 
   const openContextMenu = React.useCallback<UseContextMenuReturn['openContextMenu']>(
     (at, items, options) => {
@@ -154,7 +158,7 @@ export function useContextMenu(): UseContextMenuReturn {
   const closeContextMenu = React.useCallback(() => setState(null), []);
 
   const contextMenu = state ? (
-    <ContextMenu x={state.x} y={state.y} items={state.items} header={state.header} width={state.width} onClose={closeContextMenu} />
+    <ContextMenu x={state.x} y={state.y} items={state.items} header={state.header} width={state.width} renderItem={state.renderItem} itemClassName={state.itemClassName} onClose={closeContextMenu} />
   ) : null;
 
   return { contextMenu, openContextMenu, closeContextMenu };

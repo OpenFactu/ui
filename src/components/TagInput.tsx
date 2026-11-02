@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { UiIcon } from '../icons';
+import { useComponentDefaults } from '../context/ComponentDefaults';
 import { cn } from '../utils';
 import { useI18n } from '../i18n/I18nProvider';
 
@@ -18,10 +19,15 @@ export interface TagInputProps {
   /** Añadir el texto pendiente al salir del campo. Default true. */
   commitOnBlur?: boolean;
   className?: string;
+  /** Pinta cada etiqueta entera. `remove` la quita (no llega si no se puede editar). */
+  renderTag?: (tag: string, helpers: { index: number; remove?: () => void; content: React.ReactNode }) => React.ReactNode;
+  /** Clases de cada etiqueta de serie, que ganan a las suyas. También como función. */
+  tagClassName?: string | ((tag: string, index: number) => string | undefined);
 }
 
 /** Campo controlado: Intro, coma, punto y coma o pegado de varias líneas. */
-export const TagInput: React.FC<TagInputProps> = ({
+export const TagInput: React.FC<TagInputProps> = (rawProps) => {
+  const {
   value,
   onChange,
   label,
@@ -34,7 +40,9 @@ export const TagInput: React.FC<TagInputProps> = ({
   validateTag,
   commitOnBlur = true,
   className,
-}) => {
+  renderTag,
+  tagClassName,
+} = useComponentDefaults('TagInput', rawProps);
   const { messages: m, format } = useI18n();
   const placeholder = placeholderProp ?? m.tagInput.placeholder;
   const id = React.useId();
@@ -93,32 +101,40 @@ export const TagInput: React.FC<TagInputProps> = ({
           disabled && 'opacity-50',
         )}
       >
-        {value.map((tag, index) => (
-          <span
-            key={`${tag}-${index}`}
-            className="inline-flex max-w-full items-center gap-1 rounded-[var(--k-radius-xs)] bg-[var(--bg-muted)] px-2 py-1 text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-default)]"
-          >
-            <span className="break-all">{tag}</span>
-            {!readOnly && (
-              <button
-                type="button"
-                data-remove-tag
-                disabled={disabled}
-                aria-label={format(m.tagInput.remove, { tag })}
-                onClick={() => remove(index)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Backspace' || event.key === 'Delete') {
-                    event.preventDefault();
-                    remove(index);
-                  }
-                }}
-                className="shrink-0 rounded-sm p-0.5 hover:text-[var(--k-danger-fg)] focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                <UiIcon slot="x" size={12} aria-hidden="true" />
-              </button>
-            )}
-          </span>
-        ))}
+        {value.map((tag, index) => {
+          const content = (
+            <>
+                <span className="break-all">{tag}</span>
+              {!readOnly && (
+                <button
+                  type="button"
+                  data-remove-tag
+                  disabled={disabled}
+                  aria-label={format(m.tagInput.remove, { tag })}
+                  onClick={() => remove(index)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Backspace' || event.key === 'Delete') {
+                      event.preventDefault();
+                      remove(index);
+                    }
+                  }}
+                  className="shrink-0 rounded-sm p-0.5 hover:text-[var(--k-danger-fg)] focus-visible:ring-2 focus-visible:ring-accent"
+                >
+                  <UiIcon slot="x" size={12} aria-hidden="true" />
+                </button>
+              )}
+            </>
+          );
+          if (renderTag) return <React.Fragment key={`${tag}-${index}`}>{renderTag(tag, { index, remove: locked ? undefined : () => remove(index), content })}</React.Fragment>;
+          return (
+            <span
+              key={`${tag}-${index}`}
+              className={cn('inline-flex max-w-full items-center gap-1 rounded-[var(--k-radius-xs)] bg-[var(--bg-muted)] px-2 py-1 text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-default)]', typeof tagClassName === 'function' ? tagClassName(tag, index) : tagClassName)}
+            >
+              {content}
+            </span>
+          );
+        })}
         <input
           ref={inputRef}
           data-k-focus-input=""

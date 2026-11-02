@@ -6,6 +6,8 @@ import { adaptivePortal } from './internal/MobileOverlay';
 import { resolveMobilePresentation, type MobilePresentation } from './internal/mobilePresentation';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import { UiIcon } from '../icons';
+import { useComponentDefaults } from '../context/ComponentDefaults';
+import { optionCheckClass, optionRowClass, resolveItemClass, type ItemRenderState, type OptionCustomization, type SelectedStyle } from './internal/optionStyle';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
@@ -25,7 +27,11 @@ export interface SearchableSelectOption {
   [key: string]: any;
 }
 
-interface SearchableSelectBaseProps {
+/** @deprecated Usa `ItemRenderState`: es el mismo en toda la librería. */
+export type SearchableSelectOptionState = ItemRenderState;
+export type SearchableSelectSelectedStyle = SelectedStyle;
+
+export interface SearchableSelectBaseProps extends OptionCustomization<SearchableSelectOption> {
   mobilePresentation?: MobilePresentation;
   options: SearchableSelectOption[];
   placeholder?: string;
@@ -70,6 +76,11 @@ interface SearchableSelectBaseProps {
   highlightMatch?: boolean;
   /** Ordena y agrupa por `group`. Default true si alguna opción trae grupo. */
   grouped?: boolean;
+  /**
+   * Selección múltiple: pinta cada elegida en el control. Por defecto, su icono, su nombre y una X. `remove` la quita (no
+   * llega con el control desactivado); un botón dentro no abre la lista.
+   */
+  renderChip?: (option: SearchableSelectOption, helpers: { remove?: () => void }) => React.ReactNode;
 }
 
 export interface SearchableSelectSingleProps extends SearchableSelectBaseProps {
@@ -93,7 +104,8 @@ function splitMatch(text: string, term: string): [string, string, string] | null
   return [text.slice(0, range[0]), text.slice(range[0], range[1]), text.slice(range[1])];
 }
 
-export function SearchableSelect(props: SearchableSelectProps) {
+export function SearchableSelect(rawProps: SearchableSelectProps) {
+  const props = useComponentDefaults('SearchableSelect', rawProps);
   const { messages: m, format } = useI18n();
   const ss = m.searchableSelect;
   const {
@@ -114,6 +126,11 @@ export function SearchableSelect(props: SearchableSelectProps) {
     highlightMatch = true,
     grouped,
     mobilePresentation = 'auto',
+    renderOption,
+    selectedStyle = 'fill',
+    optionClassName,
+    renderValue,
+    renderChip,
   } = props;
   const placeholder = placeholderProp ?? m.common.select;
   const emptyMessage = emptyMessageProp ?? m.common.noResults;
@@ -438,6 +455,39 @@ export function SearchableSelect(props: SearchableSelectProps) {
               const idx = row.optionIndex;
               const selected = isSelected(opt.value);
               const highlighted = idx === highlightedIndex;
+              const labelNode = (() => {
+                const parts = highlightMatch ? splitMatch(opt.label, searchTerm) : null;
+                if (!parts) return opt.label;
+                const [before, hit, after] = parts;
+                return (
+                  <>
+                    {before}
+                    <mark className="bg-transparent text-inherit underline decoration-2 underline-offset-2">
+                      {hit}
+                    </mark>
+                    {after}
+                  </>
+                );
+              })();
+              const content = (
+                <div className="flex items-center gap-2 min-w-0">
+                  {opt.icon && <span className="shrink-0">{opt.icon}</span>}
+                  <div className="flex flex-col min-w-0">
+                  <span className="font-semibold truncate">{labelNode}</span>
+                  {opt.secondaryLabel && (
+                    <span
+                      className={cn(
+                        'text-[length:calc(9px*var(--k-text-scale,1))] font-mono mt-0.5',
+                        (!selected || selectedStyle !== 'fill') && 'text-[var(--fg-subtle)]',
+                      )}
+                    >
+                      {opt.secondaryLabel}
+                    </span>
+                  )}
+                  </div>
+                </div>
+              );
+              const state: ItemRenderState = { selected, highlighted, disabled: Boolean(opt.disabled), query: searchTerm, label: labelNode, content };
               return (
                 <div
                   key={opt.value}
@@ -446,51 +496,20 @@ export function SearchableSelect(props: SearchableSelectProps) {
                   role="option"
                   aria-selected={selected}
                   aria-disabled={opt.disabled || undefined}
+                  data-selected={selected || undefined}
+                  data-highlighted={highlighted || undefined}
                   onClick={() => selectOption(opt)}
                   onMouseEnter={() => !opt.disabled && setHighlightedIndex(idx)}
                   style={opt.depth ? { paddingLeft: 10 + opt.depth * 14 } : undefined}
                   className={cn(
-                    'group flex items-center justify-between rounded-[var(--k-radius-xs,2px)] px-2.5 py-1.5 text-[length:calc(12px*var(--k-text-scale,1))] cursor-pointer transition-colors',
-                    selected
-                      ? 'bg-accent text-[color:var(--k-accent-on,#0f172a)]'
-                      : highlighted
-                        ? 'bg-[var(--bg-hover,#f1f5f9)] text-[var(--fg-body,#2d3a4a)]'
-                        : 'text-[var(--fg-body,#2d3a4a)]',
+                    'group flex items-center justify-between gap-2 rounded-[var(--k-radius-xs,2px)] px-2.5 py-1.5 text-[length:calc(12px*var(--k-text-scale,1))] cursor-pointer transition-colors',
+                    optionRowClass(selectedStyle, selected, highlighted),
                     opt.disabled && 'opacity-40 cursor-not-allowed',
+                    resolveItemClass(optionClassName, opt, state),
                   )}
                 >
-                  <div className="flex items-center gap-2 min-w-0">
-                    {opt.icon && <span className="shrink-0">{opt.icon}</span>}
-                    <div className="flex flex-col min-w-0">
-                    <span className="font-semibold truncate">
-                      {(() => {
-                        const parts = highlightMatch ? splitMatch(opt.label, searchTerm) : null;
-                        if (!parts) return opt.label;
-                        const [before, hit, after] = parts;
-                        return (
-                          <>
-                            {before}
-                            <mark className="bg-transparent text-inherit underline decoration-2 underline-offset-2">
-                              {hit}
-                            </mark>
-                            {after}
-                          </>
-                        );
-                      })()}
-                    </span>
-                    {opt.secondaryLabel && (
-                      <span
-                        className={cn(
-                          'text-[length:calc(9px*var(--k-text-scale,1))] font-mono mt-0.5',
-                          !selected && 'text-[var(--fg-subtle)]',
-                        )}
-                      >
-                        {opt.secondaryLabel}
-                      </span>
-                    )}
-                    </div>
-                  </div>
-                  {selected && <UiIcon slot="check" className="h-3.5 w-3.5 shrink-0" />}
+                  {renderOption ? <div className="min-w-0 flex-1">{renderOption(opt, state)}</div> : content}
+                  {selected && selectedStyle !== 'none' && <UiIcon slot="check" className={optionCheckClass(selectedStyle)} />}
                 </div>
               );
             })
@@ -545,26 +564,49 @@ export function SearchableSelect(props: SearchableSelectProps) {
       >
         {props.multiple && hasValue ? (
           <span className="flex flex-wrap items-center gap-1 min-w-0">
-            {selectedOptions.map((opt) => (
-              <span
-                key={opt.value}
-                className="inline-flex items-center gap-1 rounded-[var(--k-radius-xs,2px)] bg-accent/10 dark:bg-accent/20 text-accent px-1.5 py-0.5 text-[length:calc(11px*var(--k-text-scale,1))] font-semibold max-w-[160px]"
-              >
-                <span className="truncate">{opt.label}</span>
-                {!disabled && (
-                  <button type="button"
-                    aria-label={format(m.common.removeItem, { name: String(opt.label) })}
-                    className="k-search-select-remove shrink-0 hover:text-[var(--k-danger-fg)] transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      (props.onChange as (v: string[]) => void)(
-                        selectedValues.filter((v) => v !== opt.value),
-                      );
-                    }}
-                  ><UiIcon slot="x" className="h-3 w-3" /></button>
-                )}
-              </span>
-            ))}
+            {selectedOptions.map((opt) => {
+              const remove = () => (props.onChange as (v: string[]) => void)(selectedValues.filter((v) => v !== opt.value));
+              if (renderChip) {
+                return (
+                  // Un botón dentro hace lo suyo sin abrir la lista; pulsar en el resto del chip la abre, como en los de serie.
+                  <span
+                    key={opt.value}
+                    className="inline-flex min-w-0"
+                    onClick={(e) => { if ((e.target as Element).closest('button, a, [role="button"]')) e.stopPropagation(); }}
+                  >
+                    {renderChip(opt, { remove: disabled ? undefined : remove })}
+                  </span>
+                );
+              }
+              return (
+                <span
+                  key={opt.value}
+                  className="inline-flex items-center gap-1 rounded-[var(--k-radius-xs,2px)] bg-accent/10 dark:bg-accent/20 text-accent px-1.5 py-0.5 text-[length:calc(11px*var(--k-text-scale,1))] font-semibold max-w-[160px]"
+                >
+                  {opt.icon && <span className="shrink-0">{opt.icon}</span>}
+                  <span className="truncate">{opt.label}</span>
+                  {!disabled && (
+                    <button type="button"
+                      aria-label={format(m.common.removeItem, { name: String(opt.label) })}
+                      className="k-search-select-remove shrink-0 hover:text-[var(--k-danger-fg)] transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        remove();
+                      }}
+                    ><UiIcon slot="x" className="h-3 w-3" /></button>
+                  )}
+                </span>
+              );
+            })}
+          </span>
+        ) : hasValue && selectedOptions[0] && (renderValue || selectedOptions[0].icon) ? (
+          <span className="flex items-center gap-2 min-w-0">
+            {renderValue ? renderValue(selectedOptions[0]) : (
+              <>
+                <span className="shrink-0">{selectedOptions[0].icon}</span>
+                <span className="truncate font-semibold">{selectedOptions[0].label}</span>
+              </>
+            )}
           </span>
         ) : (
           <span

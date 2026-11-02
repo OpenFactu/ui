@@ -110,9 +110,25 @@ En táctil, la barra de acciones de un mensaje no se muestra bajo cada uno. Sigu
 - **Deslizar a la derecha** responde.
 - El scroll vertical no se ve afectado.
 - `ChatMessage gestures={false}` los quita; `gestures={{ swipeToReply: false }}` quita solo uno.
-- El hook `useChatMessageGestures({ onLongPress, onSwipe, onTap })` sirve para usar los mismos gestos en otra pieza.
+- Están montados sobre la API de gestos de la librería (`useGestures` y `useSwipeAction`, en la entrada principal): la burbuja sigue al dedo con `translate`, pasada la distancia hay goma y vibra, y al soltar vuelve con el muelle `gesture` del tema. El indicador de responder se dibuja con CSS a partir de `--k-swipe` (0-1) y `data-swipe="active|armed"`, que se escriben en la fila de la burbuja; mientras se mantiene pulsado la burbuja lleva `data-gesture="pressing"`.
+- El hook `useChatMessageGestures({ onLongPress, onSwipe, onTap, direction, swipeDistance, progressRef })` devuelve `{ ref, bind, style }` y sirve para usar los mismos gestos en otra pieza.
 
 Con ratón, la barra sale al pasar por encima. Si el chat es ancho (≥720px) va al lado de la burbuja; si no, encima. Nunca tapa el texto. Los vídeos adjuntos llevan reproductor. Las notas de voz son una sola fila (reproductor y descargar) que encoge con la burbuja. El id que devuelve `onUploadAttachment` sustituye al local, así que el mensaje enviado lleva el del servidor.
+
+### Notas de voz
+
+`ChatAudioPlayer` dibuja la onda de la nota. Un audio local o un `Blob` se decodifica al montarlo. Uno remoto se decodifica la primera vez que se reproduce y, si el servidor no lo permite (CORS), se queda una forma de voz estable generada a partir de su nombre y duración.
+
+Mientras suena, una cresta acompaña al cabezal, las barras ya sonadas vibran detrás y un aro sale del botón. Al pulsar reproducir sale una onda desde el cabezal, y al acabar el color se recoge de derecha a izquierda. Sigue al tema: el botón usa el muelle `pop`, la velocidad se escala con `--k-motion` y, con movimiento reducido o velocidad 0, solo cambia el color. El movimiento es decorativo y no analiza la señal en vivo, porque conectar el `<audio>` a Web Audio silenciaría los archivos remotos sin CORS.
+
+### Buscar en la conversación
+
+`ChatWorkspace search` (activo por defecto) abre la barra de búsqueda bajo la cabecera. Busca en los mensajes cargados, sin mirar acentos y con todas las palabras en cualquier orden, y resalta cada una. Empieza por la coincidencia más reciente, que es la `1 / n`.
+
+- **↑ o Intro** van hacia atrás en la conversación; **↓ o Mayús+Intro**, hacia delante.
+- **Escape** cierra la barra y devuelve el scroll a donde estaba.
+- El contador y el botón de borrar van dentro del campo. Las flechas solo salen cuando hay algo escrito.
+- `ChatSearch` se exporta para montarlo por tu cuenta: `query`, `onChange` y `onClose`.
 
 ### Stickers y GIF
 

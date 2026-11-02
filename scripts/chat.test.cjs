@@ -5,6 +5,25 @@ const load = () => require('../src/chat/state.ts');
 const conversation = (id) => ({ id, title: id, participantIds: ['me', 'ana'], unreadCount: 0 });
 const message = (id, conversationId = 'a', extra = {}) => ({ id, conversationId, senderId: 'ana', text: id, createdAt: '2026-10-27T09:00:00Z', status: 'sent', ...extra });
 
+test('the voice note wave: a stable placeholder, a crest at the playhead, stillness ahead of it and at rest', () => {
+  const { placeholderPeaks, waveBarHeight, waveRestHeight, WAVE_BARS, WAVE_MAX } = require('../src/chat/audioWave.ts');
+  const a = placeholderPeaks('nota.wav|6');
+  assert.equal(a.length, WAVE_BARS);
+  assert.deepEqual(a, placeholderPeaks('nota.wav|6'), 'la misma nota dibuja lo mismo');
+  assert.notDeepEqual(a, placeholderPeaks('otra.wav|6'));
+  assert.ok(a.every(peak => peak > 0.1 && peak <= 1));
+  assert.ok(Math.max(...a) - Math.min(...a) > 0.25, 'tiene forma, no es una raya');
+  const peak = 0.5; const rest = waveRestHeight(peak);
+  const at = (index, extra = {}) => waveBarHeight(index, peak, 36, { progress: 0.5, time: 1, energy: 1, rippleAge: null, ...extra });
+  assert.ok(at(18) > rest + 3, 'la cresta acompaña al cabezal');
+  assert.ok(at(18) > at(24), 'y baja con la distancia');
+  assert.equal(at(35), rest, 'lo que no ha sonado no se mueve');
+  assert.equal(at(18, { energy: 0 }), rest, 'sin energía, en reposo');
+  assert.ok(at(30, { energy: 0, rippleAge: 0.3 }) > rest, 'la onda de pulsar reproducir llega por delante');
+  assert.equal(at(18, { energy: 0, rippleAge: 2 }), rest, 'y se acaba');
+  for (let i = 0; i < 36; i += 1) assert.ok(waveBarHeight(i, 1, 36, { progress: i / 36, time: i, energy: 1, rippleAge: 0.05 }) <= WAVE_MAX, 'nunca se sale de la onda');
+});
+
 test('chat keeps drafts and reply targets separate when changing conversations', () => {
   const { createChatState, chatReducer, getChatDraft } = load();
   let state = createChatState([conversation('a'), conversation('b')], [], 'a');

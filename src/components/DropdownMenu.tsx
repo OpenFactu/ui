@@ -5,12 +5,13 @@ import { resolveMobilePresentation, type MobilePresentation } from './internal/m
 import { useIsMobile } from '../hooks/useMediaQuery';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
-import { MenuItemButton, MenuSeparator, MenuItemShape } from './internal/MenuItemButton';
+import { MenuItemButton, MenuSeparator, MenuItemShape, type MenuItemCustomization } from './internal/MenuItemButton';
+import { useComponentDefaults } from '../context/ComponentDefaults';
 import { useMessages } from '../i18n/I18nProvider';
 
 export interface DropdownMenuItem extends MenuItemShape {}
 
-export interface DropdownMenuProps {
+export interface DropdownMenuProps extends MenuItemCustomization<DropdownMenuItem> {
   mobilePresentation?: MobilePresentation;
   items: DropdownMenuItem[];
   /** Trigger: cualquier nodo; se envuelve en un span clicable. */
@@ -26,7 +27,8 @@ export interface DropdownMenuProps {
   'aria-label'?: string;
 }
 
-export const DropdownMenu: React.FC<DropdownMenuProps> = ({
+export const DropdownMenu: React.FC<DropdownMenuProps> = (rawProps) => {
+  const {
   items,
   children,
   align = 'start',
@@ -35,7 +37,9 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
   menuClassName,
   mobilePresentation = 'auto',
   'aria-label': ariaLabel,
-}) => {
+  renderItem,
+  itemClassName,
+} = useComponentDefaults('DropdownMenu', rawProps);
   const common = useMessages('common');
   const mobile = useIsMobile();
   const presentation = resolveMobilePresentation(mobile, mobilePresentation, 'sheet');
@@ -116,6 +120,8 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
               active={i === activeIndex}
               index={i}
               onSelect={() => setIsOpen(false)}
+              renderItem={renderItem}
+              itemClassName={itemClassName}
             />
           </React.Fragment>
         ))}

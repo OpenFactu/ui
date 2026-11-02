@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { cn } from '../utils';
+import { useComponentDefaults } from '../context/ComponentDefaults';
+import { resolveItemClass, type ItemClassName, type ItemRenderState } from './internal/optionStyle';
 import { ControlField, describedBy } from './internal/ControlField';
 
 export interface ChoiceOption<T extends string = string> {
@@ -10,9 +12,11 @@ export interface ChoiceOption<T extends string = string> {
   /** A la derecha del título: precio, plazo, etiqueta («Recomendado»). */
   aside?: React.ReactNode;
   disabled?: boolean;
+  /** Datos propios, para `renderOption`. */
+  [key: string]: any;
 }
 
-interface ChoiceBase<T extends string> {
+export interface ChoiceBaseProps<T extends string> {
   options: readonly ChoiceOption<T>[];
   label?: React.ReactNode;
   helperText?: React.ReactNode;
@@ -24,11 +28,17 @@ interface ChoiceBase<T extends string> {
   name?: string;
   id?: string;
   className?: string;
+  /** Pinta el contenido de cada tarjeta. La marca, el teclado y los radios siguen siendo del componente. */
+  renderOption?: (option: ChoiceOption<T>, state: ItemRenderState) => React.ReactNode;
+  /** Clases de cada tarjeta, que ganan a las de serie. La marcada lleva `data-checked`. También como función. */
+  optionClassName?: ItemClassName<ChoiceOption<T>>;
+  /** Muestra la marca de la esquina. Default true. */
+  indicator?: boolean;
 }
 
 export type ChoiceCardsProps<T extends string = string> =
-  | (ChoiceBase<T> & { multiple?: false; value: T | null; onChange: (value: T) => void })
-  | (ChoiceBase<T> & { multiple: true; value: readonly T[]; onChange: (value: T[]) => void });
+  | (ChoiceBaseProps<T> & { multiple?: false; value: T | null; onChange: (value: T) => void })
+  | (ChoiceBaseProps<T> & { multiple: true; value: readonly T[]; onChange: (value: T[]) => void });
 
 const Tick = () => (
   <svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" /></svg>
@@ -39,8 +49,9 @@ const Tick = () => (
  * derecha. Por debajo son radios (o casillas con `multiple`), así que el teclado y los lectores de pantalla funcionan
  * como en cualquier grupo.
  */
-export function ChoiceCards<T extends string = string>(props: ChoiceCardsProps<T>) {
-  const { options, label, helperText, error, required, disabled, minWidth, name, id, className } = props;
+export function ChoiceCards<T extends string = string>(rawProps: ChoiceCardsProps<T>) {
+  const props = useComponentDefaults('ChoiceCards', rawProps);
+  const { options, label, helperText, error, required, disabled, minWidth, name, id, className, renderOption, optionClassName, indicator = true } = props;
   const generated = React.useId();
   const groupId = id ?? generated;
   const inputName = name ?? groupId;
@@ -65,8 +76,21 @@ export function ChoiceCards<T extends string = string>(props: ChoiceCardsProps<T
         {options.map((option, index) => {
           const on = isOn(option.value);
           const off = disabled || option.disabled;
+          const content = (
+            <>
+              {option.icon && <span className="k-choice-icon" aria-hidden="true">{option.icon}</span>}
+              <span className="k-choice-body">
+                <span className="k-choice-title">
+                  <span>{option.title}</span>
+                  {option.aside && <span className="k-choice-aside">{option.aside}</span>}
+                </span>
+                {option.description && <span className="k-choice-description block">{option.description}</span>}
+              </span>
+            </>
+          );
+          const state: ItemRenderState = { selected: on, highlighted: false, disabled: Boolean(off), query: '', label: option.title, content };
           return (
-            <label key={option.value} className="k-choice" data-k-control="choice" data-checked={on || undefined} data-disabled={off || undefined}>
+            <label key={option.value} className={cn('k-choice', resolveItemClass(optionClassName, option, state))} data-k-control="choice" data-checked={on || undefined} data-disabled={off || undefined}>
               <input
                 className="k-choice-input"
                 id={index === 0 ? groupId : undefined}
@@ -77,15 +101,8 @@ export function ChoiceCards<T extends string = string>(props: ChoiceCardsProps<T
                 disabled={off}
                 onChange={() => toggle(option.value)}
               />
-              {option.icon && <span className="k-choice-icon" aria-hidden="true">{option.icon}</span>}
-              <span className="k-choice-body">
-                <span className="k-choice-title">
-                  <span>{option.title}</span>
-                  {option.aside && <span className="k-choice-aside">{option.aside}</span>}
-                </span>
-                {option.description && <span className="k-choice-description block">{option.description}</span>}
-              </span>
-              <span className={cn('k-choice-mark')} data-shape={props.multiple ? 'square' : undefined} aria-hidden="true"><Tick /></span>
+              {renderOption ? <span className="k-choice-body">{renderOption(option, state)}</span> : content}
+              {indicator && <span className={cn('k-choice-mark')} data-shape={props.multiple ? 'square' : undefined} aria-hidden="true"><Tick /></span>}
             </label>
           );
         })}

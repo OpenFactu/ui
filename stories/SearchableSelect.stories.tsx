@@ -1,6 +1,9 @@
 import * as React from 'react';
 import type { Story } from '@ladle/react';
+import { Ban, CircleCheck, CircleDot, Clock3, X } from 'lucide-react';
 import { SearchableSelect } from '../src/components/SearchableSelect';
+import { Avatar } from '../src/components/Avatar';
+import { Badge } from '../src/components/Badge';
 
 const OPTIONS = Array.from({ length: 30 }, (_, i) => ({
   value: String(i + 1),
@@ -202,3 +205,91 @@ export const CargaIncremental: Story = () => {
   );
 };
 CargaIncremental.storyName = 'Carga incremental';
+
+const PERSONAS = [
+  { value: 'adrian', label: 'Adrián', rol: 'Ventas', online: true },
+  { value: 'angel', label: 'Ángel Acedo', rol: 'Ventas', online: true },
+  { value: 'prueba', label: 'Prueba humo', rol: 'Soporte', online: false },
+  { value: 'user', label: 'user_prueba', rol: 'Soporte', online: false },
+  { value: 'marta', label: 'Marta Ruiz', rol: 'Dirección', online: true },
+];
+
+const ESTADOS = [
+  { value: 'abierto', label: 'Abierto', color: 'var(--color-accent, #0d9488)', icon: <CircleDot size={14} /> },
+  { value: 'espera', label: 'En espera', color: 'var(--k-warning, #d97706)', icon: <Clock3 size={14} /> },
+  { value: 'bloqueado', label: 'Bloqueado', color: 'var(--k-danger, #dc2626)', icon: <Ban size={14} /> },
+  { value: 'hecho', label: 'Hecho', color: 'var(--k-success, #16a34a)', icon: <CircleCheck size={14} /> },
+];
+
+/** La opción y lo elegido, pintados por quien usa el componente; el teclado, la búsqueda y los roles siguen funcionando. */
+export const OpcionesAMedida: Story = () => {
+  const [personas, setPersonas] = React.useState(['adrian']);
+  const [estado, setEstado] = React.useState('abierto');
+  const [iconos, setIconos] = React.useState('espera');
+  const [estilos, setEstilos] = React.useState({ fill: 'abierto', soft: 'abierto', check: 'abierto', none: 'abierto' });
+  return (
+    <div className="flex max-w-xl flex-col gap-8">
+      <SearchableSelect
+        multiple
+        ariaLabel="Personas"
+        options={PERSONAS}
+        value={personas}
+        onChange={setPersonas}
+        selectedStyle="soft"
+        optionClassName="rounded-[var(--k-radius-lg,12px)] py-2"
+        renderOption={(option, { label }) => (
+          <span data-testid="persona" className="flex items-center gap-2.5">
+            <Avatar name={option.label} size="sm" status={option.online ? 'online' : 'offline'} />
+            <span className="min-w-0 flex-1 truncate font-semibold">{label}</span>
+            <Badge variant="neutral">{option.rol}</Badge>
+          </span>
+        )}
+        renderChip={(option, { remove }) => (
+          <span data-testid="chip" className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-default,#e2e8f0)] py-0.5 pl-0.5 pr-2 text-[length:calc(12px*var(--k-text-scale,1))]">
+            <Avatar name={option.label} size="xs" />
+            <span>{option.label}</span>
+            {remove && <button type="button" aria-label={`Quitar a ${option.label}`} onClick={remove} className="inline-grid place-items-center text-[var(--fg-subtle,#657486)]"><X size={12} /></button>}
+          </span>
+        )}
+      />
+
+      <SearchableSelect
+        ariaLabel="Estado"
+        options={ESTADOS}
+        value={estado}
+        onChange={setEstado}
+        selectedStyle="none"
+        optionClassName={(option) => (option.value === 'bloqueado' ? 'text-[var(--k-danger-fg,#b42318)]' : undefined)}
+        renderOption={(option, { selected, label }) => (
+          <span className="flex items-center gap-2">
+            <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full" style={{ background: option.color, outline: selected ? `2px solid ${option.color}` : undefined, outlineOffset: 2 }} />
+            <span className={selected ? 'font-bold' : 'font-medium'}>{label}</span>
+          </span>
+        )}
+        renderValue={(option) => (
+          <span data-testid="valor" className="inline-flex items-center gap-2 rounded-full px-2 py-0.5 text-[length:calc(12px*var(--k-text-scale,1))] font-semibold" style={{ background: `color-mix(in srgb, ${option.color} 15%, transparent)` }}>
+            <span aria-hidden="true" className="h-2 w-2 rounded-full" style={{ background: option.color }} />
+            {option.label}
+          </span>
+        )}
+      />
+
+      <SearchableSelect ariaLabel="Con iconos" options={ESTADOS} value={iconos} onChange={setIconos} />
+
+      <div className="grid grid-cols-2 gap-4">
+        {(['fill', 'soft', 'check', 'none'] as const).map((style) => (
+          <SearchableSelect
+            key={style}
+            label={`selectedStyle="${style}"`}
+            ariaLabel={style}
+            options={ESTADOS}
+            selectedStyle={style}
+            value={estilos[style]}
+            onChange={(value) => setEstilos((all) => ({ ...all, [style]: value }))}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+OpcionesAMedida.storyName = 'Opciones a medida';

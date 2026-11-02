@@ -70,7 +70,7 @@
   .k-command-overlay [role='option'], [data-k-mobile='SearchSuggestions'] [role='option'] { min-height: 48px; font-size: calc(15px * var(--k-text-scale, 1)); }
   .ai-surface .ai-icon-button, .k-chat-workspace .k-chat-icon-button, .notification-center-trigger, .notification-center-close { min-width: 48px; min-height: 48px; }
   .ai-workspace-header, .k-chat-header { min-height: 60px; height: auto; }
-  .ai-composer textarea, .k-chat-composer textarea { font-size: max(16px, calc(16px * var(--k-text-scale, 1))); line-height: 1.5; }
+  .ai-composer textarea, .k-chat-composer textarea, .k-chat-search-field input { font-size: max(16px, calc(16px * var(--k-text-scale, 1))); line-height: 1.5; }
   .ai-composer-tools { gap: 8px; }
   .ai-model-selector { width: auto; max-width: 100%; }
   .ai-composer .ai-attach, .ai-composer .ai-recorder button, .ai-tool-chip { min-height: 48px; }

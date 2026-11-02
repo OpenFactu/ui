@@ -5,7 +5,7 @@ import { cn } from '../utils';
 import type { AIMessageData, AIRun, AIUIProps } from './types';
 import { useAILabels } from './labels';
 import { AIStatus, AIThinking } from './internal/ui';
-import { AIMessage, type AIMessageCallbacks } from './AIMessage';
+import { AIMessage, type AIMessageCallbacks, type AIMessageCustomization } from './AIMessage';
 
 export interface AIPromptSuggestion { id: string; label: string; prompt?: string; description?: string }
 export interface AIPromptSuggestionsProps extends AIUIProps { suggestions: AIPromptSuggestion[]; onSelect: (prompt: string) => void }
@@ -18,8 +18,12 @@ export interface AIConversationProps extends AIUIProps {
   hasOlder?: boolean; loadingOlder?: boolean; onLoadOlder?: () => void; loading?: boolean;
   suggestions?: AIPromptSuggestion[]; onSelectPrompt?: (prompt: string) => void;
   onOpenCode?: (code: string, language?: string) => void; children?: React.ReactNode;
+  /** Lo que se puede cambiar de cada mensaje. Conviene que sea estable (`useMemo`): si no, cada trozo repinta todos. */
+  messageProps?: AIMessageCustomization;
+  /** Cada mensaje entero: recibe el de serie, para envolverlo o cambiarlo por otro según sus datos. */
+  renderMessage?: (message: AIMessageData, context: { fresh: boolean; defaults: React.ReactNode }) => React.ReactNode;
 }
-export function AIConversation({ messages, conversationId, run, actions, hasOlder, loadingOlder, onLoadOlder, loading, suggestions, onSelectPrompt, onOpenCode, labels, className, children }: AIConversationProps) {
+export function AIConversation({ messages, conversationId, run, actions, hasOlder, loadingOlder, onLoadOlder, loading, suggestions, onSelectPrompt, onOpenCode, messageProps, renderMessage, labels, className, children }: AIConversationProps) {
   const l = useAILabels(labels);
   const scroller = React.useRef<HTMLDivElement>(null); const content = React.useRef<HTMLDivElement>(null);
   const nearBottom = React.useRef(true); const [unread, setUnread] = React.useState(false);
@@ -52,7 +56,7 @@ export function AIConversation({ messages, conversationId, run, actions, hasOlde
       if (nearBottom.current) setUnread(false);
     }}><div ref={content} className="ai-conversation-content">
       {hasOlder && onLoadOlder && <div className="ai-load-older"><Button size="sm" variant="secondary" disabled={loadingOlder} onClick={onLoadOlder}>{loadingOlder ? l.loading : l.loadOlder}</Button></div>}
-      {loading ? <div className="ai-conversation-empty"><AIStatus>{l.loading}</AIStatus></div> : !messages.length ? <div className="ai-conversation-empty"><span className="ai-orb" aria-hidden="true"><UiIcon slot="sparkles" size={26} /></span><h2>{l.emptyTitle}</h2><p>{l.emptyHint}</p>{suggestions && onSelectPrompt && <AIPromptSuggestions suggestions={suggestions} onSelect={onSelectPrompt} labels={labels} />}</div> : <div role="log" aria-live="off" className="ai-message-list">{messages.map((message, index) => <AIMessage key={message.id} message={message} fresh={isFresh(message.id, index)} showError={!(run?.status === 'error' && index === messages.length - 1)} actions={actions} onOpenCode={onOpenCode} labels={labels} />)}</div>}
+      {loading ? <div className="ai-conversation-empty"><AIStatus>{l.loading}</AIStatus></div> : !messages.length ? <div className="ai-conversation-empty"><span className="ai-orb" aria-hidden="true"><UiIcon slot="sparkles" size={26} /></span><h2>{l.emptyTitle}</h2><p>{l.emptyHint}</p>{suggestions && onSelectPrompt && <AIPromptSuggestions suggestions={suggestions} onSelect={onSelectPrompt} labels={labels} />}</div> : <div role="log" aria-live="off" className="ai-message-list">{messages.map((message, index) => { const fresh = isFresh(message.id, index); const defaults = <AIMessage key={message.id} {...messageProps} message={message} fresh={fresh} showError={!(run?.status === 'error' && index === messages.length - 1)} actions={actions} onOpenCode={onOpenCode} labels={labels} />; return renderMessage ? <React.Fragment key={message.id}>{renderMessage(message, { fresh, defaults })}</React.Fragment> : defaults; })}</div>}
       {run?.status === 'submitting' && <AIThinking>{run.label ?? l.submitting}</AIThinking>}
       {run?.status === 'waiting' && <AIThinking>{run.label ?? l.waiting}</AIThinking>}
       {run?.status === 'cancelled' && <p role="status" className="ai-muted">{l.cancelled}</p>}

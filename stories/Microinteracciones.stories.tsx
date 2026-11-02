@@ -5,6 +5,8 @@ import { RollingNumber, SwapText, TextScramble } from '../src/components/TextMot
 import { Spinner } from '../src/components/Spinner';
 import { Button } from '../src/components/Button';
 import { Input } from '../src/components/Input';
+import { BurstToggle, CountBadge, HoldToConfirm, IconSwap, Magnetic, Reveal, flyTo, pop } from '../src/components/Microinteractions';
+import { Copy, Check, Heart, Star, ShoppingCart, Bookmark } from 'lucide-react';
 
 export const OndaYConfeti: Story = () => {
   const [saved, setSaved] = React.useState<'idle' | 'saving' | 'done'>('idle');
@@ -36,6 +38,66 @@ export const MarcasYErrores: Story = () => {
     </div>
   );
 };
+
+export const Recompensas: Story = () => {
+  const [liked, setLiked] = React.useState(false);
+  const [starred, setStarred] = React.useState(true);
+  const [saved, setSaved] = React.useState(false);
+  const [copied, setCopied] = React.useState(false);
+  return (
+    <div className="flex flex-wrap items-center gap-6">
+      <BurstToggle label="Me gusta" tone="danger" pressed={liked} onPressedChange={setLiked} count={liked ? 13 : 12} icon={<Heart size={18} />} activeIcon={<Heart size={18} fill="currentColor" />} />
+      <BurstToggle label="Destacar" tone="warning" pressed={starred} onPressedChange={setStarred} icon={<Star size={18} />} activeIcon={<Star size={18} fill="currentColor" />} />
+      <BurstToggle label="Guardar" pressed={saved} onPressedChange={setSaved} icon={<Bookmark size={18} />} activeIcon={<Bookmark size={18} fill="currentColor" />} />
+      <Button variant="secondary" onClick={() => { setCopied(true); setTimeout(() => setCopied(false), 1400); }}>
+        <IconSwap state={copied}>{copied ? <Check size={14} /> : <Copy size={14} />}</IconSwap>
+        {copied ? 'Copiado' : 'Copiar'}
+      </Button>
+    </div>
+  );
+};
+
+export const MantenerParaConfirmar: Story = () => {
+  const [done, setDone] = React.useState(0);
+  return (
+    <div className="flex flex-wrap items-center gap-4">
+      <HoldToConfirm onConfirm={() => setDone((n) => n + 1)}>Eliminar factura</HoldToConfirm>
+      <HoldToConfirm tone="accent" duration={800} onConfirm={() => setDone((n) => n + 1)}>Publicar</HoldToConfirm>
+      <span className="text-[length:calc(13px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)]">Confirmadas: <span data-testid="hold-count">{done}</span></span>
+    </div>
+  );
+};
+
+export const CarritoYContadores: Story = () => {
+  const [count, setCount] = React.useState(0);
+  const product = React.useRef<HTMLDivElement>(null);
+  const cart = React.useRef<HTMLSpanElement>(null);
+  return (
+    <div className="flex flex-wrap items-center gap-10">
+      <div className="flex flex-col items-start gap-3">
+        <div ref={product} className="grid h-20 w-20 place-items-center rounded-[var(--k-radius-md,8px)] bg-[var(--color-accent,#0d9488)] text-[var(--color-accent-fg,#ffffff)]">A4</div>
+        <Button size="sm" onClick={() => { void flyTo(product.current, cart.current).then(() => setCount((n) => n + 1)); }}>Añadir</Button>
+      </div>
+      <span ref={cart} className="relative inline-grid h-11 w-11 place-items-center rounded-full border border-[var(--border-default,#e2e8f0)]">
+        <ShoppingCart size={18} />
+        <CountBadge value={count} className="absolute -right-1.5 -top-1.5" />
+      </span>
+      <Button size="sm" variant="secondary" onClick={() => setCount(0)}>Vaciar</Button>
+      <Magnetic><Button onClick={(event) => void pop(event.currentTarget)}>Botón con imán</Button></Magnetic>
+    </div>
+  );
+};
+
+export const EntrarAlAparecer: Story = () => (
+  <div className="flex flex-col gap-16">
+    <p className="m-0 text-[length:calc(13px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)]">Baja: cada bloque entra al aparecer.</p>
+    <div style={{ height: 500 }} />
+    <Reveal stagger className="grid grid-cols-3 gap-3">
+      {['Facturas', 'Clientes', 'Almacén'].map((label) => <div key={label} className="k-lift rounded-[var(--k-radius-md,8px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-6">{label}</div>)}
+    </Reveal>
+    <Reveal direction="left"><p className="m-0">Y esto entra desde un lado.</p></Reveal>
+  </div>
+);
 
 export const TextoQueCambia: Story = () => {
   const [n, setN] = React.useState(1280);

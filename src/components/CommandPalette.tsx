@@ -1,3 +1,5 @@
+import { resolveItemClass, type ItemClassName, type ItemRenderState } from './internal/optionStyle';
+import { useComponentDefaults } from '../context/ComponentDefaults';
 import { Spinner } from './Spinner';
 import { useRecentSearches } from '../internal/storage';
 import { matchesAllWords } from '../internal/text';
@@ -42,6 +44,10 @@ export interface CommandSection {
 }
 
 export interface CommandPaletteProps {
+  /** Pinta el contenido de cada resultado. El rol, las flechas y el activar siguen siendo de la paleta. */
+  renderItem?: (item: CommandItem, state: ItemRenderState) => React.ReactNode;
+  /** Clases de la fila, que ganan a las de serie. También como función. */
+  itemClassName?: ItemClassName<CommandItem>;
   open: boolean;
   onClose: () => void;
   /** Resultados ya agrupados. Con `onSearch` los calcula el consumidor. */
@@ -80,7 +86,8 @@ function matches(item: CommandItem, term: string): boolean {
  * Se abre desde fuera (`open`), de modo que el atajo lo decide la aplicación;
  * {@link useCommandPalette} trae uno ya montado si no quieres pensarlo.
  */
-export const CommandPalette: React.FC<CommandPaletteProps> = ({
+export const CommandPalette: React.FC<CommandPaletteProps> = (rawProps) => {
+  const {
   open,
   onClose,
   sections,
@@ -93,7 +100,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   maxRecent = 5,
   footerHint,
   className,
-}) => {
+  renderItem,
+  itemClassName,
+} = useComponentDefaults('CommandPalette', rawProps);
   const { messages: m } = useI18n();
   const cp = m.commandPalette;
   const placeholder = placeholderProp ?? cp.placeholder;
@@ -305,20 +314,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                   index += 1;
                   const i = index;
                   const active = i === activeIndex;
-                  return (
-                    <div
-                      key={item.id}
-                      id={`command-item-${i}`}
-                      data-cmd-index={i}
-                      role="option"
-                      aria-selected={active}
-                      onClick={() => run(item)}
-                      onMouseEnter={() => setActiveIndex(i)}
-                      className={cn(
-                        'flex items-center gap-2.5 rounded-[var(--k-radius-xs,2px)] px-2.5 py-2 cursor-pointer transition-colors',
-                        active ? 'bg-accent/10 text-accent' : 'text-[var(--fg-body,#2d3a4a)]',
-                      )}
-                    >
+                  const content = (
+                    <>
                       {item.icon && <span className="shrink-0">{item.icon}</span>}
                       <span className="flex-1 min-w-0 flex flex-col">
                         <span className="truncate text-[length:calc(13px*var(--k-text-scale,1))]">{item.label}</span>
@@ -348,6 +345,25 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                       {active && !item.shortcut && !item.meta && (
                         <UiIcon slot="corner-down-left" className="h-3.5 w-3.5 shrink-0 opacity-60" />
                       )}
+                    </>
+                  );
+                  const state: ItemRenderState = { selected: false, highlighted: active, disabled: Boolean(item.disabled), query: term ?? '', label: item.label, content };
+                  return (
+                    <div
+                      key={item.id}
+                      id={`command-item-${i}`}
+                      data-cmd-index={i}
+                      role="option"
+                      aria-selected={active}
+                      onClick={() => run(item)}
+                      onMouseEnter={() => setActiveIndex(i)}
+                      className={cn(
+                        'flex items-center gap-2.5 rounded-[var(--k-radius-xs,2px)] px-2.5 py-2 cursor-pointer transition-colors',
+                        active ? 'bg-accent/10 text-accent' : 'text-[var(--fg-body,#2d3a4a)]',
+                        resolveItemClass(itemClassName, item, state),
+                      )}
+                    >
+                      {renderItem ? <span className="min-w-0 flex-1">{renderItem(item, state)}</span> : content}
                     </div>
                   );
                 })}

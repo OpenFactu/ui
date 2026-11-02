@@ -155,10 +155,11 @@ export const chat = {
   // Búsqueda
   searchLoaded: 'Buscar en mensajes cargados',
   searchInMessages: 'Buscar en mensajes',
-  searchPlaceholder: 'Buscar en mensajes cargados…',
+  searchPlaceholder: 'Buscar mensajes…',
   noSearchMatches: 'Sin coincidencias',
   previousMatch: 'Coincidencia anterior',
   nextMatch: 'Coincidencia siguiente',
+  clearSearch: 'Borrar búsqueda',
   closeSearch: 'Cerrar búsqueda de mensajes',
   // Escribiendo
   typingOne: '{name} está escribiendo',

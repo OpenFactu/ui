@@ -57,4 +57,8 @@ export const kanban = {
   done: 'Hecha',
   subtasks: '{done} de {total} subtareas',
   dueOn: 'Vence el {date}',
+  comments: { one: '# comentario', other: '# comentarios' },
+  attachments: { one: '# adjunto', other: '# adjuntos' },
+  markDone: 'Marcar como hecha: {title}',
+  markPending: 'Marcar como pendiente: {title}',
 };

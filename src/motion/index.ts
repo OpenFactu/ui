@@ -7,4 +7,5 @@ export { createVelocityTracker, projectRelease, rubberband, type VelocityTracker
 export { motionDisabled, readMotionSpeed, readMotionMs, readSpringConfig, readSpringCss, afterNextPaint, exitDelay, EXIT_SLACK_MS } from './dom';
 export { useSpring, type SpringController, type UseSpringOptions } from './useSpring';
 export { useDragDismiss, type UseDragDismissOptions } from './useDragDismiss';
+export { useFlip, type UseFlipOptions } from './useFlip';
 export { useIndicator, attrValue, type UseIndicatorOptions } from './useIndicator';

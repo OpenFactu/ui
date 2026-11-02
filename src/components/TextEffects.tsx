@@ -3,22 +3,7 @@ import * as React from 'react';
 import { cn } from '../utils';
 import { motionDisabled } from '../motion/dom';
 import { useSpring } from '../motion/useSpring';
-
-/** `true` cuando el elemento entra en pantalla (una sola vez). Sin `IntersectionObserver`, desde el principio. */
-function useInView<T extends HTMLElement>(enabled = true) {
-  const ref = React.useRef<T>(null);
-  const [seen, setSeen] = React.useState(false);
-  React.useEffect(() => {
-    const el = ref.current;
-    if (!enabled || !el || typeof IntersectionObserver === 'undefined') { setSeen(true); return; }
-    const observer = new IntersectionObserver((entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) { setSeen(true); observer.disconnect(); }
-    }, { threshold: 0.4 });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [enabled]);
-  return { ref, seen };
-}
+import { useInView } from '../hooks/useInView';
 
 type Tag = 'span' | 'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'div';
 
@@ -132,7 +117,7 @@ export interface TextRevealProps extends Omit<React.HTMLAttributes<HTMLElement>,
 
 /** El texto aparece pieza a pieza con el muelle `enter` del tema. */
 export const TextReveal: React.FC<TextRevealProps> = ({ text, by = 'word', step, blur = 4, onView = true, as: Component = 'span', className, style, ...rest }) => {
-  const { ref, seen } = useInView<HTMLElement>(onView);
+  const { ref, seen } = useInView<HTMLElement>({ enabled: onView });
   const parts = React.useMemo(() => (by === 'word' ? text.split(/(\s+)/).filter(Boolean) : Array.from(text)), [text, by]);
   let index = -1;
   return (
@@ -165,7 +150,7 @@ export interface HighlightProps extends React.HTMLAttributes<HTMLElement> {
 
 /** Texto resaltado cuyo marcador se dibuja de izquierda a derecha. */
 export const Highlight: React.FC<HighlightProps> = ({ styleName = 'marker', tone = 'accent', onView = true, className, ...rest }) => {
-  const { ref, seen } = useInView<HTMLElement>(onView);
+  const { ref, seen } = useInView<HTMLElement>({ enabled: onView });
   return (
     <mark
       ref={ref}
