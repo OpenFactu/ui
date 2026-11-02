@@ -1,3 +1,5 @@
+import { useComponentDefaults } from '../context/ComponentDefaults';
+import { logicalKey } from '../internal/roving';
 import { useMergedRefs } from '../hooks/useMergedRefs';
 import * as React from 'react';
 import { adaptivePortal } from './internal/MobileOverlay';
@@ -38,6 +40,8 @@ export interface NavMenuProps {
    * botón sin dejar de heredar estilos, teclado y accesibilidad.
    */
   renderItem?: (item: NavMenuItem, content: React.ReactNode) => React.ReactNode;
+  /** Clases de cada ítem, que ganan a las de serie. También como función de cada ítem. */
+  itemClassName?: string | ((item: NavMenuItem, active: boolean) => string | undefined);
   size?: 'sm' | 'md';
   className?: string;
   'aria-label'?: string;
@@ -122,6 +126,7 @@ interface GrupoDesplegableProps {
   size: 'sm' | 'md';
   onChange: NavMenuProps['onChange'];
   renderItem?: NavMenuProps['renderItem'];
+  itemClassName?: NavMenuProps['itemClassName'];
   /** Un menubar abierto sigue al ratón: pasar por otro grupo cambia el abierto. */
   abierto: boolean;
   onAbrir: () => void;
@@ -138,6 +143,7 @@ const GrupoDesplegable: React.FC<GrupoDesplegableProps> = ({
   size,
   onChange,
   renderItem,
+  itemClassName,
   abierto,
   onAbrir,
   onCerrar,
@@ -203,7 +209,7 @@ const GrupoDesplegable: React.FC<GrupoDesplegableProps> = ({
         // Dentro de una barra de menús las flechas horizontales cambian de
         // grupo aunque haya uno desplegado.
         e.preventDefault();
-        onMoverBarra(e.key === 'ArrowRight' ? 1 : -1);
+        onMoverBarra(logicalKey(e) === 'ArrowRight' ? 1 : -1);
         break;
       case 'Enter':
       case ' ':
@@ -296,12 +302,13 @@ const GrupoDesplegable: React.FC<GrupoDesplegableProps> = ({
                   onMouseEnter={() => setActivo(idx)}
                   onClick={() => elegir(item)}
                   className={cn(
-                    'flex w-full flex-col rounded-[var(--k-radius-xs,2px)] px-2.5 py-1.5 text-left text-[length:calc(13px*var(--k-text-scale,1))] transition-colors focus-visible:outline-none',
+                    'flex w-full flex-col rounded-[var(--k-radius-xs,2px)] px-2.5 py-1.5 text-start text-[length:calc(13px*var(--k-text-scale,1))] transition-colors focus-visible:outline-none',
                     item.id === value
                       ? 'bg-[rgb(var(--color-accent-rgb)/0.1)] text-accent'
                       : 'text-[var(--fg-body,#2d3a4a)]',
                     idx >= 0 && idx === activo && item.id !== value && 'bg-[var(--bg-hover)]',
                     item.disabled && 'cursor-not-allowed opacity-40',
+                    typeof itemClassName === 'function' ? itemClassName(item, item.id === value) : itemClassName,
                   )}
                 >
                   {contenido}
@@ -340,15 +347,17 @@ const GrupoDesplegable: React.FC<GrupoDesplegableProps> = ({
  * />
  * ```
  */
-export const NavMenu: React.FC<NavMenuProps> = ({
+export const NavMenu: React.FC<NavMenuProps> = (rawProps) => {
+  const {
   items,
   value,
   onChange,
   renderItem,
+  itemClassName,
   size = 'md',
   className,
   'aria-label': ariaLabelProp,
-}) => {
+} = useComponentDefaults('NavMenu', rawProps);
   const ariaLabelDefault = useMessages('navigation').main;
   const ariaLabel = ariaLabelProp ?? ariaLabelDefault;
   const entradas = React.useMemo(() => agrupar(items), [items]);
@@ -388,7 +397,7 @@ export const NavMenu: React.FC<NavMenuProps> = ({
             value={value}
             size={size}
             onChange={onChange}
-            renderItem={renderItem}
+            renderItem={renderItem} itemClassName={itemClassName}
             abierto={abierto === entrada.group.name}
             onAbrir={() => setAbierto(entrada.group.name)}
             onCerrar={() => setAbierto(null)}
@@ -405,7 +414,7 @@ export const NavMenu: React.FC<NavMenuProps> = ({
             value={value}
             size={size}
             onChange={onChange}
-            renderItem={renderItem}
+            renderItem={renderItem} itemClassName={itemClassName}
             onMoverBarra={(delta) => moverBarra(i, delta)}
             onEntrar={() => abierto !== null && setAbierto(null)}
             registrar={(el) => {
@@ -425,6 +434,7 @@ interface ItemSueltoProps {
   onChange: NavMenuProps['onChange'];
   renderItem?: NavMenuProps['renderItem'];
   onMoverBarra: (delta: number) => void;
+  itemClassName?: NavMenuProps['itemClassName'];
   onEntrar: () => void;
   registrar: (el: HTMLButtonElement | null) => void;
 }
@@ -435,6 +445,7 @@ const ItemSuelto: React.FC<ItemSueltoProps> = ({
   size,
   onChange,
   renderItem,
+  itemClassName,
   onMoverBarra,
   onEntrar,
   registrar,
@@ -452,7 +463,7 @@ const ItemSuelto: React.FC<ItemSueltoProps> = ({
       onKeyDown={(e) => {
         if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
         e.preventDefault();
-        onMoverBarra(e.key === 'ArrowRight' ? 1 : -1);
+        onMoverBarra(logicalKey(e) === 'ArrowRight' ? 1 : -1);
       }}
       className={cn(
         'inline-flex shrink-0 items-center rounded-[var(--k-radius-xs,2px)] font-medium transition-colors',
@@ -462,6 +473,7 @@ const ItemSuelto: React.FC<ItemSueltoProps> = ({
           ? 'bg-[rgb(var(--color-accent-rgb)/0.1)] text-accent'
           : 'text-[var(--fg-muted,#52606f)] hover:bg-[var(--bg-hover)] hover:text-[var(--fg-default,#0a1628)]',
         item.disabled && 'cursor-not-allowed opacity-40',
+        typeof itemClassName === 'function' ? itemClassName(item, activo) : itemClassName,
       )}
     >
       <ItemContent item={item} />

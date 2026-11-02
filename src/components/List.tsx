@@ -228,7 +228,7 @@ export const ListItem: React.FC<ListItemProps> = ({
   );
 
   const rowClass = cn(
-    'group relative flex items-center gap-3 w-full text-left transition-colors',
+    'group relative flex items-center gap-3 w-full text-start transition-colors',
     spec.cell,
     variant === 'cards' &&
       'rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)]',
@@ -311,13 +311,13 @@ export const ListItem: React.FC<ListItemProps> = ({
       style={style}
       className={cn(
         'group relative flex items-center',
-        isActive && 'border-l-2 border-accent',
+        isActive && 'border-s-2 border-accent',
         variant === 'cards' && 'mb-2 last:mb-0',
       )}
     >
-      {selectionBox && <span className={cn('pl-4 flex items-center')}>{selectionBox}</span>}
+      {selectionBox && <span className={cn('ps-4 flex items-center')}>{selectionBox}</span>}
       {inner}
-      {actionsNode && <span className="pr-3 flex items-center">{actionsNode}</span>}
+      {actionsNode && <span className="pe-3 flex items-center">{actionsNode}</span>}
     </li>
   );
 };
@@ -372,7 +372,7 @@ export const ListSection: React.FC<ListSectionProps> = ({
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="w-full text-left"
+          className="w-full text-start"
         >
           {header}
         </button>

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { logicalKey } from '../internal/roving';
 import { createPortal } from 'react-dom';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
@@ -7,6 +8,7 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useEscapeStack } from '../internal/escapeStack';
 import { useI18n } from '../i18n/I18nProvider';
+import { useGestures } from '../gestures/useGestures';
 
 export interface LightboxImage {
   src: string;
@@ -70,45 +72,29 @@ export const Lightbox: React.FC<LightboxProps> = ({ images, open, onClose, index
     return () => el.removeEventListener('wheel', onWheel);
   });
 
-  const pointers = React.useRef(new Map<number, { x: number; y: number }>());
-  const gesture = React.useRef<{ x: number; y: number; view: View; distance?: number; swipe: number } | null>(null);
-  // Con la captura del puntero el clic llega siempre al escenario: se recuerda dónde empezó para cerrar solo al pulsar
-  // el fondo (no la imagen) y sin haber arrastrado.
+  // Se recuerda dónde empezó para cerrar solo al pulsar el fondo (no la imagen) y sin haber arrastrado.
   const pressedBackground = React.useRef(false);
-  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if ((e.target as HTMLElement).closest('button')) return;
-    pressedBackground.current = e.target === e.currentTarget;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    const pts = [...pointers.current.values()];
-    gesture.current = { x: e.clientX, y: e.clientY, view, swipe: 0, distance: pts.length === 2 ? Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) : undefined };
-  };
-  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    const g = gesture.current; if (!g || !pointers.current.has(e.pointerId)) return;
-    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    const pts = [...pointers.current.values()];
-    if (pts.length === 2 && g.distance) {
-      const d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      zoomAt(g.view.scale * (d / g.distance), (pts[0].x + pts[1].x) / 2, (pts[0].y + pts[1].y) / 2);
-      return;
-    }
-    const dx = e.clientX - g.x; const dy = e.clientY - g.y;
-    if (Math.hypot(dx, dy) > 6) pressedBackground.current = false;
-    if (g.view.scale > 1) setView(clampView({ ...g.view, x: g.view.x + dx, y: g.view.y + dy }));
-    else g.swipe = dx;
-  };
-  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    pointers.current.delete(e.pointerId);
-    const g = gesture.current;
-    if (pointers.current.size === 0) {
-      if (g && g.view.scale === 1 && Math.abs(g.swipe) > 60) go(index + (g.swipe < 0 ? 1 : -1));
-      gesture.current = null;
-    }
-  };
+  const startView = React.useRef<View>(FIT);
+  const gestures = useGestures({
+    slop: 6,
+    pointerTypes: ['touch', 'pen', 'mouse'],
+    ignore: 'button',
+    attribute: false,
+    haptics: false,
+    onPan: (pan) => {
+      if (pan.phase === 'start') { startView.current = view; pressedBackground.current = false; }
+      if (pan.phase === 'end' && startView.current.scale === 1 && Math.abs(pan.dx) > 60) go(index + (pan.dx < 0 ? 1 : -1));
+      if ((pan.phase === 'start' || pan.phase === 'move') && startView.current.scale > 1) setView(clampView({ ...startView.current, x: startView.current.x + pan.dx, y: startView.current.y + pan.dy }));
+    },
+    onPinch: (pinch) => {
+      if (pinch.phase === 'start') { startView.current = view; pressedBackground.current = false; }
+      if (pinch.phase === 'move') zoomAt(startView.current.scale * pinch.scale, pinch.center.x, pinch.center.y);
+    },
+  });
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowRight') { e.preventDefault(); go(index + 1); }
-    else if (e.key === 'ArrowLeft') { e.preventDefault(); go(index - 1); }
+    if (logicalKey(e) === 'ArrowRight') { e.preventDefault(); go(index + 1); }
+    else if (logicalKey(e) === 'ArrowLeft') { e.preventDefault(); go(index - 1); }
     else if (e.key === '+' || e.key === '=') setView((v) => clampView({ ...v, scale: v.scale * 1.5 }));
     else if (e.key === '-') setView((v) => clampView({ ...v, scale: v.scale / 1.5 }));
     else if (e.key === '0') setView(FIT);
@@ -138,10 +124,9 @@ export const Lightbox: React.FC<LightboxProps> = ({ images, open, onClose, index
         ref={stage}
         className="k-lightbox-stage"
         data-zoomed={view.scale > 1 || undefined}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
+        {...gestures.bind}
+        style={gestures.style}
+        onPointerDownCapture={(e) => { pressedBackground.current = e.target === e.currentTarget; }}
         onDoubleClick={(e) => (view.scale > 1 ? setView(FIT) : zoomAt(2.5, e.clientX, e.clientY))}
         onClick={() => { if (pressedBackground.current && view.scale === 1) onClose(); pressedBackground.current = false; }}
       >

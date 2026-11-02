@@ -1,3 +1,6 @@
+import { useComponentDefaults } from '../context/ComponentDefaults';
+import { logicalKey } from '../internal/roving';
+import { resolveItemClass, type ItemClassName, type ItemRenderState } from './internal/optionStyle';
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
@@ -28,7 +31,9 @@ export interface TreeViewProps<T = unknown> {
   /** Icono de cada nodo. Por defecto carpetas y documentos. */
   getIcon?: (node: TreeNode<T>, expanded: boolean) => React.ReactNode;
   /** Contenido de la fila en lugar del texto (contadores, etiquetas…). */
-  renderLabel?: (node: TreeNode<T>) => React.ReactNode;
+  renderLabel?: (node: TreeNode<T>, state: ItemRenderState) => React.ReactNode;
+  /** Clases de la fila, que ganan a las de serie. También como función. */
+  itemClassName?: ItemClassName<TreeNode<T>>;
   /** Texto si no hay nodos (o el filtro no encuentra nada). */
   empty?: React.ReactNode;
   'aria-label'?: string;
@@ -50,10 +55,11 @@ const CheckBox: React.FC<{ state: CheckState }> = ({ state }) => (
  * moverse, abrir y cerrar, Inicio y Fin, y escribir una letra salta al siguiente nodo que empieza por ella. Las ramas se
  * despliegan animando su altura; admite casillas en tres estados, carga perezosa y filtro.
  */
-export function TreeView<T = unknown>({
+export function TreeView<T = unknown>(rawProps: TreeViewProps<T>) {
+  const {
   nodes, expanded: controlledExpanded, defaultExpanded = [], onExpandedChange, selected, onSelect, checkable, checked = [], onCheckedChange,
-  loadChildren, filter = '', getIcon = defaultIcon, renderLabel, empty: emptyProp, className, ...rest
-}: TreeViewProps<T>) {
+  loadChildren, filter = '', getIcon = defaultIcon, renderLabel, empty: emptyProp, className, itemClassName, ...rest
+  } = useComponentDefaults('TreeView', rawProps);
   const emptyDefault = useMessages('status').noItems;
   const empty = emptyProp ?? emptyDefault;
   const [internalExpanded, setInternalExpanded] = React.useState<string[]>([...defaultExpanded]);
@@ -112,7 +118,7 @@ export function TreeView<T = unknown>({
     if (index < 0) return;
     const current = flat[index];
     const go = (i: number) => { const target = flat[Math.max(0, Math.min(flat.length - 1, i))]; if (target) focusNode(target.node.id); };
-    switch (event.key) {
+    switch (logicalKey(event)) {
       case 'ArrowDown': event.preventDefault(); go(index + 1); return;
       case 'ArrowUp': event.preventDefault(); go(index - 1); return;
       case 'Home': event.preventDefault(); go(0); return;
@@ -147,6 +153,7 @@ export function TreeView<T = unknown>({
     const expandable = isExpandable(node);
     const state = states?.get(node.id);
     const isSelected = selected === node.id;
+    const rowState: ItemRenderState = { selected: isSelected, highlighted: node.id === activeId, disabled: Boolean(node.disabled), query: filter, label: node.label, content: node.label };
     return (
       <li
         key={node.id}
@@ -165,10 +172,10 @@ export function TreeView<T = unknown>({
         onFocus={(e) => { if (e.target === e.currentTarget) setFocusId(node.id); }}
       >
         <div
-          className="k-tree-row"
+          className={cn('k-tree-row', resolveItemClass(itemClassName, node, rowState))}
           data-selected={isSelected || undefined}
           data-disabled={node.disabled || undefined}
-          style={{ paddingLeft: `calc(${level - 1} * var(--k-tree-indent, 18px) + 6px)` }}
+          style={{ paddingInlineStart: `calc(${level - 1} * var(--k-tree-indent, 18px) + 6px)` }}
           onClick={(e) => { e.stopPropagation(); setFocusId(node.id); if (expandable && !checkable && !onSelect) void toggleExpand(node); else activate(node); }}
         >
           <span
@@ -181,7 +188,7 @@ export function TreeView<T = unknown>({
           </span>
           {state && <span onClick={(e) => { e.stopPropagation(); toggleCheck(node); }}><CheckBox state={state} /></span>}
           <span className="k-tree-icon" aria-hidden="true">{getIcon(node, open)}</span>
-          <span className="k-tree-label">{renderLabel ? renderLabel(node) : node.label}</span>
+          <span className="k-tree-label">{renderLabel ? renderLabel(node, rowState) : node.label}</span>
         </div>
         {expandable && node.children && node.children.length > 0 && (
           <Collapse open={open}>

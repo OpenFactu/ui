@@ -1,3 +1,5 @@
+import { useComponentDefaults } from '../context/ComponentDefaults';
+import { logicalKey } from '../internal/roving';
 import { MobileScheduleActions } from './internal/MobileScheduleActions';
 import * as React from 'react';
 import { useIsMobile } from '../hooks/useMediaQuery';
@@ -79,6 +81,13 @@ export interface CalendarProps {
    * igual en claro y en oscuro. `solid`: relleno de color entero.
    */
   eventStyle?: 'soft' | 'solid';
+  /**
+   * Pinta el contenido de cada acontecimiento según dónde esté: `week` (rejilla de horas), `allDay` (barra de todo el día),
+   * `month` (chip del mes), `agenda` o `tray` (sin programar). Recibe el de serie. El arrastre y el teclado siguen siendo del calendario.
+   */
+  renderEvent?: (event: CalendarEvent, context: { place: 'week' | 'allDay' | 'month' | 'agenda' | 'tray'; content: React.ReactNode }) => React.ReactNode;
+  /** Clases de cada acontecimiento. También como función. */
+  eventClassName?: string | ((event: CalendarEvent) => string | undefined);
   /** Qué día se considera hoy. Fijable para que las pruebas no dependan del reloj. */
   today?: Date | string;
   /** Arrastrar (o flechas con el bloque enfocado) para mover o cambiar duración. Sin esto es solo lectura. */
@@ -173,7 +182,8 @@ const soloDia = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()
  * />
  * ```
  */
-export const Calendar: React.FC<CalendarProps> = ({
+export const Calendar: React.FC<CalendarProps> = (rawProps) => {
+  const {
   events,
   view: viewProp,
   onViewChange,
@@ -198,7 +208,11 @@ export const Calendar: React.FC<CalendarProps> = ({
   className,
   'aria-label': ariaLabelProp,
   mobileView = 'calendar',
-}) => {
+  renderEvent,
+  eventClassName,
+} = useComponentDefaults('Calendar', rawProps);
+  const pintarEvento = (event: CalendarEvent, place: 'week' | 'allDay' | 'month' | 'agenda' | 'tray', content: React.ReactNode) => (renderEvent ? renderEvent(event, { place, content }) : content);
+  const claseEvento = (event: CalendarEvent) => (typeof eventClassName === 'function' ? eventClassName(event) : eventClassName);
   const { messages: m, format } = useI18n();
   const c = m.calendar;
   const dn = m.dates;
@@ -306,8 +320,10 @@ export const Calendar: React.FC<CalendarProps> = ({
     return el.getBoundingClientRect().width / columnas;
   };
 
+  /** De derecha a izquierda, los días avanzan hacia la izquierda. */
+  const sentido = () => (rejillaRef.current && getComputedStyle(rejillaRef.current).direction === 'rtl' ? -1 : 1);
   const desplazamiento = (a: Arrastre) => {
-    const dDias = Math.round(a.dx / anchoDia());
+    const dDias = Math.round((a.dx * sentido()) / anchoDia());
     const brutoMin = (a.dy / hourHeight) * 60;
     const dMin = Math.round(brutoMin / PASO_MIN) * PASO_MIN;
     return { dDias, dMin };
@@ -415,7 +431,8 @@ export const Calendar: React.FC<CalendarProps> = ({
     if (!el) return null;
     const r = el.getBoundingClientRect();
     if (clientX < r.left || clientX > r.right || clientY < r.top || clientY > r.bottom) return null;
-    const col = Math.min(columnas - 1, Math.max(0, Math.floor(((clientX - r.left) / r.width) * columnas)));
+    const columna = Math.min(columnas - 1, Math.max(0, Math.floor(((clientX - r.left) / r.width) * columnas)));
+    const col = sentido() < 0 ? columnas - 1 - columna : columna;
     if (view === 'month') {
       const fila = Math.floor(((clientY - r.top) / r.height) * 6);
       return diasMes[Math.min(41, Math.max(0, fila * 7 + col))];
@@ -445,7 +462,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   const teclaEvento = (evt: React.KeyboardEvent, e: Normalizado) => {
     if (evt.key === 'Enter') { evt.preventDefault(); onEventClick?.(e); return; }
     if (!onEventChange || e.locked) return;
-    const siguiente = nudgeEvent(e._inicio, e._fin, evt.key, evt.shiftKey, PASO_MIN);
+    const siguiente = nudgeEvent(e._inicio, e._fin, logicalKey(evt), evt.shiftKey, PASO_MIN);
     if (!siguiente) return;
     evt.preventDefault();
     focoPendiente.current = e.id;
@@ -637,7 +654,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                     data-status={e.status ?? 'pendiente'}
                     data-cut-start={desde < 0 || undefined}
                     data-cut-end={hasta > dias.length - 1 || undefined}
-                    className="k-cal-bar"
+                    className={cn('k-cal-bar', claseEvento(e))}
                     style={{
                       ...tonoDe(e),
                       gridColumn: `${Math.max(0, desde) + 1} / ${Math.min(dias.length - 1, hasta) + 2}`,
@@ -645,7 +662,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                     }}
                     onClick={() => onEventClick?.(e)}
                   >
-                    {e.title}
+                    {pintarEvento(e, 'allDay', e.title)}
                   </button>
                 ))}
               </div>
@@ -704,7 +721,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                             <div
                               className="k-cal-origin"
                               aria-hidden="true"
-                              style={{ top: origenTop, height: Math.max(18, (horaDecimal(e._fin) - horaDecimal(e._inicio)) * hourHeight - 2), left: `calc(${(hueco.col / hueco.cols) * 100}% + 2px)`, width: `calc(${(hueco.span / hueco.cols) * 100}% - 4px)` }}
+                              style={{ top: origenTop, height: Math.max(18, (horaDecimal(e._fin) - horaDecimal(e._inicio)) * hourHeight - 2), insetInlineStart: `calc(${(hueco.col / hueco.cols) * 100}% + 2px)`, width: `calc(${(hueco.span / hueco.cols) * 100}% - 4px)` }}
                             />
                           )}
                           <div
@@ -725,16 +742,18 @@ export const Calendar: React.FC<CalendarProps> = ({
                               ...tonoDe(e),
                               top: (desde - hourStart) * hourHeight + 1,
                               height: alto,
-                              left: `calc(${izquierda}% + 2px)`,
+                              insetInlineStart: `calc(${izquierda}% + 2px)`,
                               width: `calc(${ancho}% - 4px)`,
-                              transform: dDias ? `translateX(${dDias * 100}%)` : undefined,
+                              transform: dDias ? `translateX(${dDias * 100 * sentido()}%)` : undefined,
                               zIndex: arrastrando ? 30 : 1 + hueco.col,
                             }}
-                            className="k-cal-event"
+                            className={cn('k-cal-event', claseEvento(e))}
                           >
-                            <span className="k-cal-event-title">{e.title}</span>
-                            <span className="k-cal-event-time">{hhmm(inicio)}{compacto ? '' : ` – ${hhmm(fin)}`}</span>
-                            {e.meta && alto >= 58 && <span className="k-cal-event-meta">{e.meta}</span>}
+                            {pintarEvento(e, 'week', <>
+                              <span className="k-cal-event-title">{e.title}</span>
+                              <span className="k-cal-event-time">{hhmm(inicio)}{compacto ? '' : ` – ${hhmm(fin)}`}</span>
+                              {e.meta && alto >= 58 && <span className="k-cal-event-meta">{e.meta}</span>}
+                            </>)}
                             {editable && (
                               <span
                                 onPointerDown={(evt) => empezar(evt, e.id, 'fin')}
@@ -798,7 +817,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                   onKeyDown={compacto ? (evt) => {
                     const salto: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
                     if (evt.key === 'Enter' || evt.key === ' ') { evt.preventDefault(); irA(d); return; }
-                    if (salto[evt.key] === undefined) return;
+                    if (salto[logicalKey(evt)] === undefined) return;
                     evt.preventDefault();
                     focoDia.current = true;
                     irA(sumarDias(d, salto[evt.key]));
@@ -826,8 +845,10 @@ export const Calendar: React.FC<CalendarProps> = ({
                         onEventClick?.(e);
                       }}
                     >
-                      {!e.allDay && <span className="k-cal-chip-time">{hhmm(e._inicio)}</span>}
-                      <span className="k-cal-chip-title">{e.title}</span>
+                      {pintarEvento(e, 'month', <>
+                        {!e.allDay && <span className="k-cal-chip-time">{hhmm(e._inicio)}</span>}
+                        <span className="k-cal-chip-title">{e.title}</span>
+                      </>)}
                     </button>
                   ))}
                   {!compacto && suyos.length > visibles.length && (
@@ -848,9 +869,11 @@ export const Calendar: React.FC<CalendarProps> = ({
             <section className="k-cal-dayagenda" aria-label={format(c.dayEvents, { date: diaMes(fecha) })}>
               <h3>{capitalizar(fechaLarga(fecha))}</h3>
               {deDia(fecha).length === 0 ? <p className="k-cal-dayagenda-empty">{c.nothingThisDay}</p> : deDia(fecha).map((e) => (
-                <button key={e.id} type="button" className="k-cal-agenda-item" data-evento={e.id} style={tonoDe(e)} onClick={() => onEventClick?.(e)}>
-                  <span className="k-cal-agenda-time">{e.allDay ? c.allDay : hhmm(e._inicio)}</span>
-                  <span className="k-cal-agenda-title">{e.title}</span>
+                <button key={e.id} type="button" className={cn('k-cal-agenda-item', claseEvento(e))} data-evento={e.id} style={tonoDe(e)} onClick={() => onEventClick?.(e)}>
+                  {pintarEvento(e, 'agenda', <>
+                    <span className="k-cal-agenda-time">{e.allDay ? c.allDay : hhmm(e._inicio)}</span>
+                    <span className="k-cal-agenda-title">{e.title}</span>
+                  </>)}
                 </button>
               ))}
               {onSlotClick && <Button size="sm" variant="secondary" onClick={() => onSlotClick(fecha)}>{c.addEvent}</Button>}
@@ -893,7 +916,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                   data-draggable={onSchedule ? true : undefined}
                 >
                   {onSchedule && <UiIcon slot="grip-vertical" size={12} className="k-cal-tray-grip" aria-hidden="true" />}
-                  <span className="k-cal-chip-title">{e.title}</span>
+                  {pintarEvento(e, 'tray', <span className="k-cal-chip-title">{e.title}</span>)}
                 </div>
               ))}
             </div>

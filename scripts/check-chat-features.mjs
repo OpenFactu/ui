@@ -137,7 +137,7 @@ try {
     assert.ok(await page.evaluate(()=>window.__voiceStops)>0);
     assert.equal(await page.locator('audio[controls]').count(),0);
     await page.getByRole('button',{name:'Reproducir nota de voz',exact:true}).click(); await page.getByRole('button',{name:'Pausar nota de voz',exact:true}).waitFor();
-    await page.getByRole('button',{name:'Velocidad de la nota de voz',exact:true}).click();
+    await page.getByRole('button',{name:'Velocidad de la nota de voz: 1×',exact:true}).click();
     assert.equal(await page.locator('audio').first().evaluate(el=>el.playbackRate),1.5);
     fs.mkdirSync('.shots/chat',{recursive:true}); await page.screenshot({path:'.shots/chat/voice-styled.png',fullPage:true});
     await page.getByRole('button',{name:'Enviar nota de voz',exact:true}).click(); await page.getByRole('link',{name:/Descargar nota-de-voz/}).waitFor();

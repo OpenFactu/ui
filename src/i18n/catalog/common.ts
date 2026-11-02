@@ -13,6 +13,7 @@ export const common = {
   erase: 'Borrar',
   apply: 'Aplicar',
   retry: 'Reintentar',
+  progress: 'Progreso',
   loading: 'Cargando…',
   loadingShort: 'Cargando',
   uploading: 'Subiendo…',

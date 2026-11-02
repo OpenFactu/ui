@@ -1,382 +1,35 @@
+import { useComponentDefaults } from '../context/ComponentDefaults';
 import { Spinner } from './Spinner';
-import { isPrimaryPointer, startPointerDrag } from '../internal/pointerDrag';
 import * as React from 'react';
-import { adaptivePortal } from './internal/MobileOverlay';
 import { UiIcon } from '../icons';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import { cn } from '../utils';
 import { Checkbox } from './Checkbox';
 import { Pagination } from './Pagination';
-import { DropdownMenu, DropdownMenuItem } from './DropdownMenu';
 import { useContextMenu } from './ContextMenu';
 import { Skeleton } from './Skeleton';
-import { densityClasses, skeletonWidth, type Density } from './internal/density';
-import { usePopover } from '../hooks/usePopover';
-import { useIsNarrow, useIsMobile } from '../hooks/useMediaQuery';
-import { useResizeObserver } from '../hooks/useResizeObserver';
 import { Alert } from './Alert';
 import { Button } from './Button';
-import { SelectionBar, type SelectionBarAction } from './SelectionBar';
-import { Input } from './Input';
-import { NumberInput } from './NumberInput';
-import { SearchInput } from './SearchInput';
-import { DateRangePicker } from './DateRangePicker';
 import { formatNumber } from '../internal/intl';
-import {
-  aggregate as aggregateValues,
-  describeFilter,
-  isEmptyFilter,
-  matchesFilter,
-  matchesSearch,
-  type TableAggregate,
-  type TableColumnFilter,
-  type TableFilterValue,
-  type TableFilters,
-} from './internal/tableFilters';
-import { useI18n, useMessages } from '../i18n/I18nProvider';
+import { aggregate as aggregateValues, isEmptyFilter } from './internal/tableFilters';
+import { useI18n } from '../i18n/I18nProvider';
+import { useIsNarrow } from '../hooks/useMediaQuery';
+import { SelectionBar } from './SelectionBar';
+import { densityClasses, skeletonWidth } from './internal/density';
+import { ColumnFilter, ColumnToggle, RowActionsCell, colKeyOf } from './table/parts';
+import { TableCards } from './table/TableCards';
+import { TableToolbar } from './table/TableToolbar';
+import { useColumnLayout } from './table/useColumnLayout';
+import { useTableData } from './table/useTableData';
+import type { TableColumn, TableDensity, TableProps } from './table/types';
 
-export type { TableAggregate, TableColumnFilter, TableFilterOption, TableFilterValue, TableFilters } from './internal/tableFilters';
+export type {
+  RowAction, TableAggregate, TableBulkAction, TableColumn, TableColumnFilter, TableDensity, TableFilterOption, TableFilterValue, TableFilters,
+  TableInfinite, TablePagination, TableProps, TableSort,
+} from './table/types';
 
-export interface TableColumn<T> {
-  header: string;
-  accessor?: keyof T | ((item: T, index: number) => React.ReactNode);
-  cell?: (item: T, index: number) => React.ReactNode;
-  align?: 'left' | 'center' | 'right';
-  className?: string;
-  width?: string;
-  /** Si true, aplica estilo primary column: DM Mono 12px ink-900 medium. */
-  primary?: boolean;
-  /** Si true, la columna es ordenable. Por defecto usa `accessor` como clave.
-   *  Si `accessor` es función o necesitas otra clave, pasa `sortAccessor`. */
-  sortable?: boolean;
-  /** Accessor específico para ordenar (cuando `accessor` es función o no existe). */
-  sortAccessor?: (item: T) => any;
-  /** Clave estable para ordenación/visibilidad/resize. Fallback: `header`
-   *  (obligatorio si dos columnas comparten header). */
-  id?: string;
-  /**
-   * Papel de la columna cuando la tabla se pinta como tarjetas en pantalla
-   * estrecha (`responsive="cards"`). Sin indicar nada va al cuerpo con su
-   * etiqueta delante.
-   */
-  card?: 'title' | 'subtitle' | 'status' | 'meta' | 'body' | 'hidden';
-  /** Filtro de la columna: botón en la cabecera (y en la barra en móvil) y chip mientras está activo. */
-  filter?: TableColumnFilter;
-  /** Valor con el que se filtra y se busca. Por defecto `sortAccessor` o `accessor`. */
-  filterAccessor?: (item: T) => unknown;
-  /** Fija la columna a la izquierda o a la derecha al desplazar en horizontal. */
-  pin?: 'left' | 'right';
-  /**
-   * Agregado al pie sobre TODAS las filas filtradas (no solo la página): `sum`, `avg`, `min`, `max`, `count`, o una
-   * función que recibe las filas. Sin `summaryRow` ni `summaryByColumn`, basta con esto para tener fila de totales.
-   */
-  aggregate?: TableAggregate | ((rows: T[]) => React.ReactNode);
-  /** Formato del agregado numérico (importes, porcentajes…). Default número con 2 decimales como mucho. */
-  aggregateFormat?: (value: number) => React.ReactNode;
-}
-
-/** Acción sobre las filas seleccionadas, en la barra que aparece al seleccionar. */
-export type TableBulkAction = SelectionBarAction;
-
-export type TableDensity = Density;
-
-/** Acción de fila (menú ⋯ y click derecho). Mismo shape que DropdownMenuItem. */
-export type RowAction = DropdownMenuItem;
-
-export interface TablePagination {
-  pageSize: number;
-  /** Página controlada (1-based). Si se omite, la Table mantiene estado interno. */
-  page?: number;
-  onPageChange?: (page: number) => void;
-  /** Modo servidor: total real de registros; `data` es SOLO la página actual
-   *  y no se pagina en cliente. */
-  total?: number;
-  pageSizeOptions?: number[];
-  /** Si se pasa, `pageSize` se trata como controlado. */
-  onPageSizeChange?: (size: number) => void;
-}
-
-export interface TableInfinite {
-  /** Quedan más filas por traer. */
-  hasMore: boolean;
-  /** Trae la página siguiente. Se llama una vez por cada acercamiento al final. */
-  onLoadMore: () => void;
-  /** Hay una petición en vuelo; se enseña un indicador y no se pide otra. */
-  loading?: boolean;
-  /** Qué poner cuando ya no queda nada. `false` no pone nada. */
-  endMessage?: React.ReactNode | false;
-}
-
-export interface TableProps<T> {
-  columns: TableColumn<T>[];
-  data: T[];
-  onRowClick?: (item: T) => void;
-  className?: string;
-  /**
-   * Estado vacío. Admite nodos, no solo texto: un vacío útil suele llevar
-   * icono y un botón para crear el primer registro.
-   */
-  emptyMessage?: React.ReactNode;
-  /**
-   * Clases extra por fila, para el estado visual que solo conoce quien la usa:
-   * la fila seleccionada de un panel, o tachar las ya asignadas. Sin esto hay
-   * que salirse del componente y escribir la tabla a mano.
-   */
-  rowClassName?: (item: T, index: number) => string | undefined;
-  isLoading?: boolean;
-  /** Actualiza en segundo plano conservando filas, selección y expansión. */
-  isRefreshing?: boolean;
-  refreshingLabel?: string;
-  /** Error de carga. Con datos conserva las filas; sin datos sustituye al vacío. */
-  errorMessage?: React.ReactNode;
-  /** Solicita otro intento. La aplicación gestiona la petición y sus estados. */
-  onRetry?: () => void;
-  retryLabel?: string;
-  /** Densidad de filas. Default: 'normal'. */
-  density?: TableDensity;
-  /** Filas lisas, alternas o rejilla con separadores verticales. */
-  variant?: 'default' | 'striped' | 'grid';
-  /** Cabecera con superficie atenuada para separar los encabezados del cuerpo. */
-  headerVariant?: 'default' | 'muted';
-  /** Nombre accesible de la tabla o del listado de tarjetas. */
-  ariaLabel?: string;
-  /** Limita el área de scroll; la cabecera permanece visible. */
-  maxHeight?: number | string;
-  /** Ordenación controlada. `null` conserva el orden recibido. */
-  sort?: TableSort | null;
-  defaultSort?: TableSort | null;
-  onSortChange?: (sort: TableSort | null) => void;
-  /** 'server' emite el cambio sin reordenar los datos recibidos. Default 'client'. */
-  sortMode?: 'client' | 'server';
-  /** Si true, añade columna de checkboxes y permite multi-select.
-   *  Con paginación en cliente, el checkbox de cabecera selecciona SOLO la página visible. */
-  selectable?: boolean;
-  /** Excluye filas de la selección individual y de «seleccionar página». */
-  isRowSelectable?: (item: T) => boolean;
-  /** Selección controlada. Si se omite, la Table mantiene estado interno. */
-  selectedKeys?: Set<string | number>;
-  onSelectionChange?: (keys: Set<string | number>) => void;
-  /** Key estable: por defecto item.id, o índice original en data como alternativa.
-   * El índice recibido corresponde a data antes de ordenar o paginar.
-   * Para datos remotos o que cambian, proporciona siempre una identidad estable. */
-  rowKey?: (item: T, index: number) => string | number;
-  /** Paginación integrada (cliente o servidor, ver TablePagination). */
-  pagination?: TablePagination;
-  /**
-   * Carga la página siguiente al acercarse al final, en lugar de paginar. Se
-   * excluye con `pagination`: o se navega por páginas o se sigue bajando.
-   */
-  infinite?: TableInfinite;
-  /** Filas expandibles: contenido del detalle. Añade columna chevron. */
-  renderExpanded?: (item: T) => React.ReactNode;
-  /** Expansión controlada. */
-  expandedKeys?: Set<string | number>;
-  onExpandedChange?: (keys: Set<string | number>) => void;
-  /** Acciones por fila: botón ⋯ al hover + menú contextual con click derecho. */
-  rowActions?: (item: T) => RowAction[];
-  /** Fija la primera columna (y las utilitarias) al hacer scroll horizontal. */
-  stickyFirstColumn?: boolean;
-  /** Visibilidad controlada: key = col.id ?? col.header. */
-  columnVisibility?: Record<string, boolean>;
-  onColumnVisibilityChange?: (visibility: Record<string, boolean>) => void;
-  /** Botón en la cabecera para mostrar/ocultar columnas. */
-  showColumnToggle?: boolean;
-  /** Redimensionar columnas arrastrando el borde de la cabecera. */
-  resizableColumns?: boolean;
-  /** Cómo se representa `isLoading`. Default 'skeleton'. */
-  loadingVariant?: 'skeleton' | 'spinner';
-  /** Filas fantasma en modo esqueleto. Default: el tamaño de página, o 8. */
-  skeletonRows?: number;
-  /**
-   * Alto de la caja de contenido de cada celda fantasma. Por defecto es la
-   * caja de línea del texto (`1.25em`), que clava la altura en tablas de solo
-   * texto. Si las filas llevan Badges o botones serán algo más altas que el
-   * esqueleto: pásale aquí la altura real (p. ej. `24`) para que coincida.
-   */
-  skeletonRowHeight?: number | string;
-  /** Texto bajo el spinner (solo con loadingVariant='spinner'). */
-  loadingLabel?: string;
-  /**
-   * Qué hacer cuando no cabe: 'auto' (default) usa tarjetas en móvil; 'scroll' deja desplazar en horizontal;
-   * 'cards' pinta una tarjeta por fila por debajo de `cardsBreakpoint`.
-   */
-  responsive?: 'auto' | 'scroll' | 'cards';
-  /** Ancho de tarjetas: 768 en auto y 640 en cards; un valor explícito tiene prioridad. */
-  cardsBreakpoint?: number;
-  /**
-   * Fila de totales al pie, alineada con las columnas. Se le pasan las filas
-   * visibles y devuelve una celda por columna visible (o `null` para dejarla
-   * vacía). Evita tener que montar un bloque de totales aparte que se
-   * desalinea con la tabla.
-   */
-  summaryRow?: (rows: T[]) => Array<React.ReactNode>;
-  /** Totales de la página por `col.id ?? col.header`. Conservan su columna al
-   * ocultar otras; tienen prioridad sobre summaryRow y aparecen también en móvil. */
-  summaryByColumn?: (rows: T[]) => Record<string, React.ReactNode>;
-  /** Etiqueta de la primera celda del pie. Default 'Total'. */
-  summaryLabel?: React.ReactNode;
-  /** Fila extra al final del cuerpo, para el «+ Añadir línea». */
-  appendRow?: React.ReactNode;
-  /** Buscador en la barra superior: busca en todas las columnas, sin acentos ni mayúsculas. */
-  searchable?: boolean | { placeholder?: string };
-  /** Búsqueda controlada. */
-  search?: string;
-  onSearchChange?: (query: string) => void;
-  /** Filtros controlados por `col.id ?? col.header`. */
-  filters?: TableFilters;
-  defaultFilters?: TableFilters;
-  onFiltersChange?: (filters: TableFilters) => void;
-  /** 'server' solo avisa de filtros y búsqueda, sin filtrar `data`. Default 'client'. */
-  filterMode?: 'client' | 'server';
-  /** Selector de densidad (compacta, normal, cómoda) en la barra superior. */
-  densityToggle?: boolean;
-  onDensityChange?: (density: TableDensity) => void;
-  /** Contenido extra a la derecha de la barra superior (exportar, crear…). */
-  toolbar?: React.ReactNode;
-  /** Con selección: barra flotante con el recuento y estas acciones. */
-  bulkActions?: (rows: T[]) => TableBulkAction[];
-}
-
-export interface TableSort {
-  colKey: string;
-  dir: 'asc' | 'desc';
-}
-
-function compareValues(a: any, b: any): number {
-  if (a == null && b == null) return 0;
-  if (a == null) return -1;
-  if (b == null) return 1;
-  if (typeof a === 'number' && typeof b === 'number') return a - b;
-  const da = a instanceof Date ? a.getTime() : NaN;
-  const db = b instanceof Date ? b.getTime() : NaN;
-  if (!Number.isNaN(da) && !Number.isNaN(db)) return da - db;
-  // Los códigos no son importes: quitar letras mezcla series y referencias.
-  // Para importes formateados, sortAccessor debe devolver el número original.
-  return String(a).localeCompare(String(b), undefined, { numeric: true });
-}
-
-function colKeyOf<T>(col: TableColumn<T>): string {
-  return col.id ?? col.header;
-}
-
-/** Popover con checkboxes para mostrar/ocultar columnas. */
-function ColumnToggle({
-  entries,
-  onToggle,
-}: {
-  entries: { key: string; header: string; visible: boolean }[];
-  onToggle: (key: string) => void;
-}) {
-  const tt = useMessages('table');
-  const [isOpen, setIsOpen] = React.useState(false);
-  const mobile = useIsMobile();
-  const { anchorRef, popoverRef, style, ready, mounted, popoverProps } = usePopover<HTMLButtonElement>({
-    open: isOpen && !mobile,
-    onClose: () => setIsOpen(false),
-    align: 'end',
-    minWidth: 180,
-    scrollStrategy: 'close',
-  });
-
-  return (
-    <>
-      <button
-        ref={anchorRef}
-        type="button"
-        aria-label={tt.toggleColumns}
-        aria-expanded={isOpen}
-        title={tt.columns}
-        onClick={() => setIsOpen(!isOpen)}
-        className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent hover:bg-[var(--bg-hover)] transition-colors"
-      >
-        <UiIcon slot="columns-3" className="h-3.5 w-3.5" />
-      </button>
-      {(isOpen || mounted) &&
-        adaptivePortal(
-          <div
-            ref={popoverRef}
-            {...(mobile ? undefined : popoverProps)}
-            className={cn(
-              'z-[var(--k-z-popover,999999)] min-w-[180px] rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-1 shadow-lg k-appear',
-              !ready && !mobile && 'invisible',
-            )}
-            style={style}
-          >
-            <p className="px-2.5 pt-1.5 pb-1 text-[length:calc(9px*var(--k-text-scale,1))] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
-              {tt.columns}
-            </p>
-            {entries.map((entry) => (
-              <label
-                key={entry.key}
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--k-radius-xs,2px)] text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-body,#2d3a4a)] hover:bg-[var(--bg-hover)] cursor-pointer"
-              >
-                <Checkbox
-                  checked={entry.visible}
-                  disabled={entry.visible && entries.filter((column) => column.visible).length === 1}
-                  onChange={() => onToggle(entry.key)}
-                  size="sm"
-                />
-                <span className="truncate">{entry.header}</span>
-              </label>
-            ))}
-          </div>,
-          document.body,
-          { open: isOpen, onClose: () => setIsOpen(false), title: tt.columns, presentation: mobile ? 'sheet' : 'anchored', anchorRef },
-        )}
-    </>
-  );
-}
-
-/**
- * Celda de acciones de fila.
- *
- * Una única acción no destructiva con icono propio puede mostrarse directamente.
- * Los tres puntos siempre abren el menú, incluso cuando solo hay una acción.
- * Las acciones destructivas requieren elegir explícitamente el elemento.
- */
-const RowActionsCell: React.FC<{ actions: RowAction[] | null; alwaysVisible?: boolean }> = ({
-  actions,
-  alwaysVisible,
-}) => {
-  const tt = useMessages('table');
-  if (!actions || actions.length === 0) return null;
-
-  const revealClass = alwaysVisible
-    ? ''
-    : 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-within:opacity-100';
-  const btnClass = cn(
-    'p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent hover:bg-[var(--bg-hover)] transition-all disabled:opacity-40 disabled:pointer-events-none',
-    // En las tarjetas (pantalla táctil) el área de toque llega a 40 px.
-    alwaysVisible && 'inline-flex min-h-10 min-w-10 items-center justify-center',
-    revealClass,
-  );
-
-  if (actions.length === 1 && actions[0].icon && !actions[0].destructive) {
-    const only = actions[0];
-    const label = typeof only.label === 'string' ? only.label : tt.rowAction;
-    return (
-      <button
-        type="button"
-        title={label}
-        aria-label={label}
-        disabled={only.disabled}
-        onClick={only.onClick}
-        className={cn(btnClass, only.destructive && 'hover:text-[var(--k-danger-fg)]')}
-      >
-        {only.icon ?? <UiIcon slot="more-horizontal" className="h-3.5 w-3.5" />}
-      </button>
-    );
-  }
-
-  return (
-    <DropdownMenu items={actions} align="end" className={cn(btnClass, 'cursor-pointer')}>
-      <span className="sr-only">{tt.rowActions}</span>
-      <UiIcon slot="more-horizontal" className="h-3.5 w-3.5" />
-    </DropdownMenu>
-  );
-};
-
-export function Table<T>({
+export function Table<T>(rawProps: TableProps<T>) {
+  const {
   columns,
   data = [],
   onRowClick,
@@ -435,10 +88,15 @@ export function Table<T>({
   onDensityChange,
   toolbar,
   bulkActions,
-}: TableProps<T>) {
+  cellClassName,
+  headerClassName,
+  renderHeader,
+  renderEmpty,
+  } = useComponentDefaults('Table', rawProps);
   const { messages: m, format } = useI18n();
   const t = m.table;
-  const emptyMessage = emptyMessageProp ?? t.empty;
+  const emptyMessageDefault = emptyMessageProp ?? t.empty;
+  const emptyMessage = renderEmpty ? renderEmpty(emptyMessageDefault) : emptyMessageDefault;
   const refreshingLabel = refreshingLabelProp ?? t.refreshing;
   const retryLabel = retryLabelProp ?? m.common.retry;
   const loadingLabel = loadingLabelProp ?? t.syncing;
@@ -503,80 +161,14 @@ export function Table<T>({
   const pinnedRight = visibleBase.filter((c, i) => pinOf(c, i) === 'right');
   const visibleColumns = [...pinnedLeft, ...visibleBase.filter((c, i) => !pinOf(c, i)), ...pinnedRight];
 
-  // ── Filtros y búsqueda — controlados o internos ───────────────────────
-  const [internalFilters, setInternalFilters] = React.useState<TableFilters>(defaultFilters ?? {});
-  const filters = filtersProp ?? internalFilters;
-  const setFilters = (next: TableFilters) => {
-    if (filtersProp === undefined) setInternalFilters(next);
-    onFiltersChange?.(next);
-    if (pagination) setPage(1);
-  };
-  const setFilter = (key: string, value: TableFilterValue | undefined) => {
-    const next = { ...filters };
-    if (value === undefined || isEmptyFilter(value)) delete next[key];
-    else next[key] = value;
-    setFilters(next);
-  };
-  const [internalSearch, setInternalSearch] = React.useState('');
-  const search = searchProp ?? internalSearch;
-  const setSearch = (query: string) => {
-    if (searchProp === undefined) setInternalSearch(query);
-    onSearchChange?.(query);
-    if (pagination) setPage(1);
-  };
-  /** Valor de una celda para filtrar, buscar y agregar. */
-  const valueOf = (col: TableColumn<T>, item: T): unknown => {
-    if (col.filterAccessor) return col.filterAccessor(item);
-    if (col.sortAccessor) return col.sortAccessor(item);
-    if (typeof col.accessor === 'function') return col.accessor(item, 0);
-    if (col.accessor) return (item as any)[col.accessor];
-    return null;
-  };
-  const filterableColumns = columns.filter((c) => c.filter);
-  const activeFilterColumns = filterableColumns.filter((c) => !isEmptyFilter(filters[colKeyOf(c)]));
-  const filteredData = React.useMemo(() => {
-    if (filterMode === 'server' || (activeFilterColumns.length === 0 && !search.trim())) return data;
-    return data.filter((item) =>
-      activeFilterColumns.every((c) => matchesFilter(valueOf(c, item), c.filter!, filters[colKeyOf(c)])) &&
-      matchesSearch(columns.map((c) => valueOf(c, item)), search),
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, columns, filters, search, filterMode]);
-
-  // ── Ordenación — cíclico: null → asc → desc → null (clave estable) ────
-  const [internalSort, setInternalSort] = React.useState<TableSort | null>(defaultSort);
-  const sort = controlledSort === undefined ? internalSort : controlledSort;
-
-  const changeSort = (next: TableSort | null) => {
-    if (controlledSort === undefined) setInternalSort(next);
-    onSortChange?.(next);
-    if (pagination) setPage(1);
-  };
-  const toggleSort = (colKey: string) => {
-    changeSort(!sort || sort.colKey !== colKey
-      ? { colKey, dir: 'asc' }
-      : sort.dir === 'asc' ? { colKey, dir: 'desc' } : null);
-  };
-
-  const sortedData = React.useMemo(() => {
-    if (!sort || sortMode === 'server') return filteredData;
-    const col = columns.find((c) => colKeyOf(c) === sort.colKey);
-    if (!col) return filteredData;
-    const getVal = (item: T): any => {
-      if (col.sortAccessor) return col.sortAccessor(item);
-      if (typeof col.accessor === 'function') return col.accessor(item, 0);
-      if (col.accessor) return (item as any)[col.accessor];
-      return null;
-    };
-    const direction = sort.dir === 'desc' ? -1 : 1;
-    // Invertir el comparador conserva el orden de las filas con el mismo valor.
-    return [...filteredData].sort((a, b) => direction * compareValues(getVal(a), getVal(b)));
-  }, [filteredData, sort, columns, sortMode]);
-
-  // ── Paginación — cliente (total omitido) o servidor (total presente) ──
-  const [internalPage, setInternalPage] = React.useState(1);
-  const [internalPageSize, setInternalPageSize] = React.useState(pagination?.pageSize ?? 25);
-  const serverMode = pagination?.total !== undefined;
+  const {
+    filters, setFilters, setFilter, search, setSearch, valueOf, filterableColumns, activeFilterColumns, filteredData,
+    sort, changeSort, toggleSort, sortedData,
+    serverMode, pageSize, totalRecords, page, setPage, setPageSize, pagedData,
+  } = useTableData({
+    columns, data, pagination, infinite, filters: filtersProp, defaultFilters, onFiltersChange, filterMode,
+    search: searchProp, onSearchChange, sort: controlledSort, defaultSort, onSortChange, sortMode,
+  });
 
   const { sentinelRef } = useInfiniteScroll({
     hasMore: infinite?.hasMore ?? false,
@@ -602,32 +194,6 @@ export function Table<T>({
       )}
     </>
   );
-  const pageSize = pagination
-    ? pagination.onPageSizeChange
-      ? pagination.pageSize
-      : internalPageSize
-    : sortedData.length || 1;
-  const totalRecords = serverMode ? pagination!.total! : sortedData.length;
-  const totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
-  const rawPage = pagination?.page ?? internalPage;
-  const page = Math.max(1, Math.min(rawPage, totalPages));
-
-  const setPage = (next: number) => {
-    if (pagination?.page === undefined) setInternalPage(next);
-    pagination?.onPageChange?.(next);
-  };
-  const setPageSize = (size: number) => {
-    if (!pagination?.onPageSizeChange) setInternalPageSize(size);
-    pagination?.onPageSizeChange?.(size);
-    setPage(1);
-  };
-
-  const pagedData = React.useMemo(() => {
-    // Con carga incremental no se recorta: las filas se van acumulando.
-    if (!pagination || serverMode || infinite) return sortedData;
-    return sortedData.slice((page - 1) * pageSize, page * pageSize);
-  }, [sortedData, pagination, serverMode, page, pageSize, infinite]);
-
   // ── Selección — controlada o interna ──────────────────────────────────
   const [internalSelected, setInternalSelected] = React.useState<Set<string | number>>(
     () => new Set(),
@@ -691,90 +257,21 @@ export function Table<T>({
   // ── Acciones por fila (menú contextual) ───────────────────────────────
   const { contextMenu, openContextMenu } = useContextMenu();
 
-  // ── Resize de columnas ─────────────────────────────────────────────────
-  const [colWidths, setColWidths] = React.useState<Record<string, number>>({});
-  const resizingRef = React.useRef(false);
-  const stopResize = React.useRef<() => void>(() => undefined);
-  React.useEffect(() => () => stopResize.current(), []);
-
-  const startResize = (event: React.PointerEvent, colKey: string) => {
-    if (!isPrimaryPointer(event)) return;
-    event.preventDefault();
-    event.stopPropagation();
-    const th = (event.target as HTMLElement).closest('th');
-    if (!th) return;
-    const startX = event.clientX;
-    const startWidth = th.offsetWidth;
-    resizingRef.current = true;
-    stopResize.current = startPointerDrag(event, {
-      onMove: (e) => {
-        const width = Math.max(60, startWidth + (e.clientX - startX));
-        setColWidths((prev) => ({ ...prev, [colKey]: width }));
-      },
-      // Evitar que el click posterior dispare la ordenación.
-      onEnd: () => { setTimeout(() => { resizingRef.current = false; }, 0); },
-    });
-  };
-
-  // ── Columnas fijas: offsets medidos sobre la cabecera ────────────────
-  const headerRowRef = React.useRef<HTMLTableRowElement>(null);
-  const scrollerRef = React.useRef<HTMLDivElement>(null);
-  const [stickyLefts, setStickyLefts] = React.useState<number[]>([]);
-  const [stickyRights, setStickyRights] = React.useState<Record<number, number>>({});
-  const [overflow, setOverflow] = React.useState({ left: false, right: false });
   const hasExpand = !!renderExpanded;
   const hasTrailing = !!rowActions || showColumnToggle;
   const leadingCount = (selectable ? 1 : 0) + (hasExpand ? 1 : 0);
   const totalCols =
     visibleColumns.length + (selectable ? 1 : 0) + (hasExpand ? 1 : 0) + (hasTrailing ? 1 : 0);
-  // Fijas a la izquierda: las utilitarias iniciales y las columnas fijadas. A la derecha: las fijadas y la de acciones.
-  const stickyCount = pinnedLeft.length > 0 ? leadingCount + pinnedLeft.length : 0;
-  const rightCount = pinnedRight.length > 0 ? pinnedRight.length + (hasTrailing ? 1 : 0) : 0;
-
-  React.useLayoutEffect(() => {
-    if ((!stickyCount && !rightCount) || !headerRowRef.current) return;
-    const cells = Array.from(headerRowRef.current.children) as HTMLElement[];
-    const lefts: number[] = [];
-    let acc = 0;
-    for (let i = 0; i < stickyCount && i < cells.length; i++) { lefts.push(acc); acc += cells[i].offsetWidth; }
-    const rights: Record<number, number> = {};
-    acc = 0;
-    for (let i = cells.length - 1; i >= cells.length - rightCount && i >= 0; i--) { rights[i] = acc; acc += cells[i].offsetWidth; }
-    setStickyLefts(lefts);
-    setStickyRights(rights);
-  }, [stickyCount, rightCount, visibleColumns.length, densidad, colWidths, data]);
-
-  // La sombra del borde de las fijas solo aparece cuando hay contenido pasando por debajo.
-  const measureOverflow = React.useCallback(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const left = el.scrollLeft > 1;
-    const right = el.scrollLeft < el.scrollWidth - el.clientWidth - 1;
-    setOverflow((o) => (o.left === left && o.right === right ? o : { left, right }));
-  }, []);
-  // Se mide al cambiar el tamaño del contenedor o de la tabla, y cuando cambian columnas, datos o densidad; no en cada render.
-  useResizeObserver(() => [scrollerRef.current, scrollerRef.current?.firstElementChild], measureOverflow);
-  React.useLayoutEffect(measureOverflow, [measureOverflow, visibleColumns.length, densidad, colWidths, data]);
-
-  const stickyCellStyle = (cellIdx: number): React.CSSProperties | undefined => {
-    if (cellIdx < stickyCount) return { position: 'sticky', left: stickyLefts[cellIdx] ?? 0, zIndex: 2 };
-    if (rightCount && cellIdx >= totalCols - rightCount) return { position: 'sticky', right: stickyRights[cellIdx] ?? 0, zIndex: 2 };
-    return undefined;
-  };
-
-  const stickyCellClass = (cellIdx: number, isRowSelected: boolean, striped = false): string | false => {
-    const left = cellIdx < stickyCount;
-    const right = rightCount > 0 && cellIdx >= totalCols - rightCount;
-    if (!left && !right) return false;
-    return cn(
-      isRowSelected
-        ? 'bg-[color-mix(in_srgb,var(--color-accent)_8%,var(--bg-card))]'
-        : striped ? 'bg-[var(--bg-muted,#f8fafc)] group-hover:bg-[var(--bg-hover)]'
-        : 'bg-[var(--bg-card,#ffffff)] group-hover:bg-[var(--bg-hover)]',
-      left && cellIdx === stickyCount - 1 && 'k-table-edge-left',
-      right && cellIdx === totalCols - rightCount && 'k-table-edge-right',
-    );
-  };
+  const { colWidths, resizingRef, startResize, headerRowRef, scrollerRef, overflow, measureOverflow, stickyCellStyle, stickyCellClass } = useColumnLayout({
+    columnCount: visibleColumns.length,
+    pinnedStart: pinnedLeft.length,
+    pinnedEnd: pinnedRight.length,
+    leadingCount,
+    hasTrailing,
+    totalCols,
+    density: densidad,
+    data,
+  });
 
   const narrow = useIsNarrow(cardsBreakpoint);
   const asCards = responsive !== 'scroll' && narrow;
@@ -806,58 +303,22 @@ export function Table<T>({
     ? format(m.common.ofTotal, { current: filteredData.length, total: data.length })
     : null;
   const toolbarEl = (cards: boolean) => showToolbar && (
-    <div className="k-table-toolbar" data-cards={cards || undefined}>
-      <div className="k-table-toolbar-row">
-        {searchable && (
-          <div className="k-table-search">
-            <SearchInput
-              value={search}
-              onChange={setSearch}
-              placeholder={searchConfig.placeholder ?? m.common.searchPlaceholder}
-              aria-label={t.search}
-              clearable
-              shortcut={false}
-              trailing={cards && filteredInfo ? <span className="k-table-results" aria-live="polite">{filteredInfo}</span> : undefined}
-            />
-          </div>
-        )}
-        <div className="k-table-toolbar-end">
-          {filteredInfo && !cards && <span className="k-table-results" aria-live="polite">{filteredInfo}</span>}
-          {/* En tarjetas la densidad no cambia nada: no se ofrece. */}
-          {densityToggle && !cards && (
-            <DropdownMenu
-              align="end"
-              className="k-table-tool"
-              items={(['compact', 'normal', 'comfy'] as const).map((d) => ({
-                label: t.density[d],
-                icon: densidad === d ? <UiIcon slot="check" size={14} /> : <span className="inline-block w-[14px]" />,
-                onClick: () => changeDensity(d),
-              }))}
-            >
-              <UiIcon slot="sliders-horizontal" size={14} />
-              <span>{t.density[densidad]}</span>
-            </DropdownMenu>
-          )}
-          {toolbar}
-        </div>
-      </div>
-      {(activeFilterColumns.length > 0 || (cards && filteredInfo && !searchable)) && (
-        <div className="k-table-chips" role="list" aria-label={t.activeFilters}>
-          {activeFilterColumns.map((col) => (
-            <span key={colKeyOf(col)} role="listitem" className="k-table-chip">
-              <span className="k-table-chip-key">{col.header}:</span>
-              <span className="k-table-chip-value">{describeFilter(col.filter!, filters[colKeyOf(col)], t)}</span>
-              <button type="button" aria-label={format(t.removeFilter, { column: String(col.header) })} onClick={() => setFilter(colKeyOf(col), undefined)}>
-                <UiIcon slot="x" size={12} />
-              </button>
-            </span>
-          ))}
-          {activeFilterColumns.length > 0 && <button type="button" className="k-table-clear" onClick={() => setFilters({})}>{t.clearFilters}</button>}
-          {/* En tarjetas el recuento va aquí y no en una fila suelta. */}
-          {cards && filteredInfo && !searchable && <span className="k-table-results k-table-results-end" aria-live="polite">{filteredInfo}</span>}
-        </div>
-      )}
-    </div>
+    <TableToolbar
+      cards={cards}
+      searchable={Boolean(searchable)}
+      search={search}
+      onSearchChange={setSearch}
+      searchPlaceholder={searchConfig.placeholder}
+      filteredInfo={filteredInfo}
+      densityToggle={densityToggle}
+      density={densidad}
+      onDensityChange={changeDensity}
+      toolbar={toolbar}
+      activeFilterColumns={activeFilterColumns}
+      filters={filters}
+      onFilterChange={setFilter}
+      onClearFilters={() => setFilters({})}
+    />
   );
 
   // ── Acciones en lote ──────────────────────────────────────────────────
@@ -896,233 +357,59 @@ export function Table<T>({
   };
 
   if (asCards) {
-    const byRole = (role: TableColumn<T>['card']) => visibleColumns.filter((c) => c.card === role);
-    const titleCol = byRole('title')[0] ?? visibleColumns.find((c) => c.primary) ?? visibleColumns[0];
-    const subtitleCols = byRole('subtitle');
-    const statusCols = byRole('status');
-    const metaCols = byRole('meta');
-    const bodyCols = visibleColumns.filter(
-      (c) =>
-        c !== titleCol &&
-        !subtitleCols.includes(c) &&
-        !statusCols.includes(c) &&
-        !metaCols.includes(c) &&
-        c.card !== 'hidden',
-    );
-
-    const render = (col: TableColumn<T>, item: T, idx: number): React.ReactNode => {
-      if (col.cell) return col.cell(item, idx);
-      if (typeof col.accessor === 'function') return col.accessor(item, idx);
-      if (col.accessor) return item[col.accessor] as React.ReactNode;
-      return null;
-    };
-
     return (
-      <div
-        aria-label={ariaLabel}
-        role={ariaLabel ? 'region' : undefined}
-        data-k-mobile="TableCards" className={cn('k-table-cards w-full flex flex-col gap-2', className)}
-      >
-        {feedback}
-        {toolbarEl(true)}
-        {/* Una sola tira que se desliza en horizontal: en un móvil, cada control en su propia fila se comía la pantalla. */}
-        <div className="k-table-strip" role="toolbar" aria-label={t.options}>
-          {selectable && (
-            <span className="k-table-strip-check">
-              <Checkbox
-                checked={allSelected}
-                state={headerState}
-                disabled={isLoading || pageKeys.length === 0}
-                onChange={toggleAll}
-                label={t.selectPage}
-                size="sm"
-              />
-            </span>
-          )}
-          {columns.some((column) => column.sortable) && (
-              <DropdownMenu className="k-table-filter-pill" items={[
-                { label: t.sortOriginal, onClick: () => changeSort(null) },
-                ...columns.filter((column) => column.sortable).flatMap((column) =>
-                  (['asc', 'desc'] as const).map((dir) => ({
-                    label: format(dir === 'asc' ? t.sortAsc : t.sortDesc, { column: String(column.header) }),
-                    onClick: () => changeSort({ colKey: colKeyOf(column), dir }),
-                  })),
-                ),
-              ]}>
-                <UiIcon slot="chevrons-up-down" size={14} />
-                {sort ? `${columns.find((column) => colKeyOf(column) === sort.colKey)?.header ?? t.sortBy} ${sort.dir === 'asc' ? '↑' : '↓'}` : <>{t.sort}<span className="sr-only">{t.sortRecords}</span></>}
-              </DropdownMenu>
-          )}
-          {filterableColumns.map((col) => (
-            <ColumnFilter key={colKeyOf(col)} column={col} value={filters[colKeyOf(col)]} onChange={(v) => setFilter(colKeyOf(col), v)} labelled />
-          ))}
-          {showColumnToggle && <ColumnToggle entries={toggleEntries} onToggle={(key) => setVisibility({ ...visibility, [key]: visibility[key] === false })} />}
-        </div>
-        <div aria-busy={isLoading || isRefreshing || undefined} className="flex flex-col gap-2">
-          {isLoading ? (
-            Array.from({ length: skeletonRowCount }).map((_, i) => (
-              <div
-                key={i}
-                aria-hidden="true"
-                className="rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-3 flex flex-col gap-2"
-              >
-                <Skeleton height={14} width="55%" />
-                <Skeleton height={11} width="35%" />
-              </div>
-            ))
-          ) : blockingError ? null : pagedData.length === 0 ? (
-            <div className="rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] py-10 text-center">
-              {typeof emptyMessage === 'string' ? (
-                <span className="text-[length:calc(10px*var(--k-text-scale,1))] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">{emptyMessage}</span>
-              ) : emptyMessage}
-            </div>
-          ) : (
-            pagedData.map((item, rowIdx) => {
-              const key = getKey(item, rowIdx);
-              const isRowSelected = selected.has(key);
-              const actions = rowActions ? rowActions(item) : null;
-              return (
-                <div
-                  key={key}
-                  onClick={() => onRowClick?.(item)}
-                  tabIndex={onRowClick ? 0 : undefined}
-                  onKeyDown={(event) => activateRow(event, item)}
-                  onContextMenu={
-                    actions && actions.length > 0 ? (e) => openContextMenu(e, actions) : undefined
-                  }
-                  style={{ animation: `k-row-in calc(0.35s * var(--k-motion, 1)) ease-out calc(${Math.min(rowIdx * 20, 200)}ms * var(--k-motion, 1)) both` }}
-                  className={cn(
-                    'rounded-[var(--k-radius-sm,4px)] border bg-[var(--bg-card,#ffffff)] p-3 flex flex-col gap-2 transition-colors',
-                    isRowSelected ? 'border-accent bg-accent/5' : 'border-[var(--border-default,#e2e8f0)]',
-                    onRowClick && 'cursor-pointer active:bg-[var(--bg-hover,#f1f5f9)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
-                    rowClassName?.(item, rowIdx),
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-start gap-2 min-w-0">
-                      {selectable && (
-                        // La etiqueta amplía la zona táctil a 44 px sin agrandar la casilla: tocar alrededor también marca.
-                        <label onClick={(e) => e.stopPropagation()} className="k-table-card-check">
-                          <Checkbox
-                            checked={isRowSelected}
-                            disabled={isRowSelectable ? !isRowSelectable(item) : false}
-                            onChange={() => toggleRow(key)}
-                            size="sm"
-                            aria-label={format(t.selectRow, { row: rowIdx + 1 })}
-                          />
-                        </label>
-                      )}
-                      <div className="min-w-0">
-                        <div
-                          className={cn(
-                            'text-[var(--fg-default,#0a1628)] truncate',
-                            // La fuente monoespaciada es para códigos (columna `primary`); un nombre va en la del cuerpo.
-                            titleCol?.primary
-                              ? 'font-mono text-[length:calc(13px*var(--k-text-scale,1))] font-medium'
-                              : 'text-sm font-semibold',
-                          )}
-                        >
-                          {titleCol && render(titleCol, item, rowIdx)}
-                        </div>
-                        {subtitleCols.map((col) => (
-                          <div
-                            key={colKeyOf(col)}
-                            className="text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)] truncate"
-                          >
-                            {render(col, item, rowIdx)}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {statusCols.map((col) => (
-                        <React.Fragment key={colKeyOf(col)}>{render(col, item, rowIdx)}</React.Fragment>
-                      ))}
-                      <span onClick={(e) => e.stopPropagation()}>
-                        <RowActionsCell actions={actions} alwaysVisible />
-                      </span>
-                    </div>
-                  </div>
-
-                  {bodyCols.length > 0 && (
-                    <dl className="grid grid-cols-2 gap-x-3 gap-y-1">
-                      {bodyCols.map((col) => (
-                        <div key={colKeyOf(col)} className="flex flex-col min-w-0">
-                          <dt className="text-[length:calc(9px*var(--k-text-scale,1))] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
-                            {col.header}
-                          </dt>
-                          <dd
-                            className={cn(
-                              'text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-body,#2d3a4a)] truncate',
-                              col.align === 'right' && 'font-mono tabular-nums',
-                            )}
-                          >
-                            {render(col, item, rowIdx)}
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
-                  )}
-
-                  {metaCols.length > 0 && (
-                    <div className="flex items-center justify-end gap-3 pt-1 border-t border-[var(--border-subtle,#f1f5f9)] font-mono text-[length:calc(13px*var(--k-text-scale,1))] tabular-nums text-[var(--fg-default,#0a1628)]">
-                      {metaCols.map((col) => (
-                        <React.Fragment key={colKeyOf(col)}>{render(col, item, rowIdx)}</React.Fragment>
-                      ))}
-                    </div>
-                  )}
-
-                  {renderExpanded && (
-                    <button
-                      type="button"
-                      aria-expanded={expanded.has(key)}
-                      onClick={(event) => { event.stopPropagation(); toggleExpanded(key); }}
-                      className="self-start text-[length:calc(12px*var(--k-text-scale,1))] text-accent focus-visible:ring-1 focus-visible:ring-accent"
-                    >
-                      {expanded.has(key) ? t.hideDetail : t.showDetail}
-                    </button>
-                  )}
-                  {renderExpanded && expanded.has(key) && (
-                    <div className="pt-2 border-t border-[var(--border-subtle,#f1f5f9)]">
-                      {renderExpanded(item)}
-                    </div>
-                  )}
-                </div>
-              );
-            })
-          )}
-
-        </div>
-        {infiniteFooter}
-
-        {hasSummary && (
-          <section aria-label={t.summary} className="rounded-[var(--k-radius-sm)] border border-[var(--border-default)] bg-[var(--bg-muted)] p-4">
-            <p className="mb-3 text-[length:calc(12px*var(--k-text-scale,1))] font-semibold text-[var(--fg-default)]">{summaryLabel}</p>
-            <dl className="space-y-2 text-[length:calc(12px*var(--k-text-scale,1))]">
-              {visibleColumns.map((col, index) => summaryCells[index] != null && (
-                <div key={colKeyOf(col)} className="flex flex-wrap justify-between gap-3">
-                  <dt className="text-[var(--fg-muted)]">{col.header}</dt>
-                  <dd className="font-mono text-[var(--fg-default)]">{summaryCells[index]}</dd>
-                </div>
-              ))}
-            </dl>
-          </section>
-        )}
-
-        {pagination && !infinite && !isLoading && !blockingError && (
-          <Pagination
-            page={page}
-            pageSize={pageSize}
-            total={totalRecords}
-            onPageChange={setPage}
-            pageSizeOptions={pagination.pageSizeOptions}
-            onPageSizeChange={setPageSize}
-            className="px-1 py-2"
-          />
-        )}
-        {bulkBar}
-        {contextMenu}
-      </div>
+      <TableCards
+        columns={columns}
+        visibleColumns={visibleColumns}
+        ariaLabel={ariaLabel}
+        className={className}
+        feedback={feedback}
+        toolbar={toolbarEl(true)}
+        selectable={selectable}
+        isRowSelectable={isRowSelectable}
+        allSelected={allSelected}
+        headerState={headerState}
+        isLoading={Boolean(isLoading)}
+        isRefreshing={isRefreshing}
+        blockingError={blockingError}
+        pageKeyCount={pageKeys.length}
+        onToggleAll={toggleAll}
+        sort={sort}
+        onSortChange={changeSort}
+        filterableColumns={filterableColumns}
+        filters={filters}
+        onFilterChange={setFilter}
+        showColumnToggle={showColumnToggle}
+        toggleEntries={toggleEntries}
+        onToggleColumn={(key) => setVisibility({ ...visibility, [key]: visibility[key] === false })}
+        skeletonRowCount={skeletonRowCount}
+        pagedData={pagedData}
+        emptyMessage={emptyMessage}
+        getKey={getKey}
+        selected={selected}
+        onToggleRow={toggleRow}
+        rowActions={rowActions}
+        onRowClick={onRowClick}
+        onRowKeyDown={activateRow}
+        onOpenContextMenu={openContextMenu}
+        rowClassName={rowClassName}
+        expanded={expanded}
+        onToggleExpanded={toggleExpanded}
+        renderExpanded={renderExpanded}
+        infiniteFooter={infiniteFooter}
+        hasSummary={hasSummary}
+        summaryLabel={summaryLabel}
+        summaryCells={summaryCells}
+        pagination={pagination}
+        infinite={infinite}
+        page={page}
+        pageSize={pageSize}
+        totalRecords={totalRecords}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        bulkBar={bulkBar}
+        contextMenu={contextMenu}
+      />
     );
   }
 
@@ -1142,14 +429,14 @@ export function Table<T>({
           className={cn(
             // min-w para móvil: si la tabla tiene varias columnas no caben en
             // pantalla pequeña → scroll horizontal del wrapper (overflow-auto).
-            'w-full leading-tight text-left border-collapse font-sans min-w-[720px] sm:min-w-full',
+            'w-full leading-tight text-start border-collapse font-sans min-w-[720px] sm:min-w-full',
             cellText,
           )}
         >
           <thead className={cn(
             'bg-[var(--bg-card,#ffffff)] sticky top-0 z-[3] border-b border-[var(--border-default,#e2e8f0)]',
             headerVariant === 'muted' && 'bg-[var(--bg-muted,#f8fafc)] [&_th]:bg-[var(--bg-muted,#f8fafc)]',
-            variant === 'grid' && '[&_th+th]:border-l [&_th+th]:border-[var(--border-default,#e2e8f0)]',
+            variant === 'grid' && '[&_th+th]:border-s [&_th+th]:border-[var(--border-default,#e2e8f0)]',
           )}>
             <tr ref={headerRowRef}>
               {selectable && (
@@ -1202,13 +489,14 @@ export function Table<T>({
                       col.align === 'center'
                         ? 'text-center'
                         : col.align === 'right'
-                          ? 'text-right'
-                          : 'text-left',
+                          ? 'text-end'
+                          : 'text-start',
                       isSortable &&
                         'cursor-pointer hover:text-accent dark:hover:text-accent transition-colors',
                       isSorted && 'text-accent dark:text-accent',
                       stickyCellClass(cellIdx, false),
                       col.className,
+                      headerClassName?.(col),
                     )}
                   >
                     <HeaderContent
@@ -1220,7 +508,7 @@ export function Table<T>({
                         col.align === 'right' && (col.filter ? 'justify-end' : 'justify-end w-full'),
                       )}
                     >
-                      {col.header}
+                      {renderHeader ? renderHeader(col, col.header) : col.header}
                       {isSortable && (
                         <svg
                           className="shrink-0 opacity-60"
@@ -1249,14 +537,14 @@ export function Table<T>({
                       <span
                         onPointerDown={(e) => startResize(e, colKey)}
                         onClick={(e) => e.stopPropagation()}
-                        className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-accent transition-colors"
+                        className="absolute end-0 top-0 h-full w-1 cursor-col-resize hover:bg-accent transition-colors"
                       />
                     )}
                   </th>
                 );
               })}
               {hasTrailing && (
-                <th className={cn(cellPad, 'w-8 text-right', stickyCellClass(totalCols - 1, false))} style={stickyCellStyle(totalCols - 1)}>
+                <th className={cn(cellPad, 'w-8 text-end', stickyCellClass(totalCols - 1, false))} style={stickyCellStyle(totalCols - 1)}>
                   {showColumnToggle && (
                     <ColumnToggle
                       entries={toggleEntries}
@@ -1300,8 +588,8 @@ export function Table<T>({
                         col.align === 'center'
                           ? 'text-center'
                           : col.align === 'right'
-                            ? 'text-right'
-                            : 'text-left',
+                            ? 'text-end'
+                            : 'text-start',
                       )}
                     >
                       {/* El contenedor reproduce la caja de línea del texto
@@ -1395,7 +683,7 @@ export function Table<T>({
                         isRowSelected
                           ? 'k-table-row-selected'
                           : cn(striped && 'bg-[var(--bg-muted,#f8fafc)]', 'hover:bg-[var(--bg-hover)]'),
-                        variant === 'grid' && '[&_td+td]:border-l [&_td+td]:border-[var(--border-default,#e2e8f0)]',
+                        variant === 'grid' && '[&_td+td]:border-s [&_td+td]:border-[var(--border-default,#e2e8f0)]',
                         onRowClick && 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent',
                         rowClassName?.(item, rowIdx),
                       )}
@@ -1470,10 +758,11 @@ export function Table<T>({
                               col.align === 'center'
                                 ? 'text-center'
                                 : col.align === 'right'
-                                  ? 'text-right'
-                                  : 'text-left',
+                                  ? 'text-end'
+                                  : 'text-start',
                               stickyCellClass(cellIdx, isRowSelected, striped),
                               col.className,
+                              cellClassName?.(col, item, rowIdx),
                             )}
                           >
                             {content}
@@ -1481,7 +770,7 @@ export function Table<T>({
                         );
                       })}
                       {hasTrailing && (
-                        <td className={cn(cellPad, 'w-8 text-right', stickyCellClass(totalCols - 1, isRowSelected, striped))} style={stickyCellStyle(totalCols - 1)} onClick={(e) => e.stopPropagation()}>
+                        <td className={cn(cellPad, 'w-8 text-end', stickyCellClass(totalCols - 1, isRowSelected, striped))} style={stickyCellStyle(totalCols - 1)} onClick={(e) => e.stopPropagation()}>
                           <RowActionsCell actions={actions} />
                         </td>
                       )}
@@ -1530,8 +819,8 @@ export function Table<T>({
                         col.align === 'center'
                           ? 'text-center'
                           : col.align === 'right'
-                            ? 'text-right'
-                            : 'text-left',
+                            ? 'text-end'
+                            : 'text-start',
                       )}
                     >
                       {/* La primera celda lleva la etiqueta si no se ha dado contenido. */}
@@ -1573,113 +862,5 @@ export function Table<T>({
       {bulkBar}
       {contextMenu}
     </div>
-  );
-}
-
-
-/** Botón de filtro de una columna y su panel (texto, opciones, rango numérico o de fechas). */
-function ColumnFilter<T>({
-  column,
-  value,
-  onChange,
-  labelled = false,
-}: {
-  column: TableColumn<T>;
-  value: TableFilterValue | undefined;
-  onChange: (value: TableFilterValue | undefined) => void;
-  /** Con el nombre de la columna (barra de la vista de tarjetas). */
-  labelled?: boolean;
-}) {
-  const { messages: { table: tt, common }, format: fmt } = useI18n();
-  const [isOpen, setIsOpen] = React.useState(false);
-  const mobile = useIsMobile();
-  const filter = column.filter!;
-  const active = !isEmptyFilter(value);
-  const close = React.useCallback(() => setIsOpen(false), []);
-  const { anchorRef, popoverRef, style, ready, mounted, popoverProps } = usePopover<HTMLButtonElement>({
-    open: isOpen && !mobile,
-    onClose: close,
-    align: column.align === 'right' ? 'end' : 'start',
-    minWidth: filter.type === 'date-range' ? 280 : 220,
-    scrollStrategy: 'close',
-  });
-
-  const body = (() => {
-    switch (filter.type) {
-      case 'text':
-        return (
-          <Input
-            autoFocus
-            value={typeof value === 'string' ? value : ''}
-            placeholder={filter.placeholder ?? tt.filterContains}
-            aria-label={fmt(tt.filterColumn, { column: String(column.header) })}
-            onChange={(e) => onChange(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') close(); }}
-          />
-        );
-      case 'select': {
-        const marked = Array.isArray(value) ? value : [];
-        return (
-          <div className="k-table-filter-options" role="group" aria-label={fmt(tt.filterColumn, { column: String(column.header) })}>
-            {filter.options.map((option) => (
-              <Checkbox
-                key={option.value}
-                size="sm"
-                label={option.label}
-                checked={marked.includes(option.value)}
-                onChange={(checked) => onChange(checked ? [...marked, option.value] : marked.filter((v) => v !== option.value))}
-              />
-            ))}
-          </div>
-        );
-      }
-      case 'range': {
-        const r = (value && typeof value === 'object' && !Array.isArray(value) ? value : {}) as { min?: number | null; max?: number | null };
-        return (
-          <div className="k-table-filter-range">
-            <NumberInput label={tt.rangeFrom} value={r.min ?? null} min={filter.min} max={filter.max} step={filter.step} onChange={(min) => onChange({ ...r, min })} />
-            <NumberInput label={tt.rangeTo} value={r.max ?? null} min={filter.min} max={filter.max} step={filter.step} onChange={(max) => onChange({ ...r, max })} />
-          </div>
-        );
-      }
-      case 'date-range': {
-        const d = (value && typeof value === 'object' && !Array.isArray(value) ? value : {}) as { start?: string | null; end?: string | null };
-        return <DateRangePicker value={{ start: d.start ?? null, end: d.end ?? null }} onChange={(range) => onChange(range)} months={1} />;
-      }
-    }
-  })();
-
-  return (
-    <>
-      <button
-        ref={anchorRef}
-        type="button"
-        aria-label={fmt(active ? tt.filterByActive : tt.filterBy, { column: String(column.header) })}
-        aria-expanded={isOpen}
-        data-active={active || undefined}
-        className={labelled ? 'k-table-filter-pill' : 'k-table-filter-btn'}
-        onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
-      >
-        <UiIcon slot="filter" size={labelled ? 14 : 12} />
-        {labelled && <span>{column.header}</span>}
-      </button>
-      {(isOpen || mounted) &&
-        adaptivePortal(
-          <div
-            ref={popoverRef}
-            {...(mobile ? undefined : popoverProps)}
-            className={cn('k-table-filter-panel k-appear', !ready && !mobile && 'invisible')}
-            style={style}
-          >
-            <div className="k-table-filter-head">
-              <span>{column.header}</span>
-              {active && <button type="button" onClick={() => onChange(undefined)}>{common.clear}</button>}
-            </div>
-            {body}
-          </div>,
-          document.body,
-          { open: isOpen, onClose: close, title: fmt(tt.filterColumn, { column: String(column.header) }), presentation: mobile ? 'sheet' : 'anchored', anchorRef },
-        )}
-    </>
   );
 }

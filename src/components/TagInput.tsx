@@ -79,7 +79,7 @@ export const TagInput: React.FC<TagInputProps> = (rawProps) => {
     if (locked) return;
     onChange(value.filter((_, position) => position !== index));
     setInvalid(false);
-    setMessage(`Etiqueta «${value[index]}» eliminada.`);
+    setMessage(format(m.tagInput.removed, { tag: value[index] }));
     inputRef.current?.focus();
   };
   return (
@@ -182,7 +182,7 @@ export const TagInput: React.FC<TagInputProps> = (rawProps) => {
       <p id={`${id}-hint`} className="mt-1.5 text-[length:calc(11px*var(--k-text-scale,1))] text-[var(--fg-muted)]">
         {helperText ?? m.tagInput.help}
         {maxTags !== undefined && (
-          <span className="ml-2">
+          <span className="ms-2">
             {value.length}/{maxTags}
           </span>
         )}

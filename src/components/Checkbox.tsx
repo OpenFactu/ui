@@ -87,7 +87,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
           <span className="block text-[length:calc(12px*var(--k-text-scale,1))] font-medium text-[var(--fg-body,#2d3a4a)]">
             {label}
             {rest.required && (
-              <span className="ml-0.5 text-[var(--k-danger-fg)]" aria-hidden="true">
+              <span className="ms-0.5 text-[var(--k-danger-fg)]" aria-hidden="true">
                 *
               </span>
             )}

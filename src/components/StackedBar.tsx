@@ -79,9 +79,9 @@ export const StackedBar: React.FC<StackedBarProps> = ({
                 width: `${pct}%`,
                 background: segment.color ?? DEFAULT_COLORS[i % DEFAULT_COLORS.length],
                 // Separador entre tramos, del color de la superficie.
-                marginLeft: i === 0 ? undefined : 2,
+                marginInlineStart: i === 0 ? undefined : 2,
               }}
-              className="h-full shrink-0 first:rounded-l-full last:rounded-r-full"
+              className="h-full shrink-0 first:rounded-s-full last:rounded-e-full"
             />
           );
         })}

@@ -157,13 +157,13 @@ export const Quote: React.FC<QuoteProps> = ({ author, source, variant = 'default
   return (
   <figure ref={ref} data-align={align} data-state={seen ? 'open' : 'closed'} className="k-quote-figure m-0">
     <blockquote
-      className={cn(variant === 'pull' ? 'k-quote-pull' : variant === 'card' ? 'k-quote-card' : 'm-0 border-l-[3px] border-[var(--color-accent,#0d9488)] pl-4 text-[length:calc(18px*var(--k-text-scale,1))] leading-[1.55] italic text-[var(--fg-default,#0a1628)] [text-wrap:pretty]', className)}
+      className={cn(variant === 'pull' ? 'k-quote-pull' : variant === 'card' ? 'k-quote-card' : 'm-0 border-s-[3px] border-[var(--color-accent,#0d9488)] ps-4 text-[length:calc(18px*var(--k-text-scale,1))] leading-[1.55] italic text-[var(--fg-default,#0a1628)] [text-wrap:pretty]', className)}
       {...rest}
     >
       {children}
     </blockquote>
     {(author || source) && (
-      <figcaption className={cn('mt-2', variant === 'default' && 'pl-4', 'text-[length:calc(13px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)]')}>
+      <figcaption className={cn('mt-2', variant === 'default' && 'ps-4', 'text-[length:calc(13px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)]')}>
         {author && <strong className="font-semibold text-[var(--fg-body,#2d3a4a)]">{author}</strong>}
         {author && source && ' · '}
         {source}

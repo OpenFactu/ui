@@ -93,6 +93,7 @@ export const Typewriter: React.FC<TypewriterProps> = ({
     <Component
       ref={ref as React.Ref<never>}
       data-done={done || undefined}
+      role="text"
       aria-label={lines.join('. ')}
       className={cn(cursor && 'k-caret', className)}
       {...rest}

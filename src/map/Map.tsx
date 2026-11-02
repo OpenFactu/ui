@@ -261,7 +261,7 @@ export const TileMap = React.forwardRef<TileMapHandle, TileMapProps>(function Ti
 
   const locate = () => {
     if (locating) return;
-    if (typeof navigator === 'undefined' || !navigator.geolocation) { setLocateError('Este navegador no puede dar tu ubicación'); return; }
+    if (typeof navigator === 'undefined' || !navigator.geolocation) { setLocateError(mt.locateUnsupported); return; }
     setLocating(true);
     setLocateError(null);
     navigator.geolocation.getCurrentPosition(

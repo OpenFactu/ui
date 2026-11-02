@@ -26,3 +26,14 @@ export function rovingNext(
 /** Índices de las opciones activas de una lista. */
 export const enabledIndices = <T extends { disabled?: boolean }>(items: readonly T[], allDisabled = false): number[] =>
   allDisabled ? [] : items.map((item, i) => (item.disabled ? -1 : i)).filter((i) => i >= 0);
+
+/**
+ * La tecla según el sentido del elemento: de derecha a izquierda, → va hacia atrás. Para lo que recorre una lista o una rejilla
+ * que se refleja. Lo que mantiene su propio eje (un deslizador) sigue leyendo `event.key`.
+ */
+export function logicalKey(event: { key: string; currentTarget: EventTarget | null }): string {
+  if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return event.key;
+  const el = event.currentTarget;
+  if (!(el instanceof Element) || getComputedStyle(el).direction !== 'rtl') return event.key;
+  return event.key === 'ArrowLeft' ? 'ArrowRight' : 'ArrowLeft';
+}

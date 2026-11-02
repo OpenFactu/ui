@@ -24,7 +24,7 @@ export interface ControlFieldProps {
 /** Etiqueta, control y mensaje con el mismo aspecto y enlace accesible que `Input`. Interno. */
 export const ControlField: React.FC<ControlFieldProps> = ({ id, label, helperText, error, required, labelMode = 'label', labelClassName, mobileName, className, children }) => {
   const labelClass = cn('text-[length:calc(12px*var(--k-text-scale,1))] font-medium text-[var(--fg-body,#2d3a4a)]', labelClassName);
-  const mark = required && <span className="text-[var(--k-danger-fg)] ml-0.5" aria-hidden="true">*</span>;
+  const mark = required && <span className="text-[var(--k-danger-fg)] ms-0.5" aria-hidden="true">*</span>;
   return (
     <div data-k-mobile={mobileName} className={cn('flex flex-col gap-1.5 w-full', className)}>
       {label && (labelMode === 'label'

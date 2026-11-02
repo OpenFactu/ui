@@ -16,7 +16,7 @@ export const Variantes: Story = () => {
       <Switch checked={b} onChange={setB} label="Tamaño pequeño" size="sm" />
       <Switch checked onChange={() => {}} label="Deshabilitado activo" disabled />
       <Switch checked={false} onChange={() => {}} label="Deshabilitado inactivo" disabled />
-      <Switch checked={a} onChange={setA} />
+      <Switch checked={a} onChange={setA} aria-label="Sin etiqueta visible" />
     </div>
   );
 };

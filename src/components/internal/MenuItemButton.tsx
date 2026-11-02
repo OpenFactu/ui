@@ -69,7 +69,7 @@ export const MenuItemButton: React.FC<MenuItemButtonProps> = ({
         item.onClick?.();
       }}
       className={cn(
-        'w-full flex items-center gap-2 px-3 py-1.5 text-[length:calc(13px*var(--k-text-scale,1))] text-left rounded-[var(--k-radius-xs,2px)] transition-colors focus-visible:outline-none',
+        'w-full flex items-center gap-2 px-3 py-1.5 text-[length:calc(13px*var(--k-text-scale,1))] text-start rounded-[var(--k-radius-xs,2px)] transition-colors focus-visible:outline-none',
         item.destructive
           ? 'text-[var(--k-danger-fg)] hover:bg-[var(--k-danger-bg)]'
           : 'text-[var(--fg-body,#2d3a4a)] hover:bg-[var(--bg-hover)]',

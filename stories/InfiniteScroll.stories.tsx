@@ -114,6 +114,9 @@ export const HookSuelto: Story = () => {
       </p>
       <div
         ref={contenedor}
+        tabIndex={0}
+        role="region"
+        aria-label="Lista de resultados"
         className="h-64 overflow-y-auto rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] p-2"
       >
         {filas.map((f) => (

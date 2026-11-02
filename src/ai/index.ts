@@ -14,6 +14,7 @@ export * from './AIToolCall';
 export * from './toolViews';
 export * from './AIQuestion';
 export * from './AISelectionAction';
+export * from './AIActivityPanel';
 export * from './AIArtifactPanel';
 export * from './AIVoice';
 export * from './registry';

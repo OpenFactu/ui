@@ -1,3 +1,5 @@
+import { useComponentDefaults } from '../context/ComponentDefaults';
+import { resolveItemClass, type ItemClassName, type ItemRenderState } from './internal/optionStyle';
 import { DEFAULT_LOCALE } from '../internal/intl';
 import * as React from 'react';
 import { cn } from '../utils';
@@ -25,6 +27,12 @@ export interface TimelineEvent {
 }
 
 export interface TimelineProps {
+  /** Pinta el cuerpo de cada acontecimiento. Recibe el de serie en `content` y la hora ya formateada en `when`. */
+  renderItem?: (event: TimelineEvent, state: ItemRenderState & { when: string }) => React.ReactNode;
+  /** Pinta el punto o el icono de cada acontecimiento. Recibe el de serie. */
+  renderMarker?: (event: TimelineEvent, defaults: React.ReactNode) => React.ReactNode;
+  /** Clases de cada acontecimiento. También como función. */
+  itemClassName?: ItemClassName<TimelineEvent>;
   events: TimelineEvent[];
   /**
    * 'detallado' (default) agrupa por día y deja respirar; 'compacto' es una
@@ -108,7 +116,8 @@ interface Fila {
  * <Timeline events={historial} />
  * ```
  */
-export const Timeline: React.FC<TimelineProps> = ({
+export const Timeline: React.FC<TimelineProps> = (rawProps) => {
+  const {
   events,
   variant = 'detallado',
   groupByDay,
@@ -117,7 +126,10 @@ export const Timeline: React.FC<TimelineProps> = ({
   emptyMessage: emptyMessageProp,
   className,
   'aria-label': ariaLabelProp,
-}) => {
+  renderItem,
+  renderMarker,
+  itemClassName,
+} = useComponentDefaults('Timeline', rawProps);
   const { messages: m } = useI18n();
   const emptyMessage = emptyMessageProp ?? m.timeline.empty;
   const ariaLabel = ariaLabelProp ?? m.timeline.label;
@@ -184,11 +196,7 @@ export const Timeline: React.FC<TimelineProps> = ({
         const ultimo = !filas.slice(i + 1).some((f) => f.kind === 'evento');
         const cuando = relative ? fechaRelativa(e._fecha, ahora, m.dates) : hhmm(e._fecha);
 
-        return (
-          <li key={fila.key} data-evento={e.id} className="relative flex gap-3">
-            {/* Carril: punto o icono, y la línea que baja. */}
-            <div className="flex shrink-0 flex-col items-center">
-              {e.icon ? (
+        const marcaDeSerie = e.icon ? (
                 <span
                   className={cn(
                     'flex items-center justify-center rounded-full border',
@@ -206,22 +214,15 @@ export const Timeline: React.FC<TimelineProps> = ({
                     TONO_PUNTO[tono],
                   )}
                 />
-              )}
-              {!ultimo && (
-                <span
-                  aria-hidden="true"
-                  className="mt-1 w-px flex-1 bg-[var(--border-default,#e2e8f0)]"
-                />
-              )}
-            </div>
-
+              );
+        const cuerpo = (
             <div className={cn('min-w-0 flex-1', compacto ? 'pb-2' : 'pb-4')}>
               <div className="flex flex-wrap items-baseline gap-x-2">
                 {e.onClick ? (
                   <button
                     type="button"
                     onClick={e.onClick}
-                    className="rounded-sm text-left text-[length:calc(13px*var(--k-text-scale,1))] font-medium text-[var(--fg-default)] hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    className="rounded-sm text-start text-[length:calc(13px*var(--k-text-scale,1))] font-medium text-[var(--fg-default)] hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     {e.title}
                   </button>
@@ -236,7 +237,7 @@ export const Timeline: React.FC<TimelineProps> = ({
                 <time
                   dateTime={e._fecha.toISOString()}
                   title={e._fecha.toLocaleString(DEFAULT_LOCALE)}
-                  className="ml-auto shrink-0 font-mono text-[length:calc(10px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)]"
+                  className="ms-auto shrink-0 font-mono text-[length:calc(10px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)]"
                 >
                   {cuando}
                 </time>
@@ -246,6 +247,22 @@ export const Timeline: React.FC<TimelineProps> = ({
               )}
               {e.content && <div className="mt-1.5">{e.content}</div>}
             </div>
+        );
+        const estadoFila = (content: React.ReactNode): ItemRenderState => ({ selected: false, highlighted: false, disabled: false, query: '', label: e.title, content });
+        return (
+          <li key={fila.key} data-evento={e.id} className={cn('relative flex gap-3', resolveItemClass(itemClassName, e, estadoFila(null)))}>
+            {/* Carril: punto o icono, y la línea que baja. */}
+            <div className="flex shrink-0 flex-col items-center">
+              {renderMarker ? renderMarker(e, marcaDeSerie) : marcaDeSerie}
+              {!ultimo && (
+                <span
+                  aria-hidden="true"
+                  className="mt-1 w-px flex-1 bg-[var(--border-default,#e2e8f0)]"
+                />
+              )}
+            </div>
+
+            {renderItem ? renderItem(e, { ...estadoFila(cuerpo), when: cuando }) : cuerpo}
           </li>
         );
       })}

@@ -70,10 +70,10 @@
 .k-spinner[data-variant='orbit'] > i {
   position: absolute;
   top: 0;
-  left: 50%;
+  inset-inline-start: 50%;
   width: 22%;
   height: 22%;
-  margin-left: -11%;
+  margin-inline-start: -11%;
   border-radius: 50%;
   background: currentColor;
   animation: none;
@@ -127,7 +127,7 @@
 .k-progress-track[data-indeterminate] > .k-progress-fill {
   position: absolute;
   inset-block: 0;
-  left: 0;
+  inset-inline-start: 0;
   width: 40% !important;
   animation: k-progress-slide calc(var(--k-motion, 1) * 1500ms) cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
@@ -190,7 +190,7 @@
   display: inline-block;
   width: 0.09em;
   height: 1.05em;
-  margin-left: 0.08em;
+  margin-inline-start: 0.08em;
   vertical-align: -0.15em;
   background: currentColor;
   animation: k-blink calc(var(--k-motion, 1) * 1000ms) steps(1) infinite;
@@ -281,7 +281,7 @@
 .k-clamp { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--k-lines, 3); overflow: hidden; }
 .k-clamp-toggle {
   align-self: flex-start;
-  text-align: left;
+  text-align: start;
   margin-top: 0.25rem;
   color: var(--color-accent, #0d9488);
   font-size: 0.85em;
@@ -313,7 +313,7 @@
 .k-spinner[data-variant='blades'] > i {
   position: absolute;
   top: 0;
-  left: calc(50% - var(--k-spinner-size) * 0.045);
+  inset-inline-start: calc(50% - var(--k-spinner-size) * 0.045);
   width: calc(var(--k-spinner-size) * 0.09);
   height: 28%;
   border-radius: 999px;
@@ -385,7 +385,7 @@
 
 /* Confeti: lo posiciona y anima `fireConfetti` con la API de animaciones web. */
 .k-confetti-layer { position: fixed; inset: 0; z-index: var(--k-z-toast, 1000000); pointer-events: none; overflow: hidden; }
-.k-confetti-piece { position: absolute; left: 0; top: 0; will-change: transform, opacity; }
+.k-confetti-piece { position: absolute; inset-inline-start: 0; top: 0; will-change: transform, opacity; }
 
 @media (prefers-reduced-motion: reduce) {
   .k-ripple-wave, .k-shake, .k-swap-in { animation: none !important; }

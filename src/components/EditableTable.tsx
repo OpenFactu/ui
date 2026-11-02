@@ -175,7 +175,7 @@ export function EditableTable<T extends Record<string, any>>({
     const disabled = col.isDisabled?.(row) ?? false;
     const set = (v: any) => writeValue(row, field, v);
 
-    const common = { disabled, inputSize: 'sm' as const, containerClassName: 'w-full' };
+    const common = { disabled, inputSize: 'sm' as const, containerClassName: 'w-full', 'aria-label': col.header };
 
     switch (editor.type) {
       case 'number':
@@ -185,9 +185,9 @@ export function EditableTable<T extends Record<string, any>>({
       case 'percent':
         return <PercentInput {...common} value={current ?? null} onChange={set} precision={editor.precision ?? 2} />;
       case 'select':
-        return <Select disabled={disabled} containerClassName="w-full" className="py-1 text-[length:calc(12px*var(--k-text-scale,1))]" value={String(current ?? '')} onChange={set} {...editor.customize} options={editor.options ?? []} />;
+        return <Select ariaLabel={col.header} disabled={disabled} containerClassName="w-full" className="py-1 text-[length:calc(12px*var(--k-text-scale,1))]" value={String(current ?? '')} onChange={set} {...editor.customize} options={editor.options ?? []} />;
       case 'search-select':
-        return <SearchableSelect disabled={disabled} options={editor.options ?? []} value={String(current ?? '')} onChange={set} placeholder={editor.placeholder} {...editor.customize} />;
+        return <SearchableSelect ariaLabel={col.header} disabled={disabled} options={editor.options ?? []} value={String(current ?? '')} onChange={set} placeholder={editor.placeholder} {...editor.customize} />;
       case 'date':
         return <DatePicker disabled={disabled} value={current ?? null} onChange={set} className="w-full" />;
       case 'checkbox':

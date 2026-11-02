@@ -1,4 +1,5 @@
 import { formatNumber } from '../internal/intl';
+import { logicalKey } from '../internal/roving';
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
@@ -67,7 +68,7 @@ export const Rating: React.FC<RatingProps> = ({
     const keys: Record<string, number> = { ArrowRight: value + step, ArrowUp: value + step, ArrowLeft: value - step, ArrowDown: value - step, Home: 0, End: max };
     if (!(event.key in keys)) return;
     event.preventDefault();
-    onChange!(Math.min(max, Math.max(0, keys[event.key])));
+    onChange!(Math.min(max, Math.max(0, keys[logicalKey(event)])));
   };
 
   return (

@@ -409,3 +409,33 @@ test('el avatar del mensaje es el Avatar de la librería: mismo tamaño con foto
   assert.match(user, />AL</);
   assert.match(renderToStaticMarkup(h(AIMessage, { message: { id: 'p', role: 'user', name: 'Ana', avatar: 'https://example.com/a.png', parts } })), /<img[^>]*a\.png/);
 });
+
+test('actividad del agente: junta herramientas y pasos, y cuenta lo terminado', () => {
+  const { collectAIActivity, summarizeAIActivity } = require('../src/ai/AIActivityPanel.tsx');
+  const entries = collectAIActivity([
+    { id: 'm1', role: 'assistant', parts: [
+      { type: 'text', text: 'Hola' },
+      { type: 'tool', tool: { id: 'a', name: 'buscar', status: 'completed', durationMs: 400 } },
+      { type: 'tool', tool: { id: 'b', name: 'calcular', status: 'error', durationMs: 100 } },
+    ] },
+    { id: 'm2', role: 'assistant', parts: [
+      { type: 'activity', steps: [{ id: 'c', title: 'Leer', status: 'running' }] },
+      { type: 'tool', tool: { id: 'd', name: 'enviar', status: 'approval-required' } },
+    ] },
+  ]);
+  assert.deepEqual(entries.map((entry) => entry.id), ['a', 'b', 'c', 'd']);
+  assert.equal(entries[2].messageId, 'm2');
+  assert.deepEqual(summarizeAIActivity(entries), { done: 2, total: 4, durationMs: 500, failed: 1, active: 2 });
+  assert.deepEqual(summarizeAIActivity([]), { done: 0, total: 0, durationMs: 0, failed: 0, active: 0 });
+});
+
+test('panel de actividad: resume, avisa si está vacío y deja pintar cada entrada', () => {
+  const React = require('react'); const { renderToStaticMarkup } = require('react-dom/server');
+  const { AIActivityPanel } = require('../src/ai/AIActivityPanel.tsx');
+  const h = React.createElement;
+  assert.match(renderToStaticMarkup(h(AIActivityPanel, { messages: [] })), /ai-muted/);
+  assert.match(renderToStaticMarkup(h(AIActivityPanel, { messages: [], emptyMessage: 'Nada aún' })), /Nada aún/);
+  const entries = [{ id: 'a', title: 'Leer', status: 'completed', kind: 'step', messageId: 'm' }];
+  assert.match(renderToStaticMarkup(h(AIActivityPanel, { entries })), /1 de 1/);
+  assert.match(renderToStaticMarkup(h(AIActivityPanel, { entries, renderItem: (entry) => h('b', null, `propia ${entry.title}`) })), /propia Leer/);
+});

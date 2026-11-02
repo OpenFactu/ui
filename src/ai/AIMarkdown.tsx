@@ -40,6 +40,7 @@ export const AIMarkdown = React.memo(function AIMarkdown({ children, onOpenCode,
     a: ({ href, children }) => href ? <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> : <span>{children}</span>,
     img: ({ src, alt }) => <MarkdownImage src={typeof src === 'string' ? src : undefined} alt={alt} unavailable={l.imageUnavailable} />,
     table: ({ children }) => <div className="ai-md-table"><table>{children}</table></div>,
+    input: ({ type, checked, disabled }) => <input type={type} checked={checked} disabled={disabled} readOnly aria-label={checked ? l.taskDone : l.taskPending} />,
     pre: ({ children }) => {
       const child = React.Children.toArray(children).find(React.isValidElement) as React.ReactElement<{ children?: React.ReactNode; className?: string }> | undefined;
       const code = String(child?.props.children ?? '').replace(/\n$/, '');

@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
-import { createVelocityTracker } from '../motion/velocity';
 import { exitDelay, motionDisabled } from '../motion/dom';
-import { isPrimaryPointer, startPointerDrag } from '../internal/pointerDrag';
+import { useGestures } from '../gestures/useGestures';
 import { useI18n } from '../i18n/I18nProvider';
 
 export type SwipeDirection = 'left' | 'right';
@@ -37,8 +36,7 @@ export function SwipeCards<T>({ items, getKey, renderCard, onSwipe, labels = {},
   const empty = emptyProp ?? m.swipeCards.empty;
   const top = React.useRef<HTMLDivElement>(null);
   const [leaving, setLeaving] = React.useState<{ key: React.Key; dir: SwipeDirection } | null>(null);
-  const tracker = React.useMemo(() => createVelocityTracker(100), []);
-  const left = labels.left ?? 'Descartar'; const right = labels.right ?? 'Aceptar';
+  const left = labels.left ?? m.swipeCards.reject; const right = labels.right ?? m.swipeCards.accept;
 
   const setOffset = (el: HTMLElement, x: number, animate: boolean) => {
     el.style.transition = animate ? '' : 'none';
@@ -57,21 +55,22 @@ export function SwipeCards<T>({ items, getKey, renderCard, onSwipe, labels = {},
     setTimeout(() => { setLeaving(null); onSwipe(item, dir); }, motionDisabled(el) ? 0 : exitDelay(el, 'gesture'));
   };
 
-  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!isPrimaryPointer(event) || leaving) return;
-    const el = event.currentTarget; const startX = event.clientX;
-    tracker.reset(); tracker.add(event.clientX, event.timeStamp);
-    el.setAttribute('data-dragging', '');
-    startPointerDrag(event, {
-      onMove: (e) => { tracker.add(e.clientX, e.timeStamp); setOffset(el, e.clientX - startX, false); },
-      onEnd: (e) => {
-        el.removeAttribute('data-dragging');
-        const dx = e.clientX - startX; const v = tracker.velocity(e.timeStamp);
-        if (Math.abs(dx) > el.offsetWidth * THRESHOLD || (Math.abs(v) > FLICK && Math.sign(v) === Math.sign(dx))) fling(dx > 0 ? 'right' : 'left');
-        else setOffset(el, 0, true);
-      },
-    });
-  };
+  const gestures = useGestures({
+    axis: 'x',
+    slop: 4,
+    pointerTypes: ['touch', 'pen', 'mouse'],
+    disabled: Boolean(leaving),
+    attribute: false,
+    onPan: (pan) => {
+      const el = top.current;
+      if (!el) return;
+      if (pan.phase === 'start') el.setAttribute('data-dragging', '');
+      if (pan.phase === 'start' || pan.phase === 'move') { setOffset(el, pan.dx, false); return; }
+      el.removeAttribute('data-dragging');
+      if (pan.phase === 'end' && (Math.abs(pan.dx) > el.offsetWidth * THRESHOLD || (Math.abs(pan.vx) > FLICK && Math.sign(pan.vx) === Math.sign(pan.dx)))) fling(pan.dx > 0 ? 'right' : 'left');
+      else setOffset(el, 0, true);
+    },
+  });
 
   const visible = items.slice(0, stack + 1);
   return (
@@ -94,8 +93,8 @@ export function SwipeCards<T>({ items, getKey, renderCard, onSwipe, labels = {},
               ref={isTop ? top : undefined}
               className="k-swipe-card"
               data-depth={depth}
-              style={{ '--k-depth': depth } as React.CSSProperties}
-              onPointerDown={isTop ? onPointerDown : undefined}
+              style={{ ...(isTop ? gestures.style : null), '--k-depth': depth } as React.CSSProperties}
+              {...(isTop ? gestures.bind : null)}
               aria-hidden={!isTop || undefined}
             >
               {isTop && <span className="k-swipe-stamp" data-side="left" aria-hidden="true">{left}</span>}

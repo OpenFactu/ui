@@ -29,7 +29,7 @@ const barra = (nombre) => page.locator(`[role="button"][aria-label^="${nombre},"
 // ── Colocación ──────────────────────────────────────────────────────────
 console.log('\nColocación');
 await go('gantt--obra');
-check('se pinta el diagrama', (await page.getByRole('table').count()) === 1);
+check('se pinta el diagrama', (await page.locator('[data-k-mobile="Gantt"]').count()) === 1);
 check('una barra por tarea (6 barras + 1 hito)', (await page.locator('[role="button"][aria-label*=" al "]').count()) === 6);
 check('el hito va como rombo', (await page.locator('[role="img"][aria-label*="hito"]').count()) === 1);
 
@@ -53,7 +53,7 @@ check('hay marca de hoy', (await page.locator('.bg-\\[var\\(--k-danger\\)\\]').c
 // arrancan las barras: colocadas en flujo, la semana empieza en lunes y la
 // regla entera quedaba desplazada respecto a lo que hay debajo.
 const cobertura = await page.evaluate(() => {
-  const sc = document.querySelector('[role="table"] .overflow-x-auto');
+  const sc = document.querySelector('[data-k-mobile="Gantt"] .overflow-x-auto');
   const lienzo = sc.firstElementChild;
   const menores = [...lienzo.firstElementChild.children[1].children];
   const rejilla = [...lienzo.children[1].children[0].children];
@@ -164,7 +164,7 @@ check('el vacío se explica', (await page.getByText('No hay tareas').count()) ==
 await go('gantt--obra');
 await page.evaluate(() => document.documentElement.classList.add('dark'));
 await page.waitForTimeout(400);
-const fondo = await page.getByRole('table').evaluate((el) => getComputedStyle(el).backgroundColor);
+const fondo = await page.locator('[data-k-mobile="Gantt"]').evaluate((el) => getComputedStyle(el).backgroundColor);
 check('en oscuro usa la superficie del tema', fondo === 'rgb(26, 37, 53)', fondo);
 await page.screenshot({ path: `${OUT}/obra-oscuro.png` });
 

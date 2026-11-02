@@ -1,5 +1,51 @@
 # Chat entre personas
 
+## Resumen
+
+`ChatProvider` comparte conversaciones, mensajes, borradores, respuestas,
+contadores sin leer e historial. `ChatWorkspace` reúne la lista de conversaciones,
+cabecera, mensajes y compositor; cada pieza también puede usarse por separado.
+Tu aplicación conecta el transporte con `onSendMessage` y los eventos con
+`useChatActions`. Incluye envío inmediato, errores con reintento, confirmaciones
+sin duplicados y navegación móvil. Consulta la [guía del chat](docs/chat.md).
+
+Incluye reacciones, emojis, edición/eliminación, archivos con iconos por tipo,
+menciones, notas de voz con controles propios, búsqueda, fijados y gestión de
+conversaciones. Todo se conecta mediante callbacks del provider.
+
+## Componentes dentro de la burbuja
+
+Un mensaje puede llevar cualquier componente. Como los mensajes viajan por tu
+transporte, no llevan JSX sino datos: `blocks: [{ kind, data }]`. Tú dices qué
+componente pinta cada `kind`, para un chat o para toda la aplicación:
+
+```tsx
+import { ChatProvider, registerChatBlock, useChatActions } from '@openfactu/ui';
+
+// Para toda la aplicación (devuelve la función que lo retira).
+registerChatBlock('factura', ({ data, own }) => <FacturaCard factura={data as Factura} />, {
+  summary: data => `Factura ${(data as Factura).numero}`, // vistas previas, respuestas y búsqueda
+  source: 'facturas',
+});
+
+// O solo para este chat (gana al registro). `fill` lo pone de borde a borde.
+<ChatProvider blockRenderers={{ mapa: { fill: true, render: ({ data }) => <MiniMapa {...(data as Punto)} /> } }} … />
+
+// Mensaje: el texto es opcional y hace de pie.
+{ id: 'm1', senderId: 'ana', text: 'Te paso la factura', blocks: [{ kind: 'factura', data: { numero: 'F-12' } }], … }
+
+// Enviarlo desde tu interfaz: pasa por `onSendMessage` como cualquier otro.
+const { sendBlocks } = useChatActions();
+sendBlocks([{ kind: 'factura', data: { numero: 'F-13' } }], { text: 'La de este mes' });
+```
+
+Un `kind` sin renderizador, o un componente que falla, deja un aviso discreto
+en su hueco sin romper la conversación. Reenviar copia los bloques y eliminar
+los borra. Ejemplo en **Chat → Bloques propios**.
+
+En Ladle: **Chat → Mensajeria** para probarlo y **Chat → Temas** para comparar
+seis estilos. También hay ejemplos de reacciones, adjuntos, edición, búsqueda y voz.
+
 Disponible desde `@openfactu/ui`. Importa `@openfactu/ui/styles.css` como para el resto de la librería. El módulo de IA sigue siendo independiente.
 
 ## Provider

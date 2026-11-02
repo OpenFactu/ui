@@ -1,11 +1,12 @@
 import * as React from 'react';
+import { logicalKey } from '../internal/roving';
 import { UiIcon } from '../icons';
 import { CodeEditor } from '../components/CodeEditor';
 import { Table } from '../components/Table';
 import { cn } from '../utils';
 import { useAILabels } from './labels';
 import type { AIArtifact, AIArtifactRenderer, AIUIProps } from './types';
-import { AIIconButton, AICopyButton } from './internal/ui';
+import { AIIconButton, AICopyButton, AIThinking } from './internal/ui';
 import { artifactContent, displayJson, downloadText, htmlPreviewDocument, safeUrl } from './internal/helpers';
 import { AIMarkdown } from './AIMarkdown';
 import { AICodeActionBar } from './AICodeBlock';
@@ -33,13 +34,14 @@ export interface AIArtifactPanelProps extends AIUIProps {
 }
 function ArtifactView({ artifact, mode, onChange, renderers, labels }: Omit<AIArtifactPanelProps, 'artifacts' | 'onSelect'> & { artifact: AIArtifact; mode: 'preview' | 'code' }) {
   const l = useAILabels(labels);
-  const document = React.useMemo(() => artifact.kind === 'html' ? htmlPreviewDocument(artifact.content) : '', [artifact]);
+  const document = React.useMemo(() => artifact.kind === 'html' && !artifact.streaming ? htmlPreviewDocument(artifact.content) : '', [artifact]);
   const [imageFailed, setImageFailed] = React.useState(false);
   React.useEffect(() => setImageFailed(false), [artifact.id]);
   if (renderers?.[artifact.kind]) return <>{renderers[artifact.kind]!(artifact)}</>;
-  if (artifact.kind === 'code') return <CodeArtifact artifact={artifact} onChange={onChange} labels={labels} />;
-  if ((artifact.kind === 'html' || artifact.kind === 'markdown') && mode === 'code') return <CodeArtifact artifact={artifact} onChange={onChange} labels={labels} />;
-  if (artifact.kind === 'markdown') return <AIMarkdown labels={labels}>{artifact.content}</AIMarkdown>;
+  if (artifact.kind === 'code') return <CodeArtifact artifact={artifact} onChange={artifact.streaming ? undefined : onChange} labels={labels} />;
+  // Un HTML a medias no se previsualiza: recargar el marco con cada trozo parpadearía y ejecutaría código sin terminar.
+  if ((artifact.kind === 'html' && artifact.streaming) || ((artifact.kind === 'html' || artifact.kind === 'markdown') && mode === 'code')) return <CodeArtifact artifact={artifact} onChange={artifact.streaming ? undefined : onChange} labels={labels} />;
+  if (artifact.kind === 'markdown') return <AIMarkdown streaming={artifact.streaming} labels={labels}>{artifact.content}</AIMarkdown>;
   if (artifact.kind === 'html') return <iframe className="ai-html-preview" title={artifact.title} sandbox="allow-scripts" referrerPolicy="no-referrer" srcDoc={document} />;
   if (artifact.kind === 'table') return <Table<Record<string, unknown>> data={artifact.rows} rowKey={(_, index) => index} columns={artifact.columns.map(column => ({ id: column.key, header: column.label, cell: row => displayJson(row[column.key], l.unserializable) }))} emptyMessage={l.noResults} />;
   if (artifact.kind === 'image') return imageFailed || !safeUrl(artifact.url, 'media') ? <p className="ai-muted">{l.imageUnavailable}</p> : <img className="ai-artifact-image" src={safeUrl(artifact.url, 'media')} alt={artifact.alt ?? artifact.title} onError={() => setImageFailed(true)} />;
@@ -53,16 +55,28 @@ export function AIArtifactPanel({ artifacts, value, onSelect, onClose, onChange,
   const id = React.useId();
   React.useEffect(() => setMode('preview'), [artifact?.id]);
   const tabsRef = React.useRef<HTMLDivElement>(null);
+  // Mientras llega, se sigue el final; si la persona sube a leer, se la deja en paz hasta que vuelva abajo.
+  const bodyRef = React.useRef<HTMLDivElement>(null);
+  const following = React.useRef(true);
+  const streaming = Boolean(artifact?.streaming);
+  const scroller = () => bodyRef.current?.querySelector<HTMLElement>('textarea') ?? bodyRef.current;
+  const size = artifact && 'content' in artifact ? artifact.content.length : 0;
+  React.useEffect(() => { following.current = true; }, [artifact?.id]);
+  React.useEffect(() => {
+    if (!streaming || !following.current) return;
+    const el = scroller();
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [streaming, size]);
   if (!artifact) return <aside className={cn('ai-surface ai-artifact-panel ai-artifact-empty', className)}><UiIcon slot="file" size={26} /><p>{l.noResults}</p></aside>;
   const canSource = artifact.kind === 'html' || artifact.kind === 'markdown';
   return <aside className={cn('ai-surface ai-artifact-panel', className)} aria-label={l.results}>
     <div className="ai-artifact-tabs" role="tablist" aria-label={l.results} ref={tabsRef} onKeyDown={event => {
       if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key) || (event.target as HTMLElement).getAttribute('role') !== 'tab') return;
       event.preventDefault(); const current = artifacts.findIndex(item => item.id === artifact.id);
-      const next = event.key === 'Home' ? 0 : event.key === 'End' ? artifacts.length - 1 : (current + (event.key === 'ArrowRight' ? 1 : -1) + artifacts.length) % artifacts.length;
+      const next = event.key === 'Home' ? 0 : event.key === 'End' ? artifacts.length - 1 : (current + (logicalKey(event) === 'ArrowRight' ? 1 : -1) + artifacts.length) % artifacts.length;
       onSelect(artifacts[next].id); (tabsRef.current?.querySelectorAll('[role="tab"]')[next] as HTMLElement)?.focus();
-    }}>{artifacts.map(item => <div className="ai-artifact-tab" key={item.id}><button type="button" role="tab" id={`${id}-${item.id}`} aria-controls={`${id}-panel`} aria-selected={item.id === artifact.id} tabIndex={item.id === artifact.id ? 0 : -1} onClick={() => onSelect(item.id)}>{item.title}</button>{onClose && <AIIconButton label={`${l.close}: ${item.title}`} onClick={() => onClose(item.id)}><UiIcon slot="x" size={12} /></AIIconButton>}</div>)}</div>
-    <div className="ai-artifact-toolbar"><strong>{artifact.title}</strong><div className="ai-inline-actions">
+    }}>{artifacts.map(item => <div className="ai-artifact-tab" role="presentation" key={item.id}><button type="button" role="tab" id={`${id}-${item.id}`} aria-controls={`${id}-panel`} aria-selected={item.id === artifact.id} tabIndex={item.id === artifact.id ? 0 : -1} onClick={() => onSelect(item.id)}>{item.title}</button>{onClose && <AIIconButton label={`${l.close}: ${item.title}`} onClick={() => onClose(item.id)}><UiIcon slot="x" size={12} /></AIIconButton>}</div>)}</div>
+    <div className="ai-artifact-toolbar"><strong>{artifact.title}</strong>{streaming && <AIThinking>{l.artifactStreaming}</AIThinking>}<div className="ai-inline-actions">
       {canSource && <AIIconButton label={mode === 'preview' ? l.code : l.preview} onClick={() => setMode(current => current === 'preview' ? 'code' : 'preview')}>{mode === 'preview' ? <UiIcon slot="code-2" size={14} /> : <UiIcon slot="eye" size={14} />}</AIIconButton>}
       <AICopyButton text={artifactContent(artifact)} labels={labels} />
       <AIIconButton label={l.download} onClick={() => {
@@ -71,6 +85,6 @@ export function AIArtifactPanel({ artifacts, value, onSelect, onClose, onChange,
         else { const url = safeUrl(artifact.url, 'media'); if (url) { const link = window.document.createElement('a'); link.href = url; link.download = artifact.filename ?? artifact.title; link.click(); } }
       }}><UiIcon slot="download" size={14} /></AIIconButton>
     </div></div>
-    <div id={`${id}-panel`} aria-labelledby={`${id}-${artifact.id}`} className={cn('ai-artifact-body', (artifact.kind === 'html' || artifact.kind === 'code' || artifact.kind === 'markdown' && mode === 'code') && 'ai-artifact-fill')} role="tabpanel"><ArtifactView key={artifact.id} artifact={artifact} mode={mode} onChange={onChange} renderers={renderers} labels={labels} /></div>
+    <div ref={bodyRef} data-streaming={streaming || undefined} onScrollCapture={(event) => { if (!streaming) return; const el = event.target as HTMLElement; following.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48; }} id={`${id}-panel`} aria-labelledby={`${id}-${artifact.id}`} className={cn('ai-artifact-body', (artifact.kind === 'html' || artifact.kind === 'code' || artifact.kind === 'markdown' && mode === 'code') && 'ai-artifact-fill')} role="tabpanel"><ArtifactView key={artifact.id} artifact={artifact} mode={mode} onChange={onChange} renderers={renderers} labels={labels} /></div>
   </aside>;
 }

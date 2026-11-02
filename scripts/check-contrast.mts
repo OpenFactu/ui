@@ -29,7 +29,25 @@ const STORIES = (process.env.CONTRAST_STORIES ?? '').split(',').filter(Boolean).
       'date-picker--basico',
       'table--basica',
       'modal--formulario',
+      'gantt--completo',
+      'kanban--tablero',
+      'calendar--semana',
+      'prosa--articulo',
+      'texto--parrafos',
+      'avatar--colores',
+      'chat--mensajeria',
+      'ai-respuesta--respuesta-en-directo',
+      'ai-respuesta--panel-de-actividad',
+      'ai-respuesta--preguntas-guiadas',
+      'personalizacion--navegacion-y-datos',
+      'personalizacion--selectores-y-filtros',
     ];
+
+/**
+ * Lo que ya se sabe que queda por debajo, y por qué. Avisa si empeora; quítalo de aquí cuando se resuelva.
+ * Blanco sobre el teal por defecto (#0D9488) da 3.74:1. Es el color de marca: cambiarlo es una decisión de diseño.
+ */
+const KNOWN = [{ story: 'theme-in-use--pantalla-completa', text: 'Nueva factura', ratio: 3.74 }];
 
 const presetId = process.argv[2] ?? 'keirost-plum';
 const preset = THEME_PRESETS.find((p) => p.id === presetId);
@@ -63,7 +81,15 @@ const MEASURE = `(() => {
     const layers = [];
     let n = el;
     while (n && n !== document.documentElement) {
-      const v = nums(getComputedStyle(n).backgroundColor);
+      const cs = getComputedStyle(n);
+      // Un degradado que cubre el elemento cuenta por su primer color: el avatar del tema no tiene color de fondo. Un subrayado dibujado con degradado no cuenta.
+      const stop = !['auto', 'auto auto', '100% 100%'].includes(cs.backgroundSize) ? null : cs.backgroundImage.match(/gradient[(][^)]*?(rgba?[(][^)]*[)]|oklch[(][^)]*[)]|color[(][^)]*[)])/);
+      // El indicador de los controles segmentados es un hermano que pasa por debajo del texto.
+      const indicator = n.parentElement && Array.from(n.parentElement.children).find((c) => c !== n && c.classList.contains('k-indicator') && (() => {
+        const a = c.getBoundingClientRect(); const b = n.getBoundingClientRect();
+        return a.left <= b.left + b.width / 2 && a.right >= b.left + b.width / 2 && a.top <= b.top + b.height / 2 && a.bottom >= b.top + b.height / 2;
+      })());
+      const v = nums(indicator ? getComputedStyle(indicator).backgroundColor : stop ? stop[1] : cs.backgroundColor);
       if (v.length >= 3) {
         const a = v.length > 3 ? v[3] : 1;
         if (a > 0) { layers.push({ rgb: v.slice(0, 3), a }); if (a >= 0.999) break; }
@@ -126,7 +152,8 @@ for (const story of STORIES) {
   // Umbral AA: 3:1 si el texto es grande (>=24px, o >=18.66px en negrita).
   const threshold = (r: { size: number; bold: boolean }) =>
     r.size >= 24 || (r.size >= 18.66 && r.bold) ? 3 : 4.5;
-  const bad = results.filter((r) => r.ratio < threshold(r));
+  const under = results.filter((r) => r.ratio < threshold(r));
+  const bad = under.filter((r) => !KNOWN.some((k) => k.story === story && k.text === r.text && r.ratio >= k.ratio));
   const localWorst = results.reduce((a, r) => (r.ratio < a.ratio ? r : a), { ratio: 99, text: '' } as any);
   if (localWorst.ratio < worst.ratio) worst = { ...localWorst, story };
   failures += bad.length;

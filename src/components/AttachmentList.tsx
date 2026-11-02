@@ -74,7 +74,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
                   type="button"
                   disabled={disabled}
                   onClick={() => onOpen(item)}
-                  className="max-w-full break-all text-left text-[length:calc(13px*var(--k-text-scale,1))] font-medium text-[var(--fg-default)] underline decoration-[var(--border-strong)] underline-offset-4 focus-visible:ring-2 focus-visible:ring-accent"
+                  className="max-w-full break-all text-start text-[length:calc(13px*var(--k-text-scale,1))] font-medium text-[var(--fg-default)] underline decoration-[var(--border-strong)] underline-offset-4 focus-visible:ring-2 focus-visible:ring-accent"
                 >
                   {item.name}
                 </button>

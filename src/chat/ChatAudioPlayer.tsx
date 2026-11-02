@@ -110,7 +110,7 @@ export function ChatAudioPlayer({ src, blob, duration: knownDuration = 0, title:
       <input type="range" aria-label={ct.position} min={0} max={duration || 0} step={.1} value={Math.min(position, duration)} disabled={!duration} onChange={event => { setRewinding(false); if (audio.current) { audio.current.currentTime = Number(event.target.value); setPosition(Number(event.target.value)); } }} />
       <span className="k-chat-audio-time">{formatClock(playing || position ? position : duration)}</span>
     </div>
-    <button type="button" className="k-chat-audio-speed" aria-label={ct.speed} onClick={() => { const next = speed === 1 ? 1.5 : speed === 1.5 ? 2 : 1; setSpeed(next); if (audio.current) audio.current.playbackRate = next; }}>{speed}×</button>
+    <button type="button" className="k-chat-audio-speed" aria-label={`${ct.speed}: ${speed}×`} onClick={() => { const next = speed === 1 ? 1.5 : speed === 1.5 ? 2 : 1; setSpeed(next); if (audio.current) audio.current.playbackRate = next; }}>{speed}×</button>
     {error && <p className="k-chat-message-error" role="status">{error}</p>}
   </div>;
 }

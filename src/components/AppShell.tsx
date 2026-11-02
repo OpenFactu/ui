@@ -94,7 +94,7 @@ export function AppShell({
     >
       <a
         href={`#${mainId}`}
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-sm focus:bg-[var(--bg-card,#ffffff)] focus:p-3"
+        className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-50 focus:rounded-sm focus:bg-[var(--bg-card,#ffffff)] focus:p-3"
       >
         {shell.skipToContent}
       </a>
@@ -110,8 +110,8 @@ export function AppShell({
           aria-label={navigationLabel}
           tabIndex={mobile ? -1 : undefined}
           className={cn(
-            'flex shrink-0 flex-col border-r border-[var(--border-default,#e2e8f0)] bg-[var(--bg-sidebar,#0a1628)] text-[var(--sidebar-fg,#ffffff)]',
-            mobile && 'k-app-shell-mobile-menu fixed inset-y-0 left-0 z-50 shadow-k-overlay',
+            'flex shrink-0 flex-col border-e border-[var(--border-default,#e2e8f0)] bg-[var(--bg-sidebar,#0a1628)] text-[var(--sidebar-fg,#ffffff)]',
+            mobile && 'k-app-shell-mobile-menu fixed inset-y-0 start-0 z-50 shadow-k-overlay',
           )}
           style={{
             width: mobile

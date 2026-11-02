@@ -355,7 +355,7 @@ export const Toast: React.FC<ToastProps> = ({
           onClick={() => onClose(id)}
           aria-label={common.dismiss}
           className={cn(
-            '-mr-1 -mt-1 grid h-7 w-7 shrink-0 place-items-center rounded-[var(--k-radius-xs,2px)] transition-colors',
+            '-me-1 -mt-1 grid h-7 w-7 shrink-0 place-items-center rounded-[var(--k-radius-xs,2px)] transition-colors',
             'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
             filled
               ? 'text-[var(--k-tone-on)] opacity-70 hover:bg-[color-mix(in_srgb,var(--k-tone-on)_16%,transparent)] hover:opacity-100'
@@ -425,7 +425,7 @@ export const Toast: React.FC<ToastProps> = ({
           onClick={() => onClose(id)}
           aria-label={common.dismiss}
           className={cn(
-            'absolute -left-2 -top-2 grid h-6 w-6 place-items-center rounded-full border shadow-sm transition-opacity',
+            'absolute -start-2 -top-2 grid h-6 w-6 place-items-center rounded-full border shadow-sm transition-opacity',
             'border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] text-[var(--fg-muted,#52606f)] hover:text-[var(--fg-default,#0a1628)]',
             'opacity-0 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent group-hover:opacity-100 [@media(hover:none)]:opacity-100',
           )}

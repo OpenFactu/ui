@@ -254,7 +254,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = (rawProps) => {
                 <button
                   type="button"
                   onClick={olvidar}
-                  className="ml-auto normal-case tracking-normal text-[length:calc(10px*var(--k-text-scale,1))] font-medium text-accent hover:underline"
+                  className="ms-auto normal-case tracking-normal text-[length:calc(10px*var(--k-text-scale,1))] font-medium text-accent hover:underline"
                 >
                   {m.common.erase}
                 </button>
@@ -267,7 +267,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = (rawProps) => {
                     setTerm(texto);
                     inputRef.current?.focus();
                   }}
-                  className="flex w-full items-center gap-2.5 rounded-[var(--k-radius-xs,2px)] px-2.5 py-2 text-left text-[length:calc(13px*var(--k-text-scale,1))] text-[var(--fg-body,#2d3a4a)] transition-colors hover:bg-[var(--bg-hover)]"
+                  className="flex w-full items-center gap-2.5 rounded-[var(--k-radius-xs,2px)] px-2.5 py-2 text-start text-[length:calc(13px*var(--k-text-scale,1))] text-[var(--fg-body,#2d3a4a)] transition-colors hover:bg-[var(--bg-hover)]"
                 >
                   <UiIcon slot="clock" className="h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle,#657486)]" />
                   {texto}
@@ -292,7 +292,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = (rawProps) => {
                           onClose();
                           section.action!.onSelect();
                         }}
-                        className="ml-auto normal-case tracking-normal text-[length:calc(10px*var(--k-text-scale,1))] font-medium text-accent hover:underline"
+                        className="ms-auto normal-case tracking-normal text-[length:calc(10px*var(--k-text-scale,1))] font-medium text-accent hover:underline"
                       >
                         {section.action.label}
                       </button>

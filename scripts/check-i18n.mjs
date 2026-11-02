@@ -85,6 +85,8 @@ function revisar(sf) {
         else if (ts.isPropertyAssignment(p) && p.initializer === node && dentroDe(node, (x) => ts.isVariableDeclaration(x) && /LABEL|TEXT|MESSAGE|NAMES|COPY/i.test(x.name.getText()))) informar(sf, node, texto, 'mapa de textos');
         else if (ts.isArrayLiteralExpression(p) && dentroDe(node, (x) => ts.isVariableDeclaration(x) && /LABEL|MESES|DIAS|MONTH|WEEKDAY|DAYS|NAMES/i.test(x.name.getText()))) informar(sf, node, texto, 'lista de textos');
         else if ((ts.isConditionalExpression(p) || ts.isBinaryExpression(p) || ts.isReturnStatement(p) || ts.isArrowFunction(p)) && /[ÁÉÍÓÚÜÑáéíóúüñ¿¡…«»]|\b(de|del|la|el|los|las|sin|con|para|por|más|hoy|ayer)\b/i.test(texto)) informar(sf, node, texto, 'texto calculado');
+        else if (ts.isBinaryExpression(p) && p.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken && p.right === node) informar(sf, node, texto, 'por defecto con ??');
+        else if (ts.isCallExpression(p) && /^set[A-Z]\w*$/.test(p.expression.getText()) && p.arguments.includes(node)) informar(sf, node, texto, `valor de ${p.expression.getText()}`);
         else if (ts.isTemplateSpan(p) || ts.isTemplateExpression(p)) { /* el padre ya se informa */ }
       }
     }

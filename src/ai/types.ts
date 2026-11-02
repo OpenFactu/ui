@@ -113,7 +113,11 @@ export interface AIMessageData {
 }
 export interface AIConversationProject { id: string; title: string }
 export interface AIConversationItem { id: string; title: string; description?: string; group?: string; projectId?: string; pinned?: boolean; updatedAt?: string }
-interface AIArtifactBase { id: string; title: string; filename?: string }
+interface AIArtifactBase {
+  id: string; title: string; filename?: string;
+  /** Aún está llegando: el panel lo sigue hasta el final, no deja editarlo y, si es HTML, enseña el código hasta que termine. */
+  streaming?: boolean;
+}
 export type AIArtifact = AIArtifactBase & (
   | { kind: 'markdown' | 'code' | 'html'; content: string; language?: string; editable?: boolean }
   | { kind: 'table'; columns: { key: string; label: string }[]; rows: Record<string, unknown>[] }

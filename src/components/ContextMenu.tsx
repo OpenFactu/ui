@@ -90,7 +90,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = (rawProps) => {
           />
           {openSub === i && (
             <div
-              className="absolute top-0 left-full ml-0.5 max-h-[60vh] overflow-y-auto rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] shadow-lg p-1"
+              className="absolute top-0 start-full ms-0.5 max-h-[60vh] overflow-y-auto rounded-[var(--k-radius-sm,4px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] shadow-lg p-1"
               style={{ width: MENU_WIDTH }}
             >
               {item.submenu.map((sub, j) => (

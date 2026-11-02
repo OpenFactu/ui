@@ -105,7 +105,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
   return (
     <ControlField id={fieldId} label={label} helperText={helperText} error={error} required={required} className={className}>
       <div ref={anchorRef} className="relative flex items-center">
-        <UiIcon slot="clock" size={14} className="pointer-events-none absolute left-3 text-[var(--fg-subtle,#657486)]" />
+        <UiIcon slot="clock" size={14} className="pointer-events-none absolute start-3 text-[var(--fg-subtle,#657486)]" />
         <input
           id={fieldId}
           data-k-control="input"
@@ -126,7 +126,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
           onBlur={() => { commitText(); }}
           onKeyDown={onKeyDown}
           className={cn(
-            'w-full rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] py-2 pl-8 pr-3 text-[length:calc(13px*var(--k-text-scale,1))] font-mono tabular-nums text-[var(--fg-default,#0a1628)]',
+            'w-full rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] py-2 ps-8 pe-3 text-[length:calc(13px*var(--k-text-scale,1))] font-mono tabular-nums text-[var(--fg-default,#0a1628)]',
             'placeholder:text-[var(--fg-subtle,#657486)] focus-visible:outline-none focus-visible:border-accent disabled:cursor-not-allowed disabled:opacity-50',
             error && 'border-[var(--k-danger)]',
           )}

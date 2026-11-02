@@ -88,7 +88,7 @@ export const Field: React.FC<FieldProps> = ({
       style={orientation === 'horizontal' ? { width: labelWidth } : undefined}
     >
       {label}
-      {required && <span className="text-[var(--k-danger-fg)] ml-0.5" aria-hidden="true">*</span>}
+      {required && <span className="text-[var(--k-danger-fg)] ms-0.5" aria-hidden="true">*</span>}
     </label>
   );
 

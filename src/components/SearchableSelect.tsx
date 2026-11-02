@@ -500,7 +500,7 @@ export function SearchableSelect(rawProps: SearchableSelectProps) {
                   data-highlighted={highlighted || undefined}
                   onClick={() => selectOption(opt)}
                   onMouseEnter={() => !opt.disabled && setHighlightedIndex(idx)}
-                  style={opt.depth ? { paddingLeft: 10 + opt.depth * 14 } : undefined}
+                  style={opt.depth ? { paddingInlineStart: 10 + opt.depth * 14 } : undefined}
                   className={cn(
                     'group flex items-center justify-between gap-2 rounded-[var(--k-radius-xs,2px)] px-2.5 py-1.5 text-[length:calc(12px*var(--k-text-scale,1))] cursor-pointer transition-colors',
                     optionRowClass(selectedStyle, selected, highlighted),
@@ -543,7 +543,8 @@ export function SearchableSelect(rawProps: SearchableSelectProps) {
         role="combobox"
         data-k-control="search-select"
         aria-required={props.required || undefined}
-        aria-label={props.ariaLabel}
+        // Es un `div`: el `<label for>` de la etiqueta no le da nombre.
+        aria-label={props.ariaLabel ?? (typeof props.label === 'string' ? props.label : props.label ? undefined : placeholder)}
         aria-invalid={props.error ? true : undefined}
         aria-describedby={describedBy(controlId, props.error, props.helperText)}
         aria-expanded={isOpen}

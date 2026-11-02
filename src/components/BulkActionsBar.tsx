@@ -58,7 +58,7 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
           {status.deselect}
         </button>
       )}
-      <div className="ml-auto flex flex-wrap items-center gap-2">{children}</div>
+      <div className="ms-auto flex flex-wrap items-center gap-2">{children}</div>
     </div>
   );
 };

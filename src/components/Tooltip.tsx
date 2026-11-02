@@ -1,3 +1,4 @@
+import { useComponentDefaults } from '../context/ComponentDefaults';
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '../utils';
@@ -11,16 +12,20 @@ export interface TooltipProps {
   disabled?: boolean;
   children: React.ReactNode;
   className?: string;
+  /** Clases de la burbuja, que ganan a las de serie. */
+  contentClassName?: string;
 }
 
-export const Tooltip: React.FC<TooltipProps> = ({
+export const Tooltip: React.FC<TooltipProps> = (rawProps) => {
+  const {
   content,
   side = 'top',
   delay = 300,
   disabled = false,
   children,
   className,
-}) => {
+  contentClassName,
+} = useComponentDefaults('Tooltip', rawProps);
   const [isOpen, setIsOpen] = React.useState(false);
   const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -71,6 +76,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
             className={cn(
               'z-[var(--k-z-popover,999999)] max-w-[280px] rounded-[var(--k-radius-sm,4px)] bg-[var(--fg-default)] px-2 py-1 text-[length:calc(11px*var(--k-text-scale,1))] font-medium text-[var(--bg-card)] shadow-lg pointer-events-none k-appear duration-150',
               !ready && 'invisible',
+              contentClassName,
             )}
             style={style}
           >

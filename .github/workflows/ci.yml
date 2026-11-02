@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Rápido y sin navegador: tipos, tests de unidad, guardas y compilación.
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run check
+      - run: npm run build
+
+  # Las sondas de Playwright contra Ladle, con el Chrome que ya trae la imagen.
+  browser:
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      CHROME_PATH: /usr/bin/google-chrome
+      LADLE_URL: http://localhost:61000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Arrancar Ladle
+        run: |
+          npm run dev > ladle.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf "$LADLE_URL" > /dev/null && exit 0; sleep 2; done
+          cat ladle.log; exit 1
+      - run: npm run test:browser
+      - run: npm run test:chat
+      - run: npm run check:a11y
+      - run: npm run check:contrast
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: capturas-de-las-sondas
+          path: .shots
+          retention-days: 7

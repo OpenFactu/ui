@@ -16,6 +16,17 @@ import { ChoiceCards } from '../src/components/ChoiceCards';
 import { TagInput } from '../src/components/TagInput';
 import { FilterBar } from '../src/components/FilterBar';
 import { Avatar } from '../src/components/Avatar';
+import { Tabs } from '../src/components/Tabs';
+import { Accordion } from '../src/components/Accordion';
+import { Stepper } from '../src/components/Stepper';
+import { Timeline } from '../src/components/Timeline';
+import { Breadcrumbs } from '../src/components/Breadcrumbs';
+import { NotificationList } from '../src/components/NotificationList';
+import { TreeView } from '../src/components/TreeView';
+import { Calendar } from '../src/components/Calendar';
+import { Table } from '../src/components/Table';
+import { useToast } from '../src/context/ToastContext';
+import { ToastProvider } from '../src/context/ToastContext';
 import { Badge } from '../src/components/Badge';
 import { Button } from '../src/components/Button';
 
@@ -161,5 +172,83 @@ export const Elecciones: Story = () => {
       <ChoiceCards label="Tarjetas a medida" indicator={false} options={ENVIOS.map((e) => ({ value: e.value, title: e.label, description: e.secondaryLabel, icon: e.icon }))} value={tarjeta} onChange={setTarjeta} renderOption={(_option, { content, selected }) => <span data-testid="tarjeta" className="flex items-center justify-between gap-2"><span className="flex items-center gap-2">{content}</span>{selected && <Badge variant="neutral">elegida</Badge>}</span>} />
       <TagInput label="Etiquetas a medida" value={tags} onChange={setTags} renderTag={(tag, { remove }) => <span data-testid="tag" className="inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--color-accent,#0d9488)_14%,transparent)] px-2.5 py-0.5 text-[length:calc(12px*var(--k-text-scale,1))]">#{tag}{remove && <button type="button" aria-label={`Quitar ${tag}`} onClick={remove}><X size={11} /></button>}</span>} />
     </div>
+  );
+};
+
+const FILAS = [{ id: 1, cliente: 'Talleres Ruiz', total: 1200 }, { id: 2, cliente: 'Clínica Sol', total: 830 }];
+
+const Avisar = () => {
+  const toast = useToast();
+  return <Button size="sm" onClick={() => toast.success('Guardado')}>Avisar</Button>;
+};
+
+/** Navegación, estados, listas y datos: el mismo contrato que los selectores, cada uno con lo que tiene sentido en él. */
+export const NavegacionYDatos: Story = () => {
+  const [tab, setTab] = React.useState('a');
+  return (
+    <ToastProvider renderToast={(toast, close) => <span data-testid="aviso-propio" className="flex items-center gap-2">★ {toast.message}<button type="button" onClick={close}>×</button></span>}>
+      <div className="flex max-w-3xl flex-col gap-8">
+        <Tabs
+          value={tab}
+          onChange={setTab}
+          items={[{ key: 'a', label: 'Resumen' }, { key: 'b', label: 'Detalle' }, { key: 'c', label: 'Historial' }]}
+          renderItem={(item, { selected }) => <span data-testid="pestana">{selected ? '● ' : ''}{item.label}</span>}
+          itemClassName={(_item, { selected }) => (selected ? 'mi-activa' : undefined)}
+        />
+        <Accordion
+          items={[{ key: 'x', title: 'Pregunta', content: 'Contenido del panel' }]}
+          renderItem={(item, { selected }) => <span data-testid="acordeon">{selected ? 'Abierto: ' : ''}{item.title}</span>}
+          renderIndicator={(open) => <span data-testid="flecha">{open ? '−' : '+'}</span>}
+        />
+        <Stepper
+          current={1}
+          steps={[{ id: 'a', label: 'Datos' }, { id: 'b', label: 'Revisión' }, { id: 'c', label: 'Envío' }]}
+          renderItem={(step, { selected }) => <span data-testid="paso">{step.label}{selected ? ' (actual)' : ''}</span>}
+          renderMarker={(_step, { index, defaults }) => <span data-testid="marca" title={`Paso ${index + 1}`}>{defaults}</span>}
+        />
+        <Timeline
+          now="2026-07-22T12:00:00"
+          events={[{ id: 'a', title: 'Factura enviada', date: '2026-07-22T10:00:00' }, { id: 'b', title: 'Pago recibido', date: '2026-07-22T11:00:00' }]}
+          renderItem={(_event, { content, when }) => <div data-testid="evento" title={when}>{content}</div>}
+          renderMarker={(_event, defaults) => <span data-testid="marca-evento">{defaults}</span>}
+        />
+        <Breadcrumbs
+          items={[{ label: 'Inicio', onClick: () => undefined }, { label: 'Ventas', onClick: () => undefined }, { label: 'Facturas' }]}
+          separator={<span data-testid="separador">/</span>}
+          renderItem={(_item, { content }) => <span data-testid="miga">{content}</span>}
+        />
+        <NotificationList
+          items={[{ id: 'n', title: 'Factura pagada', read: false }]}
+          renderItem={(_item, { selected, content }) => <div data-testid="notificacion" className="flex flex-1 gap-3">{content}{selected && <Badge variant="neutral">nueva</Badge>}</div>}
+        />
+        <TreeView
+          nodes={[{ id: 'r', label: 'Ventas', children: [{ id: 'h', label: 'Facturas' }] }]}
+          defaultExpanded={['r']}
+          renderLabel={(node) => <span data-testid="nodo">{node.label}</span>}
+          itemClassName="mi-fila"
+        />
+        <Calendar
+          view="week"
+          views={['week']}
+          date="2026-07-22"
+          today="2026-07-22"
+          hourStart={8}
+          hourEnd={12}
+          events={[{ id: 'e', title: 'Reunión', start: '2026-07-22T09:00:00', end: '2026-07-22T10:00:00' }]}
+          renderEvent={(_event, { place, content }) => <span data-testid="evento-calendario" data-lugar={place}>{content}</span>}
+          eventClassName="mi-evento"
+        />
+        <Table
+          data={FILAS}
+          rowKey={(row) => row.id}
+          columns={[{ header: 'Cliente', accessor: 'cliente' }, { header: 'Total', accessor: 'total', align: 'right' }]}
+          cellClassName={(_column, row) => (row.total > 1000 ? 'mi-celda' : undefined)}
+          headerClassName={() => 'mi-cabecera'}
+          renderHeader={(_column, defaults) => <span data-testid="cabecera-tabla">{defaults}</span>}
+          responsive="scroll"
+        />
+        <Avisar />
+      </div>
+    </ToastProvider>
   );
 };

@@ -10,10 +10,10 @@ import { useComponentDefaults } from '../context/ComponentDefaults';
 import { useI18n } from '../i18n/I18nProvider';
 import { ToolViewBoundary, getToolView, toolDisplayName, useRegisteredToolViews, type AIToolViewDefinition } from './toolViews';
 
-function statusLabel(status: AIToolStatus, l: AILabels): string {
+export function toolStatusLabel(status: AIToolStatus, l: AILabels): string {
   return ({ pending: l.pending, running: l.running, 'approval-required': l.approval, completed: l.completed, error: l.error, cancelled: l.cancelled, denied: l.denied })[status];
 }
-function StatusIcon({ status }: { status: AIToolStatus }) {
+export function AIToolStatusIcon({ status }: { status: AIToolStatus }) {
   return status === 'running' ? <UiIcon slot="loader-2" size={14} className="ai-spinner" /> : status === 'completed' ? <UiIcon slot="check-circle-2" size={14} className="ai-pop" /> : status === 'error' || status === 'approval-required' ? <UiIcon slot="alert-circle" size={14} /> : status === 'denied' || status === 'cancelled' ? <UiIcon slot="x-circle" size={14} /> : <UiIcon slot="circle" size={14} />;
 }
 export interface AIToolCallProps extends AIUIProps {
@@ -44,7 +44,7 @@ export const AIToolCall = React.memo(function AIToolCall(rawProps: AIToolCallPro
     try { await callback(); } catch (error) { setActionError(error instanceof Error ? error.message : l.error); } finally { setBusy(false); }
   };
   return <section className={cn('ai-surface ai-tool', className)} data-status={tool.status}>
-    <button type="button" data-k-focus-inset="" className="ai-disclosure" aria-expanded={open} onClick={() => setOpen(value => !value)}>{view?.icon ?? <UiIcon slot="wrench" size={14} />}<strong>{toolDisplayName(tool, view)}</strong>{summary != null && summary !== false && <span className="ai-tool-summary">{summary}</span>}<span className="ai-tool-state"><StatusIcon status={tool.status} />{statusLabel(tool.status, l)}{tool.status === 'completed' && tool.durationMs !== undefined ? ` · ${(tool.durationMs / 1000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} s` : ''}</span><UiIcon slot="chevron-right" size={14} className={open ? 'ai-rotated' : undefined} /></button>
+    <button type="button" data-k-focus-inset="" className="ai-disclosure" aria-expanded={open} onClick={() => setOpen(value => !value)}>{view?.icon ?? <UiIcon slot="wrench" size={14} />}<strong>{toolDisplayName(tool, view)}</strong>{summary != null && summary !== false && <span className="ai-tool-summary">{summary}</span>}<span className="ai-tool-state"><AIToolStatusIcon status={tool.status} />{toolStatusLabel(tool.status, l)}{tool.status === 'completed' && tool.durationMs !== undefined ? ` · ${(tool.durationMs / 1000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} s` : ''}</span><UiIcon slot="chevron-right" size={14} className={open ? 'ai-rotated' : undefined} /></button>
     {open && <div className="ai-tool-body">{tool.status === 'approval-required' && <p className="ai-tool-ask"><UiIcon slot="alert-triangle" size={14} />{l.approvalPrompt}</p>}{tool.description && <p>{tool.description}</p>}
       {view?.render
         ? <ToolViewBoundary fallback={raw} resetKey={tool.output}><ToolBody view={view} tool={tool} raw={raw} /></ToolViewBoundary>
@@ -102,7 +102,7 @@ export const AIToolGroup = React.memo(function AIToolGroup({ tools, onApprove, o
         <UiIcon slot="chevron-right" size={14} className={open ? 'ai-rotated' : undefined} />
         <strong>{format(l.toolGroup, { count: tools.length })}</strong>
         {!open && <span className="ai-tool-summary">{names}</span>}
-        <span className="ai-tool-state"><StatusIcon status={status} />{statusLabel(status, l)}</span>
+        <span className="ai-tool-state"><AIToolStatusIcon status={status} />{toolStatusLabel(status, l)}</span>
       </button>
       {open && <div className="ai-tool-group-list">{tools.map((tool) => <AIToolCall key={tool.id} tool={tool} onApprove={onApprove} onReject={onReject} labels={labels} />)}</div>}
     </section>
@@ -115,6 +115,6 @@ export const AIAgentActivity = React.memo(function AIAgentActivity({ steps, labe
   const [open, setOpen] = React.useState(true);
   return <section className={cn('ai-surface ai-activity', className)} aria-label={l.activity}>
     <button type="button" data-k-focus-inset="" className="ai-disclosure" aria-expanded={open} onClick={() => setOpen(value => !value)}><UiIcon slot="chevron-right" size={14} className={open ? 'ai-rotated' : undefined} /><strong>{l.activity}</strong><span className="ai-muted">{steps.filter(step => step.status === 'completed').length}/{steps.length}</span></button>
-    {open && <ol>{steps.map(step => <li key={step.id} data-status={step.status}><StatusIcon status={step.status} /><div><span>{step.title}</span>{step.description && <small>{step.description}</small>}</div><small>{statusLabel(step.status, l)}{step.durationMs !== undefined ? ` · ${(step.durationMs / 1000).toFixed(1)} s` : ''}</small></li>)}</ol>}
+    {open && <ol>{steps.map(step => <li key={step.id} data-status={step.status}><AIToolStatusIcon status={step.status} /><div><span>{step.title}</span>{step.description && <small>{step.description}</small>}</div><small>{toolStatusLabel(step.status, l)}{step.durationMs !== undefined ? ` · ${(step.durationMs / 1000).toFixed(1)} s` : ''}</small></li>)}</ol>}
   </section>;
 });

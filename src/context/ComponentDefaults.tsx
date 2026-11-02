@@ -12,6 +12,17 @@ import type { SegmentedControlProps } from '../components/SegmentedControl';
 import type { ChoiceBaseProps } from '../components/ChoiceCards';
 import type { TagInputProps } from '../components/TagInput';
 import type { AvatarProps } from '../components/Avatar';
+import type { TabsProps } from '../components/Tabs';
+import type { AccordionProps } from '../components/Accordion';
+import type { StepperProps } from '../components/Stepper';
+import type { TimelineProps } from '../components/Timeline';
+import type { BreadcrumbsProps } from '../components/Breadcrumbs';
+import type { TooltipProps } from '../components/Tooltip';
+import type { NotificationListProps } from '../components/NotificationList';
+import type { TreeViewProps } from '../components/TreeView';
+import type { NavMenuProps } from '../components/NavMenu';
+import type { CalendarProps } from '../components/Calendar';
+import type { TableProps } from '../components/Table';
 
 /** Lo que se puede fijar para todos los de un tipo. Quedan fuera los datos de cada uso (`value`, `options`, `onChange`…). */
 export interface ComponentDefaultsMap {
@@ -28,6 +39,18 @@ export interface ComponentDefaultsMap {
   ChoiceCards?: Partial<ChoiceBaseProps<string>>;
   TagInput?: Partial<Pick<TagInputProps, 'renderTag' | 'tagClassName'>>;
   Avatar?: Partial<Pick<AvatarProps, 'color' | 'shape' | 'size'>>;
+  Tabs?: Partial<Pick<TabsProps, 'renderItem' | 'itemClassName' | 'variant' | 'size'>>;
+  Accordion?: Partial<Pick<AccordionProps, 'renderItem' | 'itemClassName' | 'renderIndicator' | 'type'>>;
+  Stepper?: Partial<Pick<StepperProps, 'renderItem' | 'renderMarker' | 'itemClassName' | 'size'>>;
+  Timeline?: Partial<Pick<TimelineProps, 'renderItem' | 'renderMarker' | 'itemClassName' | 'variant'>>;
+  Breadcrumbs?: Partial<Pick<BreadcrumbsProps, 'renderItem' | 'separator' | 'itemClassName'>>;
+  Tooltip?: Partial<Pick<TooltipProps, 'side' | 'delay' | 'contentClassName'>>;
+  NotificationList?: Partial<Pick<NotificationListProps, 'renderItem' | 'itemClassName'>>;
+  TreeView?: Partial<Pick<TreeViewProps, 'renderLabel' | 'itemClassName' | 'getIcon'>>;
+  NavMenu?: Partial<Pick<NavMenuProps, 'renderItem' | 'itemClassName' | 'size'>>;
+  Calendar?: Partial<Pick<CalendarProps, 'renderEvent' | 'eventClassName' | 'eventStyle'>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Table?: Partial<Pick<TableProps<any>, 'cellClassName' | 'headerClassName' | 'renderHeader' | 'renderEmpty' | 'density' | 'variant' | 'headerVariant'>>;
 }
 
 const Defaults = React.createContext<ComponentDefaultsMap>({});

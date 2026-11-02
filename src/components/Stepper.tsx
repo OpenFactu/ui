@@ -1,3 +1,5 @@
+import { useComponentDefaults } from '../context/ComponentDefaults';
+import { resolveItemClass, type ItemClassName, type ItemRenderState } from './internal/optionStyle';
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
@@ -17,6 +19,12 @@ export interface Step {
 }
 
 export interface StepperProps {
+  /** Pinta el texto de cada paso. El estado llega en `selected` (el actual) y en `status`. */
+  renderItem?: (step: Step, state: ItemRenderState & { status: StepStatus; index: number }) => React.ReactNode;
+  /** Pinta el círculo de cada paso. Recibe el de serie. */
+  renderMarker?: (step: Step, state: { status: StepStatus; index: number; defaults: React.ReactNode }) => React.ReactNode;
+  /** Clases de cada paso. También como función. */
+  itemClassName?: ItemClassName<Step>;
   steps: Step[];
   /** Índice del paso en curso. Los anteriores se dan por hechos. */
   current?: number;
@@ -36,7 +44,7 @@ export interface StepperProps {
 const ESTILO_CIRCULO: Record<StepStatus, string> = {
   hecha: 'bg-accent text-[color:var(--color-accent-fg)] border-accent',
   actual:
-    'bg-[var(--bg-card,#ffffff)] text-accent border-accent ring-2 ring-[rgb(var(--color-accent-rgb)/0.2)]',
+    'bg-[var(--bg-card,#ffffff)] text-[var(--fg-default,#0a1628)] border-accent ring-2 ring-[rgb(var(--color-accent-rgb)/0.2)]',
   pendiente:
     'bg-[var(--bg-card,#ffffff)] text-[var(--fg-subtle,#657486)] border-[var(--border-default,#e2e8f0)]',
   error: 'bg-[var(--k-danger)] text-[var(--k-danger-on)] border-[var(--k-danger)]',
@@ -65,7 +73,8 @@ const TAMANOS = {
  * <Stepper current={2} steps={[{ id: 'datos', label: 'Datos fiscales' }, …]} />
  * ```
  */
-export const Stepper: React.FC<StepperProps> = ({
+export const Stepper: React.FC<StepperProps> = (rawProps) => {
+  const {
   steps,
   current = 0,
   orientation = 'horizontal',
@@ -74,7 +83,10 @@ export const Stepper: React.FC<StepperProps> = ({
   allowForward = false,
   className,
   'aria-label': ariaLabelProp,
-}) => {
+  renderItem,
+  renderMarker,
+  itemClassName,
+} = useComponentDefaults('Stepper', rawProps);
   const ariaLabelDefault = useMessages('navigation').progress;
   const ariaLabel = ariaLabelProp ?? ariaLabelDefault;
   const spec = TAMANOS[size];
@@ -96,7 +108,7 @@ export const Stepper: React.FC<StepperProps> = ({
         const pulsable =
           Boolean(onStepClick) && !step.disabled && (allowForward || i <= current);
 
-        const circulo = (
+        const circuloDeSerie = (
           <span
             className={cn(
               'flex shrink-0 items-center justify-center rounded-full border font-mono transition-colors',
@@ -115,7 +127,8 @@ export const Stepper: React.FC<StepperProps> = ({
           </span>
         );
 
-        const texto = (
+        const circulo = renderMarker ? renderMarker(step, { status: estado, index: i, defaults: circuloDeSerie }) : circuloDeSerie;
+        const textoDeSerie = (
           <span className={cn('flex flex-col', vertical ? 'pb-6' : 'items-center text-center')}>
             <span className={cn('leading-tight', spec.texto, ESTILO_TEXTO[estado])}>
               {step.label}
@@ -128,13 +141,17 @@ export const Stepper: React.FC<StepperProps> = ({
           </span>
         );
 
+        const state: ItemRenderState = { selected: estado === 'actual', highlighted: false, disabled: Boolean(step.disabled), query: '', label: step.label, content: textoDeSerie };
+        const texto = renderItem ? renderItem(step, { ...state, status: estado, index: i }) : textoDeSerie;
+        const claseExtra = resolveItemClass(itemClassName, step, state);
         const contenido = pulsable ? (
           <button
             type="button"
             onClick={() => onStepClick!(step, i)}
             className={cn(
-              'flex gap-2.5 text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent rounded-[var(--k-radius-xs,2px)]',
+              'flex gap-2.5 text-start focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent rounded-[var(--k-radius-xs,2px)]',
               vertical ? 'items-start' : 'flex-col items-center',
+              claseExtra,
             )}
           >
             {circulo}
@@ -146,6 +163,7 @@ export const Stepper: React.FC<StepperProps> = ({
               'flex gap-2.5',
               vertical ? 'items-start' : 'flex-col items-center',
               step.disabled && 'opacity-40',
+              claseExtra,
             )}
           >
             {circulo}
@@ -177,7 +195,7 @@ export const Stepper: React.FC<StepperProps> = ({
                         'absolute top-8 bottom-0 w-px',
                         estado === 'hecha' ? 'bg-accent' : 'bg-[var(--border-default,#e2e8f0)]',
                       )}
-                      style={{ left: size === 'sm' ? 11 : 15 }}
+                      style={{ insetInlineStart: size === 'sm' ? 11 : 15 }}
                     />
                   )}
                 </div>
@@ -197,8 +215,8 @@ export const Stepper: React.FC<StepperProps> = ({
                     )}
                     style={{
                       top: size === 'sm' ? 11 : 15,
-                      left: `calc(50% + ${size === 'sm' ? 16 : 20}px)`,
-                      right: `calc(-50% + ${size === 'sm' ? 16 : 20}px)`,
+                      insetInlineStart: `calc(50% + ${size === 'sm' ? 16 : 20}px)`,
+                      insetInlineEnd: `calc(-50% + ${size === 'sm' ? 16 : 20}px)`,
                     }}
                   />
                 )}

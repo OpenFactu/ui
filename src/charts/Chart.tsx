@@ -296,7 +296,7 @@ export const Chart: React.FC<ChartProps> = ({
 
   return (
     <div data-k-mobile="Chart" className={cn('w-full', className)}>
-      <div style={{ height }} role="img" aria-label={rest['aria-label']}>
+      <div style={{ height }} role="img" aria-label={rest['aria-label'] ?? chartTexts.label}>
         <ResponsiveContainer width="100%" height="100%">
           {chart}
         </ResponsiveContainer>
@@ -307,13 +307,13 @@ export const Chart: React.FC<ChartProps> = ({
           <caption className="sr-only">{chartTexts.tableCaption}</caption>
           <thead>
             <tr className="border-b border-[var(--border-default,#e2e8f0)]">
-              <th className="text-left py-1.5 font-mono text-[length:calc(10px*var(--k-text-scale,1))] uppercase tracking-wider text-[var(--fg-subtle,#657486)]">
+              <th className="text-start py-1.5 font-mono text-[length:calc(10px*var(--k-text-scale,1))] uppercase tracking-wider text-[var(--fg-subtle,#657486)]">
                 {xKey}
               </th>
               {series.map((s) => (
                 <th
                   key={s.key}
-                  className="text-right py-1.5 font-mono text-[length:calc(10px*var(--k-text-scale,1))] uppercase tracking-wider text-[var(--fg-subtle,#657486)]"
+                  className="text-end py-1.5 font-mono text-[length:calc(10px*var(--k-text-scale,1))] uppercase tracking-wider text-[var(--fg-subtle,#657486)]"
                 >
                   {s.label ?? s.key}
                 </th>
@@ -329,7 +329,7 @@ export const Chart: React.FC<ChartProps> = ({
                 {series.map((s) => (
                   <td
                     key={s.key}
-                    className="py-1.5 text-right font-mono tabular-nums text-[var(--fg-body,#2d3a4a)]"
+                    className="py-1.5 text-end font-mono tabular-nums text-[var(--fg-body,#2d3a4a)]"
                   >
                     {formatValue(Number(row[s.key]))}
                   </td>

@@ -1,4 +1,4 @@
-import { enabledIndices, rovingNext } from '../internal/roving';
+import { enabledIndices, rovingNext, logicalKey } from '../internal/roving';
 import * as React from 'react';
 import { cn } from '../utils';
 import { useComponentDefaults } from '../context/ComponentDefaults';
@@ -69,7 +69,7 @@ export function SegmentedControl<T extends string = string>(rawProps: SegmentedC
   const { ref: indicatorRef } = useIndicator({ containerRef, activeSelector: options.some((o) => o.value === value) ? `[data-segment="${attrValue(value)}"]` : null });
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    const index = rovingNext(event.key, enabledIndices(options, disabled), options.findIndex((o) => o.value === value));
+    const index = rovingNext(logicalKey(event), enabledIndices(options, disabled), options.findIndex((o) => o.value === value));
     if (index === null) return;
     event.preventDefault();
     const next = options[index];
@@ -140,7 +140,7 @@ export function SegmentedControl<T extends string = string>(rawProps: SegmentedC
                   )
                 : cn(
                     // Separador entre segmentos; el contenedor recorta los extremos.
-                    i > 0 && 'border-l border-[var(--border-default,#e2e8f0)]',
+                    i > 0 && 'border-s border-[var(--border-default,#e2e8f0)]',
                     isActive
                       ? 'text-[color:var(--color-accent-fg)]'
                       : 'text-[var(--fg-muted,#52606f)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--bg-hover,#f1f5f9)]',

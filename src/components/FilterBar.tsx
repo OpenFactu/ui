@@ -213,11 +213,11 @@ export function FilterBar({
       {mobile && <MobileOverlay open={abiertos} onClose={() => setAbiertos(false)} title={m.filterBar.filters} presentation="sheet" anchorRef={filterButton}><div className="k-mobile-filters">
         {filterControls}<div className="k-mobile-filter-actions"><Button variant="secondary" onClick={onClear}>{m.filterBar.clearFilters}</Button><Button onClick={() => setAbiertos(false)}>{m.filterBar.showResults}</Button></div>
       </div></MobileOverlay>}
-      {actions && <div className="ml-auto flex flex-wrap items-center gap-2">{actions}</div>}
+      {actions && <div className="ms-auto flex flex-wrap items-center gap-2">{actions}</div>}
       {(resultCount !== undefined || (showActiveFilters && hayFiltros)) && (
         <div className="flex w-full flex-wrap items-center gap-2 text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-muted,#52606f)]">
           {resultCount !== undefined && (
-            <span role="status" className="mr-1 tabular-nums">
+            <span role="status" className="me-1 tabular-nums">
               {resultCount} {resultCount === 1 ? 'resultado' : 'resultados'}
             </span>
           )}

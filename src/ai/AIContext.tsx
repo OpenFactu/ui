@@ -40,7 +40,7 @@ export interface AICheckpointProps extends AIUIProps {
 export function AICheckpoint({ label, onRestore, restored, labels, className }: AICheckpointProps) {
   const l = useAILabels(labels);
   const [busy, setBusy] = React.useState(false);
-  return <div className={cn('ai-surface ai-checkpoint', className)} role="separator" aria-label={label ?? l.checkpoint} data-restored={restored || undefined}>
+  return <div className={cn('ai-surface ai-checkpoint', className)} role="group" aria-label={label ?? l.checkpoint} data-restored={restored || undefined}>
     <UiIcon slot="bookmark" size={13} aria-hidden="true" /><span className="ai-checkpoint-label">{label ?? l.checkpoint}</span><span className="ai-checkpoint-rule" aria-hidden="true" />
     {onRestore && <button type="button" className="ai-code-action" disabled={busy || restored} title={l.restoreHint} onClick={async () => { setBusy(true); try { await onRestore(); } finally { setBusy(false); } }}><UiIcon slot="rotate-ccw" size={13} /><span>{restored ? l.restored : l.restore}</span></button>}
   </div>;

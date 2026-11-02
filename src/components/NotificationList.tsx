@@ -1,3 +1,5 @@
+import { useComponentDefaults } from '../context/ComponentDefaults';
+import { resolveItemClass, type ItemClassName, type ItemRenderState } from './internal/optionStyle';
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
@@ -16,6 +18,10 @@ export interface NotificationItem {
   action?: React.ReactNode;
 }
 export interface NotificationListProps {
+  /** Pinta cada notificación. Recibe la de serie en `content`; sin leer = `selected`. */
+  renderItem?: (item: NotificationItem, state: ItemRenderState) => React.ReactNode;
+  /** Clases de cada notificación. También como función. */
+  itemClassName?: ItemClassName<NotificationItem>;
   items: NotificationItem[];
   title?: string;
   /** Acciones de cabecera adicionales, por ejemplo el cierre de una bandeja. */
@@ -31,7 +37,8 @@ export interface NotificationListProps {
 }
 
 /** Bandeja controlada. Abrir una notificación no cambia su lectura automáticamente. */
-export const NotificationList: React.FC<NotificationListProps> = ({
+export const NotificationList: React.FC<NotificationListProps> = (rawProps) => {
+  const {
   items,
   title: titleProp,
   headerActions,
@@ -42,7 +49,9 @@ export const NotificationList: React.FC<NotificationListProps> = ({
   disabled = false,
   maxHeight,
   className,
-}) => {
+  renderItem,
+  itemClassName,
+} = useComponentDefaults('NotificationList', rawProps);
   const { messages: m, format } = useI18n();
   const nl = m.notificationList;
   const title = titleProp ?? m.notifications.title;
@@ -83,11 +92,9 @@ export const NotificationList: React.FC<NotificationListProps> = ({
           className="divide-y divide-[var(--border-default)] overflow-y-auto"
           style={{ maxHeight }}
         >
-          {items.map((item) => (
-            <li
-              key={item.id}
-              className={cn('flex gap-3 p-4', !item.read && 'bg-[var(--bg-muted)]')}
-            >
+          {items.map((item) => {
+            const content = (
+              <>
               <span aria-hidden="true" className="mt-0.5 shrink-0 text-[var(--fg-muted)]">
                 {item.icon ?? <UiIcon slot="bell" size={18} />}
               </span>
@@ -100,7 +107,7 @@ export const NotificationList: React.FC<NotificationListProps> = ({
                         type="button"
                         disabled={disabled}
                         onClick={() => onActivate(item)}
-                        className="break-words text-left text-[length:calc(13px*var(--k-text-scale,1))] font-semibold text-[var(--fg-default)] hover:text-accent focus-visible:ring-2 focus-visible:ring-accent"
+                        className="break-words text-start text-[length:calc(13px*var(--k-text-scale,1))] font-semibold text-[var(--fg-default)] hover:text-accent focus-visible:ring-2 focus-visible:ring-accent"
                       >
                         {item.title}
                       </button>
@@ -155,8 +162,18 @@ export const NotificationList: React.FC<NotificationListProps> = ({
                   </div>
                 )}
               </div>
-            </li>
-          ))}
+              </>
+            );
+            const state: ItemRenderState = { selected: !item.read, highlighted: false, disabled: Boolean(disabled), query: '', label: item.title, content };
+            return (
+              <li
+                key={item.id}
+                className={cn('flex gap-3 p-4', !item.read && 'bg-[var(--bg-muted)]', resolveItemClass(itemClassName, item, state))}
+              >
+                {renderItem ? renderItem(item, state) : content}
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

@@ -110,7 +110,7 @@ export const SplitButton: React.FC<SplitButtonProps> = (rawProps) => {
         disabled={locked}
         isLoading={isLoading}
         onClick={onClick}
-        className={cn('min-w-0', actions.length > 0 && 'rounded-r-none')}
+        className={cn('min-w-0', actions.length > 0 && 'rounded-e-none')}
       >
         {icon}
         {label}
@@ -137,7 +137,7 @@ export const SplitButton: React.FC<SplitButtonProps> = (rawProps) => {
               setOpen(true);
             }
           }}
-          className="shrink-0 rounded-l-none border-l border-current/20 px-2"
+          className="shrink-0 rounded-s-none border-s border-current/20 px-2"
         >
           <UiIcon slot="chevron-down" size={16} aria-hidden="true" />
         </Button>
@@ -169,7 +169,7 @@ export const SplitButton: React.FC<SplitButtonProps> = (rawProps) => {
                   action.onClick();
                 }}
                 className={cn(
-                  'flex w-full items-center gap-2 rounded-[var(--k-radius-xs)] px-3 py-2 text-left text-[length:calc(13px*var(--k-text-scale,1))] focus:outline-none focus:ring-1 focus:ring-inset focus:ring-accent disabled:opacity-40',
+                  'flex w-full items-center gap-2 rounded-[var(--k-radius-xs)] px-3 py-2 text-start text-[length:calc(13px*var(--k-text-scale,1))] focus:outline-none focus:ring-1 focus:ring-inset focus:ring-accent disabled:opacity-40',
                   action.destructive
                     ? 'text-[var(--k-danger-fg)] hover:bg-[var(--k-danger-bg)] focus:bg-[var(--k-danger-bg)]'
                     : 'text-[var(--fg-default)] hover:bg-[var(--bg-hover)] focus:bg-[var(--bg-hover)]',

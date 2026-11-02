@@ -11,7 +11,7 @@ run(async ({ browser, check }) => {
 
   // ── Gantt ────────────────────────────────────────────────────────────
   await page.goto(storyUrl('gantt--completo'));
-  const table = page.getByRole('table', { name: 'Diagrama de Gantt' });
+  const table = page.getByRole('group', { name: 'Diagrama de Gantt' });
   await table.waitFor();
   const bar = page.locator('[role="button"][aria-label^="Licencia de obra,"]');
   await page.waitForTimeout(700);

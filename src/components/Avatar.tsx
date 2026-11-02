@@ -67,10 +67,10 @@ const badgeSizes = {
 };
 
 const badgePlacements = {
-  'top-right': '-top-0.5 -right-0.5',
-  'bottom-right': '-bottom-0.5 -right-0.5',
-  'top-left': '-top-0.5 -left-0.5',
-  'bottom-left': '-bottom-0.5 -left-0.5',
+  'top-right': '-top-0.5 -end-0.5',
+  'bottom-right': '-bottom-0.5 -end-0.5',
+  'top-left': '-top-0.5 -start-0.5',
+  'bottom-left': '-bottom-0.5 -start-0.5',
 };
 
 /** Iniciales de las dos primeras palabras, sin partir un emoji ni una letra compuesta. */
@@ -136,7 +136,7 @@ export const Avatar: React.FC<AvatarProps> = (rawProps) => {
       {status && (
         <span
           className={cn(
-            'absolute bottom-0 right-0 rounded-full ring-2 ring-[var(--bg-card)]',
+            'absolute bottom-0 end-0 rounded-full ring-2 ring-[var(--bg-card)]',
             statusColors[status],
             statusSizes[size],
           )}

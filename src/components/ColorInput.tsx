@@ -101,7 +101,7 @@ export const ColorInput: React.FC<ColorInputProps> = ({
               error && 'border-[var(--k-danger)]',
             )}
           >
-            <span className="pl-2 font-mono text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)] select-none">#</span>
+            <span className="ps-2 font-mono text-[length:calc(12px*var(--k-text-scale,1))] text-[var(--fg-subtle,#657486)] select-none">#</span>
             <input
               data-k-focus-input=""
               type="text"
@@ -119,7 +119,7 @@ export const ColorInput: React.FC<ColorInputProps> = ({
               className={cn(
                 'w-[8ch] bg-transparent font-mono uppercase text-[var(--fg-default,#0a1628)] focus:outline-none',
                 FIELD_SIZES[size],
-                'pl-1',
+                'ps-1',
               )}
             />
             {clearable && value && !disabled && (

@@ -99,7 +99,7 @@
    anchura; aquí solo se anima con el muelle `move`. Sin medir aún, aparece en su sitio sin viajar. */
 .k-indicator {
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   top: 0;
   pointer-events: none;
   transition-property: transform, width, height, opacity;

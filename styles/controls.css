@@ -31,7 +31,7 @@
 .k-slider[data-dragging] .k-slider-thumb, .k-slider[data-dragging] .k-slider-fill { transition-property: transform, box-shadow; }
 .k-slider-bubble {
   position: absolute;
-  left: 50%;
+  inset-inline-start: 50%;
   bottom: calc(100% + 8px);
   padding: 2px 7px;
   border-radius: var(--k-radius-xs, 2px);
@@ -47,7 +47,7 @@
 .k-slider-bubble[data-show], .k-slider-thumb:focus-visible .k-slider-bubble, .k-slider[data-dragging] .k-slider-thumb[data-active] .k-slider-bubble { opacity: 1; transform: translate(-50%, 0) scale(1); }
 .k-slider-mark { position: absolute; top: 50%; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: var(--border-strong, #cbd5e1); pointer-events: none; }
 .k-slider-mark[data-in] { background: color-mix(in srgb, var(--color-accent-fg, #ffffff) 70%, transparent); }
-.k-slider-mark-label { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); color: var(--fg-muted, #52606f); font-size: calc(11px * var(--k-text-scale, 1)); white-space: nowrap; }
+.k-slider-mark-label { position: absolute; top: 12px; inset-inline-start: 50%; transform: translateX(-50%); color: var(--fg-muted, #52606f); font-size: calc(11px * var(--k-text-scale, 1)); white-space: nowrap; }
 
 /* ── Rating ─────────────────────────────────────────────────────────────── */
 .k-rating { display: inline-flex; align-items: center; gap: 2px; width: fit-content; border-radius: var(--k-radius-xs, 2px); outline: none; }
@@ -99,7 +99,7 @@
   background: var(--bg-card, #ffffff);
   color: var(--fg-body, #2d3a4a);
   cursor: pointer;
-  text-align: left;
+  text-align: start;
   transition: border-color calc(150ms * var(--k-motion, 1)), box-shadow calc(150ms * var(--k-motion, 1)), transform calc(var(--k-spring-pop-duration, 280ms) * var(--k-motion, 1)) var(--k-spring-pop, cubic-bezier(0.22, 1, 0.36, 1));
 }
 .k-choice:hover { border-color: var(--border-strong, #cbd5e1); }
@@ -122,7 +122,7 @@
 
 /* ── Edición en línea ──────────────────────────────────────────────────── */
 .k-inline-edit { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0; }
-.k-inline-edit-view { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; margin: -2px -6px; padding: 2px 6px; border-radius: var(--k-radius-xs, 2px); color: inherit; font: inherit; text-align: left; cursor: text; transition: background-color calc(120ms * var(--k-motion, 1)); }
+.k-inline-edit-view { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; margin: -2px -6px; padding: 2px 6px; border-radius: var(--k-radius-xs, 2px); color: inherit; font: inherit; text-align: start; cursor: text; transition: background-color calc(120ms * var(--k-motion, 1)); }
 .k-inline-edit-view:hover, .k-inline-edit-view:focus-visible { background: var(--bg-hover, #f1f5f9); outline: none; }
 .k-inline-edit-view:focus-visible { box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent, #0d9488) 40%, transparent); }
 .k-inline-edit-view .k-inline-edit-pencil { opacity: 0; color: var(--fg-subtle, #657486); transition: opacity calc(120ms * var(--k-motion, 1)); }
@@ -134,8 +134,8 @@
 .k-signature-pad { position: relative; overflow: hidden; border: var(--k-border-width, 1px) dashed var(--border-strong, #cbd5e1); border-radius: var(--k-radius-md, 8px); background: var(--bg-card, #ffffff); touch-action: none; cursor: crosshair; }
 .k-signature-pad[data-error] { border-color: var(--k-danger, #dc2626); }
 .k-signature-pad canvas { display: block; width: 100%; height: 100%; }
-.k-signature-line { position: absolute; left: 24px; right: 24px; bottom: 28%; border-bottom: var(--k-border-width, 1px) solid var(--border-default, #e2e8f0); pointer-events: none; }
-.k-signature-hint { position: absolute; left: 24px; bottom: calc(28% + 6px); color: var(--fg-subtle, #657486); font-size: calc(12px * var(--k-text-scale, 1)); pointer-events: none; transition: opacity calc(200ms * var(--k-motion, 1)); }
+.k-signature-line { position: absolute; inset-inline-start: 24px; inset-inline-end: 24px; bottom: 28%; border-bottom: var(--k-border-width, 1px) solid var(--border-default, #e2e8f0); pointer-events: none; }
+.k-signature-hint { position: absolute; inset-inline-start: 24px; bottom: calc(28% + 6px); color: var(--fg-subtle, #657486); font-size: calc(12px * var(--k-text-scale, 1)); pointer-events: none; transition: opacity calc(200ms * var(--k-motion, 1)); }
 .k-signature-pad[data-signed] .k-signature-hint { opacity: 0; }
 .k-signature-actions { display: flex; justify-content: flex-end; gap: 6px; }
 

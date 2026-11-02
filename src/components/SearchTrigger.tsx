@@ -85,7 +85,7 @@ export const SearchTrigger: React.FC<SearchTriggerProps> = ({
     )}
   >
     <UiIcon slot="search" className="h-3.5 w-3.5 shrink-0" />
-    <span className="flex-1 truncate text-left">{placeholder}</span>
+    <span className="flex-1 truncate text-start">{placeholder}</span>
     {shortcut && (
       <kbd className="pointer-events-none shrink-0 select-none rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] px-1.5 py-0.5 font-mono text-[length:calc(10px*var(--k-text-scale,1))]">
         {etiquetaAtajo(shortcut)}

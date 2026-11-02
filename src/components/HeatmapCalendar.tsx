@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { logicalKey } from '../internal/roving';
 import { cn } from '../utils';
 import { capitalizar } from '../internal/fechas';
 import { formatNumber } from '../internal/intl';
@@ -60,7 +61,7 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
   const mover = (event: React.KeyboardEvent) => {
     const salto: Record<string, number> = { ArrowUp: -1, ArrowDown: 1, ArrowLeft: -7, ArrowRight: 7 };
     let siguiente: string | null = null;
-    if (event.key in salto) siguiente = addDays(activo, salto[event.key]);
+    if (event.key in salto) siguiente = addDays(activo, salto[logicalKey(event)]);
     else if (event.key === 'Home') siguiente = first;
     else if (event.key === 'End') siguiente = last;
     if (!siguiente) return;

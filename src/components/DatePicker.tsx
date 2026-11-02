@@ -1,4 +1,5 @@
 import { ControlField, describedBy } from './internal/ControlField';
+import { logicalKey } from '../internal/roving';
 import { capitalizar, isoDate } from '../internal/fechas';
 import * as React from 'react';
 import { adaptivePortal } from './internal/MobileOverlay';
@@ -30,7 +31,7 @@ export interface DatePickerProps {
   label?: string;
   /** Nombre accesible cuando no se muestra una etiqueta encima. */
   ariaLabel?: string;
-  /** Marca visible junto a la etiqueta y `aria-required` en el control. */
+  /** Marca visible junto a la etiqueta. El control es un botón, que no admite `aria-required`. */
   required?: boolean;
   error?: string;
   helperText?: string;
@@ -242,7 +243,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       }
     };
 
-    switch (event.key) {
+    switch (logicalKey(event)) {
       case 'ArrowLeft':
         moveTo(current - 1);
         break;
@@ -531,7 +532,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         )}
       </div>,
       document.body,
-      { open: isOpen, onClose: close, title: label ?? ariaLabel ?? 'Seleccionar fecha', presentation, anchorRef },
+      { open: isOpen, onClose: close, title: label ?? ariaLabel ?? m.datePicker.selectDate, presentation, anchorRef },
     );
 
   return (
@@ -541,7 +542,6 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           id={generatedId}
           data-k-control="select"
           type="button"
-          aria-required={required || undefined}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy(generatedId, error, helperText)}
           aria-label={ariaLabel}

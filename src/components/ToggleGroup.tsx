@@ -1,4 +1,4 @@
-import { enabledIndices, rovingNext } from '../internal/roving';
+import { enabledIndices, rovingNext, logicalKey } from '../internal/roving';
 import * as React from 'react';
 import { cn } from '../utils';
 import { useComponentDefaults } from '../context/ComponentDefaults';
@@ -67,7 +67,7 @@ export function ToggleGroup<T extends string = string>(rawProps: ToggleGroupProp
   };
 
   const onKeyDown = (event: React.KeyboardEvent) => {
-    const index = rovingNext(event.key, enabledIndices(items, disabled), focus);
+    const index = rovingNext(logicalKey(event), enabledIndices(items, disabled), focus);
     if (index === null) return;
     event.preventDefault();
     setFocus(index);

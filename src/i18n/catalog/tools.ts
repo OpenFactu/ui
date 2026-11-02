@@ -40,6 +40,7 @@ export const map = {
   locating: 'Buscando tu ubicación',
   locateDenied: 'Sin permiso para usar tu ubicación',
   locateFailed: 'No se pudo obtener tu ubicación',
+  locateUnsupported: 'Este navegador no puede dar tu ubicación',
   fullscreen: 'Pantalla completa',
   exitFullscreen: 'Salir de pantalla completa',
   reset: 'Volver a la vista inicial',
@@ -53,6 +54,7 @@ export const map = {
 };
 
 export const charts = {
+  label: 'Gráfico',
   empty: 'Sin datos',
   tableCaption: 'Datos del gráfico en forma de tabla',
 };

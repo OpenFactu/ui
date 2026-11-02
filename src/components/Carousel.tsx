@@ -2,10 +2,10 @@ import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { useSpring } from '../motion/useSpring';
-import { createVelocityTracker, projectRelease, rubberband } from '../motion/velocity';
+import { projectRelease, rubberband } from '../motion/velocity';
 import { motionDisabled } from '../motion/dom';
 import { useElementSize } from '../hooks/useResizeObserver';
-import { isPrimaryPointer, startPointerDrag } from '../internal/pointerDrag';
+import { useGestures } from '../gestures/useGestures';
 import { useI18n } from '../i18n/I18nProvider';
 
 export interface CarouselProps {
@@ -50,7 +50,7 @@ export const Carousel: React.FC<CarouselProps> = ({
   const step = width > 0 ? (width - gap * (perView - 1)) / perView + gap : 0;
   const [paused, setPaused] = React.useState(false);
   const dragging = React.useRef(false);
-  const tracker = React.useMemo(() => createVelocityTracker(100), []);
+  const panOrigin = React.useRef(0);
 
   const spring = useSpring({ ref: track as React.RefObject<HTMLElement | null>, role: 'gesture', apply: (x, el) => { el.style.transform = `translate3d(${x}px, 0, 0)`; } });
 
@@ -71,35 +71,32 @@ export const Carousel: React.FC<CarouselProps> = ({
     return () => clearTimeout(timer);
   }, [autoplay, paused, index, maxIndex, go, slides.length, perView]);
 
-  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!isPrimaryPointer(event) || !step || (event.target as HTMLElement).closest('button, a, input, select, textarea')) return;
-    const startX = event.clientX; const origin = spring.get();
-    let moved = false;
-    tracker.reset(); tracker.add(event.clientX, event.timeStamp);
-    spring.stop();
-    startPointerDrag(event, {
-      onMove: (e) => {
-        const dx = e.clientX - startX;
-        if (!moved && Math.abs(dx) < 4) return;
-        moved = true; dragging.current = true; setPaused(true);
-        tracker.add(e.clientX, e.timeStamp);
-        const min = -maxIndex * step; let x = origin + dx;
+  const gestures = useGestures({
+    axis: 'x',
+    slop: 4,
+    pointerTypes: ['touch', 'pen', 'mouse'],
+    ignore: 'button, a, input, select, textarea',
+    attribute: false,
+    onPan: (pan) => {
+      if (!step) return;
+      if (pan.phase === 'start') { panOrigin.current = spring.get(); spring.stop(); dragging.current = true; setPaused(true); }
+      if (pan.phase === 'start' || pan.phase === 'move') {
+        const min = -maxIndex * step; let x = panOrigin.current + pan.dx;
         if (x > 0) x = rubberband(x, width);
         if (x < min) x = min - rubberband(min - x, width);
         spring.set(x);
-      },
-      onEnd: (e) => {
-        dragging.current = false; setPaused(false);
-        if (!moved) return;
-        const v = tracker.velocity(e.timeStamp); // px/ms
-        const projected = spring.get() + projectRelease(v, 0.992);
-        let next = Math.round(-projected / step);
-        // Un lanzamiento claro avanza al menos una diapositiva.
-        if (Math.abs(v) > 0.4 && next === index) next = index + (v < 0 ? 1 : -1);
-        go(Math.max(index - perView, Math.min(index + perView, next)), v * 1000);
-      },
-    });
-  };
+        return;
+      }
+      dragging.current = false; setPaused(false);
+      if (pan.phase === 'cancel') { go(index); return; }
+      const v = pan.vx; // px/ms
+      const projected = spring.get() + projectRelease(v, 0.992);
+      let next = Math.round(-projected / step);
+      // Un lanzamiento claro avanza al menos una diapositiva.
+      if (Math.abs(v) > 0.4 && next === index) next = index + (v < 0 ? 1 : -1);
+      go(Math.max(index - perView, Math.min(index + perView, next)), v * 1000);
+    },
+  });
   // Un arrastre no debe acabar en clic sobre la diapositiva.
   const onClickCapture = (event: React.MouseEvent) => { if (Math.abs(spring.get() + index * step) > 6) { event.preventDefault(); event.stopPropagation(); } };
 
@@ -122,7 +119,7 @@ export const Carousel: React.FC<CarouselProps> = ({
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
-      <div ref={viewport} className="k-carousel-viewport" tabIndex={0} aria-label={format(m.carousel.viewport, { label: label ?? m.carousel.slides })} onKeyDown={onKeyDown} onPointerDown={onPointerDown} onClickCapture={onClickCapture} aria-live={autoplay ? 'off' : 'polite'}>
+      <div ref={viewport} className="k-carousel-viewport" tabIndex={0} aria-label={format(m.carousel.viewport, { label: label ?? m.carousel.slides })} onKeyDown={onKeyDown} {...gestures.bind} style={gestures.style} onClickCapture={onClickCapture} aria-live={autoplay ? 'off' : 'polite'}>
         <div ref={track} className="k-carousel-track" style={{ gap }}>
           {slides.map((slide, i) => (
             <div

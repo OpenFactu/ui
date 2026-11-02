@@ -39,12 +39,12 @@ export function AIConversationHistory({ conversations, projects, value, onSelect
       {legacyGroups && (index === 0 || !!ordered[index - 1].pinned !== !!item.pinned || ordered[index - 1].group !== item.group) && (item.pinned || item.group) && <div className="ai-history-group">{item.pinned ? l.pinned : item.group}</div>}
       <div className="ai-history-item" data-selected={item.id === value || undefined}>
         <button type="button" onClick={() => onSelect(item.id)} aria-current={item.id === value ? 'page' : undefined}><UiIcon slot="message-square" size={14} /><span><strong>{item.title}</strong>{item.description && <small>{item.description}</small>}</span>{item.pinned && <UiIcon slot="pin" size={11} />}</button>
-        {(onRename || onDelete || onPin || (withProjects && onMoveConversation)) && <DropdownMenu align="end" items={[
+        {(onRename || onDelete || onPin || (withProjects && onMoveConversation)) && <DropdownMenu align="end" className="ai-icon-button" aria-label={`${l.conversations}: ${item.title}`} items={[
           ...(onPin ? [{ label: item.pinned ? l.unpin : l.pin, icon: <UiIcon slot="pin" size={13} />, onClick: () => onPin(item.id, !item.pinned) }] : []),
           ...(withProjects && onMoveConversation ? [{ label: l.moveToProject, icon: <UiIcon slot="folder" size={13} />, onClick: () => { setMoving(item); setDestination(projects?.some(project => project.id === item.projectId) ? item.projectId! : ''); } }] : []),
           ...(onRename ? [{ label: l.rename, icon: <UiIcon slot="pencil" size={13} />, onClick: () => { setRenaming(item); setTitle(item.title); } }] : []),
           ...(onDelete ? [{ label: l.delete, icon: <UiIcon slot="trash-2" size={13} />, destructive: true, onClick: () => setDeleting(item) }] : []),
-        ]}><button type="button" className="ai-icon-button" aria-label={`${l.conversations}: ${item.title}`}><UiIcon slot="more-horizontal" size={14} /></button></DropdownMenu>}
+        ]}><UiIcon slot="more-horizontal" size={14} /></DropdownMenu>}
       </div>
     </React.Fragment>);
   return <nav className={cn('ai-surface ai-history', className)} aria-label={l.conversations}>
@@ -57,13 +57,13 @@ export function AIConversationHistory({ conversations, projects, value, onSelect
         const open = !!query.trim() || !collapsed.has(project.id);
         const contentId = `${sectionId}-${encodeURIComponent(project.id)}`;
         return <section className="ai-history-project" key={`project-${project.id}`} aria-label={project.title}>
-          <div className="ai-history-project-header"><button type="button" className="ai-history-project-toggle" aria-label={project.title} aria-expanded={open} aria-controls={contentId} onClick={() => toggle(project.id)}>
+          <div className="ai-history-project-header"><button type="button" className="ai-history-project-toggle" aria-expanded={open} aria-controls={contentId} onClick={() => toggle(project.id)}>
             <UiIcon slot={open ? 'chevron-down' : 'chevron-right'} size={12} /><UiIcon slot={open ? 'folder-open' : 'folder'} size={15} /><span>{project.title}</span><small>{items.length}</small>
-          </button>{(onNew || onRenameProject || onDeleteProject) && <DropdownMenu align="end" items={[
+          </button>{(onNew || onRenameProject || onDeleteProject) && <DropdownMenu align="end" className="ai-icon-button" aria-label={`${l.project}: ${project.title}`} items={[
             ...(onNew ? [{ label: l.newConversation, icon: <UiIcon slot="plus" size={13} />, onClick: () => { setCollapsed(current => { const next = new Set(current); next.delete(project.id); return next; }); onNew(project.id); } }] : []),
             ...(onRenameProject ? [{ label: l.renameProject, icon: <UiIcon slot="pencil" size={13} />, onClick: () => setProjectEditor({ project, title: project.title }) }] : []),
             ...(onDeleteProject ? [{ label: l.deleteProject, icon: <UiIcon slot="trash-2" size={13} />, destructive: true, onClick: () => setDeletingProject(project) }] : []),
-          ]}><button type="button" className="ai-icon-button" aria-label={`${l.project}: ${project.title}`}><UiIcon slot="more-horizontal" size={14} /></button></DropdownMenu>}</div>
+          ]}><UiIcon slot="more-horizontal" size={14} /></DropdownMenu>}</div>
           <div id={contentId} hidden={!open} className="ai-history-project-content">{items.length ? renderItems(items, false) : <p className="ai-history-project-empty">{l.emptyProject}</p>}</div>
         </section>;
       })}

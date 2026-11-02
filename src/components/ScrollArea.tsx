@@ -32,8 +32,9 @@ export const ScrollArea = React.forwardRef<HTMLDivElement, ScrollAreaProps>(func
     const next = {
       top: el.scrollTop > 1,
       bottom: el.scrollTop + el.clientHeight < el.scrollHeight - 1,
-      left: el.scrollLeft > 1,
-      right: el.scrollLeft + el.clientWidth < el.scrollWidth - 1,
+      // De derecha a izquierda `scrollLeft` va en negativo: aquí «left» y «right» son inicio y fin.
+      left: Math.abs(el.scrollLeft) > 1,
+      right: Math.abs(el.scrollLeft) + el.clientWidth < el.scrollWidth - 1,
     };
     setEdges((e) => (e.top === next.top && e.bottom === next.bottom && e.left === next.left && e.right === next.right ? e : next));
   }, [shadows]);

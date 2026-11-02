@@ -1,3 +1,4 @@
+import { useComponentDefaults } from '../context/ComponentDefaults';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { UiIcon } from '../icons';
@@ -14,9 +15,15 @@ export interface BreadcrumbItem {
 export interface BreadcrumbsProps {
   items: BreadcrumbItem[];
   className?: string;
+  /** Pinta cada miga. Recibe la de serie, y si es la página actual. */
+  renderItem?: (item: BreadcrumbItem, state: { current: boolean; index: number; content: React.ReactNode }) => React.ReactNode;
+  /** Lo que separa las migas. Por defecto, una flecha. */
+  separator?: React.ReactNode;
+  itemClassName?: string;
 }
 
-export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className }) => {
+export const Breadcrumbs: React.FC<BreadcrumbsProps> = (rawProps) => {
+  const { items, className, renderItem, separator, itemClassName } = useComponentDefaults('Breadcrumbs', rawProps);
   const nav = useMessages('navigation');
   return (
   <nav data-k-mobile="Breadcrumbs" aria-label={nav.breadcrumbs} className={cn('flex items-center', className)}>
@@ -25,12 +32,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className }) =>
         const isLast = idx === items.length - 1;
         const interactive =
           'text-[var(--fg-muted,#52606f)] hover:text-accent transition-colors';
-        return (
-          <li key={idx} className="flex items-center gap-1.5">
-            {idx > 0 && (
-              <UiIcon slot="chevron-right" className="h-3 w-3 text-[var(--fg-subtle,#657486)] shrink-0" />
-            )}
-            {isLast ? (
+        const content = isLast ? (
               <span
                 aria-current="page"
                 className="font-medium text-[var(--fg-default,#0a1628)]"
@@ -47,7 +49,11 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className }) =>
               </button>
             ) : (
               <span className="text-[var(--fg-muted,#52606f)]">{item.label}</span>
-            )}
+            );
+        return (
+          <li key={idx} className={cn('flex items-center gap-1.5', itemClassName)}>
+            {idx > 0 && (separator ?? <UiIcon slot="chevron-right" className="h-3 w-3 text-[var(--fg-subtle,#657486)] shrink-0" />)}
+            {renderItem ? renderItem(item, { current: isLast, index: idx, content }) : content}
           </li>
         );
       })}

@@ -115,7 +115,7 @@ try {
     await page.getByRole('button', { name: 'Recibir en equipo', exact: true }).click();
     await conversation(/Equipo de producto/).getByLabel('1 sin leer').waitFor();
     await page.getByRole('button', { name: 'Alternar escritura de Ana', exact: true }).click();
-    await page.getByText('Ana López está escribiendo…', { exact: true }).waitFor();
+    await page.getByText('Ana López está escribiendo…', { exact: true }).first().waitFor();
     await conversation(/Equipo de producto/).click();
     assert.equal(await conversation(/Equipo de producto/).getByLabel('1 sin leer').count(), 0);
   });

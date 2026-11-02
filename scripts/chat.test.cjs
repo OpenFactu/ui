@@ -276,7 +276,7 @@ test('avatar badge renders in its corner with an accessible name; status label i
   const { render } = require('./test-support.cjs');
   const { Avatar } = require('../src/components/Avatar.tsx');
   const html = render(Avatar, { name: 'Ana López', status: 'online', badge: '✓', badgeLabel: 'Verificada', badgePlacement: 'bottom-left' });
-  assert.match(html, /k-avatar-badge[^"]*-bottom-0\.5 -left-0\.5[^"]*" role="img" aria-label="Verificada">✓</);
+  assert.match(html, /k-avatar-badge[^"]*-bottom-0\.5 -start-0\.5[^"]*" role="img" aria-label="Verificada">✓</);
   assert.match(html, /aria-label="En línea"/);
 });
 

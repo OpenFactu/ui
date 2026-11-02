@@ -1,4 +1,6 @@
-import { enabledIndices, rovingNext } from '../internal/roving';
+import { useComponentDefaults } from '../context/ComponentDefaults';
+import { resolveItemClass, type ItemClassName, type ItemRenderState } from './internal/optionStyle';
+import { enabledIndices, rovingNext, logicalKey } from '../internal/roving';
 import * as React from 'react';
 import { cn } from '../utils';
 import { attrValue, useIndicator } from '../motion/useIndicator';
@@ -13,6 +15,10 @@ export interface TabItem {
 }
 
 export interface TabsProps {
+  /** Pinta el contenido de cada pestaña. El rol, las flechas y el indicador que viaja siguen siendo del componente. */
+  renderItem?: (item: TabItem, state: ItemRenderState) => React.ReactNode;
+  /** Clases de cada pestaña, que ganan a las de serie. También como función. */
+  itemClassName?: ItemClassName<TabItem>;
   items: TabItem[];
   value: string;
   onChange: (key: string) => void;
@@ -47,7 +53,8 @@ const segmentedSizes = {
   md: 'px-3.5 py-2 text-[length:calc(13px*var(--k-text-scale,1))] gap-2',
 };
 
-export const Tabs: React.FC<TabsProps> = ({
+export const Tabs: React.FC<TabsProps> = (rawProps) => {
+  const {
   items,
   value,
   onChange,
@@ -56,7 +63,9 @@ export const Tabs: React.FC<TabsProps> = ({
   scrollable = false,
   fullWidth = false,
   className,
-}) => {
+  renderItem,
+  itemClassName,
+} = useComponentDefaults('Tabs', rawProps);
   const listRef = React.useRef<HTMLDivElement>(null);
   const hasActive = items.some((item) => item.key === value);
   const { ref: indicatorRef } = useIndicator({
@@ -68,7 +77,7 @@ export const Tabs: React.FC<TabsProps> = ({
 
   // Navegación con flechas entre tabs habilitadas (patrón WAI-ARIA tablist).
   const handleKeyDown = (event: React.KeyboardEvent, currentKey: string) => {
-    const index = rovingNext(event.key, enabledIndices(items), items.findIndex((t) => t.key === currentKey), { axis: 'horizontal' });
+    const index = rovingNext(logicalKey(event), enabledIndices(items), items.findIndex((t) => t.key === currentKey), { axis: 'horizontal' });
     if (index === null) return;
     event.preventDefault();
     const next = items[index];
@@ -108,6 +117,8 @@ export const Tabs: React.FC<TabsProps> = ({
       />
       {items.map((item, i) => {
         const isActive = item.key === value;
+        const content = <>{item.icon}{item.label}{item.badge}</>;
+        const state: ItemRenderState = { selected: isActive, highlighted: false, disabled: Boolean(item.disabled), query: '', label: item.label, content };
         return (
           <button
             key={item.key}
@@ -135,7 +146,7 @@ export const Tabs: React.FC<TabsProps> = ({
                 ? cn(
                     segmentedSizes[size],
                     'justify-center',
-                    i > 0 && 'border-l border-[var(--border-default,#e2e8f0)]',
+                    i > 0 && 'border-s border-[var(--border-default,#e2e8f0)]',
                     isActive
                       ? 'text-[color:var(--color-accent-fg)]'
                       : 'text-[var(--fg-muted,#52606f)] hover:text-[var(--fg-default,#0a1628)] hover:bg-[var(--bg-hover,#f1f5f9)]',
@@ -148,11 +159,10 @@ export const Tabs: React.FC<TabsProps> = ({
                       : 'text-[var(--fg-body,#2d3a4a)] hover:bg-[var(--bg-hover)] hover:text-accent',
                   ),
               item.disabled && 'opacity-50 cursor-not-allowed pointer-events-none',
+              resolveItemClass(itemClassName, item, state),
             )}
           >
-            {item.icon}
-            {item.label}
-            {item.badge}
+            {renderItem ? renderItem(item, state) : content}
           </button>
         );
       })}

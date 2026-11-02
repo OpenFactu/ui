@@ -140,7 +140,7 @@
   border-radius: var(--k-radius-sm, 6px);
   background: var(--bg-card, #ffffff);
   box-shadow: inset 2px 0 0 var(--k-kb-tone, transparent), var(--k-shadow-sm, 0 1px 2px rgb(15 23 42 / 0.06));
-  text-align: left;
+  text-align: start;
   color: var(--fg-default, #0a1628);
   transition:
     box-shadow calc(200ms * var(--k-motion, 1)) ease,
@@ -170,7 +170,7 @@
 .k-kb-float {
   position: fixed;
   top: 0;
-  left: 0;
+  inset-inline-start: 0;
   z-index: 1000;
   pointer-events: none;
   will-change: transform, rotate;
@@ -236,9 +236,9 @@
 .k-kb-due[data-state='overdue'] { background: var(--k-danger-bg, #fee2e2); color: var(--k-danger-fg, #b42318); }
 .k-kb-due[data-state='today'], .k-kb-due[data-state='soon'] { background: var(--k-warning-bg, #fef3c7); color: var(--k-warning-fg, #92400e); }
 .k-kb-due[data-state='done'] { background: var(--k-success-bg, #dcfce7); color: var(--k-success-fg, #166534); }
-.k-kb-people { display: inline-flex; align-items: center; margin-left: auto; }
+.k-kb-people { display: inline-flex; align-items: center; margin-inline-start: auto; }
 .k-kb-people > * { box-shadow: 0 0 0 2px var(--bg-card, #ffffff); }
-.k-kb-people > * + * { margin-left: -4px; }
+.k-kb-people > * + * { margin-inline-start: -4px; }
 .k-kb-more {
   display: inline-grid;
   place-items: center;

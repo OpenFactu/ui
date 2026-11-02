@@ -1,3 +1,5 @@
+import { useComponentDefaults } from '../context/ComponentDefaults';
+import { resolveItemClass, type ItemClassName, type ItemRenderState } from './internal/optionStyle';
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
@@ -11,6 +13,12 @@ export interface AccordionItem {
 }
 
 export interface AccordionProps {
+  /** Pinta la cabecera de cada panel. El botón, `aria-expanded` y la animación siguen siendo del componente. */
+  renderItem?: (item: AccordionItem, state: ItemRenderState) => React.ReactNode;
+  /** Clases de la cabecera, que ganan a las de serie. Abierto = `selected`. También como función. */
+  itemClassName?: ItemClassName<AccordionItem>;
+  /** Sustituye a la flecha. Recibe si está abierto. `false`, sin indicador. */
+  renderIndicator?: false | ((open: boolean) => React.ReactNode);
   items: AccordionItem[];
   /** 'single': solo un panel abierto a la vez. Default 'single'. */
   type?: 'single' | 'multiple';
@@ -22,14 +30,18 @@ export interface AccordionProps {
   className?: string;
 }
 
-export const Accordion: React.FC<AccordionProps> = ({
+export const Accordion: React.FC<AccordionProps> = (rawProps) => {
+  const {
   items,
   type = 'single',
   defaultOpenKeys = [],
   openKeys,
   onOpenChange,
   className,
-}) => {
+  renderItem,
+  itemClassName,
+  renderIndicator,
+} = useComponentDefaults('Accordion', rawProps);
   const [internalKeys, setInternalKeys] = React.useState<string[]>(defaultOpenKeys);
   const keys = openKeys ?? internalKeys;
 
@@ -53,6 +65,7 @@ export const Accordion: React.FC<AccordionProps> = ({
     >
       {items.map((item) => {
         const isOpen = keys.includes(item.key);
+        const state: ItemRenderState = { selected: isOpen, highlighted: false, disabled: Boolean(item.disabled), query: '', label: item.title, content: item.title };
         return (
           <div key={item.key}>
             <button
@@ -61,18 +74,21 @@ export const Accordion: React.FC<AccordionProps> = ({
               disabled={item.disabled}
               onClick={() => toggle(item.key)}
               className={cn(
-                'flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-[length:calc(13px*var(--k-text-scale,1))] font-medium text-[var(--fg-default,#0a1628)] transition-colors',
+                'flex w-full items-center justify-between gap-3 px-4 py-3 text-start text-[length:calc(13px*var(--k-text-scale,1))] font-medium text-[var(--fg-default,#0a1628)] transition-colors',
                 'hover:bg-[var(--bg-hover)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent',
                 item.disabled && 'opacity-50 cursor-not-allowed pointer-events-none',
+                resolveItemClass(itemClassName, item, state),
               )}
             >
-              {item.title}
-              <UiIcon slot="chevron-down"
-                className={cn(
-                  'h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle,#657486)] transition-transform duration-200',
-                  isOpen && 'rotate-180',
-                )}
-              />
+              {renderItem ? renderItem(item, state) : item.title}
+              {renderIndicator === undefined ? (
+                <UiIcon slot="chevron-down"
+                  className={cn(
+                    'h-3.5 w-3.5 shrink-0 text-[var(--fg-subtle,#657486)] transition-transform duration-200',
+                    isOpen && 'rotate-180',
+                  )}
+                />
+              ) : renderIndicator && renderIndicator(isOpen)}
             </button>
             <Collapse open={isOpen}>
               <div className="px-4 pb-4 pt-1 text-[length:calc(13px*var(--k-text-scale,1))] text-[var(--fg-body,#2d3a4a)]">{item.content}</div>

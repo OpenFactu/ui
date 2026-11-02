@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { cn } from '../utils';
+import { useMessages } from '../i18n/I18nProvider';
 
 export interface ProgressProps {
   /** 0–100 (se hace clamp interno). Ignorado si `indeterminate`. */
@@ -36,6 +37,7 @@ export const Progress: React.FC<ProgressProps> = ({
   showValue = false,
   className,
 }) => {
+  const common = useMessages('common');
   const clamped = Math.min(100, Math.max(0, value));
 
   return (
@@ -62,7 +64,7 @@ export const Progress: React.FC<ProgressProps> = ({
         data-glow={glow || undefined}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label={label}
+        aria-label={label ?? common.progress}
         className={cn(
           'k-progress-track w-full overflow-hidden rounded-full bg-[var(--bg-hover)]',
           size === 'sm' ? 'h-1' : 'h-2',

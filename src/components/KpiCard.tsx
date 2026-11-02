@@ -87,19 +87,19 @@ export const KpiCard: React.FC<KpiCardProps> = ({
         surface,
         'relative min-w-0',
         onClick &&
-          'text-left w-full cursor-pointer transition-colors hover:border-[var(--border-strong)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
+          'text-start w-full cursor-pointer transition-colors hover:border-[var(--border-strong)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
         className,
       )}
     >
       {icon && (
-        <span aria-hidden="true" className="absolute top-6 right-6 text-[var(--fg-subtle,#657486)]">
+        <span aria-hidden="true" className="absolute top-6 end-6 text-[var(--fg-subtle,#657486)]">
           {icon}
         </span>
       )}
       <div
         className={cn(
           'font-mono text-[length:calc(10px*var(--k-text-scale,1))] tracking-[1.5px] uppercase text-[var(--fg-subtle,#657486)] mb-2.5',
-          icon && 'pr-7',
+          icon && 'pe-7',
         )}
       >
         {label}

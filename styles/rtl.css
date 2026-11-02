@@ -1,0 +1,24 @@
+/* ── Derecha a izquierda ──────────────────────────────────────────────────
+   La librería usa propiedades lógicas: con `dir="rtl"` casi todo se refleja solo. Aquí queda lo que no. */
+
+/* Las flechas señalan una dirección, así que se giran. `scale` se compone con el `rotate` de los desplegables. */
+[dir='rtl'] [data-k-flip] { scale: -1 1; }
+
+/* Estos tienen un eje propio o cuentas ligadas a la posición en pantalla: siguen de izquierda a derecha, y dentro se reflejaría mal. */
+[dir='rtl'] :is(.k-code-editor, .k-map, [data-k-mobile='Gantt'], .k-slider, .k-split, .k-carousel-viewport, .k-compare, .k-signature, .k-marquee, .recharts-wrapper, [data-k-mobile='OtpInput']) { direction: ltr; }
+
+/* Los importes y los códigos son números: se leen de izquierda a derecha aunque la frase vaya al revés. */
+[dir='rtl'] :is(.k-value, .k-roll, code, kbd, .font-mono) { unicode-bidi: isolate; }
+
+/* Sombras y fundidos con lado físico: el contenido que pasa por debajo está al otro lado. */
+[dir='rtl'] .k-table[data-overflow-left] .k-table-edge-left { box-shadow: -8px 0 10px -8px rgb(15 23 42 / 0.22); }
+[dir='rtl'] .k-table[data-overflow-right] .k-table-edge-right { box-shadow: 8px 0 10px -8px rgb(15 23 42 / 0.22); }
+.dark [dir='rtl'] .k-table[data-overflow-left] .k-table-edge-left { box-shadow: -8px 0 10px -8px rgb(0 0 0 / 0.6); }
+.dark [dir='rtl'] .k-table[data-overflow-right] .k-table-edge-right { box-shadow: 8px 0 10px -8px rgb(0 0 0 / 0.6); }
+
+/* El indicador se mueve con `translate` medido desde la izquierda del contenedor. */
+[dir='rtl'] .k-indicator { inset-inline-start: auto; left: 0; }
+
+[dir='rtl'] .k-scroll-area[data-overflow-left] .k-scroll-viewport { -webkit-mask-image: linear-gradient(to left, transparent, #000 18px); mask-image: linear-gradient(to left, transparent, #000 18px); }
+[dir='rtl'] .k-scroll-area[data-overflow-right] .k-scroll-viewport { -webkit-mask-image: linear-gradient(to right, transparent, #000 18px); mask-image: linear-gradient(to right, transparent, #000 18px); }
+[dir='rtl'] .k-scroll-area[data-overflow-left][data-overflow-right] .k-scroll-viewport { -webkit-mask-image: linear-gradient(to left, transparent, #000 18px, #000 calc(100% - 18px), transparent); mask-image: linear-gradient(to left, transparent, #000 18px, #000 calc(100% - 18px), transparent); }

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { logicalKey } from '../internal/roving';
 import { UiIcon } from '../icons';
 import { ChatPopover } from './ChatPopover';
 import { CHAT_EMOJIS, localizeChatEmojis, searchChatEmojis, type ChatEmoji } from './emojiCatalog';
@@ -15,7 +16,7 @@ export function ChatEmojiChoices({ catalog = CHAT_EMOJIS, select }: { catalog?: 
     <div className="k-chat-emoji-grid" ref={grid} role="group" aria-label={ct.emojis} onKeyDown={event => {
       const buttons = Array.from(grid.current?.querySelectorAll('button') ?? []);
       const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
-      const step = ({ ArrowRight: 1, ArrowLeft: -1, ArrowDown: 6, ArrowUp: -6 } as Record<string, number>)[event.key];
+      const step = ({ ArrowRight: 1, ArrowLeft: -1, ArrowDown: 6, ArrowUp: -6 } as Record<string, number>)[logicalKey(event)];
       if (index >= 0 && step) { event.preventDefault(); buttons[(index + step + buttons.length) % buttons.length]?.focus(); }
     }}>{filtered.map(item => <button type="button" key={item.emoji} aria-label={item.label} title={item.label} onClick={() => select(item.emoji)}>{item.emoji}</button>)}</div>
     {!filtered.length && <p role="status">{ct.noEmojis}</p>}</>;

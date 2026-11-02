@@ -213,7 +213,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
       prefixInteractive={mobile && showSteppers ? true : rest.prefixInteractive}
       suffix={mobile && showSteppers ? <>{suffix}{mobileStep(1)}</> : steppers ?? suffix}
       suffixInteractive={!!steppers}
-      className={cn(align === 'right' && 'text-right font-mono tabular-nums', className)}
+      className={cn(align === 'right' && 'text-end font-mono tabular-nums', className)}
       aria-valuenow={value ?? undefined}
       role={rest.role ?? 'spinbutton'}
       aria-valuemin={minimum}

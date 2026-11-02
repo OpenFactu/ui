@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {
-  AIConversation, AIMessage, AIQuestion, AIToolCall, registerToolView, unregisterToolViewSource,
+  AIActivityPanel, AIArtifactPanel, AIConversation, AIMessage, AIQuestion, AIToolCall, registerToolView, unregisterToolViewSource,
   type AIMessageCustomization, type AIMessageData, type AIMessagePart, type AIQuestionAnswer, type AITool,
 } from '../src/ai';
 import { Badge } from '../src/components/Badge';
@@ -211,4 +211,47 @@ export const ConversacionLarga = () => {
     parts: [{ type: 'text', format: 'markdown', text: `Mensaje **${i}**.\n\n- Uno con [enlace](https://example.com)\n- Otro [1]\n\n| a | b |\n| - | - |\n| 1 | 2 |` }, ...(i % 2 ? [{ type: 'sources' as const, sources: FUENTES }] : [])],
   })), []);
   return <div style={{ height: 640, display: 'flex', flexDirection: 'column' }}><AIConversation messages={messages} /></div>;
+};
+
+const HTML_DEMO = '<!doctype html><html><body style="font-family:sans-serif"><h1>Factura</h1><p>Total: 2.030 €</p></body></html>';
+
+/** Un artefacto mientras llega: sigue el final, no se puede editar y un HTML a medias no se previsualiza. */
+export const ArtefactoEnDirecto = () => {
+  const [length, setLength] = React.useState(0);
+  const [running, setRunning] = React.useState(false);
+  React.useEffect(() => {
+    if (!running) return;
+    const timer = setInterval(() => setLength((n) => { const next = Math.min(HTML_DEMO.length, n + 4); if (next === HTML_DEMO.length) setRunning(false); return next; }), 25);
+    return () => clearInterval(timer);
+  }, [running]);
+  const done = length === HTML_DEMO.length;
+  return (
+    <Frame>
+      <div className="flex items-center gap-3">
+        <Button size="sm" onClick={() => { setLength(0); setRunning(true); }}>Generar</Button>
+        <span data-testid="estado-artefacto">{done ? 'Listo' : running ? 'Llegando' : 'Parado'}</span>
+      </div>
+      <div style={{ height: 320, display: 'flex' }}>
+        <AIArtifactPanel artifacts={[{ id: 'h', title: 'Factura', kind: 'html', content: HTML_DEMO.slice(0, length), streaming: running }]} value="h" onSelect={() => undefined} />
+      </div>
+    </Frame>
+  );
+};
+
+/** Qué ha hecho el agente, de un vistazo. */
+export const PanelDeActividad = () => {
+  const [entrada, setEntrada] = React.useState('');
+  React.useEffect(() => registerToolView('consultar_facturas', { label: 'Consultar facturas' }, { source: 'actividad' }), []);
+  const messages: AIMessageData[] = [{ id: 'm', role: 'assistant', parts: [
+    { type: 'tool', tool: { id: 'a', name: 'consultar_facturas', status: 'completed', durationMs: 420 } },
+    { type: 'tool', tool: { id: 'b', name: 'calcular_intereses', status: 'error', durationMs: 90, description: 'Falta la fecha' } },
+    { type: 'activity', steps: [{ id: 'c', title: 'Leer el extracto', status: 'completed', durationMs: 1300 }, { id: 'd', title: 'Conciliar', status: 'running' }] },
+    { type: 'tool', tool: { id: 'e', name: 'enviar_correos', status: 'approval-required' } },
+  ] }];
+  return (
+    <Frame>
+      <AIActivityPanel messages={messages} onSelect={(entry) => setEntrada(String(entry.title))} />
+      <p data-testid="entrada" className="m-0">{entrada}</p>
+    </Frame>
+  );
 };

@@ -62,7 +62,7 @@ export type AIMessageCallbacks = Pick<AIWorkspaceActions, 'onRetry' | 'onEditMes
 export interface AIMessageActionsProps extends AIUIProps { message: AIMessageData; actions?: AIMessageCallbacks; onEdit?: () => void }
 export function AIMessageActions({ message, actions, onEdit, labels, className }: AIMessageActionsProps) {
   const l = useAILabels(labels); const text = messageText(message);
-  return <div className={cn('ai-message-actions', className)} aria-label={`${l.message}: ${message.name ?? (message.role === 'user' ? l.user : l.assistant)}`}>
+  return <div className={cn('ai-message-actions', className)} role="group" aria-label={`${l.message}: ${message.name ?? (message.role === 'user' ? l.user : l.assistant)}`}>
     {text && <AICopyButton text={text} labels={labels} />}
     {onEdit && <AIIconButton label={l.edit} onClick={onEdit}><UiIcon slot="pencil" size={13} /></AIIconButton>}
     {message.role === 'assistant' && actions?.onRetry && <AIIconButton label={l.regenerate} onClick={() => actions.onRetry!(message.id)}><UiIcon slot="refresh-cw" size={13} /></AIIconButton>}

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { logicalKey } from '../internal/roving';
 import { DEFAULT_LOCALE } from '../internal/intl';
 import { createPortal } from 'react-dom';
 import { useIsMobile } from '../hooks/useMediaQuery';
@@ -511,7 +512,7 @@ export const Kanban: React.FC<KanbanProps> = ({
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
       event.preventDefault();
       const i = navegables.findIndex((c) => c.id === d.columnId);
-      const otra = navegables[i + (event.key === 'ArrowRight' ? 1 : -1)];
+      const otra = navegables[i + (logicalKey(event) === 'ArrowRight' ? 1 : -1)];
       if (otra) irA(a, otra.id, d.laneId, a.pos);
     }
   };

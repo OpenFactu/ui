@@ -15,9 +15,9 @@
   mix-blend-mode: normal;
   animation: k-aurora-drift calc(var(--k-motion, 1) * var(--d, 18s)) ease-in-out infinite alternate;
 }
-.k-aurora > i:nth-child(1) { background: var(--a); top: -20%; left: -10%; --d: 19s; }
-.k-aurora > i:nth-child(2) { background: var(--b); top: 10%; right: -15%; --d: 23s; animation-delay: -6s; }
-.k-aurora > i:nth-child(3) { background: var(--c); bottom: -30%; left: 25%; --d: 27s; animation-delay: -11s; }
+.k-aurora > i:nth-child(1) { background: var(--a); top: -20%; inset-inline-start: -10%; --d: 19s; }
+.k-aurora > i:nth-child(2) { background: var(--b); top: 10%; inset-inline-end: -15%; --d: 23s; animation-delay: -6s; }
+.k-aurora > i:nth-child(3) { background: var(--c); bottom: -30%; inset-inline-start: 25%; --d: 27s; animation-delay: -11s; }
 @keyframes k-aurora-drift { 0% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(8%, 6%, 0) scale(1.15); } 100% { transform: translate3d(-6%, 10%, 0) scale(0.95); } }
 
 /* Malla: degradados superpuestos, fijos o con una deriva lentísima. */

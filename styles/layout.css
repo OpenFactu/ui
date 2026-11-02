@@ -17,7 +17,7 @@
 .k-split-handle::before { content: ''; position: absolute; inset: 0 -6px; }
 .k-split[data-direction='vertical'] > .k-split-handle::before { inset: -6px 0; }
 .k-split-handle:hover, .k-split[data-dragging] > .k-split-handle, .k-split-handle:focus-visible { background: var(--color-accent, #0d9488); }
-.k-split-grip { position: absolute; top: 50%; left: 50%; width: 4px; height: 28px; transform: translate(-50%, -50%); border-radius: 999px; background: var(--border-strong, #cbd5e1); opacity: 0; transition: opacity calc(150ms * var(--k-motion, 1)); }
+.k-split-grip { position: absolute; top: 50%; inset-inline-start: 50%; width: 4px; height: 28px; transform: translate(-50%, -50%); border-radius: 999px; background: var(--border-strong, #cbd5e1); opacity: 0; transition: opacity calc(150ms * var(--k-motion, 1)); }
 .k-split[data-direction='vertical'] .k-split-grip { width: 28px; height: 4px; }
 .k-split-handle:hover .k-split-grip, .k-split-handle:focus-visible .k-split-grip { opacity: 1; background: var(--color-accent, #0d9488); }
 
@@ -43,7 +43,7 @@
   .k-scroll-viewport::-webkit-scrollbar-track { background: transparent; }
 }
 /* Sombras de borde: indican que hay más contenido en ese lado. */
-.k-scroll-area::before, .k-scroll-area::after { content: ''; position: absolute; left: 0; right: 0; z-index: 1; height: 14px; pointer-events: none; opacity: 0; transition: opacity calc(180ms * var(--k-motion, 1)); }
+.k-scroll-area::before, .k-scroll-area::after { content: ''; position: absolute; inset-inline-start: 0; inset-inline-end: 0; z-index: 1; height: 14px; pointer-events: none; opacity: 0; transition: opacity calc(180ms * var(--k-motion, 1)); }
 .k-scroll-area::before { top: 0; background: linear-gradient(to bottom, color-mix(in srgb, var(--fg-default, #0a1628) 12%, transparent), transparent); }
 .k-scroll-area::after { bottom: 0; background: linear-gradient(to top, color-mix(in srgb, var(--fg-default, #0a1628) 12%, transparent), transparent); }
 .k-scroll-area[data-overflow-top]::before, .k-scroll-area[data-overflow-bottom]::after { opacity: 1; }
@@ -56,14 +56,14 @@
 .k-virtual { position: relative; overflow-y: auto; outline: none; contain: strict; }
 .k-virtual:focus-visible { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-accent, #0d9488) 40%, transparent); }
 .k-virtual-space { position: relative; width: 100%; }
-.k-virtual-row { position: absolute; top: 0; left: 0; right: 0; }
+.k-virtual-row { position: absolute; top: 0; inset-inline-start: 0; inset-inline-end: 0; }
 .k-virtual-footer { padding: 12px; display: flex; justify-content: center; }
 
 /* ── TreeView ───────────────────────────────────────────────────────────── */
 .k-tree, .k-tree-group { margin: 0; padding: 0; list-style: none; }
 .k-tree { font-size: calc(13px * var(--k-text-scale, 1)); color: var(--fg-body, #2d3a4a); }
 .k-tree-item { outline: none; }
-.k-tree-row { display: flex; align-items: center; gap: 6px; min-height: 30px; padding-right: 8px; border-radius: var(--k-radius-xs, 2px); cursor: pointer; transition: background-color calc(100ms * var(--k-motion, 1)); }
+.k-tree-row { display: flex; align-items: center; gap: 6px; min-height: 30px; padding-inline-end: 8px; border-radius: var(--k-radius-xs, 2px); cursor: pointer; transition: background-color calc(100ms * var(--k-motion, 1)); }
 .k-tree-row:hover { background: var(--bg-hover, #f1f5f9); }
 .k-tree-row[data-selected] { background: color-mix(in srgb, var(--color-accent, #0d9488) 12%, transparent); color: var(--fg-default, #0a1628); font-weight: 500; }
 .k-tree-row[data-disabled] { opacity: 0.5; cursor: not-allowed; }
@@ -82,8 +82,8 @@
 .k-bottom-sheet-scrim { position: absolute; inset: 0; background: color-mix(in srgb, var(--k-ink-900, #0a1628) 40%, transparent); opacity: 0; pointer-events: auto; }
 .k-bottom-sheet {
   position: absolute;
-  left: 0;
-  right: 0;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
   bottom: 0;
   margin: 0 auto;
   max-width: 640px;

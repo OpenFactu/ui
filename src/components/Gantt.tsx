@@ -498,7 +498,7 @@ export const Gantt: React.FC<GanttProps> = ({
 
   const tabla = (
     <>{onTaskChange && <MobileScheduleActions items={tasks.map(task => ({ ...task, title: task.name }))} onChange={(id, start, end) => { const task = tasks.find(task => task.id === id); if (task) onTaskChange(task, { start, end }); }} />}<div data-k-mobile="Gantt"
-      role="table"
+      role="group"
       aria-label={ariaLabel}
       data-dragging={enArrastre || undefined}
       onPointerLeave={() => setActiva(null)}
@@ -510,7 +510,7 @@ export const Gantt: React.FC<GanttProps> = ({
       <span className="sr-only" aria-live="polite">{anuncio}</span>
       {/* Columna de nombres: fija, no se desplaza con la línea de tiempo. */}
       <div
-        className="shrink-0 border-r border-[var(--border-default,#e2e8f0)]"
+        className="shrink-0 border-e border-[var(--border-default,#e2e8f0)]"
         style={{ width: labelWidth }}
       >
         <div
@@ -520,7 +520,6 @@ export const Gantt: React.FC<GanttProps> = ({
         {lista.map((f) => (
           <div
             key={f.key}
-            role="row"
             data-active={activa === f.key || undefined}
             onPointerEnter={(e) => { if (e.pointerType === 'mouse' && !enArrastre) setActiva(f.key); }}
             className={cn(
@@ -543,7 +542,7 @@ export const Gantt: React.FC<GanttProps> = ({
               </button>
             )}
             {f.task && <span className="k-gantt-dot" aria-hidden="true" style={{ background: f.task.color ?? COLOR_ESTADO[f.task.status ?? 'pendiente'].bg }} />}
-            <span className={cn('truncate', f.kind === 'tarea' && f.task?.group && 'pl-0.5')}>
+            <span className={cn('truncate', f.kind === 'tarea' && f.task?.group && 'ps-0.5')}>
               {f.name}
             </span>
           </div>
@@ -568,7 +567,7 @@ export const Gantt: React.FC<GanttProps> = ({
               {mayores.map((t) => (
                 <div
                   key={t.inicio.toISOString()}
-                  className="absolute top-0 truncate border-r border-[var(--border-default,#e2e8f0)] px-2 text-[length:calc(11px*var(--k-text-scale,1))] font-semibold leading-[26px] text-[var(--fg-body,#2d3a4a)]"
+                  className="absolute top-0 truncate border-e border-[var(--border-default,#e2e8f0)] px-2 text-[length:calc(11px*var(--k-text-scale,1))] font-semibold leading-[26px] text-[var(--fg-body,#2d3a4a)]"
                   style={{ left: x(t.inicio), width: t.ancho * pxDia, height: 26 }}
                 >
                   {t.etiqueta}
@@ -583,7 +582,7 @@ export const Gantt: React.FC<GanttProps> = ({
                 <div
                   key={t.inicio.toISOString()}
                   className={cn(
-                    'absolute top-0 truncate border-r border-[var(--border-subtle,#f1f5f9)] text-center font-mono text-[length:calc(10px*var(--k-text-scale,1))] leading-[26px]',
+                    'absolute top-0 truncate border-e border-[var(--border-subtle,#f1f5f9)] text-center font-mono text-[length:calc(10px*var(--k-text-scale,1))] leading-[26px]',
                     t.finde
                       ? 'bg-[var(--bg-hover)] text-[var(--fg-subtle,#657486)]'
                       : 'text-[var(--fg-muted,#52606f)]',
@@ -612,7 +611,7 @@ export const Gantt: React.FC<GanttProps> = ({
                 <div
                   key={t.inicio.toISOString()}
                   className={cn(
-                    'absolute top-0 bottom-0 border-r border-[var(--border-subtle,#f1f5f9)]',
+                    'absolute top-0 bottom-0 border-e border-[var(--border-subtle,#f1f5f9)]',
                     t.finde && 'bg-[var(--bg-hover)]',
                   )}
                   style={{ left: x(t.inicio), width: t.ancho * pxDia }}
@@ -631,7 +630,7 @@ export const Gantt: React.FC<GanttProps> = ({
                   data-fila={i}
                   data-active={activa === f.key || undefined}
                   className={cn(
-                    'k-gantt-sep absolute left-0 right-0 border-b border-[var(--border-subtle,#f1f5f9)]',
+                    'k-gantt-sep absolute start-0 end-0 border-b border-[var(--border-subtle,#f1f5f9)]',
                     f.kind === 'grupo' && 'bg-[var(--bg-muted)]',
                   )}
                   style={{ top: i * rowHeight, height: rowHeight }}

@@ -149,6 +149,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
       multiple={multiple}
       disabled={disabled}
       className="sr-only"
+      aria-label={m.fileDropzone.chooseFiles}
       onChange={(e) => {
         handleFiles(e.target.files);
         // Permite volver a elegir el mismo archivo.

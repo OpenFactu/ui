@@ -165,6 +165,7 @@ export const drawer = {
 
 export const fileDropzone = {
   label: 'Arrastra archivos o haz clic para seleccionar',
+  chooseFiles: 'Elegir archivos',
 };
 
 export const floatingActions = {
@@ -194,6 +195,8 @@ export const swipeCards = {
   empty: 'No hay más',
   roleDescription: 'pila de tarjetas',
   pending: '{count} por revisar',
+  reject: 'Descartar',
+  accept: 'Aceptar',
 };
 
 export const appShell = {
@@ -258,6 +261,7 @@ export const tagInput = {
   max: 'Se permiten como máximo {max} etiquetas.',
   added: { one: '# etiqueta añadida.', other: '# etiquetas añadidas.' },
   remove: 'Eliminar etiqueta {tag}',
+  removed: 'Etiqueta «{tag}» eliminada.',
   help: 'Separa las etiquetas con Intro o comas.',
 };
 
@@ -356,6 +360,7 @@ export const searchableSelect = {
 
 export const datePicker = {
   placeholder: 'dd/mm/aaaa',
+  selectDate: 'Seleccionar fecha',
   calendar: 'Calendario',
   changeMonth: 'Cambiar de mes. Mes actual: {month}',
   changeYear: 'Cambiar de año. Año actual: {year}',

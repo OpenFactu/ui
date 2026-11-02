@@ -5,6 +5,8 @@ export interface SwitchProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
   label?: string;
+  /** Nombre accesible si no lleva etiqueta visible. */
+  'aria-label'?: string;
   disabled?: boolean;
   size?: 'sm' | 'md';
   className?: string;
@@ -12,14 +14,15 @@ export interface SwitchProps {
 }
 
 const sizeClasses = {
-  sm: { track: 'w-7 h-4', thumb: 'w-3 h-3', translate: 'translate-x-3' },
-  md: { track: 'w-9 h-5', thumb: 'w-4 h-4', translate: 'translate-x-4' },
+  sm: { track: 'w-7 h-4', thumb: 'w-3 h-3', translate: 'translate-x-3 rtl:-translate-x-3' },
+  md: { track: 'w-9 h-5', thumb: 'w-4 h-4', translate: 'translate-x-4 rtl:-translate-x-4' },
 };
 
 export const Switch: React.FC<SwitchProps> = ({
   checked,
   onChange,
   label,
+  'aria-label': ariaLabel,
   disabled = false,
   size = 'md',
   className,
@@ -38,6 +41,7 @@ export const Switch: React.FC<SwitchProps> = ({
         data-k-control="switch"
         data-size={size}
         aria-checked={checked}
+        aria-label={label ? undefined : ariaLabel}
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={cn(

@@ -1,4 +1,5 @@
 import { quoteMarkdown } from './internal/remarkCitations';
+import { logicalKey } from '../internal/roving';
 import * as React from 'react';
 import { UiIcon } from '../icons';
 import { Modal } from '../components/Modal';
@@ -86,7 +87,7 @@ export function AIWorkspace({ state, actions: suppliedActions, title, header, ch
       onPointerDown={event => { event.currentTarget.setPointerCapture(event.pointerId); setResizingHistory(true); }}
       onPointerMove={event => { if (event.currentTarget.hasPointerCapture(event.pointerId) && root.current) resizeHistory(event.clientX - root.current.getBoundingClientRect().left); }}
       onPointerUp={event => { event.currentTarget.releasePointerCapture(event.pointerId); setResizingHistory(false); }} onPointerCancel={() => setResizingHistory(false)} onLostPointerCapture={() => setResizingHistory(false)}
-      onKeyDown={event => { if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) { event.preventDefault(); resizeHistory(event.key === 'Home' ? 200 : event.key === 'End' ? panels.historyMax : historyWidth + (event.key === 'ArrowRight' ? 16 : -16)); } }} />
+      onKeyDown={event => { if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) { event.preventDefault(); resizeHistory(event.key === 'Home' ? 200 : event.key === 'End' ? panels.historyMax : historyWidth + (logicalKey(event) === 'ArrowRight' ? 16 : -16)); } }} />
     <div className="ai-workspace-main"><header className="ai-workspace-header"><AIIconButton label={l.openHistory} aria-expanded={narrow ? historyOpen : desktopHistory} onClick={() => narrow ? setHistoryOpen(true) : setDesktopHistory(value => !value)}><UiIcon slot="panel-left" size={17} /></AIIconButton>
       <strong>{title ?? state.conversations.find(item => item.id === state.conversationId)?.title ?? l.newConversation}</strong>{state.usage && <AIContextUsage {...state.usage} labels={labels} />}{header}
       {!!state.artifacts.length && actions.onOpenArtifact && <AIIconButton label={l.results} onClick={() => { if (!artifactOpen) actions.onOpenArtifact!(state.artifacts[0].id); setMobilePane('results'); }}><UiIcon slot="panel-right" size={17} /></AIIconButton>}
@@ -105,7 +106,7 @@ export function AIWorkspace({ state, actions: suppliedActions, title, header, ch
       onPointerDown={event => { event.currentTarget.setPointerCapture(event.pointerId); setResizing(true); }}
       onPointerMove={event => { if (!event.currentTarget.hasPointerCapture(event.pointerId)) return; const rect = root.current!.getBoundingClientRect(); resizeResults((rect.right - event.clientX) / rect.width * 100); }}
       onPointerUp={event => { event.currentTarget.releasePointerCapture(event.pointerId); setResizing(false); }} onPointerCancel={() => setResizing(false)}
-      onKeyDown={event => { if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) { event.preventDefault(); resizeResults(event.key === 'Home' ? 25 : event.key === 'End' ? panels.resultsMax : panels.results + (event.key === 'ArrowLeft' ? 2 : -2)); } }} />
+      onKeyDown={event => { if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) { event.preventDefault(); resizeResults(event.key === 'Home' ? 25 : event.key === 'End' ? panels.resultsMax : panels.results + (logicalKey(event) === 'ArrowLeft' ? 2 : -2)); } }} />
       <div className="ai-workspace-results"><AIArtifactPanel artifacts={state.artifacts} value={state.artifactId} onSelect={actions.onOpenArtifact ?? (() => {})} onClose={actions.onCloseArtifact}
         onChange={actions.onArtifactChange} onDownload={actions.onDownloadArtifact} renderers={artifactRenderers} labels={labels} /></div>
     </>}

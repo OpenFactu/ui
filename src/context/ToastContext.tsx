@@ -125,6 +125,11 @@ export interface ToastProviderProps {
   gap?: number;
   /** Dónde va el botón de cerrar por defecto. Default 'inline'. */
   closeStyle?: 'inline' | 'corner';
+  /**
+   * Pinta todos los avisos, sin el cromo de serie: la pila, el temporizador, la entrada y el arrastre siguen siendo del
+   * proveedor. Un aviso con `custom` propio gana. Devuelve `undefined` para dejar ese aviso como de serie.
+   */
+  renderToast?: (toast: ToastData, close: () => void) => React.ReactNode;
 }
 
 /**
@@ -134,12 +139,12 @@ export interface ToastProviderProps {
  * partir de `sm`.
  */
 const POSITIONS: Record<ToastPosition, string> = {
-  'top-right': 'top-4 sm:top-6 sm:right-6 items-end',
-  'top-left': 'top-4 sm:top-6 sm:left-6 items-start',
-  'top-center': 'top-4 sm:top-6 sm:left-1/2 sm:-translate-x-1/2 items-center',
-  'bottom-right': 'bottom-4 sm:bottom-6 sm:right-6 items-end',
-  'bottom-left': 'bottom-4 sm:bottom-6 sm:left-6 items-start',
-  'bottom-center': 'bottom-4 sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2 items-center',
+  'top-right': 'top-4 sm:top-6 sm:end-6 items-end',
+  'top-left': 'top-4 sm:top-6 sm:start-6 items-start',
+  'top-center': 'top-4 sm:top-6 sm:start-1/2 sm:-translate-x-1/2 items-center',
+  'bottom-right': 'bottom-4 sm:bottom-6 sm:end-6 items-end',
+  'bottom-left': 'bottom-4 sm:bottom-6 sm:start-6 items-start',
+  'bottom-center': 'bottom-4 sm:bottom-6 sm:start-1/2 sm:-translate-x-1/2 items-center',
 };
 
 /** Duración de la animación de salida antes de quitarlo del árbol. */
@@ -173,9 +178,17 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({
   expand = false,
   gap = 12,
   closeStyle = 'inline',
+  renderToast,
 }) => {
   const { messages: { status: statusTexts }, format } = useI18n();
   const [toasts, setToasts] = React.useState<ToastData[]>([]);
+  // Un aviso con `custom` propio gana; si `renderToast` devuelve `undefined`, ese aviso sale como de serie.
+  const conMolde = (t: ToastData): ToastData => {
+    if (!renderToast || t.custom) return t;
+    const node = renderToast(t, () => dismissRef.current(t.id));
+    return node === undefined ? t : { ...t, custom: () => node };
+  };
+  const dismissRef = React.useRef<(id: string) => void>(() => undefined);
   const [leaving, setLeaving] = React.useState<Set<string>>(new Set());
   const [hovered, setHovered] = React.useState(false);
   // En táctil no hay «pasar por encima»: un toque abre la pila y otro fuera la cierra.
@@ -244,6 +257,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({
     [remove],
   );
 
+  dismissRef.current = dismiss;
   const show = React.useCallback<ToastApi['show']>(
     (message, options = {}) => {
       const { id = nextId(), type = 'info', duration: ownDuration, description, ...rest } = options;
@@ -373,7 +387,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({
       // El número de repetición va en la `key`: relanzar el mismo id vuelve
       // a montar el aviso y su cuenta atrás arranca de cero.
       key={`${t.id}#${seq.current.get(t.id) ?? 0}`}
-      toast={t}
+      toast={conMolde(t)}
       onClose={dismiss}
       paused={hovered || pinned}
       leaving={leaving.has(t.id)}
@@ -416,7 +430,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({
       >
         <SlotMeasure id={t.id} onHeight={measure}>
           <Toast
-            toast={t}
+            toast={conMolde(t)}
             onClose={dismiss}
             paused={hovered || pinned}
             leaving={leaving.has(t.id)}
@@ -448,7 +462,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({
         'pointer-events-none fixed z-[var(--k-z-toast,1000000)]',
         stacked ? 'transition-[height] duration-spring-move ease-spring-move' : 'flex flex-col gap-3',
         // Móvil: de borde a borde con margen. Escritorio: columna anclada.
-        'left-4 right-4 sm:left-auto sm:right-auto sm:w-full sm:max-w-sm',
+        'start-4 end-4 sm:start-auto sm:end-auto sm:w-full sm:max-w-sm',
         // Respeta la zona segura del móvil (barra de gestos).
         'pb-[env(safe-area-inset-bottom)]',
         POSITIONS[position],

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { logicalKey } from '../internal/roving';
 import { createPortal } from 'react-dom';
 import { Button } from './Button';
 import { useAnimatedPresence } from '../hooks/useAnimatedPresence';
@@ -96,8 +97,8 @@ export const Tour: React.FC<TourProps> = ({ steps, open, onClose, onFinish, step
   }
 
   const onKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === 'ArrowRight') { event.preventDefault(); next(); }
-    else if (event.key === 'ArrowLeft') { event.preventDefault(); previous(); }
+    if (logicalKey(event) === 'ArrowRight') { event.preventDefault(); next(); }
+    else if (logicalKey(event) === 'ArrowLeft') { event.preventDefault(); previous(); }
   };
 
   return createPortal(

@@ -118,7 +118,7 @@ export const Input: React.FC<InputProps> = ({
     >
       {label}
       {(requiredMark || props.required) && (
-        <span className="text-[var(--k-danger-fg)] ml-0.5" aria-hidden="true">
+        <span className="text-[var(--k-danger-fg)] ms-0.5" aria-hidden="true">
           *
         </span>
       )}
@@ -174,14 +174,14 @@ export const Input: React.FC<InputProps> = ({
       >
         {prefix !== undefined && (
           <span
-            className={cn(ADDON_CLASSES, 'border-r', !prefixInteractive && 'px-2.5 select-none')}
+            className={cn(ADDON_CLASSES, 'border-e', !prefixInteractive && 'px-2.5 select-none')}
           >
             {prefix}
           </span>
         )}
         <div className="relative flex-1 min-w-0 flex items-center">
           {leftIcon && (
-            <span className="absolute left-3 z-10 text-[var(--fg-subtle,#657486)] group-focus-within:text-accent transition-colors">
+            <span className="absolute start-3 z-10 text-[var(--fg-subtle,#657486)] group-focus-within:text-accent transition-colors">
               {leftIcon}
             </span>
           )}
@@ -207,25 +207,25 @@ export const Input: React.FC<InputProps> = ({
                     effectiveStatus === 'success' && 'border-[var(--k-success)]',
                     effectiveStatus === 'warning' && 'border-[var(--k-warning)]',
                   ),
-              leftIcon && 'pl-10',
-              !hasAddons && rightIcon && 'pr-10',
+              leftIcon && 'ps-10',
+              !hasAddons && rightIcon && 'pe-10',
               className,
             )}
             {...props}
             aria-describedby={describedBy}
           />
           {rightIcon && (
-            <span className="absolute right-3 text-[var(--fg-subtle,#657486)] group-focus-within:text-accent transition-colors">
+            <span className="absolute end-3 text-[var(--fg-subtle,#657486)] group-focus-within:text-accent transition-colors">
               {rightIcon}
             </span>
           )}
         </div>
         {withStatusIcon && STATUS_ICON[effectiveStatus] && (
-          <span className="flex items-center pr-2.5 shrink-0">{STATUS_ICON[effectiveStatus]}</span>
+          <span className="flex items-center pe-2.5 shrink-0">{STATUS_ICON[effectiveStatus]}</span>
         )}
         {suffix !== undefined && (
           <span
-            className={cn(ADDON_CLASSES, 'border-l', !suffixInteractive && 'px-2.5 select-none')}
+            className={cn(ADDON_CLASSES, 'border-s', !suffixInteractive && 'px-2.5 select-none')}
           >
             {suffix}
           </span>

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { logicalKey } from '../internal/roving';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
@@ -106,7 +107,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
   const onGridKey = (event: React.KeyboardEvent) => {
     const moves: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
-    if (event.key in moves) { event.preventDefault(); const next = addDays(focused, moves[event.key]); setFocused(next); if (pending) setHover(next); return; }
+    if (event.key in moves) { event.preventDefault(); const next = addDays(focused, moves[logicalKey(event)]); setFocused(next); if (pending) setHover(next); return; }
     if (event.key === 'PageUp' || event.key === 'PageDown') {
       event.preventDefault();
       const p = parseIso(focused)!; const t = shiftMonth(p.y, p.m, event.key === 'PageUp' ? -1 : 1);
@@ -203,18 +204,18 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
           disabled={disabled}
           onClick={() => (open ? close() : openPicker())}
           className={cn(
-            'flex w-full items-center gap-2 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] px-3 py-2 text-left text-[length:calc(13px*var(--k-text-scale,1))] transition-colors',
+            'flex w-full items-center gap-2 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] px-3 py-2 text-start text-[length:calc(13px*var(--k-text-scale,1))] transition-colors',
             'focus-visible:outline-none focus-visible:border-accent hover:border-[var(--border-strong)] disabled:cursor-not-allowed disabled:opacity-50',
             open && 'border-accent',
             error && 'border-[var(--k-danger)]',
-            clearable && text && 'pr-9',
+            clearable && text && 'pe-9',
           )}
         >
           <UiIcon slot="calendar" size={14} className="shrink-0 text-[var(--fg-subtle,#657486)]" />
           <span className={cn('truncate', text ? 'text-[var(--fg-default,#0a1628)]' : 'text-[var(--fg-subtle,#657486)]')}>{text || placeholder}</span>
         </button>
         {clearable && text && !disabled && (
-          <button type="button" aria-label={drp.clear} className="absolute right-1.5 grid h-7 w-7 place-items-center rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:bg-[var(--bg-hover,#f1f5f9)]" onClick={() => onChange({ start: null, end: null })}>
+          <button type="button" aria-label={drp.clear} className="absolute end-1.5 grid h-7 w-7 place-items-center rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:bg-[var(--bg-hover,#f1f5f9)]" onClick={() => onChange({ start: null, end: null })}>
             <UiIcon slot="x" size={14} />
           </button>
         )}

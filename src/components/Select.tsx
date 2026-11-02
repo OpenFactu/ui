@@ -259,7 +259,7 @@ export const Select: React.FC<SelectProps> = (rawProps) => {
         aria-required={required || undefined}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(selectId, error, helperText)}
-        aria-label={ariaLabel}
+        aria-label={ariaLabel ?? (label ? undefined : placeholder)}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-controls={isOpen ? listboxId : undefined}
@@ -270,7 +270,7 @@ export const Select: React.FC<SelectProps> = (rawProps) => {
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={handleKeyDown}
         className={cn(
-          'flex w-full items-center justify-between gap-2 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] px-3 py-2 text-[length:calc(13px*var(--k-text-scale,1))] text-left transition-colors',
+          'flex w-full items-center justify-between gap-2 rounded-[var(--k-radius-xs,2px)] border border-[var(--border-default,#e2e8f0)] bg-[var(--bg-card,#ffffff)] px-3 py-2 text-[length:calc(13px*var(--k-text-scale,1))] text-start transition-colors',
           'focus-visible:outline-none focus-visible:border-accent',
           disabled
             ? 'cursor-not-allowed opacity-50 bg-[var(--bg-muted)]'

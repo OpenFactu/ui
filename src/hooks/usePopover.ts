@@ -127,13 +127,15 @@ export function usePopover<A extends HTMLElement = HTMLElement>(
     }
 
     const next: React.CSSProperties = { position: 'fixed' };
+    // `start` y `end` dependen del sentido: de derecha a izquierda, el inicio es el borde derecho.
+    const alEnd = (align === 'end') !== (getComputedStyle(anchor).direction === 'rtl');
     // El popover crece desde el borde del disparador del que cuelga.
-    const edge = align === 'end' ? 'right' : 'left';
+    const edge = alEnd ? 'right' : 'left';
     (next as Record<string, string>)['--k-origin'] = side === 'bottom' ? `top ${edge}` : side === 'top' ? `bottom ${edge}` : side === 'right' ? 'left top' : 'right top';
 
     if (side === 'bottom' || side === 'top') {
       const w = width ?? popW;
-      let left = align === 'end' && w ? rect.right - w : rect.left;
+      let left = alEnd && w ? rect.right - w : rect.left;
       if (w) left = Math.min(Math.max(left, VIEWPORT_MARGIN), Math.max(vw - w - VIEWPORT_MARGIN, VIEWPORT_MARGIN));
       next.left = left;
       if (width !== undefined) next.width = width;

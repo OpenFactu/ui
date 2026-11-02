@@ -2,7 +2,7 @@
 
 .k-table { --k-table-fast: calc(150ms * var(--k-motion, 1)); position: relative; border-radius: var(--k-radius-md, 8px); }
 .k-table > .k-table-scroll { border-radius: inherit; }
-.k-table:has(> .k-table-toolbar) > .k-table-scroll { border-top-left-radius: 0; border-top-right-radius: 0; }
+.k-table:has(> .k-table-toolbar) > .k-table-scroll { border-start-start-radius: 0; border-start-end-radius: 0; }
 
 /* Fila seleccionada: tinte del acento (la casilla marcada ya dice cuál es; sin franja lateral). */
 .k-table-row-selected { background: color-mix(in srgb, var(--color-accent, #0d9488) 8%, var(--bg-card, #ffffff)); }
@@ -32,7 +32,7 @@
 .k-table-toolbar[data-cards] { padding: 0; border: 0; }
 .k-table-toolbar-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .k-table-search { flex: 1 1 220px; max-width: 360px; }
-.k-table-toolbar-end { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.k-table-toolbar-end { display: flex; align-items: center; gap: 8px; margin-inline-start: auto; }
 .k-table-results { font-family: var(--font-mono, ui-monospace, monospace); font-size: calc(11px * var(--k-text-scale, 1)); font-variant-numeric: tabular-nums; color: var(--fg-muted, #52606f); white-space: nowrap; }
 .k-table-tool {
   display: inline-flex;
@@ -88,7 +88,7 @@
   place-items: center;
   width: 20px;
   height: 20px;
-  margin-left: 4px;
+  margin-inline-start: 4px;
   vertical-align: middle;
   border-radius: 4px;
   color: var(--fg-subtle, #657486);
@@ -131,7 +131,7 @@ th[data-filtered] { color: color-mix(in srgb, var(--color-accent, #0d9488) 75%, 
 }
 .k-table-strip::-webkit-scrollbar { display: none; }
 .k-table-strip > * { flex: none; }
-.k-table-strip > :last-child { margin-right: 20px; }
+.k-table-strip > :last-child { margin-inline-end: 20px; }
 .k-table-strip-check {
   display: inline-flex;
   align-items: center;
@@ -145,7 +145,7 @@ th[data-filtered] { color: color-mix(in srgb, var(--color-accent, #0d9488) 75%, 
 .k-table-filter-pill { cursor: pointer; white-space: nowrap; transition: background-color var(--k-table-fast, calc(150ms * var(--k-motion, 1))) ease, border-color var(--k-table-fast, calc(150ms * var(--k-motion, 1))) ease; }
 .k-table-filter-pill:hover { background: var(--bg-hover, #f1f5f9); }
 .k-table-toolbar[data-cards] .k-table-search { flex-basis: 100%; max-width: none; }
-.k-table-results-end { margin-left: auto; }
+.k-table-results-end { margin-inline-start: auto; }
 .k-table-strip-check label { font-size: calc(12px * var(--k-text-scale, 1)); }
 .k-table-strip button[aria-label='Mostrar u ocultar columnas'] {
   display: inline-grid;
@@ -181,7 +181,7 @@ th[data-filtered] { color: color-mix(in srgb, var(--color-accent, #0d9488) 75%, 
 }
 /* Las opciones van alineadas a la izquierda, pegadas a su casilla. */
 .k-table-filter-options [data-k-control='checkbox-group'] { align-items: center; }
-.k-table-filter-options [data-k-control='checkbox-group'] > label { align-items: flex-start; text-align: left; }
+.k-table-filter-options [data-k-control='checkbox-group'] > label { align-items: flex-start; text-align: start; }
 .k-table-filter-pill[data-active] { border-color: var(--color-accent, #0d9488); background: color-mix(in srgb, var(--color-accent, #0d9488) 8%, var(--bg-card, #ffffff)); }
 .k-table-filter-btn:focus-visible, .k-table-filter-pill:focus-visible, .k-table-chip button:focus-visible, .k-table-clear:focus-visible, .k-table-tool:focus-visible {
   outline: 2px solid var(--color-accent, #0d9488);

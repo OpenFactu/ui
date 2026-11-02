@@ -14,6 +14,9 @@ export function Icon({ name, ...props }: IconComponentProps) {
   return Component ? <Component {...props} /> : null;
 }
 
+/** Huecos que señalan una dirección: de derecha a izquierda se giran (`styles/rtl.css`). */
+const DIRECTIONAL_SLOTS: ReadonlySet<IconSlot> = new Set<IconSlot>(['chevron-left', 'chevron-right', 'corner-down-left', 'undo-2', 'redo-2', 'arrow-up-right']);
+
 export interface UiIconProps extends IconProps {
   /** Un hueco de la interfaz (`'chevron-down'`, `'x'`…); lo rellena la biblioteca activa. */
   slot: IconSlot;
@@ -21,5 +24,5 @@ export interface UiIconProps extends IconProps {
 /** Un icono de la propia interfaz de la librería. Para tus iconos, usa `Icon`. */
 export function UiIcon({ slot, ...props }: UiIconProps) {
   const Component = useSlotComponent(slot);
-  return Component ? <Component {...props} /> : null;
+  return Component ? <Component {...props} data-k-flip={DIRECTIONAL_SLOTS.has(slot) || undefined} /> : null;
 }

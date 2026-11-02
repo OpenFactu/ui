@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { logicalKey } from '../internal/roving';
 import { UiIcon } from '../icons';
 import { cn } from '../utils';
 import { useIsMobile } from '../hooks/useMediaQuery';
@@ -95,7 +96,7 @@ export const SelectionBar: React.FC<SelectionBarProps> = ({
         const at = items.indexOf(document.activeElement as HTMLElement);
         if (at < 0) return;
         event.preventDefault();
-        const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : (at + (event.key === 'ArrowRight' ? 1 : -1) + items.length) % items.length;
+        const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : (at + (logicalKey(event) === 'ArrowRight' ? 1 : -1) + items.length) % items.length;
         items[next]?.focus();
       }}
     >

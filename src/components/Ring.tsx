@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { cn } from '../utils';
+import { useMessages } from '../i18n/I18nProvider';
 
 export type RingTone = 'accent' | 'success' | 'warning' | 'danger' | 'auto';
 
@@ -40,6 +41,7 @@ export const Ring: React.FC<RingProps> = ({
   ariaLabel,
   className,
 }) => {
+  const common = useMessages('common');
   const pct = Math.min(100, Math.max(0, (value / (max || 1)) * 100));
   const radius = (size - thickness) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -61,7 +63,7 @@ export const Ring: React.FC<RingProps> = ({
       aria-valuenow={Math.round(pct)}
       aria-valuemin={0}
       aria-valuemax={100}
-      aria-label={ariaLabel}
+      aria-label={ariaLabel ?? common.progress}
     >
       {/* -90° para que el progreso arranque arriba y no a las 3 en punto. */}
       <svg width={size} height={size} className="-rotate-90 block">
