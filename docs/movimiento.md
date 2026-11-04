@@ -2,6 +2,123 @@
 
 Muelles, gestos táctiles, efectos de texto y microinteracciones.
 
+## Animar cualquier cosa
+
+Una línea, sin CSS ni estados, con el muelle del tema por defecto. Sin dependencias. Stories: **Animar**, una por pieza, y **Animar ejemplos**, casos de uso que combinan varias: bandeja con deslizar y deshacer, cesta con vuelo hasta el carrito, asistente por pasos, informe enlazado al scroll y efectos con el puntero.
+
+```tsx
+import { Motion, Presence, animate, useScroll, useTransform } from '@openfactu/ui';
+
+// Cualquier elemento
+<Motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} />
+
+// Al pasar, pulsar, enfocar o entrar en pantalla; al acabar vuelve solo
+<Motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} spring="pop" />
+<Motion.section initial={{ opacity: 0 }} inView={{ opacity: 1 }} viewport={{ once: true, threshold: 0.2 }} />
+
+// Efectos con nombre: traen su entrada y su salida
+<Motion.div animate="fade-up" />
+
+// Salidas al desmontar, sin gestionar estados
+<Presence>{open && <Motion.div key="panel" animate="fade" exit={{ opacity: 0, y: 8 }} />}</Presence>
+
+// Fuera de React: elementos, variables CSS, colores, números
+animate(el, { x: 100, '--progreso': 1, color: 'var(--k-danger)' }, { spring: 'move' });
+animate([a, b, c], { opacity: 1 }, { stagger: 40 });
+animate(0, total, { onUpdate: setCifra });
+
+// Enlazado al scroll, sin rerenderizar
+const { progress } = useScroll();
+<Motion.div style={{ scaleX: progress, opacity: useTransform(progress, [0, 1], [1, 0.4]) }} />
+```
+
+### `Motion`
+
+`Motion.<etiqueta>` vale para cualquier etiqueta HTML o SVG, con sus props y sus tipos. `Motion.create(Componente)` envuelve uno tuyo, que tiene que pasar `ref` y `style` a su elemento.
+
+- **Estado de partida:** `initial` se pinta en el primer render, también en servidor, sin destello. `initial={false}` empieza ya en `animate`. Sin `initial`, parte de lo que tenga el elemento.
+- **Estados:** `whileTap` > `whileHover` > `whileFocus` > `inView` > `animate`, propiedad a propiedad. `whileHover` no actúa en táctil, para que no se quede pegado; `whileTap` responde también a Intro y Espacio en lo activable.
+- **Variantes:** `variants={{ oculto: {…}, visible: {…} }}` con `initial="oculto" animate="visible"`. Los `Motion` de dentro con esa variante heredan el nombre, y `stagger` en el padre escalona a sus hijos directos (`stagger` a secas: lo que diga el tema).
+- **Arrastrar:** `drag`, `drag="x"` o `drag="y"`, con `dragConstraints`, `dragElastic`, `onDragStart`, `onDrag` y `onDragEnd`. Al soltar sigue con la velocidad que llevaba y el muelle `gesture`. Con un solo eje, el otro sigue siendo del navegador, así que el scroll funciona. Los botones, enlaces y campos de dentro conservan su clic. Con un valor de movimiento en `style` (`style={{ x }}`), el arrastre lo mueve a él, y lo enlazado con ese valor sigue el gesto y la vuelta.
+- **Cambios de sitio:** `layout` lleva a su sitio lo que se mueva tras un render, con el muelle `move`. Solo anima la posición: si cambia de tamaño, salta.
+
+### Qué se puede animar
+
+| Valor | Detalles |
+|---|---|
+| `x`, `y`, `z` | Número = px; también `'50%'`, `'2rem'`. Van en la propiedad `translate`, así que **no pisan los `transform` de Tailwind** |
+| `inlineX` | Como `x`, pero se refleja de derecha a izquierda. `x` es físico |
+| `scale`, `scaleX`, `scaleY`, `rotate` | También propiedades separadas. `rotate`: número = grados |
+| `opacity` y cualquier propiedad numérica | Con su unidad. El rebote no deja una opacidad de 1,2 ni un ancho negativo |
+| Colores | Valen `var(--x)`, `oklch()`, `color-mix()`. Se interpolan en OKLab. El valor final se escribe como lo pediste: un `var()` sigue al tema después |
+| `--variable` | Numérica o color |
+| `width` / `height` hacia `auto` | Se mide, se anima y se restaura `auto` |
+| `filter`, sombras | Si la forma coincide (`blur(0px)` a `blur(8px)`, también desde `none`) |
+| Atributos SVG y `pathLength` | `r`, `cx`, `cy`…; `pathLength` dibuja el trazo |
+| `display`, `visibility`… | Se aplica al empezar si deja ver el elemento; al terminar si lo oculta |
+
+Un array es una secuencia de fotogramas, y `null` al principio significa «donde esté»: `{ x: [null, 100, 50] }`. Dos valores que no se pueden interpolar cambian al final y avisan en desarrollo.
+
+### El muelle
+
+`spring` acepta un papel del tema (`enter`, `exit`, `pop`, `move`, `gesture`), un preset (`snappy`, `bouncy`…), `{ bounce, duration }` en segundos o `{ stiffness, damping, mass }`. Si no dices nada, usa el papel que toca, así que cambiar de tema cambia cómo se mueve todo:
+
+| Quién anima | Papel |
+|---|---|
+| `animate` al montar, `inView` | `enter` |
+| `exit` | `exit` |
+| `whileHover`, `whileTap`, `whileFocus` y su vuelta | `pop` |
+| `animate()` suelto, `animate` que cambia, `layout` | `move` |
+| Soltar un arrastre, `useSpringValue` | `gesture` |
+
+`timing={{ duration, ease, times }}` usa una curva fija, en ms. `delay` y `stagger` también van en ms. Todo se escala con la velocidad del tema.
+
+Interrumpir a mitad nunca da un salto: la animación nueva sigue desde donde estaba y con la velocidad que llevaba. Con movimiento reducido, `data-motion="off"` o velocidad 0 va al estado final en el acto, `Presence` desmonta sin esperar y `repeat` no se repite. El arrastre sigue funcionando porque lo mueve la persona, y `useScroll` sigue actualizándose: los efectos enlazados al scroll los decides tú con `useReducedMotion`.
+
+**Una clase `transition-*` sobre la misma propiedad pelea con la animación:** cada fotograma arrancaría otra transición. En desarrollo avisa una vez; quítala de esa propiedad.
+
+### `Presence`
+
+Sigue a sus hijos directos por `key` y conserva los que desaparecen hasta que terminan de irse. Quien no tiene `exit` se va al momento, y lo que sale lleva `inert`. Si la misma `key` vuelve a mitad, invierte desde donde esté.
+
+- `mode="wait"` espera a que salga antes de que entre lo nuevo.
+- `initial={false}`: lo que ya estaba al montar no anima su entrada.
+- `onExitComplete` avisa cuando ya no queda nada saliendo.
+- `usePresence()` da `{ isPresent, done }` a un componente propio que se va a su manera.
+
+### `animate()`
+
+`animate(destino, valores, opciones)` devuelve `{ finished, stop(), animating }`. `finished` nunca rechaza: da `{ finished: false }` si otra animación la interrumpe o se detiene. Opciones: `spring`, `timing`, `delay`, `stagger`, `velocity`, `repeat`, `repeatType` (`loop`, `reverse`), `onUpdate` y `onRest`.
+
+`useAnimate()` devuelve `[scope, animate]`: la misma función, con selectores que se buscan dentro de `scope`, y detiene lo suyo al desmontar.
+
+### Valores de movimiento
+
+Cambian sin pasar por React y, en el `style` de un `Motion`, se escriben directamente en el elemento.
+
+- `useMotionValue(0)` (fuera de React, `createMotionValue`): `get()`, `set()`, `velocity()`, `on('change', fn)`.
+- `useTransform(valor, [0, 100], [0, 1])` lleva unos tramos a otros, también a colores y unidades; o `useTransform(valor, (v) => v * 2)`.
+- `useSpringValue(valor)` sigue a otro valor con un muelle.
+- `useScroll({ target, container, offset })` da `x`, `y`, `progress` y `progressX`. `offset` son dos momentos, cada uno «borde del objetivo, borde de la vista»: por defecto `['start end', 'end start']`.
+- `usePointerValue(target?)` da `x` e `y` del puntero.
+- ``motionTemplate`hsl(${tono} 80% 50%)` `` compone un texto con valores dentro.
+- `useReducedMotion()` dice, de forma reactiva, si hay que saltarse el movimiento.
+
+### Efectos con nombre
+
+`fade`, `fade-up`, `fade-down`, `fade-start`, `fade-end`, `scale`, `pop` y `blur` vienen de serie. Las props de `Motion` ganan propiedad a propiedad. `scale` y `blur` usan `--k-enter-scale` y `--k-enter-blur` del tema; `fade-start` y `fade-end` se reflejan de derecha a izquierda.
+
+```ts
+const baja = registerMotionPreset('mi-entrada', { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0 }, spring: 'enter' }, { source: 'mi-app' });
+baja();                                   // o unregisterMotionSource('mi-app')
+```
+
+`useMotionPresets()` da el catálogo, reactivo.
+
+### Cuándo usar otra cosa
+
+`Reveal`, `Transition`, `PageTransition`, `AnimatedList` y `useFlip` siguen siendo la opción directa si hacen justo lo que necesitas, y sus clases CSS son más baratas para abrir y cerrar. `Motion` es para lo demás.
+
 ## Movimiento físico
 
 Lo que se abre y se cierra se mueve con **muelles** y no con curvas fijas: un oscilador amortiguado resuelto de forma exacta (sin dependencias) que da entradas fluidas, rebote cuando el tema lo pide y gestos con inercia. El carácter lo decide el **tema**.

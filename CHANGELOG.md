@@ -2,6 +2,14 @@
 
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Antes de la 1.0, una versión menor puede cambiar lo que se ve, y cada entrada dice cómo volver a lo anterior.
 
+## [Sin publicar]
+
+### Añadido
+
+- **Animar cualquier cosa en una línea:** `Motion.<etiqueta>` y `Motion.create` (`initial`, `animate`, `whileHover`, `whileTap`, `whileFocus`, `inView`, `variants`, `stagger`, `drag`, `layout`), `Presence` y `usePresence` para las salidas al desmontar, y `animate()` y `useAnimate` para elementos, variables CSS, colores y números. Usan el muelle del tema por defecto, no dan saltos al interrumpirse y respetan «sin movimiento». Sin dependencias.
+- **Valores de movimiento:** `useMotionValue`, `useTransform`, `useSpringValue`, `useScroll`, `usePointerValue`, `motionTemplate` y `useReducedMotion`, enlazados con estilos sin rerenderizar.
+- **Efectos con nombre:** `fade`, `fade-up`, `fade-down`, `fade-start`, `fade-end`, `scale`, `pop` y `blur`, en un registro abierto (`registerMotionPreset`, `unregisterMotionSource`, `useMotionPresets`).
+
 ## [0.7.0] - 2026-11-02
 
 ### Añadido
