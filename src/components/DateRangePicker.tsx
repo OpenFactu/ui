@@ -5,6 +5,7 @@ import { cn } from '../utils';
 import { usePopover } from '../hooks/usePopover';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import { adaptivePortal } from './internal/MobileOverlay';
+import { useCalendarSwipe } from './internal/useCalendarSwipe';
 import { resolveMobilePresentation, type MobilePresentation } from './internal/mobilePresentation';
 import { ControlField, describedBy } from './internal/ControlField';
 import { capitalizar } from '../internal/fechas';
@@ -120,6 +121,10 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
   const text = value.start && value.end ? (value.start === value.end ? short(value.start) : `${short(value.start)} – ${short(value.end)}`) : '';
   const monthsToShow = Array.from({ length: shown }, (_, i) => shiftMonth(view.y, view.m, i));
+  const swipe = useCalendarSwipe({
+    onStep: (forward) => setView(shiftMonth(view.y, view.m, forward ? 1 : -1)),
+    disabled: !open,
+  });
 
   const panel = (
     <div
@@ -142,10 +147,12 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
       )}
       <div className="k-range-calendars">
         <div className="k-range-nav">
-          <button type="button" aria-label={texts.dates.previousMonth} onClick={() => setView(shiftMonth(view.y, view.m, -1))}><UiIcon slot="chevron-left" size={16} /></button>
+          <button type="button" aria-label={texts.dates.previousMonth} onClick={() => swipe.stepWithArrow(false)}><UiIcon slot="chevron-left" size={16} /></button>
           <span aria-live="polite">{pending ? drp.pickEnd : drp.pickStart}</span>
-          <button type="button" aria-label={texts.dates.nextMonth} onClick={() => setView(shiftMonth(view.y, view.m, 1))}><UiIcon slot="chevron-right" size={16} /></button>
+          <button type="button" aria-label={texts.dates.nextMonth} onClick={() => swipe.stepWithArrow(true)}><UiIcon slot="chevron-right" size={16} /></button>
         </div>
+        <div className="k-range-swipe" {...swipe.bodyProps}>
+        <div ref={swipe.pageRef}>
         <div ref={grid} className="k-range-months" onKeyDown={onGridKey} onMouseLeave={() => setHover(null)}>
           {monthsToShow.map(({ y, m }) => (
             <div key={`${y}-${m}`} className="k-range-month">
@@ -184,6 +191,8 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
               </div>
             </div>
           ))}
+        </div>
+        </div>
         </div>
       </div>
     </div>

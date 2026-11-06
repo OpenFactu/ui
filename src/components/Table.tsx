@@ -444,14 +444,16 @@ export function Table<T>(rawProps: TableProps<T>) {
                   className={cn(cellPad, 'w-8 bg-[var(--bg-card,#ffffff)]', stickyCellClass(0, false))}
                   style={stickyCellStyle(0)}
                 >
-                  <Checkbox
-                    state={headerState}
-                    checked={allSelected}
-                    disabled={isLoading || pageKeys.length === 0}
-                    onChange={toggleAll}
-                    size="sm"
-                    aria-label={t.selectPage}
-                  />
+                  <label className="k-table-check">
+                    <Checkbox
+                      state={headerState}
+                      checked={allSelected}
+                      disabled={isLoading || pageKeys.length === 0}
+                      onChange={toggleAll}
+                      size="sm"
+                      aria-label={t.selectPage}
+                    />
+                  </label>
                 </th>
               )}
               {hasExpand && (
@@ -504,7 +506,7 @@ export function Table<T>(rawProps: TableProps<T>) {
                       onClick={isSortable ? () => { if (!resizingRef.current) toggleSort(colKey); } : undefined}
                       className={cn(
                         'inline-flex items-center gap-1 uppercase',
-                        isSortable && 'rounded-[var(--k-radius-xs,2px)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+                        isSortable && 'k-table-sort rounded-[var(--k-radius-xs,2px)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
                         col.align === 'right' && (col.filter ? 'justify-end' : 'justify-end w-full'),
                       )}
                     >
@@ -694,13 +696,15 @@ export function Table<T>(rawProps: TableProps<T>) {
                           style={stickyCellStyle(0)}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <Checkbox
-                            checked={isRowSelected}
-                            disabled={isRowSelectable ? !isRowSelectable(item) : false}
-                            onChange={() => toggleRow(key)}
-                            size="sm"
-                            aria-label={format(t.selectRow, { row: rowIdx + 1 })}
-                          />
+                          <label className="k-table-check">
+                            <Checkbox
+                              checked={isRowSelected}
+                              disabled={isRowSelectable ? !isRowSelectable(item) : false}
+                              onChange={() => toggleRow(key)}
+                              size="sm"
+                              aria-label={format(t.selectRow, { row: rowIdx + 1 })}
+                            />
+                          </label>
                         </td>
                       )}
                       {hasExpand && (

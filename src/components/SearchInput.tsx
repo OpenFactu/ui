@@ -191,7 +191,7 @@ export const SearchInput: React.FC<SearchInputProps> = (rawProps) => {
           return (
             <React.Fragment key={item.id}>
               {item.group && first && (
-                <div className="px-2.5 pt-2 pb-1 text-[length:calc(9px*var(--k-text-scale,1))] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
+                <div className="px-2.5 pt-2 pb-1 text-[length:calc(10px*var(--k-text-scale,1))] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
                   {item.group}
                 </div>
               )}
@@ -300,12 +300,14 @@ export const SearchInput: React.FC<SearchInputProps> = (rawProps) => {
         >
           {token.label ?? `${token.field}:${token.value}`}
           {onTokensChange && (
-            <UiIcon slot="x"
-              role="button"
+            <button
+              type="button"
               aria-label={format(m.searchInput.removeFilter, { field: token.field })}
-              className="h-2.5 w-2.5 cursor-pointer hover:text-[var(--k-danger-fg)]"
+              className="k-hit inline-flex cursor-pointer hover:text-[var(--k-danger-fg)]"
               onClick={() => removeToken(i)}
-            />
+            >
+              <UiIcon slot="x" className="h-2.5 w-2.5" />
+            </button>
           )}
         </span>
       ))}

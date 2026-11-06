@@ -127,7 +127,7 @@ export const ColorInput: React.FC<ColorInputProps> = ({
                 type="button"
                 onClick={() => onChange('')}
                 aria-label={colorTexts.remove}
-                className="px-1.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors"
+                className="k-touch-40 px-1.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors"
               >
                 <UiIcon slot="x" className="h-3 w-3" />
               </button>
@@ -149,7 +149,7 @@ export const ColorInput: React.FC<ColorInputProps> = ({
                 aria-label={preset}
                 title={preset}
                 className={cn(
-                  'h-5 w-5 rounded-[var(--k-radius-xs,2px)] border transition-transform hover:scale-110',
+                  'k-color-swatch h-5 w-5 rounded-[var(--k-radius-xs,2px)] border transition-transform hover:scale-110',
                   normalizeHex(value) === normalized
                     ? 'border-accent ring-1 ring-accent'
                     : 'border-[var(--border-default,#e2e8f0)]',

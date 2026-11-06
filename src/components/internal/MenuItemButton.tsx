@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { UiIcon } from '../../icons';
 import { cn } from '../../utils';
 import { resolveItemClass, type ItemClassName, type ItemRenderState } from './optionStyle';
 
@@ -9,6 +10,8 @@ export interface MenuItemShape {
   onClick?: () => void;
   destructive?: boolean;
   disabled?: boolean;
+  /** Es la opción vigente (un orden, una vista): lleva una marca al final y `aria-current`. */
+  selected?: boolean;
   separatorBefore?: boolean;
   /** Segunda línea bajo el nombre. */
   description?: React.ReactNode;
@@ -54,13 +57,14 @@ export const MenuItemButton: React.FC<MenuItemButtonProps> = ({
         : <span className="flex-1 truncate">{item.label}</span>}
     </>
   );
-  const state: ItemRenderState = { selected: false, highlighted: active, disabled: Boolean(item.disabled), query: '', label: item.label, content };
+  const state: ItemRenderState = { selected: Boolean(item.selected), highlighted: active, disabled: Boolean(item.disabled), query: '', label: item.label, content };
   return (
     <button
       id={id}
       type="button"
       role="menuitem"
       disabled={item.disabled}
+      aria-current={item.selected || undefined}
       data-highlighted={active || undefined}
       style={index === undefined ? undefined : ({ '--i': index } as React.CSSProperties)}
       onClick={() => {
@@ -79,6 +83,7 @@ export const MenuItemButton: React.FC<MenuItemButtonProps> = ({
       )}
     >
       {renderItem ? <span className="min-w-0 flex-1">{renderItem(item, state)}</span> : content}
+      {item.selected && <UiIcon slot="check" size={14} className="shrink-0 text-accent" />}
       {trailing}
     </button>
   );

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { usePopover } from '../hooks/usePopover';
+import { inheritedCssVars } from '../hooks/usePortalTheme';
 import { useThemeOptional } from '../context/ThemeContext';
 import { themeToAttrs } from '../theme/tokens';
 export interface ChatPopoverProps {
@@ -40,10 +41,7 @@ export function ChatPopover({ label, trigger, children, className = '', disabled
   }, [open, anchorRef]);
   React.useLayoutEffect(() => {
     if (!open || !anchorRef.current) return;
-    const computed = getComputedStyle(anchorRef.current);
-    const entries: [string, string][] = [];
-    for (let i = 0; i < computed.length; i++) { const name = computed[i]; if (name.startsWith('--')) entries.push([name, computed.getPropertyValue(name)]); }
-    setInherited(Object.fromEntries(entries));
+    setInherited(inheritedCssVars(getComputedStyle(anchorRef.current)));
   }, [open, theme?.cssVars, anchorRef]);
   React.useEffect(() => {
     if (!open || !ready || !keyboard) return;

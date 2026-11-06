@@ -8,6 +8,27 @@ const split = require('../src/components/internal/split.ts');
 const snap = require('../src/components/internal/snap.ts');
 const tree = require('../src/components/internal/tree.ts');
 const virtual = require('../src/components/internal/virtual.ts');
+const { fitTabs } = require('../src/components/internal/tabsOverflow.ts');
+
+test('tabs: las que no caben van al menú y la activa nunca se esconde', () => {
+  const w = [100, 80, 120, 90, 110];
+  // Caben todas (500): sin menú, aunque la suma con decimales roce el borde.
+  assert.deepEqual(fitTabs(w, 500, 60), [0, 1, 2, 3, 4]);
+  assert.deepEqual(fitTabs([100.3, 99.9], 200, 60), [0, 1]);
+  // 400 con botón de 60: caben 100 + 80 + 120 = 300 ≤ 340, la siguiente (90) no.
+  assert.deepEqual(fitTabs(w, 400, 60), [0, 1, 2]);
+  // Las primeras en orden: no salta a una más estrecha de detrás.
+  assert.deepEqual(fitTabs([100, 300, 20], 200, 60), [0]);
+  // La activa escondida entra y deja fuera las que ya no caben.
+  assert.deepEqual(fitTabs(w, 400, 60, 4), [0, 1, 4]);
+  assert.deepEqual(fitTabs(w, 400, 60, 1), [0, 1, 2]);
+  // Con separación entre pestañas.
+  assert.deepEqual(fitTabs(w, 400, 60, -1, 10), [0, 1, 2]);
+  assert.deepEqual(fitTabs(w, 400, 60, -1, 20), [0, 1]);
+  // Ni la activa cabe: se muestra sola igualmente.
+  assert.deepEqual(fitTabs(w, 50, 60, 2), [2]);
+  assert.deepEqual(fitTabs([], 100, 60), []);
+});
 
 test('slider: snapping, clamping and decimals without float noise', () => {
   assert.equal(slider.snapToStep(0.3000001, 0, 1, 0.1), 0.3);

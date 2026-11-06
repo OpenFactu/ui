@@ -249,7 +249,7 @@ export const ListItem: React.FC<ListItemProps> = ({
       className={cn(
         'shrink-0 flex items-center gap-0.5 transition-opacity',
         ctx.actionsVisibility === 'hover' &&
-          'opacity-0 group-hover:opacity-100 focus-within:opacity-100',
+          'k-reveal opacity-0 group-hover:opacity-100 focus-within:opacity-100',
       )}
     >
       {actions.map((action, i) => (
@@ -264,7 +264,7 @@ export const ListItem: React.FC<ListItemProps> = ({
             action.onClick(e);
           }}
           className={cn(
-            'p-1 rounded-[var(--k-radius-xs,2px)] transition-colors disabled:opacity-40 disabled:pointer-events-none',
+            'k-touch-40 p-1 rounded-[var(--k-radius-xs,2px)] transition-colors disabled:opacity-40 disabled:pointer-events-none',
             action.tone === 'danger'
               ? 'text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] hover:bg-[var(--k-danger-bg)]'
               : 'text-[var(--fg-subtle,#657486)] hover:text-accent hover:bg-[var(--bg-hover)]',

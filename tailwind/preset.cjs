@@ -34,6 +34,8 @@ const sized = (table) => Object.fromEntries(
 
 module.exports = {
   darkMode: 'class',
+  // `hover:` solo donde hay puntero de verdad: en táctil, el estado se queda pegado tras el toque.
+  future: { hoverOnlyWhenSupported: true },
   theme: {
     extend: {
       spacing: scaled(defaults.spacing, '--k-density', value => value === '1px' || value === 'auto'),

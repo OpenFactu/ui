@@ -99,23 +99,25 @@ export function TableCards<T>({
       {/* Una sola tira que se desliza en horizontal: en un móvil, cada control en su propia fila se comía la pantalla. */}
       <div className="k-table-strip" role="toolbar" aria-label={t.options}>
         {selectable && (
-          <span className="k-table-strip-check">
+          // Una sola etiqueta para toda la píldora: parece un botón, así que responde entera y no solo casilla y texto.
+          <label className="k-table-strip-check">
             <Checkbox
               checked={allSelected}
               state={headerState}
               disabled={isLoading || pageKeyCount === 0}
               onChange={onToggleAll}
-              label={t.selectPage}
               size="sm"
             />
-          </span>
+            <span>{t.selectPage}</span>
+          </label>
         )}
         {columns.some((column) => column.sortable) && (
-            <DropdownMenu className="k-table-filter-pill" items={[
-              { label: t.sortOriginal, onClick: () => onSortChange(null) },
+            <DropdownMenu className="k-table-filter-pill" menuTitle={t.sort} items={[
+              { label: t.sortOriginal, selected: !sort, onClick: () => onSortChange(null) },
               ...columns.filter((column) => column.sortable).flatMap((column) =>
                 (['asc', 'desc'] as const).map((dir) => ({
                   label: format(dir === 'asc' ? t.sortAsc : t.sortDesc, { column: String(column.header) }),
+                  selected: sort?.colKey === colKeyOf(column) && sort.dir === dir,
                   onClick: () => onSortChange({ colKey: colKeyOf(column), dir }),
                 })),
               ),
@@ -219,7 +221,7 @@ export function TableCards<T>({
                   <dl className="grid grid-cols-2 gap-x-3 gap-y-1">
                     {bodyCols.map((col) => (
                       <div key={colKeyOf(col)} className="flex flex-col min-w-0">
-                        <dt className="text-[length:calc(9px*var(--k-text-scale,1))] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
+                        <dt className="text-[length:calc(10px*var(--k-text-scale,1))] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
                           {col.header}
                         </dt>
                         <dd

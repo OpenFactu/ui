@@ -239,7 +239,7 @@
   .ai-artifact-body { padding: 12px; }
   .ai-artifact-fill { padding: 0; }
   .ai-model-selector { width: 135px; }
-  .ai-tool-state { max-width: 140px; font-size: calc(9px * var(--k-text-scale, 1)); }
+  .ai-tool-state { max-width: 140px; font-size: calc(10px * var(--k-text-scale, 1)); }
   .ai-audio-controls { flex-wrap: wrap; }
 }
 

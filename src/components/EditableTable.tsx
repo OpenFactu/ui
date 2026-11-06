@@ -265,7 +265,7 @@ export function EditableTable<T extends Record<string, any>>({
                       onClick={() => startEdit(item, key)}
                       aria-label={m.common.edit}
                       title={m.common.edit}
-                      className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                      className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent transition-colors k-reveal k-touch-40 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                     >
                       <UiIcon slot="pencil" className="h-3.5 w-3.5" />
                     </button>
@@ -276,7 +276,7 @@ export function EditableTable<T extends Record<string, any>>({
                       onClick={() => onDelete(item)}
                       aria-label={m.common.delete}
                       title={m.common.delete}
-                      className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                      className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors k-reveal k-touch-40 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                     >
                       <UiIcon slot="trash-2" className="h-3.5 w-3.5" />
                     </button>
@@ -306,7 +306,7 @@ export function EditableTable<T extends Record<string, any>>({
             }}
             aria-label={m.editableTable.removeRow}
             title={m.editableTable.removeRow}
-            className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+            className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors k-reveal k-touch-40 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
           >
             <UiIcon slot="trash-2" className="h-3.5 w-3.5" />
           </button>
@@ -341,6 +341,7 @@ export function EditableTable<T extends Record<string, any>>({
         const key = getKey(nueva, data.length);
         if (mode === 'row') startEdit(nueva, key);
       }}
+      data-k-focus-inset=""
       className="flex w-full items-center gap-1.5 px-4 py-2 text-[length:calc(12px*var(--k-text-scale,1))] font-medium text-accent hover:bg-[var(--bg-hover,#f1f5f9)] transition-colors"
     >
       <UiIcon slot="plus" className="h-3.5 w-3.5" />

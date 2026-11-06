@@ -72,18 +72,17 @@ export const Variantes: Story = () => {
       </div>
       <div>
         <p className="text-[11px] font-mono uppercase tracking-wider text-[var(--fg-subtle,#657486)] mb-2">
-          scrollable (12 tabs)
+          12 pestañas: las que no caben, al menú «Más»
         </p>
-        <Tabs items={many} value={d} onChange={setD} scrollable size="sm" />
+        <Tabs items={many} value={d} onChange={setD} size="sm" />
       </div>
     </div>
   );
 };
 
 /**
- * El caso de `CompanySettings`: muchas pestañas, `scrollable` y subrayado.
- * `overflow-x-auto` obliga al navegador a recortar también en vertical, así que
- * cualquier cosa que sobresalga por abajo desaparece.
+ * El caso de `CompanySettings`: muchas pestañas con subrayado en un ancho corto. Las que no caben van al menú «Más»;
+ * si eliges una de ahí, entra en la fila. En móvil la fila se desliza con el dedo y se desvanece por el lado que sigue.
  */
 const MUCHAS = [
   'Datos fiscales',
@@ -100,8 +99,19 @@ const MUCHAS = [
 export const SubrayadoDesplazable: Story = () => {
   const [tab, setTab] = React.useState(MUCHAS[0].key);
   return (
+    <div className="flex max-w-md flex-col gap-8">
+      <Tabs items={MUCHAS} value={tab} onChange={setTab} variant="underline" size="sm" />
+      <Tabs items={MUCHAS} value={tab} onChange={setTab} variant="pill" size="sm" />
+    </div>
+  );
+};
+
+/** `overflow="scroll"`: la fila se desliza también en escritorio, con un degradado en el lado que tiene más. */
+export const Deslizable: Story = () => {
+  const [tab, setTab] = React.useState(MUCHAS[0].key);
+  return (
     <div className="max-w-md">
-      <Tabs items={MUCHAS} value={tab} onChange={setTab} variant="underline" size="sm" scrollable />
+      <Tabs items={MUCHAS} value={tab} onChange={setTab} size="sm" overflow="scroll" />
     </div>
   );
 };

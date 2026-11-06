@@ -110,8 +110,11 @@ registerThemePreset({
 ```
 
 - **Cristal**: con `blur > 0` o `alpha < 1`, `applyTheme` pone `data-k-material` y las
-  superficies (tarjetas, diálogos, menús, listas, el espacio de trabajo y el compositor
-  de IA) se vuelven translúcidas y difuminan el fondo. Un `backdrop` activa
+  paneles (tarjetas, diálogos, hojas, cajones, avisos, el espacio de trabajo y el compositor
+  de IA) se vuelven translúcidos y difuminan el fondo. Lo de dentro se funde con ellos,
+  salvo los controles: campos, botones y grupos de opciones conservan su fondo (marca
+  `data-k-solid` en lo que pinte tu propio control). Menús y listas desplegables se quedan
+  opacos, con su borde y su sombra, para separarse del panel que tapan. Un `backdrop` activa
   `data-k-backdrop`. Para tematizar un subárbol: `<div style={themeToStyle(t)} {...themeToAttrs(t)}>`.
   Con `prefers-reduced-transparency` o colores forzados las superficies vuelven a ser opacas.
 - **Densidad, movimiento y texto** actúan a través del preset de Tailwind: el espaciado

@@ -58,7 +58,7 @@ export function ColumnToggle({
         aria-expanded={isOpen}
         title={tt.columns}
         onClick={() => setIsOpen(!isOpen)}
-        className="p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent hover:bg-[var(--bg-hover)] transition-colors"
+        className="k-table-col-toggle p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent hover:bg-[var(--bg-hover)] transition-colors"
       >
         <UiIcon slot="columns-3" className="h-3.5 w-3.5" />
       </button>
@@ -73,7 +73,7 @@ export function ColumnToggle({
             )}
             style={style}
           >
-            <p className="px-2.5 pt-1.5 pb-1 text-[length:calc(9px*var(--k-text-scale,1))] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
+            <p className="px-2.5 pt-1.5 pb-1 text-[length:calc(10px*var(--k-text-scale,1))] font-mono uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
               {tt.columns}
             </p>
             {entries.map((entry) => (
@@ -114,9 +114,9 @@ export const RowActionsCell: React.FC<{ actions: RowAction[] | null; alwaysVisib
 
   const revealClass = alwaysVisible
     ? ''
-    : 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-within:opacity-100';
+    : 'k-reveal opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-within:opacity-100';
   const btnClass = cn(
-    'p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent hover:bg-[var(--bg-hover)] transition-all disabled:opacity-40 disabled:pointer-events-none',
+    'k-touch-40 p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-subtle,#657486)] hover:text-accent hover:bg-[var(--bg-hover)] transition-all disabled:opacity-40 disabled:pointer-events-none',
     // En las tarjetas (pantalla táctil) el área de toque llega a 40 px.
     alwaysVisible && 'inline-flex min-h-10 min-w-10 items-center justify-center',
     revealClass,

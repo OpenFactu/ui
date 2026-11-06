@@ -13,6 +13,7 @@
 /* Sombras y fundidos con lado físico: el contenido que pasa por debajo está al otro lado. */
 [dir='rtl'] .k-table[data-overflow-left] .k-table-edge-left { box-shadow: -8px 0 10px -8px rgb(15 23 42 / 0.22); }
 [dir='rtl'] .k-table[data-overflow-right] .k-table-edge-right { box-shadow: 8px 0 10px -8px rgb(15 23 42 / 0.22); }
+[dir='rtl'] .k-table-strip { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 24px), transparent); }
 .dark [dir='rtl'] .k-table[data-overflow-left] .k-table-edge-left { box-shadow: -8px 0 10px -8px rgb(0 0 0 / 0.6); }
 .dark [dir='rtl'] .k-table[data-overflow-right] .k-table-edge-right { box-shadow: 8px 0 10px -8px rgb(0 0 0 / 0.6); }
 
@@ -22,3 +23,5 @@
 [dir='rtl'] .k-scroll-area[data-overflow-left] .k-scroll-viewport { -webkit-mask-image: linear-gradient(to left, transparent, #000 18px); mask-image: linear-gradient(to left, transparent, #000 18px); }
 [dir='rtl'] .k-scroll-area[data-overflow-right] .k-scroll-viewport { -webkit-mask-image: linear-gradient(to right, transparent, #000 18px); mask-image: linear-gradient(to right, transparent, #000 18px); }
 [dir='rtl'] .k-scroll-area[data-overflow-left][data-overflow-right] .k-scroll-viewport { -webkit-mask-image: linear-gradient(to left, transparent, #000 18px, #000 calc(100% - 18px), transparent); mask-image: linear-gradient(to left, transparent, #000 18px, #000 calc(100% - 18px), transparent); }
+[dir='rtl'] .k-tabs[data-fade-start] { -webkit-mask-image: linear-gradient(to left, transparent, #000 24px); mask-image: linear-gradient(to left, transparent, #000 24px); }
+[dir='rtl'] .k-tabs[data-fade-end] { -webkit-mask-image: linear-gradient(to right, transparent, #000 24px); mask-image: linear-gradient(to right, transparent, #000 24px); }

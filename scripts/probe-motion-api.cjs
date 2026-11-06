@@ -746,7 +746,11 @@ async function motionDrag(browser, { check }) {
   await page.mouse.move(fixedBox.x + 130, fixedBox.y + 30, { steps: 4 });
   const pulled = await read('arrastre-fijo');
   await page.mouse.up();
-  await page.waitForTimeout(700);
+  // El muelle tarda lo que tarde la máquina: se espera a que llegue, con un tope.
+  await page.waitForFunction(() => {
+    const el = document.querySelector('[data-testid="arrastre-fijo"]');
+    return el && ['none', '0px'].includes(getComputedStyle(el).translate);
+  }, null, { timeout: 4000 }).catch(() => undefined);
   const released = await read('arrastre-fijo');
   check('sin recorrido, tira con goma y vuelve', pulled.x > 5 && released.x === 0, `${pulled.x} → ${released.x}`);
   check('sin errores de página', errors.length === 0, errors.join(' | '));

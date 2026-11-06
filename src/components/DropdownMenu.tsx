@@ -20,6 +20,8 @@ export interface DropdownMenuProps extends MenuItemCustomization<DropdownMenuIte
   disabled?: boolean;
   className?: string;
   menuClassName?: string;
+  /** Qué ofrece el menú: da nombre a la lista y titula la hoja en móvil. Por defecto, «Acciones». */
+  menuTitle?: string;
   /**
    * Nombre accesible del disparador cuando su contenido es solo un icono. Así no hace falta meter un `<button>` dentro
    * (el disparador ya es un botón: uno dentro de otro confunde al lector de pantalla y al teclado).
@@ -35,6 +37,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = (rawProps) => {
   disabled = false,
   className,
   menuClassName,
+  menuTitle,
   mobilePresentation = 'auto',
   'aria-label': ariaLabel,
   renderItem,
@@ -103,6 +106,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = (rawProps) => {
         ref={popoverRef}
         id={menuId}
         role="menu"
+        aria-label={menuTitle}
         {...(mobile ? undefined : popoverProps)}
         onKeyDown={mobile ? mobileMenuKeyboard : undefined}
         className={cn(
@@ -127,7 +131,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = (rawProps) => {
         ))}
       </div>,
       document.body,
-      { open: isOpen, onClose: () => setIsOpen(false), title: common.actions, presentation, anchorRef },
+      { open: isOpen, onClose: () => setIsOpen(false), title: menuTitle ?? common.actions, presentation, anchorRef },
     );
 
   return (

@@ -114,3 +114,11 @@ test('roving: arrows skip disabled items, wrap, honour axis and Home/End', () =>
   assert.equal(rovingNext('a', enabled, 0), null);
   assert.deepEqual(enabledIndices([{}, {}], true), [], 'todo el grupo desactivado');
 });
+
+test('el portal hereda el tema del ancla, no el estado de las utilidades de Tailwind', () => {
+  const { inheritedCssVars } = require('../src/hooks/usePortalTheme.ts');
+  const props = { '--bg-card': '#fff', '--k-shadow-lg': '0 10px 15px', '--tw-shadow': '0 0 #0000', '--tw-translate-x': '0', color: 'red' };
+  const keys = Object.keys(props);
+  const computed = { length: keys.length, item: (i) => keys[i], getPropertyValue: (k) => props[k] };
+  assert.deepEqual(inheritedCssVars(computed), { '--bg-card': '#fff', '--k-shadow-lg': '0 10px 15px' });
+});

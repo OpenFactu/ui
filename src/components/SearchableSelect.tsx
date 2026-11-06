@@ -424,7 +424,7 @@ export function SearchableSelect(rawProps: SearchableSelectProps) {
                   <div
                     key={`h-${row.label}`}
                     role="presentation"
-                    className="px-2.5 pt-2 pb-1 text-[length:calc(9px*var(--k-text-scale,1))] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]"
+                    className="px-2.5 pt-2 pb-1 text-[length:calc(10px*var(--k-text-scale,1))] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]"
                   >
                     {row.label}
                   </div>
@@ -589,7 +589,8 @@ export function SearchableSelect(rawProps: SearchableSelectProps) {
                   {!disabled && (
                     <button type="button"
                       aria-label={format(m.common.removeItem, { name: String(opt.label) })}
-                      className="k-search-select-remove shrink-0 hover:text-[var(--k-danger-fg)] transition-colors"
+                      className="k-search-select-remove k-hit shrink-0 hover:text-[var(--k-danger-fg)] transition-colors"
+                      onKeyDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
                         e.stopPropagation();
                         remove();
@@ -621,15 +622,19 @@ export function SearchableSelect(rawProps: SearchableSelectProps) {
         )}
         <span className="flex items-center gap-1 shrink-0">
           {clearable && hasValue && !disabled && (
-            <UiIcon slot="x"
-              role="button"
+            // Un botón de verdad: se alcanza con el teclado y sus teclas no abren la lista.
+            <button
+              type="button"
               aria-label={props.multiple ? ss.clearAll : ss.clearSelection}
-              className="h-3.5 w-3.5 text-[var(--fg-subtle)] hover:text-[var(--k-danger-fg)] transition-colors"
+              className="k-hit inline-flex text-[var(--fg-subtle)] hover:text-[var(--k-danger-fg)] transition-colors"
+              onKeyDown={(e) => e.stopPropagation()}
               onClick={(e) => {
                 e.stopPropagation();
                 clearAll();
               }}
-            />
+            >
+              <UiIcon slot="x" className="h-3.5 w-3.5" />
+            </button>
           )}
           <UiIcon slot="chevron-down"
             className={cn(

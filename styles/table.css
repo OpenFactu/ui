@@ -60,7 +60,7 @@
   max-width: 100%;
   padding: 2px 4px 2px 10px;
   border: var(--k-border-width, 1px) solid color-mix(in srgb, var(--color-accent, #0d9488) 35%, transparent);
-  border-radius: 999px;
+  border-radius: var(--k-radius-sm, 4px);
   background: color-mix(in srgb, var(--color-accent, #0d9488) 8%, var(--bg-card, #ffffff));
   font-size: calc(12px * var(--k-text-scale, 1));
   color: var(--fg-default, #0a1628);
@@ -79,7 +79,7 @@
   transition: background-color var(--k-table-fast) ease, color var(--k-table-fast) ease;
 }
 .k-table-chip button:hover { background: color-mix(in srgb, var(--fg-default, #0a1628) 8%, transparent); color: var(--fg-default, #0a1628); }
-.k-table-clear { padding: 2px 6px; font-size: calc(12px * var(--k-text-scale, 1)); font-weight: 600; color: var(--fg-muted, #52606f); border-radius: 4px; }
+.k-table-clear { padding: 2px 6px; font-size: calc(12px * var(--k-text-scale, 1)); font-weight: 600; color: var(--fg-muted, #52606f); border-radius: var(--k-radius-xs, 2px); }
 .k-table-clear:hover { color: var(--fg-default, #0a1628); background: var(--bg-hover, #f1f5f9); }
 
 /* Botón de filtro en la cabecera y en la barra de las tarjetas */
@@ -90,9 +90,12 @@
   height: 20px;
   margin-inline-start: 4px;
   vertical-align: middle;
-  border-radius: 4px;
+  border-radius: var(--k-radius-xs, 2px);
   color: var(--fg-subtle, #657486);
   opacity: 0.55;
+  /* Por encima de `.k-table-sort::after`, que cubre la cabecera. */
+  position: relative;
+  z-index: 1;
   transition: opacity var(--k-table-fast) ease, background-color var(--k-table-fast) ease, color var(--k-table-fast) ease;
 }
 th:hover .k-table-filter-btn, .k-table-filter-btn:focus-visible, .k-table-filter-btn[aria-expanded='true'] { opacity: 1; }
@@ -107,11 +110,12 @@ th[data-filtered] { color: color-mix(in srgb, var(--color-accent, #0d9488) 75%, 
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 32px;
-  padding: 0 10px;
+  height: calc(32px * var(--k-density, 1));
+  padding: 0 calc(10px * var(--k-density, 1));
   border: var(--k-border-width, 1px) solid var(--border-default, #e2e8f0);
-  border-radius: 999px;
+  border-radius: var(--k-radius-sm, 4px);
   background: var(--bg-card, #ffffff);
+  font-family: var(--font-sans, inherit);
   font-size: calc(12px * var(--k-text-scale, 1));
   font-weight: 500;
   color: var(--fg-body, #2d3a4a);
@@ -135,25 +139,36 @@ th[data-filtered] { color: color-mix(in srgb, var(--color-accent, #0d9488) 75%, 
 .k-table-strip-check {
   display: inline-flex;
   align-items: center;
-  height: 32px;
-  padding: 0 10px;
+  height: calc(32px * var(--k-density, 1));
+  padding: 0 calc(10px * var(--k-density, 1));
   border: var(--k-border-width, 1px) solid var(--border-default, #e2e8f0);
-  border-radius: 999px;
+  border-radius: var(--k-radius-sm, 4px);
   background: var(--bg-card, #ffffff);
+  font-family: var(--font-sans, inherit);
   font-size: calc(12px * var(--k-text-scale, 1));
+  font-weight: 500;
+  color: var(--fg-body, #2d3a4a);
+  gap: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color var(--k-table-fast, calc(150ms * var(--k-motion, 1))) ease;
 }
+.k-table-strip-check:has(input:disabled) { cursor: not-allowed; opacity: 0.5; }
 .k-table-filter-pill { cursor: pointer; white-space: nowrap; transition: background-color var(--k-table-fast, calc(150ms * var(--k-motion, 1))) ease, border-color var(--k-table-fast, calc(150ms * var(--k-motion, 1))) ease; }
-.k-table-filter-pill:hover { background: var(--bg-hover, #f1f5f9); }
+/* Solo con ratón: en táctil, `:hover` se queda pegado tras el toque. Al tocar responde `:active`. */
+@media (hover: hover) {
+  .k-table-filter-pill:hover, .k-table-strip-check:not(:has(input:disabled)):hover { background: var(--bg-hover, #f1f5f9); }
+}
+.k-table-filter-pill:active, .k-table-strip .k-table-col-toggle:active, .k-table-strip-check:not(:has(input:disabled)):active { background: var(--bg-hover, #f1f5f9); }
 .k-table-toolbar[data-cards] .k-table-search { flex-basis: 100%; max-width: none; }
 .k-table-results-end { margin-inline-start: auto; }
-.k-table-strip-check label { font-size: calc(12px * var(--k-text-scale, 1)); }
-.k-table-strip button[aria-label='Mostrar u ocultar columnas'] {
+.k-table-strip .k-table-col-toggle {
   display: inline-grid;
   place-items: center;
-  width: 40px;
-  height: 32px;
+  width: calc(32px * var(--k-density, 1));
+  height: calc(32px * var(--k-density, 1));
   border: var(--k-border-width, 1px) solid var(--border-default, #e2e8f0);
-  border-radius: 999px;
+  border-radius: var(--k-radius-sm, 4px);
   background: var(--bg-card, #ffffff);
 }
 /* En móvil todo control mide 48 px de alto (área táctil): la tira y los chips se igualan a esa altura. */
@@ -162,13 +177,23 @@ th[data-filtered] { color: color-mix(in srgb, var(--color-accent, #0d9488) 75%, 
 @media (max-width: 767px) {
   /* Más específico que `[data-k-mobile] button` (mobile.css va después): la tira y los chips miden 40 px. */
   .k-table-cards .k-table-strip > *, .k-table-cards .k-table-strip button, .k-table-cards .k-table-strip [role='button'] { min-height: 40px; height: 40px; font-size: calc(13px * var(--k-text-scale, 1)); }
-  .k-table-cards .k-table-strip button[aria-label='Mostrar u ocultar columnas'] { width: 40px; }
-  .k-table-cards .k-table-strip-check [data-k-control='checkbox-group'] { min-height: 0; gap: 8px; }
-  .k-table-cards .k-table-strip-check [data-k-control='checkbox-group'] > label { min-height: 0; }
-  .k-table-cards .k-table-strip-check [data-k-control='checkbox-group'] > label > span:first-child { font-size: calc(13px * var(--k-text-scale, 1)); white-space: nowrap; }
+  .k-table-cards .k-table-strip .k-table-col-toggle { width: 40px; }
   .k-table-cards .k-table-strip-check input[type='checkbox'] { width: 18px; height: 18px; }
   .k-table-cards .k-table-chip { min-height: 36px; padding-block: 0; font-size: calc(13px * var(--k-text-scale, 1)); }
   .k-table-cards .k-table-chip button { min-height: 32px; min-width: 32px; }
+}
+
+/* Cabecera ordenable: `th` promete con su cursor que se pulsa entera, y así es. El asa de ancho y el filtro van encima. */
+.k-table-sort::after { content: ''; position: absolute; inset: 0; }
+.k-table-check { position: relative; display: inline-flex; vertical-align: middle; cursor: pointer; }
+/* Tabla con desplazamiento en pantalla táctil: la casilla y las cabeceras no bajan de 44 px, sin mover el diseño. */
+@media (max-width: 767px), (pointer: coarse) {
+  .k-table-scroll thead th, .k-table-scroll td.k-table-select-cell { height: 44px; }
+  /* Más específico que `[data-k-mobile] button`: aquí el botón no necesita altura, la zona de toque es toda la celda. */
+  .k-table-scroll thead button { min-height: 0; }
+  .k-table-check input[type='checkbox'] { width: 18px; height: 18px; }
+  .k-table-check::after { content: ''; position: absolute; inset: -13px -14px; }
+  .k-table-filter-btn::after { content: ''; position: absolute; inset: -12px -6px; }
 }
 
 /* Panel de filtro dentro de la hoja móvil: sin marco propio (ya lo pone la hoja) ni título repetido. */

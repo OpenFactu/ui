@@ -73,7 +73,8 @@ const gesture = (cdp, points) => touch(cdp, points);
 
   // ── Indicador ──────────────────────────────────────────────────────────
   console.log('\nIndicador');
-  await desktop.goto(`${BASE}/?story=motion--indicadores`, { waitUntil: 'networkidle' });
+  // Sin el panel de Ladle: con él, la columna es tan estrecha que «Clientes» pasa al menú «Más» de Tabs.
+  await desktop.goto(`${BASE}/?story=motion--indicadores&mode=preview`, { waitUntil: 'networkidle' });
   await desktop.waitForTimeout(500);
   const x = () => desktop.evaluate(() => new DOMMatrix(getComputedStyle(document.querySelector('.k-indicator')).transform).m41);
   const x0 = await x();

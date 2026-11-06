@@ -52,6 +52,11 @@
 .k-scroll-area[data-overflow-right] .k-scroll-viewport { -webkit-mask-image: linear-gradient(to left, transparent, #000 18px); mask-image: linear-gradient(to left, transparent, #000 18px); }
 .k-scroll-area[data-overflow-left][data-overflow-right] .k-scroll-viewport { -webkit-mask-image: linear-gradient(to right, transparent, #000 18px, #000 calc(100% - 18px), transparent); mask-image: linear-gradient(to right, transparent, #000 18px, #000 calc(100% - 18px), transparent); }
 
+/* ── Tabs que se deslizan: el lado con más pestañas se desvanece ─────────── */
+.k-tabs[data-fade-start] { -webkit-mask-image: linear-gradient(to right, transparent, #000 24px); mask-image: linear-gradient(to right, transparent, #000 24px); }
+.k-tabs[data-fade-end] { -webkit-mask-image: linear-gradient(to left, transparent, #000 24px); mask-image: linear-gradient(to left, transparent, #000 24px); }
+.k-tabs[data-fade-start][data-fade-end] { -webkit-mask-image: linear-gradient(to right, transparent, #000 24px, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(to right, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
+
 /* ── VirtualList ────────────────────────────────────────────────────────── */
 .k-virtual { position: relative; overflow-y: auto; outline: none; contain: strict; }
 .k-virtual:focus-visible { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-accent, #0d9488) 40%, transparent); }

@@ -77,7 +77,7 @@ export function Alert({
           type="button"
           onClick={onDismiss}
           aria-label={dismissLabel}
-          className="rounded-[var(--k-radius-xs,2px)] p-1 hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current"
+          className="k-touch-40 rounded-[var(--k-radius-xs,2px)] p-1 hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current"
         >
           <UiIcon slot="x" size={16} />
         </button>

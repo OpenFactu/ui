@@ -119,6 +119,12 @@ export const heatmapCalendar = {
   more: 'Más',
 };
 
+export const tabs = {
+  more: 'Más',
+  moreLabel: { one: '# pestaña más', other: '# pestañas más' },
+  menuTitle: 'Más pestañas',
+};
+
 export const numberInput = {
   increase: 'Aumentar',
   decrease: 'Disminuir',

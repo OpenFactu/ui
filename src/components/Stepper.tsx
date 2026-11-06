@@ -110,6 +110,7 @@ export const Stepper: React.FC<StepperProps> = (rawProps) => {
 
         const circuloDeSerie = (
           <span
+            data-k-solid=""
             className={cn(
               'flex shrink-0 items-center justify-center rounded-full border font-mono transition-colors',
               spec.circulo,

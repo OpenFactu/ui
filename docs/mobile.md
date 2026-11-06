@@ -33,7 +33,7 @@ Los portales heredan el tema del disparador, incluido un tema aplicado a una sec
 | Familia | Adaptación |
 | --- | --- |
 | PageHeader | Acción principal visible y resto en Más acciones |
-| Tabs, Breadcrumbs | Desplazamiento horizontal local |
+| Tabs, Breadcrumbs | Desplazamiento horizontal local; `Tabs` se desvanece por el lado que sigue (en escritorio, las que no caben van a «Más») |
 | FilterBar | Filtros en panel inferior con valores controlados compartidos |
 | Pagination | Controles distribuidos en varias filas si falta espacio |
 | Card, KpiCard, PageLayout | Espaciado reducido y contenido limitado al ancho disponible |
@@ -53,5 +53,7 @@ El calendario mantiene siete columnas: a 320 px los días pueden medir menos de 
 ## Comprobación
 
 Las stories `mobile-redesign--gestion`, `mobile-redesign--controles` y `mobile-redesign--planificacion` muestran navegación, tablas, formularios, 16 temas y planificación. `npm run test:browser` incluye las pruebas móviles de selección, navegación, filtros, formularios y temas. La galería comprueba 320, 390, 430, 768, 1024 y 1440 px. `node scripts/audit-mobile.cjs` registra desbordamientos del catálogo; `scripts/mobile-shots.cjs` genera referencias visuales.
+
+`scripts/probe-touch-targets.cjs` exige 24 px o más de zona de toque y que nada dependa de pasar el puntero por encima; mira lo que recibe el toque con `elementFromPoint`, porque el ajuste de toque de Chrome disimula zonas muertas que Safari no perdona. Para tus propios iconos sueltos tienes `.k-hit`, que amplía la zona sin mover el diseño.
 
 Las comprobaciones automatizadas usan Chrome con viewport móvil. La aparición real del teclado y los gestos del sistema necesitan además una revisión en un dispositivo físico.

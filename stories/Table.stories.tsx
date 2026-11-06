@@ -363,6 +363,14 @@ export const TodoJunto: Story = () => (
 );
 
 /**
+ * `responsive="scroll"` mantiene la tabla en pantalla estrecha: se desliza en horizontal. En táctil, la casilla y las
+ * cabeceras ordenables siguen teniendo una zona de 44 px.
+ */
+export const DesplazamientoHorizontal: Story = () => (
+  <Table responsive="scroll" columns={columns} data={DATA.slice(0, 5)} selectable />
+);
+
+/**
  * En pantalla estrecha la tabla se convierte en tarjetas. El papel de cada
  * columna se declara con `card`; lo que no se indica va al cuerpo con su
  * etiqueta. Reduce el ancho de la ventana para verlo.

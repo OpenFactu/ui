@@ -140,7 +140,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     const target = event.target as HTMLElement;
     const fromContent = !!body.current?.contains(target) && !target.closest('[data-sheet-handle]');
-    if (target.closest('button, a, input, textarea, select, [role="button"]') && !target.closest('[data-sheet-handle]')) return;
+    if (target.closest('button, a, input, textarea, select, [role="button"], [data-sheet-static]') && !target.closest('[data-sheet-handle]')) return;
     drag.current = { id: event.pointerId, startY: event.clientY, startH: spring.get(), active: false, fromContent };
     tracker.reset(); tracker.add(event.clientY, event.timeStamp);
   };

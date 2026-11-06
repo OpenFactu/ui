@@ -157,7 +157,7 @@
 .k-avatar-group[data-size='lg'] { --k-avatar-overlap: -14px; }
 .k-avatar-group[data-size='xl'] { --k-avatar-overlap: -20px; }
 .k-avatar-group > * + * { margin-inline-start: var(--k-avatar-overlap); }
-.k-avatar-group > * { transition: margin-left calc(var(--k-spring-move-duration, 380ms) * var(--k-motion, 1)) var(--k-spring-move, cubic-bezier(.22,1,.36,1)); }
+.k-avatar-group > * { transition: margin-inline-start calc(var(--k-spring-move-duration, 380ms) * var(--k-motion, 1)) var(--k-spring-move, cubic-bezier(.22,1,.36,1)); }
 .k-avatar-group .k-avatar-face, .k-avatar-more { outline: 2px solid var(--bg-card, #ffffff); }
 .k-avatar-more { background: var(--bg-muted, #f8fafc); color: var(--fg-muted, #52606f); }
 @media (hover: hover) { .k-avatar-group:hover > * + * { margin-inline-start: calc(var(--k-avatar-overlap) / 3); } }

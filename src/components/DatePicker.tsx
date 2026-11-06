@@ -3,6 +3,7 @@ import { logicalKey } from '../internal/roving';
 import { capitalizar, isoDate } from '../internal/fechas';
 import * as React from 'react';
 import { adaptivePortal } from './internal/MobileOverlay';
+import { useCalendarSwipe } from './internal/useCalendarSwipe';
 import { resolveMobilePresentation, type MobilePresentation } from './internal/mobilePresentation';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import { UiIcon } from '../icons';
@@ -98,7 +99,7 @@ function addMonths(y: number, m: number, delta: number): { y: number; m: number 
 const gridButton =
   'flex items-center justify-center rounded-[var(--k-radius-xs,2px)] text-[length:calc(12px*var(--k-text-scale,1))] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none';
 const navButton =
-  'p-1 rounded-[var(--k-radius-xs,2px)] text-[var(--fg-muted,#52606f)] hover:text-accent hover:bg-[var(--bg-hover)] transition-colors disabled:opacity-30 disabled:pointer-events-none';
+  'k-dp-nav rounded-[var(--k-radius-xs,2px)] text-[var(--fg-muted,#52606f)] hover:text-accent hover:bg-[var(--bg-hover)] transition-colors disabled:opacity-30 disabled:pointer-events-none';
 
 export const DatePicker: React.FC<DatePickerProps> = ({
   value,
@@ -306,6 +307,12 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   const stepBackDisabled = view === 'years' && yearPageStart - 1 < firstYear;
   const stepForwardDisabled = view === 'years' && yearPageStart + YEARS_PER_PAGE > lastYear;
 
+  const swipe = useCalendarSwipe({
+    onStep: (forward) => { if (forward) stepForward(); else stepBack(); },
+    canStep: (forward) => !(forward ? stepForwardDisabled : stepBackDisabled),
+    disabled: !isOpen,
+  });
+
   const headerLabel = (
     <div className="flex items-baseline gap-1.5">
       {view === 'days' && (
@@ -342,11 +349,11 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 
   const daysView = (
     <>
-      <div className="grid grid-cols-7 gap-0.5 mb-1">
+      <div className="k-dp-weekdays grid grid-cols-7">
         {weekdayLabels.map((day, i) => (
           <span
             key={i}
-            className="h-7 flex items-center justify-center font-mono text-[length:calc(10px*var(--k-text-scale,1))] font-semibold uppercase text-[var(--fg-subtle,#657486)]"
+            className="flex items-center justify-center font-mono text-[length:calc(10px*var(--k-text-scale,1))] font-semibold uppercase text-[var(--fg-subtle,#657486)]"
           >
             {day}
           </span>
@@ -356,7 +363,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         ref={gridRef}
         role="grid"
         onKeyDown={handleGridKeyDown}
-        className="grid grid-cols-7 gap-0.5"
+        className="k-dp-days grid grid-cols-7"
       >
         {Array.from({ length: firstWeekdayOffset(viewYear, viewMonth, weekStartsOn) }).map((_, i) => (
           <span key={`blank-${i}`} />
@@ -378,7 +385,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
               onFocus={() => setFocusedDay(d)}
               className={cn(
                 gridButton,
-                'h-8 w-full',
+                'k-dp-cell h-full w-full',
                 isSelected
                   ? 'bg-accent text-[color:var(--color-accent-fg)] font-semibold'
                   : cn(
@@ -396,7 +403,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   );
 
   const monthsView = (
-    <div role="grid" className="grid grid-cols-3 gap-1.5">
+    <div role="grid" className="k-dp-picks grid grid-cols-3 gap-1.5">
       {t.monthsShort.map((name, i) => {
         const m = i + 1;
         const isSelected = selected?.y === viewYear && selected?.m === m;
@@ -413,7 +420,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             }}
             className={cn(
               gridButton,
-              'h-12 w-full',
+              'k-dp-cell h-full w-full',
               isSelected
                 ? 'bg-accent text-[color:var(--color-accent-fg)] font-semibold'
                 : cn(
@@ -430,7 +437,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   );
 
   const yearsView = (
-    <div role="grid" className="grid grid-cols-3 gap-1.5">
+    <div role="grid" className="k-dp-picks grid grid-cols-3 gap-1.5">
       {Array.from({ length: YEARS_PER_PAGE }, (_, i) => yearPageStart + i).map((y) => {
         const isSelected = selected?.y === y;
         const isCurrent = today.getFullYear() === y;
@@ -446,7 +453,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             }}
             className={cn(
               gridButton,
-              'h-12 w-full font-mono',
+              'k-dp-cell h-full w-full font-mono',
               isSelected
                 ? 'bg-accent text-[color:var(--color-accent-fg)] font-semibold'
                 : cn(
@@ -479,7 +486,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         <div className="flex items-center justify-between gap-1 mb-2">
           <button
             type="button"
-            onClick={stepBack}
+            onClick={() => swipe.stepWithArrow(false)}
             disabled={stepBackDisabled}
             aria-label={view === 'days' ? m.dates.previousMonth : view === 'months' ? dp.previousYear : dp.previousDecade}
             className={navButton}
@@ -489,7 +496,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           {headerLabel}
           <button
             type="button"
-            onClick={stepForward}
+            onClick={() => swipe.stepWithArrow(true)}
             disabled={stepForwardDisabled}
             aria-label={view === 'days' ? m.dates.nextMonth : view === 'months' ? dp.nextYear : dp.nextDecade}
             className={navButton}
@@ -498,9 +505,14 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           </button>
         </div>
 
-        {/* Altura fija: sin ella, cambiar de vista movería el popover. */}
-        <div className="min-h-[236px]">
-          {view === 'days' ? daysView : view === 'months' ? monthsView : yearsView}
+        {/*
+          Altura fija, siempre la de seis semanas: un mes de cuatro o cinco filas movía las flechas bajo el dedo (y la X
+          de la hoja podía acabar donde estaba «siguiente»).
+        */}
+        <div className="k-dp-body" {...swipe.bodyProps}>
+          <div ref={swipe.pageRef} className="k-dp-page">
+            {view === 'days' ? daysView : view === 'months' ? monthsView : yearsView}
+          </div>
         </div>
 
         {!hideFooter && (
@@ -568,21 +580,21 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             {value ? formatDisplay(value) : placeholder}
           </span>
           <span className="flex items-center gap-1">
-            {clearable && value && !disabled && (
-              <UiIcon slot="x"
-                role="button"
-                aria-label={dp.clearDate}
-                tabIndex={0}
-                className="h-3.5 w-3.5 text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onChange(null);
-                }}
-              />
-            )}
+            {/* Guarda el sitio de la X, que va fuera: un botón no puede ir dentro de otro. */}
+            {clearable && value && !disabled && <span aria-hidden="true" className="h-3.5 w-3.5" />}
             <UiIcon slot="calendar" className="h-3.5 w-3.5 text-[var(--fg-subtle,#657486)]" />
           </span>
         </button>
+        {clearable && value && !disabled && (
+          <button
+            type="button"
+            aria-label={dp.clearDate}
+            className="k-hit k-date-clear inline-flex text-[var(--fg-subtle,#657486)] hover:text-[var(--k-danger-fg)] transition-colors"
+            onClick={() => onChange(null)}
+          >
+            <UiIcon slot="x" className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
       {calendar}
     </ControlField>

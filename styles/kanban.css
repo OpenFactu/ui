@@ -197,7 +197,7 @@
 .k-kb-labels { display: flex; flex-wrap: wrap; gap: 4px; }
 .k-kb-tag {
   padding: 1px 7px;
-  border-radius: 999px;
+  border-radius: var(--k-radius-sm, 4px);
   background: color-mix(in srgb, var(--k-kb-tag, #94a3b8) 16%, var(--bg-card, #ffffff));
   font-size: calc(10.5px * var(--k-text-scale, 1));
   font-weight: 600;
@@ -232,7 +232,7 @@
   font-variant-numeric: tabular-nums;
   color: var(--fg-muted, #52606f);
 }
-.k-kb-due { padding: 2px 7px; border-radius: 999px; background: color-mix(in srgb, var(--fg-default, #0a1628) 6%, transparent); }
+.k-kb-due { padding: 2px 7px; border-radius: var(--k-radius-sm, 4px); background: color-mix(in srgb, var(--fg-default, #0a1628) 6%, transparent); }
 .k-kb-due[data-state='overdue'] { background: var(--k-danger-bg, #fee2e2); color: var(--k-danger-fg, #b42318); }
 .k-kb-due[data-state='today'], .k-kb-due[data-state='soon'] { background: var(--k-warning-bg, #fef3c7); color: var(--k-warning-fg, #92400e); }
 .k-kb-due[data-state='done'] { background: var(--k-success-bg, #dcfce7); color: var(--k-success-fg, #166534); }

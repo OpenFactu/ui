@@ -108,6 +108,7 @@ export function ToggleGroup<T extends string = string>(rawProps: ToggleGroupProp
               'inline-flex items-center justify-center whitespace-nowrap font-medium rounded-[var(--k-radius-xs,2px)] transition-[background-color,color,transform] duration-150 active:scale-95',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
               'disabled:opacity-40 disabled:pointer-events-none',
+              !item.label && 'k-touch-40',
               SIZES[size],
               on
                 ? 'bg-accent/10 text-accent'

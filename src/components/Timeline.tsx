@@ -180,7 +180,7 @@ export const Timeline: React.FC<TimelineProps> = (rawProps) => {
               key={fila.key}
               data-dia
               className={cn(
-                'font-mono text-[length:calc(9px*var(--k-text-scale,1))] font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]',
+                'font-mono text-[length:calc(10px*var(--k-text-scale,1))] font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]',
                 i === 0 ? 'pb-2' : 'pb-2 pt-4',
               )}
             >

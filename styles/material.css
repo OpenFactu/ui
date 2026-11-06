@@ -4,21 +4,22 @@
  * en un subárbol) pone `data-k-material` solo cuando el tema pide desenfoque o
  * transparencia, y `data-k-backdrop` cuando define un fondo propio. */
 
-/* Superficies: tarjetas marcadas, diálogos, menús y listas desplegables. */
-[data-k-material] :is([data-k-surface], [role='dialog'], [role='alertdialog'], [role='menu'], [role='listbox']):not([role='dialog'] [role='listbox']) {
+/* Cristal solo en los paneles: tarjetas marcadas, diálogos (también hojas y cajones) y avisos. Menús y listas
+   desplegables no: flotan sobre esos paneles y, translúcidos y con el borde claro del cristal, se confundían con lo que
+   tapan. Se quedan con su fondo, su borde y su sombra de siempre. */
+[data-k-material] :is([data-k-surface], [role='dialog'], [role='alertdialog']) {
   background-color: color-mix(in srgb, var(--bg-card, #ffffff) calc(var(--k-surface-alpha, 1) * 100%), transparent);
   -webkit-backdrop-filter: blur(var(--k-surface-blur, 0px)) saturate(var(--k-surface-saturate, 1));
   backdrop-filter: blur(var(--k-surface-blur, 0px)) saturate(var(--k-surface-saturate, 1));
   border-color: var(--k-surface-border, var(--border-default, #e2e8f0));
   box-shadow: var(--k-surface-highlight, 0 0 0 0 transparent), var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow, 0 0 #0000);
 }
-/* Las franjas internas (cabeceras, pies) llevan su propio relleno de tarjeta: dentro del cristal se funden con él. */
-[data-k-material] :is([data-k-surface], [role='dialog'], [role='alertdialog']) :is([class*='bg-[var(--bg-card'], [class*='bg-bg-card']) { background-color: transparent; }
-
-/* Menús y listas flotan sobre otras superficies: un poco más opacos para seguir legibles. */
-[data-k-material] :is([role='menu'], [role='listbox']):not([role='dialog'] [role='listbox']) {
-  background-color: color-mix(in srgb, var(--bg-card, #ffffff) calc(min(1, var(--k-surface-alpha, 1) + .2) * 100%), transparent);
-}
+/* Las franjas internas (cabeceras, pies, tablas, listas) llevan su propio relleno de tarjeta: dentro del cristal se
+   funden con él. Los controles no: un campo, un botón o un grupo de opciones conserva su fondo para que se vea dónde se
+   escribe o se pulsa. Lo que pinte su propio control lo pide con `data-k-solid`. */
+[data-k-material] :is([data-k-surface], [role='dialog'], [role='alertdialog']) :is([class*='bg-[var(--bg-card'], [class*='bg-bg-card']):not(input, textarea, select, button, [role='combobox'], [role='radiogroup'], [role='radiogroup'] *, [role='toolbar'], [role='toolbar'] *, [role='tablist'], [role='tablist'] *, [data-k-control], [data-k-control] *, [data-k-focus-surface], [data-k-solid]) { background-color: transparent; }
+/* Las franjas atenuadas (pies de diálogo y tarjeta) quedan como un tinte del cristal, no como una banda opaca. */
+[data-k-material] :is([data-k-surface], [role='dialog'], [role='alertdialog']) [class*='bg-[var(--bg-muted']:not(input, textarea, select, button, [role='combobox'], [role='radiogroup'], [role='radiogroup'] *, [role='toolbar'], [role='toolbar'] *, [role='tablist'], [role='tablist'] *, [data-k-control], [data-k-control] *, [data-k-focus-surface], [data-k-solid]) { background-color: color-mix(in srgb, var(--bg-muted, #fafbfc) 45%, transparent); }
 
 /* Módulo AI: el espacio de trabajo y el compositor son las superficies; lo de dentro se funde con ellas. */
 [data-k-material] :is(.ai-workspace, .ai-composer, .k-chat-workspace) {
@@ -42,7 +43,7 @@ html[data-k-backdrop] body { background: transparent; }
 
 /* Quien pide menos transparencia, o usa colores forzados, recibe superficies opacas y sin desenfoque. */
 @media (prefers-reduced-transparency: reduce), (forced-colors: active) {
-  [data-k-material] :is([data-k-surface], [role='dialog'], [role='alertdialog'], [role='menu'], [role='listbox'], .ai-workspace, .ai-composer, .k-chat-workspace) {
+  [data-k-material] :is([data-k-surface], [role='dialog'], [role='alertdialog'], .ai-workspace, .ai-composer, .k-chat-workspace) {
     background-color: var(--bg-card, #ffffff);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
@@ -74,8 +75,9 @@ html[data-k-backdrop-motion]::before, [data-k-backdrop-motion]:not(html)::before
 }
 /* Pestañas, opciones, filas y elementos de menú viven en contenedores que recortan (desplazables, `overflow: hidden`):
    un anillo por fuera se cortaría y quedaría solo una raya en un lado. Por dentro se ve entero. Cualquier otro
-   elemento en esa situación lo pide con `data-k-focus-inset`. */
-[data-k-focus] :is([role='tab'], [role='option'], [role='menuitem'], [role='menuitemradio'], [role='menuitemcheckbox'], [role='treeitem'], [role='row'], [role='gridcell'], [role='radio'], [data-k-focus-inset]):focus-visible {
+   elemento en esa situación lo pide con `data-k-focus-inset`. Igual los separadores arrastrables (ocupan todo el alto
+   o el ancho del panel que dividen) y los botones de un campo compuesto, que recorta por su borde redondeado. */
+[data-k-focus] :is([role='tab'], [role='option'], [role='menuitem'], [role='menuitemradio'], [role='menuitemcheckbox'], [role='treeitem'], [role='row'], [role='gridcell'], [role='radio'], [role='separator'], [data-k-focus-surface] :is(button, a[href]), [data-k-focus-inset]):focus-visible {
   outline-offset: calc(var(--k-focus-width, 2px) * -1) !important;
 }
 /* Composite fields already indicate focus on their outer surface. Keep tool

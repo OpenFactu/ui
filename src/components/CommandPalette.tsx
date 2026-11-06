@@ -248,7 +248,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = (rawProps) => {
               historial sería peor. */}
           {!term && recientes.length > 0 && (onSearch || flat.length === 0) ? (
             <div>
-              <div className="flex items-center gap-1.5 px-2 pt-2 pb-1 text-[length:calc(9px*var(--k-text-scale,1))] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
+              <div className="flex items-center gap-1.5 px-2 pt-2 pb-1 text-[length:calc(10px*var(--k-text-scale,1))] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
                 <UiIcon slot="clock" className="h-3 w-3" />
                 {cp.recent}
                 <button
@@ -282,7 +282,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = (rawProps) => {
             visible.map((section) => (
               <div key={section.key} className="mb-1 last:mb-0">
                 {section.label && (
-                  <div className="flex items-center gap-1.5 px-2 pt-2 pb-1 text-[length:calc(9px*var(--k-text-scale,1))] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
+                  <div className="flex items-center gap-1.5 px-2 pt-2 pb-1 text-[length:calc(10px*var(--k-text-scale,1))] font-mono font-semibold uppercase tracking-[1.5px] text-[var(--fg-subtle,#657486)]">
                     {section.icon}
                     {section.label}
                     {section.action && (

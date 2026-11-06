@@ -4,7 +4,7 @@
  *
  *   node scripts/probe-table.cjs
  */
-const { run, storyUrl, collectErrors } = require('./probe-kit.cjs');
+const { run, storyUrl, collectErrors, touch } = require('./probe-kit.cjs');
 
 run(async ({ browser, check }) => {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
@@ -97,6 +97,83 @@ run(async ({ browser, check }) => {
   check('en la hoja, cada opción va pegada a su casilla', texto - (casilla.x + casilla.w) < 24, `${Math.round(casilla.x + casilla.w)} → ${Math.round(texto)}`);
   await page.keyboard.press('Escape');
   await page.setViewportSize({ width: 1280, height: 900 });
+
+  console.log('\nTáctil: lo que parece un botón responde entero');
+  const movil = await browser.newContext({ viewport: { width: 375, height: 812 }, hasTouch: true, isMobile: true });
+  const tactil = await movil.newPage();
+  const cdp = await movil.newCDPSession(tactil);
+  const erroresTactil = [];
+  tactil.on('pageerror', (e) => erroresTactil.push(e.message));
+  // Dedo de verdad: baja, tiembla unos píxeles y sube.
+  const dedo = (x, y) => touch(cdp, [[x, y], [x + 3, y + 1, 30], [x + 3, y + 3, 30], [x + 1, y + 3, 30]]);
+  const centro = (b) => [b.x + b.width / 2, b.y + b.height / 2];
+  await tactil.goto(storyUrl('table--acciones-en-lote'), { waitUntil: 'networkidle' });
+  await tactil.waitForTimeout(400);
+  // `elementFromPoint` no tiene el ajuste de toque de Chrome: es lo que recibe un dedo en Safari.
+  const muertas = await tactil.locator('.k-table-strip-check').evaluate((pill) => {
+    const r = pill.getBoundingClientRect();
+    const puntos = [[r.height / 2, 2], [r.width / 2, 3], [r.width / 2, r.height - 3], [r.width - 6, r.height / 2], [32, r.height / 2]];
+    return puntos.filter(([x, y]) => !document.elementFromPoint(r.x + x, r.y + y)?.closest('label')).length;
+  });
+  check('toda la píldora «Seleccionar página» marca, no solo la casilla y el texto', muertas === 0, `${muertas} zonas muertas`);
+  const casillaTira = tactil.getByLabel('Seleccionar página', { exact: true });
+  const pildora = await tactil.locator('.k-table-strip-check').boundingBox();
+  await dedo(pildora.x + pildora.width - 6, pildora.y + pildora.height / 2);
+  await tactil.waitForTimeout(300);
+  check('tocar el borde de la píldora selecciona la página', await casillaTira.isChecked());
+  await dedo(pildora.x + pildora.width - 6, pildora.y + pildora.height / 2);
+  await tactil.waitForTimeout(500);
+  check('y volver a tocarla la deselecciona', !(await casillaTira.isChecked()));
+
+  const ordenar = tactil.locator('.k-table-strip [aria-haspopup="menu"]').first();
+  // Ordenar y sus vecinos siguen al tema: esquinas y letra, nada de píldora fija.
+  const estilos = () => tactil.evaluate(() => ['.k-table-strip-check', '.k-table-strip [aria-haspopup="menu"]'].map((s) => { const c = getComputedStyle(document.querySelector(s)); return { radio: c.borderTopLeftRadius, letra: c.fontFamily }; }));
+  await tactil.evaluate(() => { const r = document.documentElement.style; r.setProperty('--k-radius-sm', '0px'); r.setProperty('--font-sans', 'Georgia, serif'); });
+  const recto = await estilos();
+  check('con un tema de esquinas rectas, los botones de la tira son rectos', recto.every((e) => e.radio === '0px'), JSON.stringify(recto.map((e) => e.radio)));
+  check('y usan la letra del tema', recto.every((e) => /Georgia/.test(e.letra)), recto[0].letra);
+  await tactil.evaluate(() => { const r = document.documentElement.style; r.setProperty('--k-radius-sm', '10px'); });
+  check('con esquinas redondeadas, las siguen', (await estilos()).every((e) => e.radio === '10px'));
+  await tactil.evaluate(() => { const r = document.documentElement.style; r.removeProperty('--k-radius-sm'); r.removeProperty('--font-sans'); });
+  await dedo(...centro(await ordenar.boundingBox()));
+  await tactil.waitForTimeout(600);
+  check('la hoja de ordenar se titula «Ordenar», no «Acciones»', (await tactil.getByRole('dialog').getByRole('heading').innerText()) === 'Ordenar');
+  check('sin orden, la opción vigente es el orden original', (await tactil.locator('[role="menuitem"][aria-current="true"]').innerText()).trim() === 'Orden original');
+  await dedo(...centro(await tactil.getByRole('menuitem', { name: 'Número: descendente' }).boundingBox()));
+  await tactil.waitForTimeout(600);
+  check('elegir una opción ordena de verdad', /FAC\/2026\/0137/.test(await tactil.locator('.k-table-cards').innerText()), (await ordenar.innerText()).replace(/\n/g, ' '));
+  await dedo(...centro(await ordenar.boundingBox()));
+  await tactil.waitForTimeout(600);
+  check('al volver a abrir, se ve cuál está puesta', (await tactil.locator('[role="menuitem"][aria-current="true"]').innerText()).trim() === 'Número: descendente');
+  await tactil.keyboard.press('Escape');
+
+  console.log('\nTáctil: tabla con desplazamiento');
+  await tactil.goto(storyUrl('table--desplazamiento-horizontal'), { waitUntil: 'networkidle' });
+  await tactil.waitForTimeout(400);
+  const zona = await tactil.evaluate(() => {
+    const input = document.querySelector('thead input[type=checkbox]');
+    const r = input.getBoundingClientRect();
+    const cx = r.x + r.width / 2; const cy = r.y + r.height / 2;
+    const responde = (x, y) => !!document.elementFromPoint(x, y)?.closest('label');
+    let ancho = 0; for (let d = 0; d < 40 && responde(cx + d, cy); d++) ancho = d;
+    let alto = 0; for (let d = 0; d < 40 && responde(cx, cy + d); d++) alto = d;
+    return { ancho: ancho * 2, alto: alto * 2 };
+  });
+  check('la casilla de la cabecera tiene zona táctil de 44 px', zona.ancho >= 42 && zona.alto >= 42, JSON.stringify(zona));
+  const cabecera = tactil.getByRole('columnheader', { name: 'Cliente' });
+  const caja = await cabecera.boundingBox();
+  check('la cabecera mide 44 px: cómoda, sin comerse la pantalla', caja.height >= 44 && caja.height <= 48, `${Math.round(caja.height)} px`);
+  // Lejos del texto, pero dentro del marco que recorta la tabla (la historia lleva 24 px de margen).
+  await dedo(Math.min(caja.x + caja.width - 6, 340), caja.y + 4);
+  await tactil.waitForTimeout(300);
+  check('tocar cualquier punto de la cabecera ordena, no solo el texto', (await cabecera.getAttribute('aria-sort')) === 'ascending', await cabecera.getAttribute('aria-sort'));
+  const fila = tactil.locator('tbody tr').first().locator('input[type=checkbox]');
+  const cajaFila = await fila.boundingBox();
+  await dedo(cajaFila.x + cajaFila.width + 8, cajaFila.y + cajaFila.height / 2);
+  await tactil.waitForTimeout(300);
+  check('la casilla de la fila también se marca tocando al lado', await fila.isChecked());
+  check('sin errores de página en táctil', erroresTactil.length === 0, erroresTactil.join(' | '));
+  await movil.close();
 
   console.log('\nColumnas fijas');
   await go('table--columnas-fijas-y-totales');

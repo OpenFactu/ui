@@ -62,7 +62,8 @@ const base = process.env.LADLE_URL || 'http://localhost:61000';
     await input.fill('iiiiiiii WWWWWWWW 11111111');
     await input.press('Home'); await input.press('End'); await settle();
     await page.evaluate(async () => {
-      const face = new FontFace('CaretLateFont', 'local("Arial")');
+      // Una proporcional cualquiera: Arial no existe en Linux, donde Chrome trae Liberation Sans.
+      const face = new FontFace('CaretLateFont', 'local("Arial"), local("Liberation Sans"), local("DejaVu Sans")');
       document.fonts.add(face);
       document.querySelector('.k-code-editor').style.setProperty('--font-mono', 'CaretLateFont, monospace');
       await document.fonts.load('13px CaretLateFont');

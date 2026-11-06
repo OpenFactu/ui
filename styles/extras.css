@@ -12,7 +12,9 @@
 .k-range-nav button:hover { background: var(--bg-hover, #f1f5f9); }
 .k-range-months { display: flex; gap: 20px; }
 .k-range-month-title { margin-bottom: 6px; text-align: center; font-size: calc(13px * var(--k-text-scale, 1)); font-weight: 600; color: var(--fg-default, #0a1628); }
-.k-range-grid { display: grid; gap: 2px; }
+/* Siempre seis semanas, aunque el mes tenga menos: el calendario no cambia de tamaño al pasar de mes. */
+.k-range-grid { --k-range-cell: 32px; display: grid; gap: 2px; grid-template-rows: 24px repeat(6, var(--k-range-cell)); }
+.k-range-swipe { overflow: hidden; }
 .k-range-row { display: grid; grid-template-columns: repeat(7, 34px); }
 .k-range-weekday { display: grid; place-items: center; height: 24px; font: 600 calc(10px * var(--k-text-scale, 1)) var(--font-mono, ui-monospace, monospace); color: var(--fg-subtle, #657486); }
 .k-range-day { position: relative; display: grid; place-items: center; width: 34px; height: 32px; font-size: calc(13px * var(--k-text-scale, 1)); color: var(--fg-body, #2d3a4a); font-variant-numeric: tabular-nums; }
@@ -46,13 +48,14 @@ button.k-range-day:focus-visible { outline: 2px solid var(--color-accent, #0d948
     min-height: 36px;
     padding: 0 12px;
     border: var(--k-border-width, 1px) solid var(--border-default, #e2e8f0);
-    border-radius: 999px;
+    border-radius: var(--k-radius-sm, 4px);
     white-space: nowrap;
   }
   /* El mes ocupa todo el ancho de la hoja: sin esto la rejilla se encogía a su contenido y los días se apretaban. */
   .k-range-calendars, .k-range-months, .k-range-months > *, .k-range-grid { width: 100%; }
   .k-range-months > * { flex: 1; min-width: 0; }
   .k-range-row { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .k-range-grid { --k-range-cell: 44px; }
   .k-range-panel .k-range-day { width: 100%; height: 44px; min-height: 44px; }
 }
 
@@ -523,7 +526,7 @@ li[data-done] .k-checklist-item-title { color: var(--fg-muted, #52606f); text-de
   max-width: calc(100% - 24px);
   margin: 10px auto;
   padding: 5px 6px;
-  border-radius: 999px;
+  border-radius: var(--k-radius-lg, 12px);
   background: var(--fg-default, #0a1628);
   color: var(--bg-card, #ffffff);
   box-shadow: var(--k-shadow-overlay, 0 18px 40px -16px rgb(15 23 42 / 0.55));
@@ -551,7 +554,7 @@ li[data-done] .k-checklist-item-title { color: var(--fg-muted, #52606f); text-de
   gap: 6px;
   height: 36px;
   min-height: 36px;
-  border-radius: 999px;
+  border-radius: var(--k-radius-sm, 4px);
   font-size: calc(13px * var(--k-text-scale, 1));
   font-weight: 600;
   color: inherit;
@@ -580,4 +583,24 @@ li[data-done] .k-checklist-item-title { color: var(--fg-muted, #52606f); text-de
   [data-k-mobile='Dock'] .k-dock-item { min-height: 0; }
   /* Sin ratón no hay lupa: el dock se queda quieto. */
   .k-dock-item { --k-dock-scale: 1 !important; }
+}
+
+/* DatePicker: siempre mide seis semanas, sea el mes que sea, y lo mismo las vistas de meses y años. */
+.k-dp-body {
+  --k-dp-cell: calc(32px * var(--k-density, 1));
+  --k-dp-head: calc(28px * var(--k-density, 1));
+  --k-dp-gap: calc(2px * var(--k-density, 1));
+  height: calc(var(--k-dp-cell) * 6 + var(--k-dp-gap) * 5 + var(--k-dp-head) + var(--k-dp-gap) * 2);
+  overflow: hidden;
+}
+.k-dp-page { height: 100%; }
+.k-dp-weekdays { height: var(--k-dp-head); margin-bottom: calc(var(--k-dp-gap) * 2); column-gap: var(--k-dp-gap); }
+.k-dp-days { grid-template-rows: repeat(6, var(--k-dp-cell)); gap: var(--k-dp-gap); }
+.k-dp-picks { height: 100%; grid-template-rows: repeat(4, 1fr); }
+.k-dp-nav { display: inline-grid; flex: none; place-items: center; width: 28px; height: 28px; padding: 0; }
+@media (max-width: 767px) {
+  .k-dp-body { --k-dp-cell: 44px; }
+  /* Más específico que `.k-adaptive-content button`: el botón mide lo que diga su rejilla. */
+  .k-adaptive-content .k-dp-cell { min-height: 0; padding: 0; }
+  .k-adaptive-content .k-dp-nav { width: 44px; height: 44px; min-height: 44px; }
 }

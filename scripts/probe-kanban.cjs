@@ -73,6 +73,12 @@ run(async ({ browser, check }) => {
   await page.keyboard.press('Enter');
   check('Intro la abre', /abierta: Revisar facturas/.test(await aviso()), await aviso());
 
+  // Plegar anima la rejilla: en una máquina lenta, a los 200 ms sigue a medio camino. Se espera al final, con un tope.
+  const tiraEstrecha = () => page.waitForFunction(() => {
+    const anchos = getComputedStyle(document.querySelector('.k-kb-board')).gridTemplateColumns.split(' ').map(parseFloat);
+    return anchos.some((a) => a === 44);
+  }, null, { timeout: 4000 }).catch(() => undefined);
+
   console.log('\nAlta rápida y plegado');
   await page.getByRole('button', { name: 'Añadir tarjeta' }).nth(3).click();
   await page.getByLabel('Nueva tarjeta en Hechas').fill('Archivar extractos');
@@ -80,7 +86,7 @@ run(async ({ browser, check }) => {
   check('Intro crea la tarjeta y deja el campo listo para otra', /nueva en hechas: Archivar extractos/.test(await aviso()) && await page.getByLabel('Nueva tarjeta en Hechas').evaluate((e) => e.value === ''));
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Plegar Bloqueadas' }).click();
-  await page.waitForTimeout(200);
+  await tiraEstrecha();
   const plegada = await page.getByRole('button', { name: 'Desplegar Bloqueadas' }).boundingBox();
   check('plegar deja una tira estrecha', !!plegada && plegada.width < 50, plegada ? `${Math.round(plegada.width)} px` : '');
   check('sin sus tarjetas a la vista', (await page.locator('[data-columna="bloqueadas"]').count()) === 0);
@@ -98,7 +104,7 @@ run(async ({ browser, check }) => {
   await page.waitForTimeout(300);
   check('arrastrar a otro carril cambia de carril', (await tarjetasDe('en-curso', 'Marta Ruiz')).join(',') === 'c5,c3', (await tarjetasDe('en-curso', 'Marta Ruiz')).join(','));
   await page.getByRole('button', { name: 'Plegar Por hacer' }).click();
-  await page.waitForTimeout(200);
+  await tiraEstrecha();
   const cabecera = await page.locator('.k-kb-head').nth(1).boundingBox();
   const celdas = await page.locator('[data-columna="en-curso"]').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().x)));
   check('plegar una columna con carriles no descoloca las demás', celdas.every((x) => Math.abs(x - cabecera.x) < 2), `${Math.round(cabecera.x)} vs ${celdas.join(',')}`);

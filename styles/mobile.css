@@ -3,6 +3,46 @@
 .k-bottom-navigation { display: none; }
 .k-mobile-schedule-actions { display: none; }
 .k-search-select-remove { display: inline-flex; align-items: center; justify-content: center; width: 12px; height: 12px; padding: 0; border: 0; background: transparent; color: inherit; }
+
+/* Zona de toque de un icono suelto: más grande que lo que se ve, sin mover el diseño. Con ratón llega a 24 px. */
+.k-hit { position: relative; flex: none; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.k-hit::after { content: ''; position: absolute; inset: -5px; }
+.k-date-clear { position: absolute; top: 50%; inset-inline-end: calc(0.75rem * var(--k-density, 1) + 18px); translate: 0 -50%; }
+
+/* En pantalla táctil (o estrecha) nada depende de pasar el puntero por encima y todo se puede tocar con el dedo. */
+@media (max-width: 767px), (pointer: coarse) {
+  button.k-hit.k-hit { min-height: 0; }
+  .k-hit::after { inset: -13px; }
+  .k-reveal.k-reveal { opacity: 1; }
+  .k-touch-40 { display: inline-flex; align-items: center; justify-content: center; min-width: 40px; min-height: 40px; }
+  /* Toda la fila de una casilla con etiqueta responde, no solo el cuadrado y el texto. */
+  [data-k-control='checkbox-group'] { position: relative; }
+  [data-k-control='checkbox-group'] > label::before { content: ''; position: absolute; inset: 0; }
+  /* La casilla y el texto, por encima: reciben su propio toque (y el de las pruebas de quien use la librería). */
+  [data-k-control='checkbox-group'] input, [data-k-control='checkbox-group'] > label > * { position: relative; z-index: 1; }
+  /* Los botones de solo icono son cuadrados: `[data-k-mobile] button` les da 48 px de alto y dejaba su ancho. */
+  button.k-touch-40.k-touch-40 { min-height: 40px; }
+  button.k-kb-fold.k-kb-fold { width: 40px; height: 40px; min-height: 40px; }
+  button.k-gantt-fold.k-gantt-fold { width: 32px; height: 32px; min-height: 32px; }
+  button.k-bottom-sheet-btn.k-bottom-sheet-btn { width: 44px; height: 44px; min-height: 44px; }
+  button.k-carousel-arrow.k-carousel-arrow { min-height: 36px; }
+  button.k-kb-check.k-kb-check { min-height: 0; }
+  .k-kb-check { position: relative; }
+  .k-kb-check::after { content: ''; position: absolute; inset: -13px; }
+  [data-k-control='button']:has(> svg:only-child) { min-width: 48px; }
+  .k-range-panel .k-range-nav button { width: 44px; height: 44px; min-height: 44px; }
+  .k-chat-audio-speed { position: relative; }
+  .k-chat-audio-speed::after { content: ''; position: absolute; inset: -10px -8px; }
+  .k-clamp-toggle { position: relative; }
+  .k-clamp-toggle::after { content: ''; position: absolute; inset: -12px 0; }
+  .k-coachmark-beacon::after { content: ''; position: absolute; inset: -14px; }
+  .ai-frame-link { position: relative; }
+  .ai-frame-link::after { content: ''; position: absolute; inset: -4px 0; }
+  .k-inline-edit-view .k-inline-edit-pencil { opacity: 1; }
+  [data-k-mobile='ColorInput'] button.k-color-swatch { width: 32px; height: 32px; min-height: 32px; }
+  [data-k-mobile='Breadcrumbs'] a { display: inline-flex; align-items: center; min-height: 44px; }
+}
+
 @media (max-width: 767px) {
   .ai-message-actions { flex-wrap: wrap; }
   .k-tabs [aria-selected='true'] { color: var(--fg-default, #0a1628); }

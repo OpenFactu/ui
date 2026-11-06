@@ -571,7 +571,7 @@ export const Kanban: React.FC<KanbanProps> = ({
               style={{ ...tono(col.tone), gridColumn: iCol + 1 }}
             >
               {plegada ? (
-                <button type="button" className="k-kb-unfold" onClick={() => plegar(col.id)} aria-label={format(kt.unfold, { column: etiquetaDe(col) })} aria-expanded={false}>
+                <button type="button" className="k-kb-unfold" data-k-focus-inset="" onClick={() => plegar(col.id)} aria-label={format(kt.unfold, { column: etiquetaDe(col) })} aria-expanded={false}>
                   <UiIcon slot="chevron-right" size={14} />
                   <span className="k-kb-count">{total}</span>
                 </button>
